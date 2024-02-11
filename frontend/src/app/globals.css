@@ -1,33 +1,50 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
-
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
+@tailwind utilities; */
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  min-height: 100vh;
+  height: 100%;
+ 
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* globals.css */
+.custom-input .p-inputtext {
+border-color: #6f6f72 !important;
+
+}
+
+/* login primary button when all fields are okay*/
+.p-button-primary {
+background-color: #00308f;
+border-color: #00308f;
+color: white;
+
+padding: 1%;
+}
+
+/*login disabled button */
+.p-button-secondary[disabled] {
+background-color: grey;
+border-color: grey;
+color: white;
+
+padding: 1%;
+}
+
+ul li {
+list-style: none;
+}
+
+.footer-container {
+text-align: center;
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+background-color: #000;
+color: #fff;
+z-index: 1000;
+padding: 10px;
+box-shadow: rgba(229, 222, 222, 0.2) 0px 2px 8px 0px;
 }
