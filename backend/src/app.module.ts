@@ -10,8 +10,18 @@ import { PgRestController } from './endpoints/pgrest/pgrest.controller';
 import { PgRestService } from './endpoints/pgrest/pgrest.service';
 import { TemplatesService } from './endpoints/templates/templates.service';
 import { TemplatesController } from './endpoints/templates/templates.controller';
-import { WorkCenterController } from './endpoints/work-center/work-center.controller';
-import { WorkCenterService } from './endpoints/work-center/work-center.service';
+import { AssetController } from './endpoints/asset/asset.controller';
+import { AssetService } from './endpoints/asset/asset.service';
+import { FactorySiteController } from './endpoints/factory-site/factory-site.controller';
+import { ShopFloorAssetsController } from './endpoints/shop-floor-assets/shop-floor-assets.controller';
+import { ShopFloorController } from './endpoints/shop-floor/shop-floor.controller';
+import { NonShopFloorAssetsController } from './endpoints/non-shop-floor-assets/non-shop-floor-assets.controller';
+import { FileController } from './endpoints/file/file.controller';
+import { FactorySiteService } from './endpoints/factory-site/factory-site.service';
+import { ShopFloorAssetsService } from './endpoints/shop-floor-assets/shop-floor-assets.service';
+import { ShopFloorService } from './endpoints/shop-floor/shop-floor.service';
+import { NonShopFloorAssetsService } from './endpoints/non-shop-floor-assets/non-shop-floor-assets.service';
+import { FileService } from './endpoints/file/file.service';
 
 @Module({
   imports: [],
@@ -21,7 +31,13 @@ import { WorkCenterService } from './endpoints/work-center/work-center.service';
     AlertsController,
     PgRestController,
     TemplatesController,
-    WorkCenterController
+    AssetController,
+    AuthController,
+    FactorySiteController,
+    ShopFloorAssetsController,
+    ShopFloorController,
+    NonShopFloorAssetsController,
+    FileController
   ],
   providers: [
     AppService,
@@ -29,7 +45,13 @@ import { WorkCenterService } from './endpoints/work-center/work-center.service';
     AlertsService,
     PgRestService,
     TemplatesService,
-    WorkCenterService
+    AssetService,
+    AuthService,
+    FactorySiteService,
+    ShopFloorAssetsService,
+    ShopFloorService,
+    NonShopFloorAssetsService,
+    FileService
   ]
 })
 export class AppModule {

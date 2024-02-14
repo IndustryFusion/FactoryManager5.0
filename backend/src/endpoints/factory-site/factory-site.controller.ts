@@ -1,29 +1,25 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req } from '@nestjs/common';
-import { WorkCenterService } from './work-center.service';
-import { Request, Response } from 'express';
-import * as jsonData from './work-center-schema.json';
+import { FactorySiteService } from './factory-site.service';
+import * as jsonData from './factory-schema.json';
 import { getSessionToken } from '../session/session.service';
-import axios from 'axios';
+import { Request, Response } from 'express';
 
-@Controller('work-center')
-export class WorkCenterController {
-  private readonly scorpioUrl = process.env.SCORPIO_URL;
-  constructor(private readonly workCenterService: WorkCenterService) {}
+@Controller('factory-site')
+export class FactorySiteController {
+  constructor(private readonly factorySiteService: FactorySiteService) {}
 
   @Post()
   async create(@Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.workCenterService.create(data, token);
+      const response = await this.factorySiteService.create(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
           status: response['status'],
           message: response['statusText'],
+          id: response['id']
         }
-      }
-      else {
-        console.log("Error: " + response)
       }
     } catch (err) {
       return { 
@@ -35,7 +31,7 @@ export class WorkCenterController {
   }
 
   @Get('/template')
-  async findshopFloorTemplate() {
+  async findFactoryTemplate() {
     return jsonData;
   }
 
@@ -43,7 +39,7 @@ export class WorkCenterController {
   async findAll(@Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      return await this.workCenterService.findAll(token);
+      return await this.factorySiteService.findAll(token);
     } catch (err) {
       throw new NotFoundException();
     }
@@ -53,7 +49,7 @@ export class WorkCenterController {
   async findOne(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      return await this.workCenterService.findOne(id, token);
+      return await this.factorySiteService.findOne(id, token);
     } catch (err) {
       throw new NotFoundException();
     }
@@ -63,7 +59,7 @@ export class WorkCenterController {
   async update(@Param('id') id: string, @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.workCenterService.update(id, data, token);
+      const response = await this.factorySiteService.update(id, data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
@@ -85,7 +81,7 @@ export class WorkCenterController {
   async remove(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.workCenterService.remove(id, token);
+      const response = await this.factorySiteService.remove(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,

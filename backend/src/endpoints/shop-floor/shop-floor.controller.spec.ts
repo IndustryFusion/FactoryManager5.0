@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { WorkCenterController } from './work-center.controller';
-import { WorkCenterService } from './work-center.service';
+import { ShopFloorController } from './shop-floor.controller';
+import { ShopFloorService } from './shop-floor.service';
 import * as sessionService from '../session/session.service';
 
 jest.mock('../session/session.service');
 
-describe('WorkCenterrController', () => {
-  let controller: WorkCenterController;
+describe('ShopFloorController', () => {
+  let controller: ShopFloorController;
 
   const mockProvider = {
     create: jest.fn((dto, token) => {
@@ -92,11 +92,11 @@ describe('WorkCenterrController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [WorkCenterController],
-      providers: [WorkCenterService],
-    }).overrideProvider(WorkCenterService).useValue(mockProvider).compile();
+      controllers: [ShopFloorController],
+      providers: [ShopFloorService],
+    }).overrideProvider(ShopFloorService).useValue(mockProvider).compile();
 
-    controller = module.get<WorkCenterController>(WorkCenterController);
+    controller = module.get<ShopFloorController>(ShopFloorController);
   });
 
   it('should be defined', () => {

@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/schema#",
-    "$id": "https://industry-fusion.org/types/v0.1/workCenter",
-    "title": "Work Center",
-    "description": "Work center floor template for Fusion App",
+    "$id": "https://industry-fusion.org/types/v0.1/shopFloor",
+    "title": "Shop Floors",
+    "description": "Shop floor template for Fusion App",
     "type": "object",
     "properties": {
         "floor_name": {
