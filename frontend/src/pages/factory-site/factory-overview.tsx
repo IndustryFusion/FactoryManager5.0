@@ -223,7 +223,7 @@ const FactoryOverview = () => {
   return (
     <>
     <HorizontalNavbar />
-      <div className="grid py-1 px-2 factory-overview " >
+      <div className="grid py-1 px-2 factory-overview "  style={{zoom:"80%"}}>
         <div className="col-12">
           <ConfirmDialog />
           <div className="">
