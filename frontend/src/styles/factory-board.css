@@ -1,0 +1,15 @@
+.big-transparent-button {
+  background-color: transparent;
+  border-color: azure;
+  color: #007ad9;
+  font-size: 1.5rem;
+
+  font-size: 3rem;
+  padding: 10px 20px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

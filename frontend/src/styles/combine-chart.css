@@ -1,0 +1,80 @@
+/* combine-chart.css */
+.buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Center buttons in the container */
+  gap: 10px; /* Adjust based on your spacing preference */
+  justify-content: center; /* Center buttons in the container */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .custom-button {
+    max-width: calc(50% - 10px); /* Show 2 buttons per row on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-button {
+    max-width: 100%; /* Stack buttons vertically on very small screens */
+  }
+}
+.content {
+  max-width: 110%;
+}
+.custom-button {
+  cursor: pointer;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: all 0.3s;
+  width: auto; /* Remove fixed width */
+  margin-bottom: 10px; /* Space between buttons */
+  position: relative; /* Add relative positioning for absolute child */
+  display: flex; /* Ensure icon and text are displayed flexibly */
+  align-items: center; /* Align icon and text vertically */
+  border: none;
+}
+
+.custom-button:hover {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Adjust icon styles */
+.button-icon {
+  margin-right: 8px; /* Add margin to the right of the icon */
+}
+
+/* Adjust text styles */
+.button-text {
+  font-size: 20px; /* Adjust based on your preference */
+  padding: 5px 0; /* Give some space at the top */
+  font-weight: bold;
+  justify-content: center;
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.8
+  ); /* Slightly transparent background for readability */
+}
+
+.interval-filter-container {
+  display: flex;
+  flex-direction: column; /* Stack label and dropdown vertically */
+  align-items: center; /* Center-align the items */
+  margin-bottom: 20px; /* Adjust spacing as needed */
+}
+
+.dropdown-container {
+  width: 200px; /* Adjust width as needed */
+  margin-top: 5px; /* Provide some space between the label and dropdown */
+}
+
+/* Ensure the label has a consistent style */
+.interval-filter-container > p {
+  margin: 0; /* Remove default margins */
+  font-size: 16px; /* Adjust the font size as needed */
+  font-weight: bold; /* Make label text bold */
+  text-align: center; /* Center-align the text */
+}

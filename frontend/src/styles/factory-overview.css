@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+.factory-overview,
+.p-button .p-button-label,
+.p-dropdown .p-dropdown-label.p-placeholder,
+.p-inputtext {
+  font-family: "Inter", sans-serif !important;
+}
+
+.p-button .p-button-label {
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+.factory-image {
+  width: 145px;
+  height: 145px;
+  margin-left: 0.5rem;
+}
+
+.factory-location {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 86%;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dfe7ef;
+  border-radius: 12px !important;
+  padding: 10px;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 2px 0px;
+  width: 100%;
+}
+
+.card:last-child {
+  margin-bottom: 0
+}
+
+.action-btn-container {
+  display: flex;
+  width: 100%;
+  gap: 1.5rem;
+  margin-top: 1.2rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.action-btn-container button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  border-radius: 50%;
+  padding: 5px 20px;
+}
+
+.edit-icon {
+  background-color: #ede1e15e;
+  color: #6f6868;
+}
+
+.delete-icon {
+  /* color: #ff0404; */
+  background-color: #df2c1321;
+  color: #ff0000;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+}
+
+.factory-btn {
+  /* background-color: #fff96757; */
+  /* background-color: #a7e3f985; */
+  color: #000;
+  border: 1px solid #ced4da;
+  font-weight: 600;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+}
+
+.p-dataview.p-dataview-list .p-dataview-content>.p-grid>div {
+  border: none;
+}
+
+.factory-card-content {
+  height: 180px;
+  justify-content: space-between;
+}
+
+.zip-text {
+  margin-left: 1.3rem;
+}
+
+.p-button.p-button-sm .p-button-icon {
+  font-size: 17px;
+
+}
+
+.p-dataview .p-dataview-header {
+  background: #c5dcff24;
+  border: none;
+}
+
+.pi-eye:before {
+  color: #a06bf7;
+}
+
+.pi-pencil:before {
+  color: #4ad3ab;
+}
+
+.pi-trash:before {
+  color: #fd7e14;
+}
+
+.location-icon {
+  color: #8d8681;
+  font-size: 20px;
+}
+
+.view-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #dcd2f0;
+}
+
+.edit-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #e0f7ec;
+}
+.delete-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #ffe0c7;
+  margin-right: 2rem;
+}
+.address-text{
+  margin-top: 1.5rem;
+  font-size: 14.6px;
+  letter-spacing: 0.1px;
+}
+.image-container{
+  flex: 40%;
+}
+.factory-text-container{
+flex: 40%;
+margin-top: 8px;
+}
+
+
+
+
+
+
+
+@media only screen and (min-width: 1440px) and (max-width: 1800px) {
+  .factory-image {
+    width: 135px;
+    height: 135px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+  .address-text{
+    font-size: 14px;
+  }
+}

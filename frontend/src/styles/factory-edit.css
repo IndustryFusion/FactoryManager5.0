@@ -1,0 +1,42 @@
+.edit-form {
+  margin: auto; /* Centers the card */
+  max-width: 35%; /* Sets the maximum width to 50% */
+  padding: 20px;
+}
+
+/* Targeting labels within the .edit-form for margin */
+.edit-form .p-field label {
+  margin-bottom: 0.5rem; /* Adds margin below the labels */
+  display: block; /* Ensures the margin takes effect by making label block-level */
+}
+
+/* Targeting input fields within the .edit-form for margin */
+.edit-form .p-inputtext,
+.edit-form .p-dropdown,
+.edit-form .p-inputnumber .p-inputtext,
+.edit-form .p-fileupload .p-fileupload-choose {
+  margin-bottom: 1rem; /* Adds margin below input fields */
+  width: 100%; /* Ensures input fields take up the full width of their container */
+}
+
+/* This targets the specific class for InputNumber component as it has a nested structure */
+.edit-form .p-inputnumber {
+  width: 100%; /* Ensures the container of the input number takes full width */
+}
+.small-button {
+  padding: 0.5rem 1rem; /* Smaller padding */
+  max-width: 40%;
+  display: flex;
+}
+/* Adjustments for the "Choose" button to make it smaller */
+.small-fileupload-button .p-fileupload-choose {
+  font-size: 0.75rem; /* Smaller text */
+  padding: 0.5rem; /* Smaller padding */
+  width: auto; /* Adjust width as necessary */
+}
+/* Styles for button container to center the "Save" button */
+.edit-form .button-container {
+  display: flex;
+  justify-content: center; /* Center the button horizontally */
+  margin-top: 1rem; /* Optional: Add some space above the button */
+}

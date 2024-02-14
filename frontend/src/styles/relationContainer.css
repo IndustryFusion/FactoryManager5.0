@@ -1,0 +1,42 @@
+/* YourCustomStyles.css */
+.p-button.p-button-text {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-color);
+}
+
+.p-button.p-button-text:enabled:hover {
+  background-color: transparent;
+  color: var(--text-color-hover);
+}
+
+.p-checkbox .p-checkbox-box {
+  background-color: transparent;
+  border: 1px solid var(--text-color);
+}
+
+.p-checkbox .p-checkbox-box:not(.p-disabled):hover {
+  background-color: transparent;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight {
+  background-color: transparent;
+}
+
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
+  color: var(--text-color);
+}
+
+.asset-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+.asset-list li {
+}
+
+:root {
+  --text-color: #333;
+  --text-color-hover: #555;
+}

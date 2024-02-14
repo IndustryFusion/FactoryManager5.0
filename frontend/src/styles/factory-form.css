@@ -1,0 +1,103 @@
+.factory-form-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  width: 70%;
+  margin: 0 auto;
+}
+
+
+.factory-form-container .p-field label {
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Adjust the margin or padding around form fields */
+.factory-form-container .p-inputtext,
+.factory-form-container .p-dropdown,
+.factory-form-container .p-inputnumber .p-inputtext
+ {
+  margin-bottom: 1rem; /* Adjust or remove if necessary */
+  width: 100%; /* Keeps fields full width */
+}
+
+/* If the Card itself adds padding, you might want to adjust it */
+
+
+
+
+/* Ensure the button inside the Card is centered */
+.center-button-container .small-button {
+  margin: auto; /* Center the button horizontally */
+  display: block; /* Use block to allow margin auto to work */
+}
+
+
+
+/* This class will be applied to the Card component's container */
+.center-button-container {
+  display: flex;
+  justify-content: center; /* Center items horizontally */
+  align-items: center; /* Center items vertically if needed */
+  flex-direction: column; /* Stack items vertically */
+}
+
+.p-fileupload .p-fileupload-content,
+.p-card .p-card-body ,
+.p-card .p-card-content{
+  padding: 0;
+}
+.p-card{
+  padding-top: 1rem;
+}
+.p-card .p-card-body {
+  width: 50%;
+}
+
+.shop-floors{
+  background: #efefef;
+  color: #212529;
+  border-radius: 4px;
+  margin-top: 0px;
+}
+
+ul li{
+  list-style: none;
+  padding: 10px;
+}
+textarea {
+  resize: none;
+}
+.p-dropdown .p-dropdown-label.p-placeholder,
+.p-inputtext-lg .p-inputtext{ 
+  font-size: 1rem;
+}
+.p-badge.p-badge-warning {
+  display: none;
+}
+.p-tag.p-tag-warning {
+  display: none;
+}
+.factory-form-container .p-fileupload .p-fileupload-choose {
+  margin-bottom: 0;
+  width: auto;
+}
+.p-fluid .p-fileupload .p-button {
+  width: auto;
+  font-size: 0.75rem;
+  padding: 0.5rem;
+}
+.form-btn-container{
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  bottom: 0.2rem;
+  padding-right: 5rem;
+  z-index: 100;
+  background-color: #fff;
+}
+.form-icons{
+  color: #808080;
+  margin-right: 0.4rem;
+}
+
