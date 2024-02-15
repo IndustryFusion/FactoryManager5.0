@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
 import { TemplatesService } from '../templates/templates.service';
 import axios from 'axios';
+import { ImportAssetDto } from './dto/importAsset.dto';
 
 @Injectable()
 export class AssetService {
@@ -119,59 +119,19 @@ export class AssetService {
     }
   }
 
-  async setAssetData(id : string, data: TemplateDescriptionDto, token: string) {
+  async setAssetData( data: ImportAssetDto, token: string ) {
     try {
-      //fetch the last urn from scorpio and create a new urn
-      const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:id-store`;
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let getLastUrn = await axios.get(fetchLastUrnUrl, {
-        headers
-      });
-      getLastUrn = getLastUrn.data;
-      let newUrn = '', lastUrn = {}, lastUrnKey = '';
-      lastUrn["@context"] = getLastUrn["@context"];
-      for(let key in getLastUrn) {
-        if(key.includes('last-urn')) {
-          lastUrnKey = key;
-          lastUrn[lastUrnKey] = getLastUrn[key];
-          newUrn = getLastUrn[key]['value'].split(':')[4];
-          newUrn = (parseInt(newUrn, 10) + 1).toString().padStart(newUrn.length, "0");
-        }
-      }
-
-      //set the result to store in scorpio
-      const result = {
-        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-        "id": `urn:ngsi-ld:asset:2:${newUrn}`,
-        "type": data.type,
-        "templateId": id
-      }
-      for(let key in data.properties) {
-        let resultKey = "http://www.industry-fusion.org/schema#" + key;
-        if(key.includes("has")) {
-          let obj = {
-            type: "Relationship",
-            object: data.properties[key]
-          }
-          result[resultKey] = obj;
-          } else {
-          result[resultKey] = data.properties[key];
-        }
-      }
-      //update the last urn with the current urn in scorpio
-      lastUrn[lastUrnKey].value = `urn:ngsi-ld:asset:2:${newUrn}`;
-      const updateLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:id-store/attrs`;
-      await axios.patch(updateLastUrnUrl, lastUrn, {headers});
 
       //store the template data to scorpio
-      const response = await axios.post(this.scorpioUrl, result, {headers});
+      const response = await axios.post(this.scorpioUrl, data, {headers});
       console.log('response ',response.statusText);
       return {
-        id: result.id,
+        id: data.id,
         status: response.status,
         statusText: response.statusText,
         data: response.data

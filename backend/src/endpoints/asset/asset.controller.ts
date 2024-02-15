@@ -54,11 +54,11 @@ export class AssetController {
     }
   }
 
-  @Post(':id')
-  async setAssetData(@Param('id') id: string, @Body() data, @Req() req: Request) {
+  @Post()
+  async setAssetData( @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.assetService.setAssetData(id, data, token);
+      const response = await this.assetService.setAssetData(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
