@@ -119,7 +119,7 @@ export class AssetService {
     }
   }
 
-  async setAssetData( data: ImportAssetDto[], token: string ) {
+  async setAssetData( data: any, token: string ) {
     try {
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -146,7 +146,7 @@ export class AssetService {
         statusText: response.statusText
       }
     } catch (err) {
-      throw err;
+      throw ('files to upload new asset' + err);
     }
   }
 
