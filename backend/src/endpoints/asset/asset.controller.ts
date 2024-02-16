@@ -63,15 +63,13 @@ export class AssetController {
         return {
           success: true,
           status: response['status'],
-          message: response['statusText'],
-          id: response['id'],
+          message: response['statusText']
         }
       }
     } catch (err) {
       return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
+        success: false,
+        message: err
       };
     }
   }

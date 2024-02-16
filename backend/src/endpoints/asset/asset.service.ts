@@ -119,7 +119,7 @@ export class AssetService {
     }
   }
 
-  async setAssetData( data: ImportAssetDto, token: string ) {
+  async setAssetData( data: ImportAssetDto[], token: string ) {
     try {
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -127,14 +127,23 @@ export class AssetService {
         'Accept': 'application/ld+json'
       };
 
-      //store the template data to scorpio
-      const response = await axios.post(this.scorpioUrl, data, {headers});
-      console.log('response ',response.statusText);
+      // sending multiple requests to scorpio to save the asset array
+      let response;
+      try{
+        for (let i = 0; i < data.length; i++) {
+          response = await axios.post(this.scorpioUrl, data[i], {headers});
+        }
+      }
+      catch(err){
+        return {
+          status: 500,
+          statusText: err
+        }
+      }
+      
       return {
-        id: data.id,
         status: response.status,
-        statusText: response.statusText,
-        data: response.data
+        statusText: response.statusText
       }
     } catch (err) {
       throw err;
