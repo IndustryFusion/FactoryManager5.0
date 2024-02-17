@@ -26,8 +26,8 @@ jobs:
           NIGHTLY_DOCKER_TAG=nightly-`date -I`-`date +%s`
           docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
           docker compose build
-          docker tag ${DOCKER_PREFIX}/factory50-backend:${DOCKER_TAG} ${DOCKER_PREFIX}/if50-backend:${NIGHTLY_DOCKER_TAG}
-          docker tag ${DOCKER_PREFIX}/factory50-frontend:${DOCKER_TAG} ${DOCKER_PREFIX}/if50-frontend:${NIGHTLY_DOCKER_TAG}
+          docker tag ${DOCKER_PREFIX}/factory50-backend:${DOCKER_TAG} ${DOCKER_PREFIX}/factory50-backend:${NIGHTLY_DOCKER_TAG}
+          docker tag ${DOCKER_PREFIX}/factory50-frontend:${DOCKER_TAG} ${DOCKER_PREFIX}/factory50-frontend:${NIGHTLY_DOCKER_TAG}
           docker push ${DOCKER_PREFIX}/factory50-backend:${DOCKER_TAG}
           docker push ${DOCKER_PREFIX}/factory50-backend:${NIGHTLY_DOCKER_TAG}
           docker push ${DOCKER_PREFIX}/factory50-frontend:${DOCKER_TAG}
