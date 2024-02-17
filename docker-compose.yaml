@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  if50-backend:
+    image: ${DOCKER_PREFIX:-ibn40}/factory50-backend:${DOCKER_TAG:-latest}
+    build:
+      context: ./backend
+    ports:
+    - "4002:4002"
+  if50-frontend:
+    image: ${DOCKER_PREFIX:-ibn40}/factory50-frontend:${DOCKER_TAG:-latest}
+    build:
+      context: ./frontend
+    ports:
+    - "3002:3002"
