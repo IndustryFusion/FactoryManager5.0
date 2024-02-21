@@ -80,7 +80,7 @@ export class AssetController {
       const token = await getSessionToken(req);
       const response = await this.assetService.updateRelations(data, token);
       console.log(response);
-      if(response['status'] == "200") {
+      if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
           status: response['status'],

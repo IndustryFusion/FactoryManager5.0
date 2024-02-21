@@ -18,31 +18,41 @@ export class ShopFloorController {
       const response = await this.shopFloorService.create(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         try{
-          const data = await this.factorySiteService.findOne(factoryId, token);
-          let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"].object;
-          
-          if(Array.isArray(shopFloorData) && shopFloorData.length > 0)
-            shopFloorData = [...shopFloorData, `${response.id}`];
-          else if(shopFloorData.includes('urn'))
-            shopFloorData = [shopFloorData, `${response.id}`];
-          else 
-          shopFloorData = [`${response.id}`];
-
-          const finalData = {
-            "http://www.industry-fusion.org/schema#hasShopFloor": {
-              type: "Relationship",
-              object: shopFloorData
-            }
+          const headers = {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/ld+json',
+            Accept: 'application/ld+json',
           };
-          const updateResponse = await this.factorySiteService.update(factoryId, finalData, token);
-          if(updateResponse['status'] == 200 || updateResponse['status'] == 204) {
-            return {
-              success: true,
-              status: response['status'],
-              message: 'shop-floor created and added in factory-site successfully',
-              id: response['id']
-            }
-          } 
+          const data = await this.factorySiteService.findOne(factoryId, token);
+          
+          let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
+          let obj = {
+            type: 'Relationship',
+            object: response.id
+          }
+          if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
+            shopFloorData = [...shopFloorData, obj];
+          } else if(shopFloorData.object.includes('urn')) {
+            shopFloorData = [shopFloorData, obj]
+          } else {
+            shopFloorData = [obj];
+          }
+          
+          console.log('after shopfloor data ',shopFloorData)
+          data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
+          const deleteResponse = await this.factorySiteService.remove(factoryId, token);
+          if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+            const response = await axios.post(this.scorpioUrl, data, { headers });
+            console.log('response ',response['status']);
+            if(response['status'] == 200 || response['status'] == 201) {
+              return {
+                success: true,
+                status: response['status'],
+                message: 'shop-floor created and added in factory-site successfully',
+                id: response['id']
+              }
+            } 
+          }
         }
         catch(err){
           return { 
@@ -135,21 +145,43 @@ export class ShopFloorController {
       const token = await getSessionToken(req);
       const response = await this.shopFloorService.remove(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
-        const data = await this.factorySiteService.findOne(factoryId, token);
-        if(data) {
-          let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
-          const updatedShopFloor = shopFloorData.object.filter(item => item !== id); 
-          shopFloorData.object = updatedShopFloor;
-          const finalData = {
-            "http://www.industry-fusion.org/schema#hasShopFloor": shopFloorData
+        try {
+          const headers = {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/ld+json',
+            Accept: 'application/ld+json',
           };
-          const response = await this.factorySiteService.update(factoryId, finalData, token);
-          if(response['status'] == 200 || response['status'] == 204) {
-            return {
-              success: true,
-              status: response['status'],
-              message: 'Deleted shop-floor and Updated factory site successfully',
+          const data = await this.factorySiteService.findOne(factoryId, token);
+          if(data) {
+            let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
+            console.log('shopFloorData ',shopFloorData);
+            console.log('id to be deleted ',id);
+            if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
+              shopFloorData = shopFloorData.filter(item => item.object !== id); 
+            } else if(shopFloorData.object == id) {
+              shopFloorData.object = "";
             }
+            console.log('after shopfloor data ',shopFloorData)
+            data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
+            const deleteResponse = await this.factorySiteService.remove(factoryId, token);
+            if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+              const response = await axios.post(this.scorpioUrl, data, { headers });
+              console.log('response ',response['status']);
+              if(response['status'] == 200 || response['status'] == 201) {
+                return {
+                  success: true,
+                  status: response['status'],
+                  message: 'Deleted shop-floor and Updated factory site successfully',
+                  id: response['id']
+                }
+              } 
+            }
+          }
+        } catch(err) {
+          return { 
+            success: false, 
+            status: err.response.status,
+            message: err.response.data 
           }
         }
       }

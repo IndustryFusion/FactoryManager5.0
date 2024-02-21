@@ -9,18 +9,18 @@ export class ShopFloorAssetsService {
   async findAll(id: string, token: string) {
     try {
       let shopFloorData = await this.shopFloorService.findOne(id, token);
-      let assetIds = shopFloorData["http://www.industry-fusion.org/schema#hasAsset"].object;
+      let assetIds = shopFloorData["http://www.industry-fusion.org/schema#hasAsset"];
       let hasAssetArr = [];
       if(Array.isArray(assetIds) && assetIds.length > 0) {
         for(let i = 0; i < assetIds.length; i++) {
-          let id = assetIds[i];
+          let id = assetIds[i].object;
           if(id.includes('urn')) {
             let assetData = await this.assetService.getAssetDataById(id, token);
             hasAssetArr.push(assetData);
           }
         }
-      } else if(assetIds.includes('urn')) {
-        let assetData = await this.assetService.getAssetDataById(id, token);
+      } else if(assetIds.object.includes('urn')) {
+        let assetData = await this.assetService.getAssetDataById(assetIds.object, token);
         hasAssetArr.push(assetData);
       }
       return hasAssetArr; 
