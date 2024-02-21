@@ -9,13 +9,14 @@ import { Button } from "primereact/button";
 import "../../styles/factory-overview.css";
 import { ConfirmDialog } from "primereact/confirmdialog";
 import { confirmDialog } from "primereact/confirmdialog";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import HorizontalNavbar from "../../components/horizontal-navbar";
 import Footer from "../../components/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
 import { Dialog } from "primereact/dialog";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
+import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -30,7 +31,6 @@ const FactoryOverview = () => {
   const [visible, setVisible] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editFactory, setEditFactory] = useState<string | undefined>("");
-
 
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
@@ -79,9 +79,17 @@ const FactoryOverview = () => {
 
 
   useEffect(() => {
-    fetchFactoryLists();
-    setGlobalFilterValue("");
-  }, [visible]);
+    if (Cookies.get("login_flag") === "false") {
+      router.push("/login");
+    } else {
+      if (router.isReady) {
+        const { } = router.query;
+        fetchFactoryLists();
+        setGlobalFilterValue("");
+      }
+    }
+   
+  }, [visible, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
@@ -186,26 +194,28 @@ const FactoryOverview = () => {
           />
         </span>
       </div>
-      <div>
-          <Button
-            label="Import Assets"
-            onClick={triggerFileInput}
-            className="bg-purple-100 factory-btn"
-            style={{marginRight:"90%"}}
-          />
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: 'none' }} // Hide the file input
-          />
+      <div className="p-3 flex justify-content-end align-items-center"
+                style={{ marginLeft: 'calc(100vw - 50%)' }}>
+        <div className="mr-3">
+            <Button
+              label="Import Assets"
+              onClick={triggerFileInput}
+              className="bg-purple-100 factory-btn"
+            />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: 'none' }} // Hide the file input
+            />
+          </div>
+        <Button
+          label="Create Factory"
+          className="bg-blue-100 factory-btn"
+          onClick={() => setVisible(true)}
+        />
         </div>
-      <Button
-        label="Create Factory"
-        className="bg-blue-100 factory-btn"
-        onClick={() => setVisible(true)}
-      />
-    </div>
+      </div>  
   );
 
   // Confirm deletion dialog

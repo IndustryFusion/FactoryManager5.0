@@ -135,7 +135,7 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ setMachineStateProp}) =
             }
         ];
         try {
-            const response = await axios.get(API_URL + `/factory-manager`, {
+            const response = await axios.get(API_URL + `/pgrest`, {
                 params: {
                     // date: new Date(),
                     limit: 20,

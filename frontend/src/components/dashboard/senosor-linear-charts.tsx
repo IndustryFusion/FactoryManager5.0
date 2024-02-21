@@ -125,7 +125,7 @@ const CombineSensorChart: React.FC = () => {
     const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
     const limit = calculateLimit(selectedInterval); // Calculate dynamic limit
     try {
-      const response = await axios.get(`${API_URL}/factory-manager`, {
+      const response = await axios.get(`${API_URL}/pgrest`, {
         params: {
           limit,
           order: "observedAt.desc",
