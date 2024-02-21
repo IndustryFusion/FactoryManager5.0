@@ -13,4 +13,13 @@ export class AlertsController {
       throw new Error("Alerta error " + err);
     }
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    try {
+      return this.alertsService.findOne(id);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
 }

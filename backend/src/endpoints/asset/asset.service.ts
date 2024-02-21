@@ -171,26 +171,51 @@ export class AssetService {
 
   async updateRelations(data, token: string) {
     try {
-      for(let key in data) {
-        let assetData = data[key];
-        console.log(assetData);
-        let finalObj = {};
-        for(let relationKey in assetData) {
-          console.log(relationKey);
-          let finalKey = "http://www.industry-fusion.org/schema#" + relationKey;
-          finalObj[finalKey] = {
-            "type": "Relationship",
-            "object": assetData[relationKey]
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        Accept: 'application/ld+json',
+      };
+      const responses = [];
+      for (let key in data) {
+        const assetData = await this.getAssetDataById(key, token);
+        let relationData = data[key];
+        for (let relationKey in relationData) {
+          let finalKey = 'http://www.industry-fusion.org/schema#' + relationKey;
+          assetData[finalKey] = [];
+          let relationArray = relationData[relationKey];
+          for (let i = 0; i < relationArray.length; i++) {
+            assetData[finalKey].push({
+              type: 'Relationship',
+              object: relationArray[i],
+            });
           }
-          console.log(finalObj);
         }
-        await this.updateAssetById(key, finalObj, token);
+        console.log('assetData ', assetData);
+
+        const deleteResponse = await this.deleteAssetById(key, token);
+        console.log('deleteResponse ', deleteResponse);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+          const response = await axios.post(this.scorpioUrl, assetData, { headers });
+          console.log('create response ', response);
+          responses.push(response);
+        } 
       }
-      return {
-        status: "200",
-        message: "Successfully updated relationships of assets"
+
+      if (responses.length === Object.keys(data).length) {
+        return {
+          success: true,
+          status: 204,
+          message: 'All updates were successful',
+        };
+      } else {
+        return {
+          success: false,
+          status: 500,
+          message: 'Some updates failed',
+        };
       }
-    }catch(err) {
+    } catch (err) {
       throw err;
     }
   }

@@ -37,4 +37,20 @@ export class AlertsService {
     }
   }
 
+  async findOne(id: string) {
+    try {
+      const headers = {
+        Authorization: 'Key ' + this.alertaKey,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      let url = this.alertaUrl + '/alerts?resource=' + id;
+      console.log('url ',url);
+      const response = await axios.get(url, {headers});
+      return response.data;
+    } catch (err) {
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+
 }

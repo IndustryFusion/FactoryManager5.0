@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+import { MongooseModule } from '@nestjs/mongoose';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -22,9 +24,21 @@ import { ShopFloorAssetsService } from './endpoints/shop-floor-assets/shop-floor
 import { ShopFloorService } from './endpoints/shop-floor/shop-floor.service';
 import { NonShopFloorAssetsService } from './endpoints/non-shop-floor-assets/non-shop-floor-assets.service';
 import { FileService } from './endpoints/file/file.service';
+import { FactorySiteSchema, FactorySite } from './endpoints/schemas/factory-site.schema';
+import { ReactFlowController } from './endpoints/react-flow/react-flow.controller';
+import { ReactFlowService } from './endpoints/react-flow/react-flow.service';
+dotenv.config();
+const mongoURI = process.env.MONGO_URL;
+console.log('mongoURI ',mongoURI)
+console.log('FactorySite ',FactorySite)
 
 @Module({
-  imports: [],
+  imports: [
+    MongooseModule.forRoot(mongoURI),
+    MongooseModule.forFeature([
+      { name: FactorySite.name, schema: FactorySiteSchema },
+    ]),
+  ],
   controllers: [
     AppController,
     AuthController,
@@ -37,7 +51,8 @@ import { FileService } from './endpoints/file/file.service';
     ShopFloorAssetsController,
     ShopFloorController,
     NonShopFloorAssetsController,
-    FileController
+    FileController,
+    ReactFlowController
   ],
   providers: [
     AppService,
@@ -51,7 +66,8 @@ import { FileService } from './endpoints/file/file.service';
     ShopFloorAssetsService,
     ShopFloorService,
     NonShopFloorAssetsService,
-    FileService
+    FileService,
+    ReactFlowService
   ]
 })
 export class AppModule {
