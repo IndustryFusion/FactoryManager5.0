@@ -17,7 +17,7 @@ RUN npm install
 COPY . .
 
 # Open the desired port
-EXPOSE 3002
+EXPOSE 3000
 
 # Run the web service on container startup.
 CMD ["npm", "run", "dev"]

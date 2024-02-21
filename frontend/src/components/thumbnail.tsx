@@ -11,7 +11,6 @@ interface HeaderTemplateOptions {
     uploadButton: JSX.Element;
     cancelButton: JSX.Element;
 }
-
 interface ButtonOptions {
     icon: string;
     iconOnly: boolean;
@@ -24,6 +23,9 @@ interface ThumbnailProps {
     setUploadedFileNameProp: React.Dispatch<React.SetStateAction<string>>;
     uploadingProp: boolean;
     uploadedFileNameProp: string;
+    isEditProp?: boolean;
+    fileProp?: string;
+    setIsEditProp?: React.Dispatch<React.SetStateAction<boolean>> | undefined;
 }
 
 
@@ -35,10 +37,23 @@ const Thumbnail: React.FC<ThumbnailProps> = (
         setUploadedFileNameProp,
         uploadingProp,
         uploadedFileNameProp,
+        isEditProp,
+        setIsEditProp,
+        fileProp
     }
 
 ) => {
 
+    console.log("edit prop", isEditProp);
+    console.log("file name", fileProp);
+    
+    let value = fileProp;
+    if (value && (typeof value == 'string') && (value.includes('png') || value.includes('jpg') || value.includes('jpeg') || value.includes('.pdf'))) {
+      value = value.split('/').pop();
+    }
+   
+    
+    
 
     const headerTemplate = (options: HeaderTemplateOptions) => {
         const { className, chooseButton, uploadButton, cancelButton } = options;
@@ -58,6 +73,9 @@ const Thumbnail: React.FC<ThumbnailProps> = (
     };
 
     const itemTemplate = (file: any, props: any) => {
+        if (setIsEditProp) {
+            setIsEditProp(false);
+        }
         return (
             <div className="flex align-items-center flex-wrap">
                 <div className="flex align-items-center" style={{ width: '70%' }}>
@@ -75,11 +93,17 @@ const Thumbnail: React.FC<ThumbnailProps> = (
         );
     };
 
+   
+
     const emptyTemplate = () => {
         return (
             <div className="flex align-items-center flex-column">
-                <i className="pi pi-image mt-3 p-5" style={{ fontSize: '5em', borderRadius: '50%', backgroundColor: 'var(--surface-b)', color: 'var(--surface-d)' }}></i>
-                <span style={{ fontSize: '1.2em', color: 'var(--text-color-secondary)' }} className="my-5">
+                <img 
+                    src={'https://iff-dev.s3-eu-central-1.ionoscloud.com/file-1708002371615-146731380.png'}  
+                    className="factory-image mt-4 border-round" 
+                    style={{height:"60px", width:"60px"}}
+                />
+                <span style={{ fontSize: '12px',fontWeight:"bold", fontFamily: "Comic Sans MS",color: 'var(--text-color-secondary)' }} className="my-3">
                     Drag and Drop Image Here
                 </span>
             </div>
@@ -104,12 +128,29 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 multiple={false}
                 customUpload={true}
                 accept="image/*"
+                maxFileSize={1000000}
                 uploadHandler={handleFileUploadProp}
-                headerTemplate={headerTemplate} itemTemplate={itemTemplate}
-                emptyTemplate={emptyTemplate}
+                headerTemplate={headerTemplate} itemTemplate={ itemTemplate}
+                emptyTemplate={!isEditProp && emptyTemplate}
                 chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions}
                 onClear={() => setUploadedFileNameProp("")}
             />
+            {isEditProp && setIsEditProp && 
+             <div className=" align-items-center flex-wrap edit-thumbnail-container" style={{display: isEditProp? "flex": "none" }}>
+             <div className="flex align-items-center" style={{ width: '70%' }}>
+                 <img alt={'file.name'} className="edit-thumbnail-image" role="presentation" src={fileProp} width={100} />
+                 <span className="flex flex-column text-left ml-3">
+                     {value}
+                 </span>
+                 </div>
+                 <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto"                
+                     onClick={
+                      ()=>  setIsEditProp(false) 
+                     }
+                 />
+             
+             </div>
+            }
             {uploadingProp && (
                 <ProgressBar mode="indeterminate" style={{ marginTop: "2rem", height: '6px' }} />
             )}

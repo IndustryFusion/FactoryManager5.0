@@ -4,7 +4,7 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Toast } from "primereact/toast";
 import authService from "@/auth/authService";
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "primeflex/primeflex.css";
 import { Password } from 'primereact/password';
@@ -96,11 +96,6 @@ const Login: React.FC = () => {
   }
   };
 
-  const handleReset = () => {
-    setPassword('');
-    setUsername('');
-  };
-  
   //Function to get tooltip error message for username
   const getUsernameTooltip = (): string | undefined => {
     if (!usernameValid && username) {
@@ -164,7 +159,7 @@ const Login: React.FC = () => {
           <div className="flex" style={{marginTop:"3rem", marginLeft:"9rem"}}>
           <Button
             label="Cancel"
-            onClick={handleReset}
+            onClick={handleLogin}
             text raised
             severity="secondary"
             style={{width:"6rem"}}

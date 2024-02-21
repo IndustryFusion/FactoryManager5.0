@@ -33,7 +33,8 @@ const login = async (username: string, password: string): Promise<LoginResponse>
         if (response.data) 
         {
             // Securely store tokens in cookies
-            Cookies.set('login_flag', "true", { expires: 86400 });
+            Cookies.set('access_token', response.data.access_token, { expires: 86400, secure: true, httpOnly: true, sameSite: 'Strict' });
+            Cookies.set('refresh_token', response.data.refresh_token, { expires: 86400, secure: true, httpOnly: true, sameSite: 'Strict' });
         }
         return response.data;
     } catch (error: any) {

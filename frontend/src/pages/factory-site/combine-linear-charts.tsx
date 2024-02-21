@@ -218,7 +218,7 @@ const CombineChart: React.FC = () => {
   };
   useEffect(() => {
     const fetchDataAndAssign = async () => {
-      let entityId = "urn:ngsi-ld:asset:2:101";
+      let entityId = "urn:ngsi-ld:asset:2:602";
       let attributeIds = await fetchAsset(entityId);
       if (attributeIds && attributeIds.length > 0) {
         const chartData: ChartDataState = { labels: [], datasets: [] };

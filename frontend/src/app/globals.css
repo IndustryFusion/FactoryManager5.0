@@ -1,47 +1,75 @@
-
-body {
-  min-height: 100vh;
-  height: 100%;
- 
-}
-
 /* globals.css */
 .custom-input .p-inputtext {
-border-color: #6f6f72 !important;
+  border-color: #6f6f72 !important;
 
 }
 
 /* login primary button when all fields are okay*/
 .p-button-primary {
-background-color: #00308f;
-border-color: #00308f;
-color: white;
+  background-color: #00308f;
+  border-color: #00308f;
+  color: white;
 
-padding: 1%;
+  padding: 1%;
 }
 
 /*login disabled button */
 .p-button-secondary[disabled] {
-background-color: grey;
-border-color: grey;
-color: white;
+  background-color: grey;
+  border-color: grey;
+  color: white;
 
-padding: 1%;
+  padding: 1%;
 }
 
 ul li {
-list-style: none;
+  list-style: none;
 }
 
 .footer-container {
-text-align: center;
-position: fixed;
-left: 0;
-bottom: 0;
-width: 100%;
-background-color: #000;
-color: #fff;
-z-index: 1000;
-padding: 10px;
-box-shadow: rgba(229, 222, 222, 0.2) 0px 2px 8px 0px;
+  text-align: center;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #000;
+  color: #fff;
+  box-shadow: rgba(229, 222, 222, 0.2) 0px 2px 8px 0px;
+  height: 55px;
+  zoom: 80%;
 }
+.alert-dialog{
+  padding: 1rem;
+  padding-top: 0;
+}
+
+.alerts-container p{
+margin: 0;
+margin-bottom: 7px;
+font-size: 14px;
+}
+.pi-bell:before {
+  content: "\e97c";
+  color: #615e5e;
+}
+.p-badge {
+  background: #007bff;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 1.2rem;
+  height: 1.2rem;
+  min-width: 0;
+  line-height: 16px;
+}
+.p-badge.active{
+  background: #d50202;
+}
+
+
+
+
+
+
+
+

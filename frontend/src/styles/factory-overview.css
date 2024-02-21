@@ -13,8 +13,8 @@
 }
 
 .factory-image {
-  width: 145px;
-  height: 145px;
+  width: 115px;
+  height: 115px;
   margin-left: 0.5rem;
 }
 
@@ -22,14 +22,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 86%;
+ 
 }
 
 .card {
   background: #ffffff;
   border: 1px solid #dfe7ef;
   border-radius: 12px !important;
-  padding: 10px;
+  padding: 0.5rem 1.2rem 1rem 1.2rem;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 2px 0px;
   width: 100%;
 }
@@ -43,7 +43,7 @@
   width: 100%;
   gap: 1.5rem;
   margin-top: 1.2rem;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -69,7 +69,9 @@
 }
 
 .card-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  letter-spacing: 0.4px;
 }
 
 .factory-btn {
@@ -85,17 +87,17 @@
   border: none;
 }
 
-.factory-card-content {
+/* .factory-card-content {
   height: 180px;
   justify-content: space-between;
-}
+} */
 
 .zip-text {
   margin-left: 1.3rem;
 }
 
 .p-button.p-button-sm .p-button-icon {
-  font-size: 17px;
+  font-size: 15px;
 
 }
 
@@ -139,29 +141,25 @@
   margin-right: 2rem;
 }
 .address-text{
-  margin-top: 1.5rem;
+  /* margin-top: 1.5rem; */
   font-size: 14.6px;
   letter-spacing: 0.1px;
 }
 .image-container{
-  flex: 40%;
+  flex: 30%;
 }
 .factory-text-container{
-flex: 40%;
+flex: 70%;
 margin-top: 8px;
 }
 
 
 
-
-
-
-
 @media only screen and (min-width: 1440px) and (max-width: 1800px) {
-  .factory-image {
+  /* .factory-image {
     width: 135px;
     height: 135px;
-  }
+  } */
 
   .card-title {
     font-size: 1rem;

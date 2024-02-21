@@ -1,3 +1,4 @@
+
 import {AppProps} from "next/app"
 import "primereact/resources/primereact.min.css";
 import "primeflex/primeflex.css";

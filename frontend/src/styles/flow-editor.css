@@ -1,0 +1,9 @@
+.react-flow__node .selected {
+    box-shadow: 50px;
+    border: none;
+}
+
+.react-flow__nodesselection {
+    box-shadow: 50px;
+    border: none;
+}

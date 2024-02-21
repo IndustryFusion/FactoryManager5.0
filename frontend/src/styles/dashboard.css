@@ -1,8 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+
+.dashboard-container,
+.dashboard-assets {
+    font-family: "Inter", sans-serif !important;
+}
+
 .card {
     background: #ffffff;
     border: 1px solid #dfe7ef;
     border-radius: 12px !important;
     padding: 1rem;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 2px 0px;
 }
 
 .heading-text {
@@ -13,25 +22,53 @@
 .relation-text {
     padding: 4px;
     font-size: 14px;
-    padding-top: 7px;
+    padding-top: 4px;
 }
 
 .active-state {
-    background-color: #9cfbbbed; 
+    background-color: #9cfbbcf6;
 }
 
 .inactive-state {
-    background-color: #ee0c0c42;;
+    background-color: #ee0c0c42;
+    ;
 }
 
-.active-icon {
-    width: 25px;
-    height: 25px;
-    color: #166020de;
+.active-icon.pi-shopping-cart:before {
+    color: #24a034c4;
 }
 
-.inactive-icon {
-    width: 25px;
-    height: 25px;
+.inactive-icon.pi-shopping-cart:before {
     color: #ff0000;
+}
+
+.dashboard-card-container {
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 5rem;
+}
+
+.dashboard-card {
+    width: 450px;
+}
+.finish-btn{
+    display: flex;
+    justify-content: flex-end;
+}
+.p-dialog .p-dialog-header {
+    border-bottom: none;
+    padding: 0.5rem;
+}
+@media screen and (min-width: 1550px){
+    .chart-content,
+    .assets-content{
+        width: 34.4%
+    }
+    }
+
+@media (min-width: 1200px) and (max-width: 1550px){
+.chart-content,
+.assets-content{
+    width: 43.4%
+}
 }

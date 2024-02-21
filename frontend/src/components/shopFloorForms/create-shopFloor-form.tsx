@@ -1,21 +1,29 @@
 import axios from "axios"
 import { useEffect, useState, ChangeEvent, useRef } from "react";
-import { Property, Schema } from "./types/factory-form";
+import { Property, Schema } from "../../pages/factory-site/types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
-import { ShopFloor } from "./types/shop-floor-form";
+import { ShopFloor } from "../../pages/factory-site/types/shop-floor-form";
 import { handleUpload } from "@/utility/factory-site-utility";
 import { Toast } from "primereact/toast";
 import "../../styles/factory-form.css"
 import Thumbnail from "@/components/thumbnail";
+import { Dialog } from "primereact/dialog";
 
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const ShopFloorForm = () => {
+interface CreateShopFloorProps {
+    isVisibleProp: boolean,
+    setIsVisibleProp: React.Dispatch<React.SetStateAction<boolean>>;
+    factoryId: string
+}
+
+
+const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisibleProp, factoryId })=>{
     const [shopFloorTemplate, setShopFloorTemplate] = useState<Schema | null>(null);
     const [uploading, setUploading] = useState<boolean>(false);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
@@ -30,7 +38,6 @@ const ShopFloorForm = () => {
         }
     );
     const toast = useRef<Toast | null>(null);
-
 
     useEffect(() => {
         findShopFloorTemplate()
@@ -116,7 +123,7 @@ const ShopFloorForm = () => {
             $id: `${shopFloorTemplate?.$id}`,
             title: `${shopFloorTemplate?.title}`,
             description: `${shopFloorTemplate?.description}`,
-            type: `${shopFloorTemplate?.type}`,
+            type: `${shopFloorTemplate?.$id}`,
             properties: {
                 floor_name: shopFloor.floor_name,
                 description: shopFloor.description,
@@ -127,7 +134,6 @@ const ShopFloorForm = () => {
         }
 
         console.log("what's the payload", payload);
-        const factoryId = "urn:ngsi-ld:factories:2:113"
 
         try {
             const response = await axios.post(API_URL + '/shop-floor', payload, {
@@ -145,6 +151,7 @@ const ShopFloorForm = () => {
             const shopFloorResponse = response.data;
             if (shopFloorResponse.status === 201) {
                 showSuccess();
+                // setIsVisibleProp(false);
             } else {
                 showError();
             }
@@ -238,12 +245,38 @@ const ShopFloorForm = () => {
         )
     }
 
+    const footerContent =(
+        <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
+        <Button
+            label="Cancel"
+            severity="danger" outlined
+            className="mr-2"
+            type="button"
+          onClick={()=> setIsVisibleProp(false)}
+        />
+        <Button
+            severity="secondary" text raised
+            label="Reset"
+            className="mr-2"
+            type="button"
+            onClick={handleReset}
+        />
+        <Button
+            label="Submit"
+            onClick={handleSave}
+            className="border-none  ml-2 mr-2"
+        />
+    </div>
+    )
+
     return (
-        <div style={{ marginBottom: "6rem" }}>
+        <div className="card flex justify-content-center">
+        <Button label="Show" icon="pi pi-external-link" onClick={() => setIsVisibleProp(true)} />
+        <Dialog visible={isVisibleProp} modal footer={footerContent} style={{ width: '50rem' }} onHide={() => setIsVisibleProp(false)}>
             <Toast ref={toast} />
             <div className="p-fluid p-formgrid p-grid ">
-                <Card className="factory-form-container mt-4 center-button-container p-0">
-                    <h2>Shop Floor</h2>
+            <h2 className="form-title">Shop Floor</h2>
+                <Card className="factory-form-container mt-4 center-button-container ">                  
                     {
                         shopFloorTemplate &&
                         shopFloorTemplate?.properties &&
@@ -252,31 +285,12 @@ const ShopFloorForm = () => {
                         )
                     }
                 </Card>
-
             </div>
-            <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
-                <Button
-                    label="Cancel"
-                    severity="danger" outlined
-                    className="mr-2"
-                    type="button"
-                //   onClick={handleCancel}
-                />
-                <Button
-                    severity="secondary" text raised
-                    label="Reset"
-                    className="mr-2"
-                    type="button"
-                    onClick={handleReset}
-                />
-                <Button
-                    label="Submit"
-                    onClick={handleSave}
-                    className="border-none  ml-2 mr-2"
-                />
+            </Dialog>          
             </div>
-        </div>
     )
+    
+
 }
 
-export default ShopFloorForm;
+export default CreateShopFloor;

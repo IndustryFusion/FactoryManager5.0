@@ -1,7 +1,7 @@
 import { MdLocationOn } from "react-icons/md";
 import { Factory } from "@/interfaces/factoryType";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
@@ -11,7 +11,11 @@ import { ConfirmDialog } from "primereact/confirmdialog";
 import { confirmDialog } from "primereact/confirmdialog";
 import { useRouter } from "next/navigation";
 import HorizontalNavbar from "../../components/horizontal-navbar";
+import Footer from "../../components/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
+import { Dialog } from "primereact/dialog";
+import CreateFactory from "@/components/factoryForms/create-factory-form";
+import EditFactory from "@/components/factoryForms/edit-factory-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -23,6 +27,10 @@ const FactoryOverview = () => {
   const [sortField, setSortField] = useState("");
   const [globalFilterValue, setGlobalFilterValue] = useState("");
   const [filteredValue, setFilteredValue] = useState<Factory[] | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editFactory, setEditFactory] = useState<string | undefined>("");
+
 
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
@@ -59,6 +67,8 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       const responseData = response.data;
+      console.log("factory data", responseData);
+
       const mappedData = mapBackendDataToFactoryLists(responseData);
       setFactorySite(mappedData);
       console.log(mappedData, "factory response here");
@@ -67,10 +77,11 @@ const FactoryOverview = () => {
     }
   };
 
+
   useEffect(() => {
     fetchFactoryLists();
     setGlobalFilterValue("");
-  }, []);
+  }, [visible]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
@@ -86,6 +97,55 @@ const FactoryOverview = () => {
     }
   };
 
+  const fileInputRef = useRef(null);
+  const triggerFileInput = () => {
+    // Trigger the hidden file input onClick of the button
+    if (fileInputRef.current != null) {
+      fileInputRef.current.click();
+    }
+  };
+
+  async function createAssets(body: any) {
+    try {
+      const response = await axios.post(API_URL + "/asset", body, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+      console.log(response);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
+  const handleFileChange = (event: { target: { files: any; }; }) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+      // Assuming createAssets is a function that takes the selected file
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          // e.target.result contains the file's content as a text string
+          try {
+            const json = JSON.parse(e.target.result); // Parse the JSON string into an object
+            createAssets(JSON.stringify(json)); // Call createAssets with the parsed JSON data
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+          }
+        };
+
+        reader.onerror = function(error) {
+          console.error('Error reading file:', error);
+        };
+
+        reader.readAsText(files[i]); 
+      };
+    }
+  };
+
   const onFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGlobalFilterValue(value);
@@ -96,7 +156,7 @@ const FactoryOverview = () => {
         value.length > 0
           ? factorySite?.filter((factory) => {
             return (
-              factory.factory_name
+              factory?.factory_name
                 .toLowerCase()
                 .includes(value.toLowerCase()) ||
               factory?.country?.toLowerCase().includes(value.toLowerCase())
@@ -126,10 +186,24 @@ const FactoryOverview = () => {
           />
         </span>
       </div>
+      <div>
+          <Button
+            label="Import Assets"
+            onClick={triggerFileInput}
+            className="bg-purple-100 factory-btn"
+            style={{marginRight:"90%"}}
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: 'none' }} // Hide the file input
+          />
+        </div>
       <Button
         label="Create Factory"
         className="bg-blue-100 factory-btn"
-        onClick={() => router.push("/factory-site/create")}
+        onClick={() => setVisible(true)}
       />
     </div>
   );
@@ -159,25 +233,14 @@ const FactoryOverview = () => {
   const itemTemplate = (data: Factory) => {
     return (
       <>
-        
-        <div className="col-12 lg:col-3 pt-2 factory-overview" 
-        style={{ backgroundColor: "#f1f1f13d", padding: "1rem" }}>
-          <div className="card  border-1 surface-border">
+        <div className="col-12 lg:col-3 pt-2 factory-overview "
+          style={{ padding: " 0 1rem" }}>
+          <div className="card  border-1 surface-border mt-4">
             <div className="flex gap-2 mb-3">
-              <div className="image-container" >
-                <div >
-                  <img
-                    src={`${data.thumbnail}`}
-                    alt={data.factory_name}
-                    className=" factory-image shadow-2 mt-3  border-round "
-                  />
-                </div>
-
-              </div>
               <div className="factory-text-container">
                 <div className="flex flex-column factory-card-content">
                   <div>
-                    <p className="card-title font-bold mt-2 mb-3 capitalize">
+                    <p className="card-title font-bold mt-2  capitalize">
                       {data.factory_name}
                     </p>
                   </div>
@@ -192,24 +255,39 @@ const FactoryOverview = () => {
                   </div>
                 </div>
               </div>
+              <div className="image-container" >
+                <div >
+                  <img
+                    src={`${data.thumbnail}`}
+                    alt={data.factory_name}
+                    className=" factory-image shadow-2 mt-3  border-round "
+                  />
+                </div>
+
+              </div>
+
             </div>
 
             <div className="action-btn-container">
               <Button
                 icon="pi pi-eye"
-                className="p-button-rounded p-button-secondary p-button-sm view-btn"              
+                className="p-button-rounded p-button-secondary p-button-sm view-btn"
                 onClick={() =>
                   router.push(`/factory-site/shop-floor/${data.id}`)
                 }
               />
               <Button
                 icon="pi pi-pencil"
-                className="p-button-rounded p-button-secondary p-button-sm edit-btn"               
-                onClick={() => router.push(`/factory-site/${data.id}`)}
+                className="p-button-rounded p-button-secondary p-button-sm edit-btn"
+                onClick={() => {
+                  setEditFactory(data.id);
+                  setIsEdit(true)
+                }
+                }
               />
               <Button
                 icon="pi pi-trash"
-                className="p-button-rounded p-button-secondary p-button-sm delete-btn"                
+                className="p-button-rounded p-button-secondary p-button-sm delete-btn"
                 onClick={() => confirmDeleteFactory(data)}
               />
             </div>
@@ -220,10 +298,12 @@ const FactoryOverview = () => {
     );
   };
 
+
+
   return (
     <>
     <HorizontalNavbar />
-      <div className="grid py-1 px-2 factory-overview "  style={{zoom:"80%"}}>
+      <div className="grid py-1 px-2 factory-overview " style={{zoom:"80%"}} >
         <div className="col-12">
           <ConfirmDialog />
           <div className="">
@@ -238,6 +318,20 @@ const FactoryOverview = () => {
           </div>
         </div>
       </div>
+      {visible &&
+        <CreateFactory
+          visibleProp={visible}
+          setVisibleProp={setVisible}
+        />
+      }
+      {isEdit &&
+        <EditFactory
+          factory={editFactory}
+          isEditProp={isEdit}
+          setIsEditProp={setIsEdit}
+        />
+      }
+      <Footer />
     </>
   );
 };

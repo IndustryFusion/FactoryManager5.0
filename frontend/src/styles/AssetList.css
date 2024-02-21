@@ -1,0 +1,27 @@
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  cursor: pointer;
+  padding: 5px;
+  transition: background-color 0.3s;
+  font-size: 1.2em;
+}
+
+li:hover,
+.selected {
+  background-color: #e0e0e0;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.hr {
+  color: black;
+}

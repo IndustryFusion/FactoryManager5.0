@@ -1,0 +1,4 @@
+.custom-listbox .p-listbox-item.p-highlight {
+    color: inherit; 
+    background-color: transparent; 
+}

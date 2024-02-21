@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "$id": "https://industry-fusion.org/types/v0.1/factorySite",
+  "title": "Factory Sites",
+  "description": "Factory Site template for Fusion App",
+  "type": "https://industry-fusion.org/types/v0.1/factorySite",
+  "properties": {
+    "factory_name": {
+      "type": "string",
+      "title": "Factory Name",
+      "description": "Name of the factory"
+    },
+    "street": {
+      "type": "string",
+      "title": "Street",
+      "description": "Street Address"
+    },
+    "zip": {
+      "type": "string",
+      "title": "ZIP",
+      "description": "ZIP Code"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country",
+      "description": "Country location"
+    },
+    "thumbnail": {
+      "type": "object",
+      "title": "Thumbnail",
+      "contentEncoding": "base64",
+      "contentMediaType": "image/png",
+      "description": "Photo of the factory"
+    },
+
+    "hasShopFloor": {
+      "relationship": "https://industry-fusion.org/types/v0.1/shopFloor",
+      "$ref": "shop-floor-schema.json"
+    }
+  }
+}

@@ -1,7 +1,8 @@
 import axios from "axios";
 import { Factory } from "@/interfaces/factoryType";
 import { Asset } from "@/interfaces/assetTypes";
-
+import { MdQueryBuilder } from "react-icons/md";
+import html2canvas from "html2canvas";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -10,6 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
  * @returns {Promise<string>} The URL of the uploaded file on success.
  * @throws {Error} Throws an error if the upload fails.
  */
+
 export const handleUpload = async (file: File): Promise<string> => {
   const uploadData = new FormData();
   uploadData.append("file", file);
@@ -230,28 +232,28 @@ export const getShopFloors = async (factoryId: string) => {
     withCredentials: true,
   });
   const mappedData = flattenData(response.data);
-  console.log(mappedData, "   shopFloor list");
+
   return mappedData;
 };
 
 export const getshopFloorById = async (factoryId: string) => {
-  const response = await axios.get(`${API_URL}/shop-floor/${factoryId}`, {
+  const response = await axios.get(`${API_URL}/shop-floor/`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     withCredentials: true,
+
+    params: { id: factoryId },
   });
 
   const mappedData1 = flattenData(response.data);
-
-  console.log(mappedData1, "  tthe  factory details ");
-  return mappedData1;
+  console.log(response.data, "TTTTT");
+  return response.data;
 };
 
 export const getNonShopFloorAsset = async (factoryId: string) => {
   try {
-    console.log("non shop floor Items Id  ", factoryId);
     const response = await axios.get(
       `${API_URL}/non-shop-floor-assets/${factoryId}`,
       {
@@ -263,9 +265,8 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
       }
     );
     console.log(response.data, "the before filter data");
-    const mappedData = flattenData(response.data);
-    console.log(mappedData, "  non shop floor items ");
-    return mappedData;
+
+    return response.data;
   } catch (error) {
     console.error("Error fetching non-shop-floor assets", error);
 
@@ -275,7 +276,6 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
 
 export const getNonShopFloorAssetDetails = async (assetId: string) => {
   try {
-    console.log("non shop floor Items Id  ");
     const response = await axios.get(`${API_URL}/asset/${assetId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -283,10 +283,9 @@ export const getNonShopFloorAssetDetails = async (assetId: string) => {
       },
       withCredentials: true,
     });
-    console.log(response.data, "the before filter data");
-    const mappedData = flattenData(response.data);
-    console.log(mappedData, "  non shop floor items ");
-    return mappedData;
+
+    console.log(response.data, "  non shop floor items ");
+    return response.data;
   } catch (error) {
     console.error("Error fetching non-shop-floor assets", error);
 
@@ -327,4 +326,200 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     });
     return newItem;
   });
+};
+
+export const exportElementToJPEG = async (
+  element: any,
+  filename = "download.jpeg"
+) => {
+  if (!element) {
+    console.error("Element not provided for export");
+    return;
+  }
+
+  try {
+    // html2canvas to take a screenshot of the element
+    const canvas = await html2canvas(element, {});
+    const image = canvas.toDataURL("image/jpeg");
+
+    // Create a temporary link element to trigger the download
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = filename;
+
+    // Append the link to the document, trigger the download, then remove the link
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log("Export successful");
+  } catch (error) {
+    console.error("Error exporting element to JPEG:", error);
+  }
+};
+
+export const checkShopFloorsForSaveDisable = (
+  currentShopFloors: string[],
+  backendShopFloors: string[]
+): boolean => {
+  return currentShopFloors.every((shopFloor) =>
+    backendShopFloors.includes(shopFloor)
+  );
+};
+
+export const fetchAndDetermineSaveState = async (
+  factoryId: string,
+  nodes: any[],
+  setIsSaveDisabled: React.Dispatch<React.SetStateAction<boolean>>,
+  API_URL: any
+) => {
+  try {
+    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+
+    if (response.data && response.data.factoryData) {
+      const factoryNode = response.data.factoryData.nodes.find(
+        (node: any) => node.type && node.type.hasShopFloor
+      );
+      const backendShopFloors = factoryNode?.type?.hasShopFloor?.object || [];
+
+      const currentShopFloors = nodes
+        .filter((node) => node.data.type === "shopFloor")
+        .map((node) => node.data.id);
+
+      const disableSave = currentShopFloors.some((sf) =>
+        backendShopFloors.includes(sf)
+      );
+
+      setIsSaveDisabled(disableSave);
+    }
+  } catch (error) {
+    console.error("Error fetching factory data:", error);
+  }
+};
+
+export async function deleteShopFloorById(
+  shopFloorId: string,
+  factoryId: string
+): Promise<void> {
+  try {
+    await axios.delete(`${API_URL}/shop-floor/${shopFloorId}`, {
+      params: {
+        "factory-id": factoryId,
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+  } catch (error) {
+    throw new Error("Failed to delete shop floor");
+  }
+}
+
+export async function getShopFloorAndAssetData(factoryId: string) {
+  try {
+    const factoryDataResponse = await axios.get(
+      `${API_URL}/factory-site/${factoryId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+    const factoryData = factoryDataResponse.data;
+    const shopFloorId =
+      factoryData["http://www.industry-fusion.org/schema#hasShopFloor"]?.object;
+
+    const shopFloorDataResponse = await axios.get(
+      `${API_URL}/shop-floor/${shopFloorId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+    const shopFloorData = shopFloorDataResponse.data;
+
+    // Normalize the assetId to always be an array
+    let assetIds =
+      shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]?.object;
+    assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
+
+    let assetsData = [];
+    if (assetIds && assetIds.length > 0) {
+      // Fetch data for all assetIds
+      const assetDataPromises = assetIds.map((assetId: any) =>
+        axios.get(`${API_URL}/asset/${assetId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        })
+      );
+      const assetsResponses = await Promise.all(assetDataPromises);
+      assetsData = assetsResponses.map((response) => response.data);
+    }
+
+    return { shopFloorId, assetIds, assetsData };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+
+export function extractHasRelations(assetData: any): { [key: string]: any } {
+  const hasRelations: { [key: string]: any } = {};
+  const prefixToRemove = "http://www.industry-fusion.org/schema#";
+
+  assetData = assetData || {};
+
+  Object.entries(assetData).forEach(([key, value]) => {
+    if (key.startsWith(prefixToRemove)) {
+      if (value && typeof value === "object" && value.type === "Relationship") {
+        const relationshipDetail: any = {
+          type: value.type,
+          object: value.object,
+        };
+
+        // Remove the prefix from the key
+        const cleanedKey = key.replace(prefixToRemove, "");
+        hasRelations[cleanedKey] = relationshipDetail;
+      }
+    }
+  });
+
+  return hasRelations;
+}
+
+export const saveFlowchartData = async (
+  factoryId: string,
+  nodes: any,
+  edges: any
+) => {
+  const payload = {};
+  try {
+    const response = await axios.post(`${API_URL}/react-flow`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error saving flowchart:", error);
+    throw error;
+  }
 };

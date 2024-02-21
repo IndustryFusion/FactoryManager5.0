@@ -1,11 +1,11 @@
 export interface Factory {
-  factory_name: string;
-  street: string;
-  zip: number | null;
-  country: string | null;
-  thumbnail: string | null;
+  factory_name?: string;
+  street?: string;
+  zip?: number | null;
+  country?: string | null;
+  thumbnail?: string | null;
   hasShopFloor?: {} | null;
-  id?: string;
+  id?: string | undefined;
   $schema?: any;
   title?: any;
   $id?: any;
@@ -13,8 +13,10 @@ export interface Factory {
 }
 
 export interface FactoryFormProps {
-  onSave: (data: Factory) => void;
+  onSave?: (data: Factory) => void;
   initialData?: Factory;
+  visibleProp:boolean,
+  setVisibleProp: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export interface FactoryDeletionProps {
   factories: Factory[];
