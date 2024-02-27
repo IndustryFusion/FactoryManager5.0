@@ -14,64 +14,78 @@ export class ShopFloorService {
 
   async create(data: shopFloorDescriptionDto, token: string) {
     try {
-      //fetch the last urn from scorpio and create a new urn
-      const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store`;
+
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         Accept: 'application/ld+json',
       };
-      let getLastUrn = await axios.get(fetchLastUrnUrl, {
-        headers,
-      });
-      getLastUrn = getLastUrn.data;
-      let newUrn = '',
-        lastUrn = {},
-        lastUrnKey = '';
-      lastUrn['@context'] = getLastUrn['@context'];
-      for (let key in getLastUrn) {
-        if (key.includes('last-urn')) {
-          lastUrnKey = key;
-          lastUrn[lastUrnKey] = getLastUrn[key];
-          newUrn = getLastUrn[key]['value'].split(':')[4];
-          newUrn = (parseInt(newUrn, 10) + 1)
-            .toString()
-            .padStart(newUrn.length, '0');
+
+      let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23floor_name==${data.properties['floor_name']}`;
+      let shopFloorData = await axios.get(checkUrl, { headers });
+
+      if(!shopFloorData.data.length){
+        //fetch the last urn from scorpio and create a new urn
+        const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store`;
+        
+        let getLastUrn = await axios.get(fetchLastUrnUrl, {
+          headers,
+        });
+        getLastUrn = getLastUrn.data;
+        let newUrn = '',
+          lastUrn = {},
+          lastUrnKey = '';
+        lastUrn['@context'] = getLastUrn['@context'];
+        for (let key in getLastUrn) {
+          if (key.includes('last-urn')) {
+            lastUrnKey = key;
+            lastUrn[lastUrnKey] = getLastUrn[key];
+            newUrn = getLastUrn[key]['value'].split(':')[4];
+            newUrn = (parseInt(newUrn, 10) + 1)
+              .toString()
+              .padStart(newUrn.length, '0');
+          }
+        }
+
+        //set the result to store in scorpio
+        const result = {
+          '@context':
+            'https://industryfusion.github.io/contexts/v0.1/context.jsonld',
+          id: `urn:ngsi-ld:shopFloors:2:${newUrn}`,
+          type: data.type,
+        };
+        for (let key in data.properties) {
+          let resultKey = 'http://www.industry-fusion.org/schema#' + key;
+          if (key.includes('hasAsset')) {
+            let obj = {
+              type: 'Relationship',
+              object: data.properties[key],
+            };
+            result[resultKey] = obj;
+          } else {
+            result[resultKey] = data.properties[key];
+          }
+        }
+        //update the last urn with the current urn in scorpio
+        lastUrn[lastUrnKey].value = `urn:ngsi-ld:shopFloors:2:${newUrn}`;
+        const updateLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store/attrs`;
+        await axios.patch(updateLastUrnUrl, lastUrn, { headers });
+
+        //store the template data to scorpio
+        const response = await axios.post(this.scorpioUrl, result, { headers });
+        return {
+          status: response.status,
+          statusText: response.statusText,
+          data: response.data,
+          id: result.id,
+        }
+      } else{
+        return {
+          "success": false,
+          "status": 409,
+          "message": "shopFloor Name Already Exists"
         }
       }
-
-      //set the result to store in scorpio
-      const result = {
-        '@context':
-          'https://industryfusion.github.io/contexts/v0.1/context.jsonld',
-        id: `urn:ngsi-ld:shopFloors:2:${newUrn}`,
-        type: data.type,
-      };
-      for (let key in data.properties) {
-        let resultKey = 'http://www.industry-fusion.org/schema#' + key;
-        if (key.includes('hasAsset')) {
-          let obj = {
-            type: 'Relationship',
-            object: data.properties[key],
-          };
-          result[resultKey] = obj;
-        } else {
-          result[resultKey] = data.properties[key];
-        }
-      }
-      //update the last urn with the current urn in scorpio
-      lastUrn[lastUrnKey].value = `urn:ngsi-ld:shopFloors:2:${newUrn}`;
-      const updateLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store/attrs`;
-      await axios.patch(updateLastUrnUrl, lastUrn, { headers });
-
-      //store the template data to scorpio
-      const response = await axios.post(this.scorpioUrl, result, { headers });
-      return {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data,
-        id: result.id,
-      };
     } catch (err) {
       console.log('err ', err);
       throw err;
