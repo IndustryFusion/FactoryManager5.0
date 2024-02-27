@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { shopFloorDescriptionDto } from './dto/shopFloorDescription.dto';
 import { FactorySiteService } from '../factory-site/factory-site.service';
+import { AssetService } from '../asset/asset.service';
 import axios from 'axios';
 
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
-  constructor(private readonly factorySiteService: FactorySiteService) {}
+  constructor(
+    private readonly factorySiteService: FactorySiteService,
+    private readonly assetService: AssetService
+    ) {}
 
   async create(data: shopFloorDescriptionDto, token: string) {
     try {
@@ -168,6 +172,7 @@ export class ShopFloorService {
       throw err;
     }
   }
+
   async update(id: string, data, token: string) {
     try {
       data['@context'] =
@@ -202,6 +207,126 @@ export class ShopFloorService {
         data: response.data,
       };
     } catch (err) {
+      throw err;
+    }
+  }
+
+  async updateReact(node: any, token: string) {
+    try {
+      let shopFloorobj = {}, assetObj = {};
+      for(let i = 0; i < node.length; i++){
+        let id = node[i].source;
+        if(node[i].source.includes('shopFloor') && !shopFloorobj.hasOwnProperty(id.split('_').pop())){
+          let key = id.split('_').pop();
+          shopFloorobj[key] = shopFloorobj[key] ? shopFloorobj[key] : [];
+          shopFloorobj[key].push(node[i].target.split('_')[1]);
+          for(let j = i+1; j < node.length; j++) {
+            if(node[j].source === id){
+              shopFloorobj[key].push(node[j].target.split('_')[1]);
+            }
+          }
+        }
+        if(node[i].source.includes('asset')&& !assetObj.hasOwnProperty(id.split('_')[1])){
+          let key = id.split('_')[1];
+          assetObj[key] = {};
+          assetObj[key][node[i].target.split('_')[1]] = assetObj[key][node[i].target.split('_')[1]] ? assetObj[key][node[i].target.split('_')[1]] : [];
+          for(let j = i+1; j < node.length; j++) {
+            if(node[j].source === node[i].target){
+              assetObj[key][node[i].target.split('_')[1]].push(node[j].target.split('_')[1]);
+            }
+          }
+        }
+      }
+      console.log('shopFloorobj ',shopFloorobj);
+      console.log('assetObj ',assetObj);
+      if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
+        let response = await this.updateAssets(shopFloorobj, token);
+        if(response.success){
+          let assetResponse = await this.assetService.updateRelations(assetObj, token);
+          return assetResponse;
+        } 
+      } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
+        if(Object.keys(shopFloorobj).length){
+          let response = await this.updateAssets(shopFloorobj, token);
+          return response;
+        } else {
+          let response = await this.updateAssets(shopFloorobj, token);
+          return response;
+        }
+      } else {
+        return {
+          success: false,
+          status: 500,
+          message: 'react flow nodes are unavailable'
+        }
+      }
+    } catch(err){
+      throw err;
+    }
+    
+  }
+
+  async deleteScript(factoryId: string, token: string) {
+    try {
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        Accept: 'application/ld+json',
+      };
+      const responses = [], assetResponses = [];
+      let assetList = [];
+      let shopFloorData = await this.findAll(factoryId, token);
+      for(let i = 0; i < shopFloorData.length; i++){
+        let data = shopFloorData[i];
+        let assetIds = data["http://www.industry-fusion.org/schema#hasAsset"];
+        if(Array.isArray(assetIds) && assetIds.length > 0){
+          assetList = [...assetList, ...assetIds];
+        } else if(assetIds.object.includes('urn')){
+          assetList.push(assetIds);
+        }
+
+        data["http://www.industry-fusion.org/schema#hasAsset"] = {
+          type: 'Relationship',
+          object: ""
+        };
+        const deleteResponse = await this.remove(data["id"], token);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+          const response = await axios.post(this.scorpioUrl, data, { headers });
+          responses.push(response);
+        } 
+      }
+
+      for(let i = 0; i < assetList.length; i++){
+        let assetData = await this.assetService.getAssetDataById(assetList[i], token);
+        for (const key in assetData) {
+          if (key.includes('has')) {
+            assetData[key] = {
+              type: 'Relationship',
+              object: ""
+            }
+          }
+        }
+        const deleteResponse = await this.assetService.deleteAssetById(assetData["id"], token);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+          const response = await axios.post(this.scorpioUrl, assetData, { headers });
+          assetResponses.push(response);
+        }  
+      }
+
+      if (responses.length === shopFloorData.length && assetResponses.length === assetList.length) {
+        return {
+          success: true,
+          status: 204,
+          message: 'All deletion were successful',
+        };
+      } else {
+        return {
+          success: false,
+          status: 500,
+          message: 'Some updates failed',
+        };
+      }
+    } catch(err) {
       throw err;
     }
   }
