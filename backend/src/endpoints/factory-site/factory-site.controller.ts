@@ -20,6 +20,8 @@ export class FactorySiteController {
           message: response['statusText'],
           id: response['id']
         }
+      } else {
+        return response;
       }
     } catch (err) {
       return { 

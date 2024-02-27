@@ -61,6 +61,8 @@ export class ShopFloorController {
             message: err.response.data 
           };
         }
+      } else{
+        return response;
       }
     } catch (err) {
       return { 
