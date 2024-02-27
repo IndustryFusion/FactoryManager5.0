@@ -96,11 +96,11 @@ export class ShopFloorController {
     }
   }
 
-  @Patch('/update-asset')
-  async updateAssets(@Body() data, @Req() req: Request) {
+  @Patch('/update-react')
+  async updateReact(@Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.shopFloorService.updateAssets(data, token);
+      const response = await this.shopFloorService.updateReact(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
@@ -131,6 +131,27 @@ export class ShopFloorController {
       }
     } catch (err) {
       console.log('err ',err);
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      };
+    }
+  }
+
+  @Delete('/delete-react/:id')
+  async deleteReact(@Param('id') id: string, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      const response = await this.shopFloorService.deleteScript(id, token);
+      if(response['status'] == 200 || response['status'] == 204) {
+        return {
+          success: true,
+          status: response['status'],
+          message: response['message'],
+        }
+      }
+    } catch (err) {
       return { 
         success: false, 
         status: err.response.status,
