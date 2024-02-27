@@ -8,7 +8,7 @@ import { Card } from "primereact/card";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import countryList from 'react-select-country-list'
-import "../../styles/factory-form.css"
+import "@/styles/factory-form.css"
 import {
     faSave,
     faBuilding,
@@ -52,6 +52,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const router = useRouter();
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
+    const [validateFactory, setValidateFactory] = useState(false);
+    const [validateThumbnail, setValidateThumbnail]= useState(false);
 
 
     const options = useMemo(() => {
@@ -67,6 +69,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         key: keyof Factory
     ) => {
         setFactory({ ...factory, [key]: e.target.value });
+        setValidateFactory(false)
     };
 
 
@@ -99,27 +102,46 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         }
     };
 
-    const testdata = [
-        "urn:ngsi-ld:factories:2:104",
-        "urn:ngsi-ld:factories:2:103",
-    ];
+    // const testdata = [
+    //     "urn:ngsi-ld:factories:2:104",
+    //     "urn:ngsi-ld:factories:2:103",
+    // ];
+
+    const showWaring = (message:any) => {
+        if (toast.current !== null) {
+            toast.current.show({
+                severity: 'warn',
+                summary: 'Warning',
+                detail: message,
+                life: 2000
+            });
+        }
+    };
 
     const handleSave = async () => {
-        const payload = {
-            $schema: `${schema?.$schema}`,
-            $id: `${schema?.$id}`,
-            title: `${schema?.title}`,
-            description: `${schema?.description}`,
-            type: `${schema?.$id}`,
-            properties: {
-                factory_name: factory.factory_name,
-                street: factory.street,
-                zip: factory.zip,
-                country: factory.country,
-                thumbnail: factory.thumbnail,
-                hasShopFloor: "",
-            },
-        };
+        console.log(factory.thumbnail , "thumbnail value here");
+        
+        let payload;
+        if(factory.factory_name === "" ){
+            setValidateFactory(true)
+        }else{
+                payload = {
+                    $schema: `${schema?.$schema}`,
+                    $id: `${schema?.$id}`,
+                    title: `${schema?.title}`,
+                    description: `${schema?.description}`,
+                    type: `${schema?.$id}`,
+                    properties: {
+                        factory_name: factory.factory_name,
+                        street: factory.street,
+                        zip: factory.zip,
+                        country: factory.country,
+                        thumbnail: factory.thumbnail,
+                        hasShopFloor: "",
+                    },
+                };
+        
+        }
 
         console.log("Sending payload:", payload);
 
@@ -135,12 +157,16 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             const responseData = response.data;
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
-            } else {
+            }else if(responseData.status === 400 ){
                 showError();
             }
-        } catch (error) {
-            console.error("Error saving factory data", error);
-        }
+        } catch (error: any) {
+            console.log(error , "what's the error");
+            
+            if (error.response.status === 404) {
+              showError();
+            }
+          }
     };
 
     const showSuccess = () => {
@@ -158,7 +184,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             toast.current.show({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Error creating factory',
+                detail: 'Please fill all required fields',
                 life: 2000
             });
         }
@@ -284,6 +310,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                                 onChange={(e) => changeHandler(e, key)}
                             />
                         ) : (
+                            <>
                             <InputText
                                 id={key}
                                 value={value}
@@ -291,7 +318,11 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                                 placeholder={property?.description}
                                 onChange={(e) => handleInputChange(e, key)}
                             />
+                           
+                            </>
                         )}
+                        {key === "factory_name" && validateFactory &&
+                         <p className="input-invalid-text" >Factory Name is required</p>}
                     </div>
                 )}
                 {property.type === "object" && (

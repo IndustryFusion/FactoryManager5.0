@@ -3,7 +3,8 @@ import { FileUpload } from "primereact/fileupload";
 import { ProgressBar } from "primereact/progressbar";
 import { Tag } from "primereact/tag";
 import { Tooltip } from "primereact/tooltip";
-import { useState } from "react";
+import "@/styles/factory-form.css"
+import { useEffect, useState } from "react";
 
 interface HeaderTemplateOptions {
     className: string;
@@ -43,17 +44,20 @@ const Thumbnail: React.FC<ThumbnailProps> = (
     }
 
 ) => {
+    const [fileName, setFileName] = useState(fileProp)
 
     console.log("edit prop", isEditProp);
-    console.log("file name", fileProp);
+    console.log("file name", fileName);
+
+    useEffect(() => {
+        setFileName(fileProp);
+    }, [fileProp]);
     
-    let value = fileProp;
+    let value = fileName;
     if (value && (typeof value == 'string') && (value.includes('png') || value.includes('jpg') || value.includes('jpeg') || value.includes('.pdf'))) {
       value = value.split('/').pop();
     }
    
-    
-    
 
     const headerTemplate = (options: HeaderTemplateOptions) => {
         const { className, chooseButton, uploadButton, cancelButton } = options;
@@ -77,6 +81,9 @@ const Thumbnail: React.FC<ThumbnailProps> = (
             setIsEditProp(false);
         }
         return (
+            <div>
+
+            
             <div className="flex align-items-center flex-wrap">
                 <div className="flex align-items-center" style={{ width: '70%' }}>
                     <img alt={file.name} role="presentation" src={file.objectURL} width={100} />
@@ -89,6 +96,10 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto"
                     onClick={() => onTemplateRemove(props.onRemove)}
                 />
+               
+            </div>
+            {uploadedFileNameProp === "" && <p className="input-invalid-text">Upload image before submit, click on upload icon above</p> }
+            
             </div>
         );
     };
@@ -131,26 +142,32 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 maxFileSize={1000000}
                 uploadHandler={handleFileUploadProp}
                 headerTemplate={headerTemplate} itemTemplate={ itemTemplate}
-                emptyTemplate={!isEditProp && emptyTemplate}
+                emptyTemplate={!fileName && emptyTemplate}
                 chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions}
                 onClear={() => setUploadedFileNameProp("")}
             />
-            {isEditProp && setIsEditProp && 
+            {isEditProp && setIsEditProp && fileName ? 
              <div className=" align-items-center flex-wrap edit-thumbnail-container" style={{display: isEditProp? "flex": "none" }}>
              <div className="flex align-items-center" style={{ width: '70%' }}>
-                 <img alt={'file.name'} className="edit-thumbnail-image" role="presentation" src={fileProp} width={100} />
+                 <img alt={fileName} className="edit-thumbnail-image" role="presentation" src={fileName} width={100} />
+                 
                  <span className="flex flex-column text-left ml-3">
                      {value}
                  </span>
                  </div>
                  <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto"                
                      onClick={
-                      ()=>  setIsEditProp(false) 
+                      ()=> {
+                        setIsEditProp(false) 
+                        setFileName("")
+                      }
                      }
                  />
              
-             </div>
+             </div> 
+             : null
             }
+         
             {uploadingProp && (
                 <ProgressBar mode="indeterminate" style={{ marginTop: "2rem", height: '6px' }} />
             )}
