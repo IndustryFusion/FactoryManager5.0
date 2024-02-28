@@ -28,6 +28,8 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
     const [uploading, setUploading] = useState<boolean>(false);
     const [uploadedFileName, setUploadedFileName] = useState<string>("");
     const [fileUploadKey, setFileUploadKey] = useState(0);
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+    const [validateShopFloor, setValidateShopFloor] = useState(false);
     const [shopFloor, setShopFloor] = useState<ShopFloor>(
         {
             floor_name: "",
@@ -54,8 +56,11 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
             })
             setShopFloorTemplate(response.data)
             console.log("shop floor template:", response.data);
-        } catch (error) {
-            console.error("Error fetching shopfloor template", error)
+        } catch (error:any) {
+            if (error.response.status === 404) {
+            showError("Fetching shopfloor template")
+            }
+            console.error(" Fetching shopfloor template", error)
         }
     }
 
@@ -64,6 +69,7 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
         key: keyof ShopFloor
     ) => {
         setShopFloor({ ...shopFloor, [key]: e.target.value });
+        setValidateShopFloor(false)
     };
     const handleInputTextAreaChange = (
         e: ChangeEvent<HTMLTextAreaElement>,
@@ -85,6 +91,7 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
                 setShopFloor({ ...shopFloor, thumbnail: uploadedUrl });
                 setUploadedFileName(file.name);
                 setUploading(false);
+                setSubmitDisabled(false);
             } catch (error) {
                 console.error("Error uploading file:", error);
                 setUploading(false);
@@ -118,20 +125,27 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
     }
 
     const handleSave = async () => {
-        const payload = {
-            $schema: `${shopFloorTemplate?.$schema}`,
-            $id: `${shopFloorTemplate?.$id}`,
-            title: `${shopFloorTemplate?.title}`,
-            description: `${shopFloorTemplate?.description}`,
-            type: `${shopFloorTemplate?.$id}`,
-            properties: {
-                floor_name: shopFloor.floor_name,
-                description: shopFloor.description,
-                type_of_floor: shopFloor.type_of_floor,
-                thumbnail: shopFloor.thumbnail,
-                hasAsset: shopFloor.hasAsset
-            }
+
+        let payload;
+        if(shopFloor.floor_name ===""){
+            setValidateShopFloor(true);
+        }else{
+            payload = {
+                $schema: `${shopFloorTemplate?.$schema}`,
+                $id: `${shopFloorTemplate?.$id}`,
+                title: `${shopFloorTemplate?.title}`,
+                description: `${shopFloorTemplate?.description}`,
+                type: `${shopFloorTemplate?.$id}`,
+                properties: {
+                    floor_name: shopFloor.floor_name,
+                    description: shopFloor.description,
+                    type_of_floor: shopFloor.type_of_floor,
+                    thumbnail: shopFloor.thumbnail,
+                    hasAsset: shopFloor.hasAsset
+                }
+            } 
         }
+         
 
         console.log("what's the payload", payload);
 
@@ -152,11 +166,14 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
             if (shopFloorResponse.status === 201) {
                 showSuccess();
                 // setIsVisibleProp(false);
-            } else {
-                showError();
+            } else if (shopFloorResponse.status === 400) {
+                showError("Please fill all required fields");
             }
 
-        } catch (error) {
+        } catch (error:any) {
+            if (error.response.status === 404) {
+                showError("Error saving shop floor");
+            }
             console.error("Error saving shop floor", error)
         }
 
@@ -172,11 +189,13 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
             });
         }
     };
-    const showError = () => {
+    const showError = (message:any) => {
         if (toast.current !== null) {
             toast.current.show({
-                severity: 'error', summary: 'Error',
-                detail: 'Error Creating Shop Floor', life: 3000
+                severity: 'error',
+                 summary: 'Error',
+                detail: message, 
+                life: 3000
             });
         }
     }
@@ -207,7 +226,9 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
                                 onChange={(e) => handleInputTextChange(e, key)}
                             />
                         }
-
+                    {key === "floor_name" && validateShopFloor &&
+                     <p className="input-invalid-text" >ShopFloor Name is required</p>
+                    }
                     </div>
                 }
                 {property.type === "object" &&
@@ -221,6 +242,7 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
                                 setUploadedFileNameProp={setUploadedFileName}
                                 uploadingProp={uploading}
                                 uploadedFileNameProp={uploadedFileName}
+                                setSubmitDisabledProp={setSubmitDisabled}
                             />
                         </div>
                     )
@@ -265,6 +287,7 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
             label="Submit"
             onClick={handleSave}
             className="border-none  ml-2 mr-2"
+            disabled={submitDisabled}
         />
     </div>
     )

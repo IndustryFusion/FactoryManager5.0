@@ -17,6 +17,7 @@ import { Dialog } from "primereact/dialog";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
+import { Toast } from "primereact/toast";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -36,7 +37,29 @@ const FactoryOverview = () => {
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
   ];
+  const toast = useRef<Toast | null>(null);
 
+  const showError = (message: any) => {
+    if (toast.current !== null) {
+      toast.current.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: message,
+        life: 2000
+      });
+    }
+  };
+
+  const showSuccess =(message:any)=>{
+    if (toast.current !== null) {
+      toast.current.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: message,
+        life: 2000
+      });
+    }
+  }
   // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: any[]): Factory[] => {
     return backendData.map((item: any) => {
@@ -67,13 +90,14 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       const responseData = response.data;
-      console.log("factory data", responseData);
-
+      // console.log("factory data", responseData);
       const mappedData = mapBackendDataToFactoryLists(responseData);
       setFactorySite(mappedData);
-      console.log(mappedData, "factory response here");
-    } catch (error) {
-      console.error("Error:", error);
+      // console.log(mappedData, "factory response here");
+    } catch (error: any) {
+      if (error.response.status === 404) {
+        showError("Getting factory lists");
+      }
     }
   };
 
@@ -88,8 +112,8 @@ const FactoryOverview = () => {
         setGlobalFilterValue("");
       }
     }
-   
-  }, [visible, router.isReady]);
+
+  }, [visible,isEdit, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
@@ -145,11 +169,11 @@ const FactoryOverview = () => {
           }
         };
 
-        reader.onerror = function(error) {
+        reader.onerror = function (error) {
           console.error('Error reading file:', error);
         };
 
-        reader.readAsText(files[i]); 
+        reader.readAsText(files[i]);
       };
     }
   };
@@ -195,27 +219,27 @@ const FactoryOverview = () => {
         </span>
       </div>
       <div className="p-3 flex justify-content-end align-items-center"
-                style={{ marginLeft: 'calc(100vw - 50%)' }}>
+        style={{ marginLeft: 'calc(100vw - 50%)' }}>
         <div className="mr-3">
-            <Button
-              label="Import Assets"
-              onClick={triggerFileInput}
-              className="bg-purple-100 factory-btn"
-            />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              style={{ display: 'none' }} // Hide the file input
-            />
-          </div>
+          <Button
+            label="Import Assets"
+            onClick={triggerFileInput}
+            className="bg-purple-100 factory-btn"
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: 'none' }} // Hide the file input
+          />
+        </div>
         <Button
           label="Create Factory"
           className="bg-blue-100 factory-btn"
           onClick={() => setVisible(true)}
         />
-        </div>
-      </div>  
+      </div>
+    </div>
   );
 
   // Confirm deletion dialog
@@ -235,7 +259,11 @@ const FactoryOverview = () => {
     try {
       await deleteFactory(factoryToDelete);
       await fetchFactoryLists();
-    } catch (error) {
+      showSuccess("Factory deleted successfully");
+    } catch (error:any) {
+      if(error.response.status === 404){
+        showError("Error deleting factory")
+      }
       console.error("Error deleting factory", error);
     }
   };
@@ -312,8 +340,9 @@ const FactoryOverview = () => {
 
   return (
     <>
-    <HorizontalNavbar />
-      <div className="grid py-1 px-2 factory-overview " style={{zoom:"80%"}} >
+      <Toast ref={toast} />
+      <HorizontalNavbar />
+      <div className="grid py-1 px-2 factory-overview " style={{ zoom: "80%" }} >
         <div className="col-12">
           <ConfirmDialog />
           <div className="">
