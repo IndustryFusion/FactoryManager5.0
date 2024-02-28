@@ -28,7 +28,7 @@ export class NonShopFloorAssetsService {
             let hasAsset = shopFloorData['http://www.industry-fusion.org/schema#hasAsset'];
             if (Array.isArray(hasAsset) && hasAsset.length > 0) {
               hasAsset.forEach((data) => {
-                hasAssetArr.push(data.Object);
+                hasAssetArr.push(data.object);
               })
             } else if (hasAsset.object.includes('urn')) {
               hasAssetArr = [...hasAssetArr, hasAsset.object];
@@ -44,7 +44,7 @@ export class NonShopFloorAssetsService {
         let hasAsset = shopFloorData['http://www.industry-fusion.org/schema#hasAsset'];
         if (Array.isArray(hasAsset) && hasAsset.length > 0) {
           hasAsset.forEach((data) => {
-            hasAssetArr.push(data.Object);
+            hasAssetArr.push(data.object);
           })
         } else if (hasAsset.object.includes('urn')) {
           hasAssetArr = [...hasAssetArr, hasAsset.object];
