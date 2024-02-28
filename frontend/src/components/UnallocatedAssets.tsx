@@ -6,7 +6,7 @@ import {
 // import { Asset } from "../interfaces/assetTypes";
 import "../styles/AssetList.css";
 import { Card } from "primereact/card";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 
 interface AssetListProps {
@@ -40,7 +40,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
         const fetchedAssets: any = Object.keys(fetchedAssetIds).map((key) => ({
           id: fetchedAssetIds[key].id,
-          product_name: fetchedAssetIds[key].product_name.value,
+          product_name: fetchedAssetIds[key].product_name?.value,
         }));
         setAssets(fetchedAssets);
         console.log(assets, "the unalocated asset");
@@ -74,7 +74,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
   const renderRelations = () => {
     if (!selectedAssetDetails)
-      return <p style={{marginLeft:"5px"}}>No asset selected or no relations found.</p>;
+      return (
+        <p style={{ marginLeft: "5px" }}>
+          No asset selected or no relations found.
+        </p>
+      );
 
     // Extracting relation names from the selected asset details
     const relations = Object.keys(selectedAssetDetails)
@@ -90,7 +94,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       return <p>No relations found for this asset.</p>;
 
     return (
-      <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
+      <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
         {relations.map((relation) => (
           <li
             key={relation.key}
@@ -103,7 +107,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       </ul>
     );
   };
-  
+
   const onAssetChange = (e: any) => {
     setSelectedAsset(e.value);
   };
@@ -127,8 +131,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
   return (
     <React.Fragment>
-      <Card style={{ height: "60%", overflowY:"scroll" }}>
-        <h3 className="font-medium text-xl" style={{ marginTop: "2%", marginLeft:"5%"}}>
+      <Card style={{ height: "60%", overflowY: "scroll" }}>
+        <h3
+          className="font-medium text-xl"
+          style={{ marginTop: "2%", marginLeft: "5%" }}
+        >
           Unallocated Assets
         </h3>
         <ul>
@@ -144,8 +151,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           ))}
         </ul>
       </Card>
-      <Card style={{ height: "38%", marginTop: "10px",  overflowY:"scroll" }}>
-        <h3 className="font-medium text-xl" style={{ marginTop: "2%", marginLeft:"5%" }}>
+      <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
+        <h3
+          className="font-medium text-xl"
+          style={{ marginTop: "2%", marginLeft: "5%" }}
+        >
           Asset Relations
         </h3>
         {selectedAssetDetails && <div>{renderRelations()}</div>}

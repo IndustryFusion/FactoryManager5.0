@@ -1,3 +1,5 @@
+//factory-site utility .ts
+
 import axios from "axios";
 import { Factory } from "@/interfaces/factoryType";
 import { Asset } from "@/interfaces/assetTypes";
@@ -499,7 +501,7 @@ export function extractHasRelations(assetData: any): { [key: string]: any } {
       }
     }
   });
-
+  console.log(hasRelations, "llllllllll");
   return hasRelations;
 }
 
@@ -521,5 +523,23 @@ export const saveFlowchartData = async (
   } catch (error) {
     console.error("Error saving flowchart:", error);
     throw error;
+  }
+};
+
+export const fetchAssetById = async (assetId: string) => {
+  try {
+    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    const responseData = response.data;
+    const mappedData = extractHasRelations(responseData);
+    console.log(mappedData, "The asset Node data");
+    return mappedData;
+  } catch (error) {
+    console.error("Error:", error);
   }
 };
