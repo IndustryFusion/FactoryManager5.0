@@ -56,8 +56,11 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
             })
             setShopFloorTemplate(response.data)
             console.log("shop floor template:", response.data);
-        } catch (error) {
-            console.error("Error fetching shopfloor template", error)
+        } catch (error:any) {
+            if (error.response.status === 404) {
+            showError("Fetching shopfloor template")
+            }
+            console.error(" Fetching shopfloor template", error)
         }
     }
 
@@ -88,7 +91,7 @@ const CreateShopFloor:React.FC<CreateShopFloorProps> =({isVisibleProp,setIsVisib
                 setShopFloor({ ...shopFloor, thumbnail: uploadedUrl });
                 setUploadedFileName(file.name);
                 setUploading(false);
-                setSubmitDisabled(false)
+                setSubmitDisabled(false);
             } catch (error) {
                 console.error("Error uploading file:", error);
                 setUploading(false);

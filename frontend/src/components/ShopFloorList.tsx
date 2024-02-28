@@ -64,6 +64,11 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
   async function handleDelete() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for deletion");
+      toast.current.show({
+        severity: "warn",
+        summary: "Warning",
+        detail: "No shop floor selected for deletion",
+      });
       return;
     }
 
@@ -90,6 +95,11 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
   function handleEdit() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for editing");
+      toast.current.show({
+        severity: "warn",
+        summary: "Warning",
+        detail: "No shop floor selected for editing",
+      });
       return;
     }
 
