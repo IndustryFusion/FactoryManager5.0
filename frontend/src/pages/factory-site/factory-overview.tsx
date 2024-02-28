@@ -39,12 +39,12 @@ const FactoryOverview = () => {
   ];
   const toast = useRef<Toast | null>(null);
 
-  const showError = () => {
+  const showError = (message: any) => {
     if (toast.current !== null) {
       toast.current.show({
         severity: 'error',
-        summary: 'Factories Not Found',
-        detail: 'Error: fetching factory lists',
+        summary: 'Error',
+        detail: message,
         life: 2000
       });
     }
@@ -85,7 +85,7 @@ const FactoryOverview = () => {
       // console.log(mappedData, "factory response here");
     } catch (error: any) {
       if (error.response.status === 404) {
-        showError();
+        showError("Getting factory lists");
       }
     }
   };

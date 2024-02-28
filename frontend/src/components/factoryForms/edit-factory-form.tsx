@@ -49,6 +49,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [updateData, setUpdateData] = useState<Record<string, any>>({});
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<any>({});
+    const [ validateFactory, setValidateFactory] = useState(false);
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+
 
     const findFactoryTemplate = async () => {
         try {
@@ -61,8 +65,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             })
             const responseData = response.data;
             setSchema(responseData);
-        } catch (error) {
-            console.error(error)
+        } catch (error:any) {
+            if (error.response.status === 404) {
+                showError("getting factory template");
+              }
         }
     }
 
@@ -197,6 +203,8 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                                 }
                             />
                         }
+                            {key === "factory_name" && validateFactory &&
+                         <p className="input-invalid-text" >Factory Name is required</p>}
                     </div>
                 )}
                 {property.type === "object" &&
@@ -220,6 +228,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             isEditProp={isEdit}
                             fileProp={editedFactory?.[key]}
                             setIsEditProp={setIsEdit}
+                            setSubmitDisabledProp={setSubmitDisabled}
                         />
                     </div>
                 }
@@ -259,6 +268,9 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     // Handle input change events to update state
     const handleChange = (key: string, value: any) => {
         console.log(value, "wt's the value");
+        if(key === "factory_name"){
+            setValidateFactory(false)
+        }
 
         setEditedFactory((prev: any) => ({ ...prev, [key]: value }));
         setUpdateData((prev: any) => ({ ...prev, [key]: value }));
@@ -282,6 +294,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
             setUploadedFileName(file.name);
             setUploading(false);
+            setSubmitDisabled(false)
         } catch (error) {
             console.error("File upload failed", error);
             setUploading(false);
@@ -291,7 +304,20 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const handleSubmit = async (event: any) => {
         event.preventDefault();
 
-        if (updateData) {
+        console.log(updateData, "what's in this");
+        console.log(  Object.keys(updateData).length === 0 );
+        
+        if(updateData.factory_name === "" ){
+            setValidateFactory(true)
+        
+       }
+
+        if (Object.values(updateData).every(value => value === '')) {
+            showError("Please fill all required fields");
+            return;  // Stop further execution
+        }
+
+       
             const dataToUpdate = {
                 ...updateData,
             };
@@ -318,7 +344,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                 showError(error);
                 console.error("Error updating factory:", error);
             }
-        }
+        
     };
 
     const showSuccess = () => {
@@ -378,6 +404,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                 label="Save"
                 onClick={handleSubmit}
                 className="border-none  ml-2 mr-2"
+                disabled={submitDisabled}
             />
         </div>
     )

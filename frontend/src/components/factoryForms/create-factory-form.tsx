@@ -53,7 +53,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
     const [validateFactory, setValidateFactory] = useState(false);
-    const [validateThumbnail, setValidateThumbnail]= useState(false);
+    const [validateThumbnail, setValidateThumbnail] = useState(false);
+    const [submitDisabled, setSubmitDisabled] = useState(false)
 
 
     const options = useMemo(() => {
@@ -88,13 +89,16 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     const handleFileUpload = async (e: { files: File[] }) => {
         const file = e.files[0];
+
         if (file) {
             setUploading(true);
+
             try {
                 const uploadedUrl = await handleUpload(file);
                 setFactory({ ...factory, thumbnail: uploadedUrl });
                 setUploadedFileName(file.name);
                 setUploading(false);
+                setSubmitDisabled(false)
             } catch (error) {
                 console.error("Error uploading file:", error);
                 setUploading(false);
@@ -102,12 +106,15 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         }
     };
 
+    console.log("button state", submitDisabled);
+
+
     // const testdata = [
     //     "urn:ngsi-ld:factories:2:104",
     //     "urn:ngsi-ld:factories:2:103",
     // ];
 
-    const showWaring = (message:any) => {
+    const showWaring = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'warn',
@@ -119,28 +126,32 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     };
 
     const handleSave = async () => {
-        console.log(factory.thumbnail , "thumbnail value here");
-        
+        console.log(factory.thumbnail, "thumbnail value here");
+
         let payload;
-        if(factory.factory_name === "" ){
+        if (factory.factory_name === "") {
             setValidateFactory(true)
-        }else{
-                payload = {
-                    $schema: `${schema?.$schema}`,
-                    $id: `${schema?.$id}`,
-                    title: `${schema?.title}`,
-                    description: `${schema?.description}`,
-                    type: `${schema?.$id}`,
-                    properties: {
-                        factory_name: factory.factory_name,
-                        street: factory.street,
-                        zip: factory.zip,
-                        country: factory.country,
-                        thumbnail: factory.thumbnail,
-                        hasShopFloor: "",
-                    },
-                };
-        
+
+
+        } else {
+            payload = {
+                $schema: `${schema?.$schema}`,
+                $id: `${schema?.$id}`,
+                title: `${schema?.title}`,
+                description: `${schema?.description}`,
+                type: `${schema?.$id}`,
+                properties: {
+                    factory_name: factory.factory_name,
+                    street: factory.street,
+                    zip: factory.zip,
+                    country: factory.country,
+                    thumbnail: factory.thumbnail,
+                    hasShopFloor: "",
+                },
+            };
+
+
+
         }
 
         console.log("Sending payload:", payload);
@@ -157,16 +168,16 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             const responseData = response.data;
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
-            }else if(responseData.status === 400 ){
-                showError();
+            } else if (responseData.status === 400) {
+                showError("Please fill all required fields");
             }
         } catch (error: any) {
-            console.log(error , "what's the error");
-            
+            console.log(error, "what's the error");
+
             if (error.response.status === 404) {
-              showError();
+                showError("Please fill all required fields");
             }
-          }
+        }
     };
 
     const showSuccess = () => {
@@ -179,12 +190,12 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             });
         }
     };
-    const showError = () => {
+    const showError = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Please fill all required fields',
+                detail: message,
                 life: 2000
             });
         }
@@ -230,8 +241,10 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
             const responseData = response.data;
             setSchema(responseData);
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            if (error.response.status === 404) {
+                showError("getting factory template");
+            }
         }
     };
 
@@ -263,7 +276,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     const renderFields = (key: string, property: Property) => {
         const value = factory[key];
-
         return (
             <>
                 {property.type === "number" && (
@@ -310,7 +322,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                                 onChange={(e) => changeHandler(e, key)}
                             />
                         ) : (
-                            <>
+
                             <InputText
                                 id={key}
                                 value={value}
@@ -318,11 +330,9 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                                 placeholder={property?.description}
                                 onChange={(e) => handleInputChange(e, key)}
                             />
-                           
-                            </>
                         )}
                         {key === "factory_name" && validateFactory &&
-                         <p className="input-invalid-text" >Factory Name is required</p>}
+                            <p className="input-invalid-text" >Factory Name is required</p>}
                     </div>
                 )}
                 {property.type === "object" && (
@@ -340,12 +350,14 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             setUploadedFileNameProp={setUploadedFileName}
                             uploadingProp={uploading}
                             uploadedFileNameProp={uploadedFileName}
+                            setSubmitDisabledProp={setSubmitDisabled}
                         />
                     </div>
-                )}
+                )
+             }
             </>
-        );
-    };
+        )
+    }
 
     const footerContent = (
         <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
@@ -367,6 +379,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 label="Submit"
                 onClick={handleSave}
                 className="border-none  ml-2 mr-2"
+                disabled={submitDisabled}
             />
         </div>
     );
@@ -376,9 +389,9 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         <>
             <div className="card flex justify-content-center">
                 <Button label="Show" icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
-                <Dialog visible={visibleProp} modal footer={footerContent} 
-                draggable={false} resizable={false}
-                style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
+                <Dialog visible={visibleProp} modal footer={footerContent}
+                    draggable={false} resizable={false}
+                    style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
                     <Toast ref={toast} />
                     <div className="p-fluid p-formgrid p-grid ">
                         <h2 className="form-title">Create Factory</h2>

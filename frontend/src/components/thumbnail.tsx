@@ -27,6 +27,7 @@ interface ThumbnailProps {
     isEditProp?: boolean;
     fileProp?: string;
     setIsEditProp?: React.Dispatch<React.SetStateAction<boolean>> | undefined;
+    setSubmitDisabledProp: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 
@@ -40,7 +41,8 @@ const Thumbnail: React.FC<ThumbnailProps> = (
         uploadedFileNameProp,
         isEditProp,
         setIsEditProp,
-        fileProp
+        fileProp,
+        setSubmitDisabledProp
     }
 
 ) => {
@@ -80,6 +82,12 @@ const Thumbnail: React.FC<ThumbnailProps> = (
         if (setIsEditProp) {
             setIsEditProp(false);
         }
+        if(file){
+           setSubmitDisabledProp(true);
+           if(file && uploadedFileNameProp !== ""){
+            setSubmitDisabledProp(false);
+        }
+        }
         return (
             <div>
 
@@ -94,7 +102,12 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 </div>
                 <Tag value={props.formatSize} severity="warning" className="px-3 py-2" />
                 <Button type="button" icon="pi pi-times" className="p-button-outlined p-button-rounded p-button-danger ml-auto"
-                    onClick={() => onTemplateRemove(props.onRemove)}
+                    onClick={() => {
+                        onTemplateRemove(props.onRemove)
+                        setSubmitDisabledProp(false)
+                    }
+                       
+                    }
                 />
                
             </div>
