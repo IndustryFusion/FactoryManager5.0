@@ -104,11 +104,19 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         getShopFloorData();
     }, [editShopFloorProp])
 
+    console.log(updateShopFloor);
+    
+
     const handleInputTextChange = (
         e: ChangeEvent<HTMLInputElement>,
         key: keyof ShopFloor
     ) => {
+
+        
         setUpdateShopFloor({ ...updateShopFloor, [key]: e.target.value });
+   
+         
+
         setValidateShopFloor(false);
     };
     const handleInputTextAreaChange = (
@@ -146,6 +154,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         event.preventDefault();
         setUpdateShopFloor({});
         setIsEdit(true);
+        setValidateShopFloor(false);
     }
 
     const handleSave = async () => {
@@ -180,10 +189,8 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                     showError('Error Updating Shop Floor');
                 }
     
-            } catch (error:any) {
-                if (error.response.status === 404) {
-                    showError("Error saving shop floor");
-                }
+            } catch (error:any) {          
+                    showError("Error saving shop floor");               
                 console.error("Error saving shop floor", error)
             }
         }
@@ -213,12 +220,9 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
     const renderFields = (key: string, property: Property) => {
         let value = shopFloor[key];
-        if (updateShopFloor[key]) {
-            value = updateShopFloor[key];
+        if (updateShopFloor.hasOwnProperty(key)) {
+            value = updateShopFloor[key];      
         } 
-
-        console.log('key ', key)
-        console.log('value ', value)
         return (
             <>
                 {property.type === "string" &&
@@ -236,7 +240,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                             :
                             <InputText
                                 id={key}
-                                value={value || ""}
+                                value={value}
                                 type="text"
                                 placeholder={property?.description}
                                 onChange={(e) => handleInputTextChange(e, key)}

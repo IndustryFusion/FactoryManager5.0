@@ -169,6 +169,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             value={editedFactory?.[key]}
                             placeholder={property?.description}
                             onChange={(e) => handleChange("zip", e.value)}
+                            useGrouping={false}
                         />
                     </div>
                 )}
@@ -353,7 +354,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             toast.current.show({
                 severity: 'success',
                 summary: 'Success',
-                detail: 'Factory created successfully',
+                detail: 'Factory edited successfully',
                 life: 2000
             });
         }
@@ -382,6 +383,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
     const handleReset = () => {
         setEditedFactory(resetFactory);
+        setValidateFactory(false);
         setIsEdit(true)
     }
 

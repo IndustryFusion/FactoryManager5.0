@@ -149,9 +149,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                     hasShopFloor: "",
                 },
             };
-
-
-
         }
 
         console.log("Sending payload:", payload);
@@ -168,12 +165,10 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             const responseData = response.data;
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
-            } else if (responseData.status === 400) {
-                showError("Please fill all required fields");
             }
         } catch (error: any) {
             console.log(error, "what's the error");
-
+            showError("Please fill all required fields");
             if (error.response.status === 404) {
                 showError("Error saving factory");
             }
@@ -291,7 +286,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             id={key}
                             value={value}
                             placeholder={property?.description}
-                            onChange={(e: any) => setFactory({ ...factory, zip: e.value })}
+                            onChange={(e: any) => setFactory({ ...factory, zip: e.value })}                           
+                            useGrouping={false}
                         />
                     </div>
                 )}

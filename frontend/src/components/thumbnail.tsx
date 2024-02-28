@@ -157,7 +157,10 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 headerTemplate={headerTemplate} itemTemplate={ itemTemplate}
                 emptyTemplate={!fileName && emptyTemplate}
                 chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions}
-                onClear={() => setUploadedFileNameProp("")}
+                onClear={() => {
+                    setUploadedFileNameProp("");
+                    setSubmitDisabledProp(false)
+                }}
             />
             {isEditProp && setIsEditProp && fileName ? 
              <div className=" align-items-center flex-wrap edit-thumbnail-container" style={{display: isEditProp? "flex": "none" }}>

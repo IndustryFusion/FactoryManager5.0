@@ -113,7 +113,7 @@ const FactoryOverview = () => {
       }
     }
 
-  }, [visible, router.isReady]);
+  }, [visible,isEdit, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
@@ -264,7 +264,6 @@ const FactoryOverview = () => {
       if(error.response.status === 404){
         showError("Error deleting factory")
       }
-
       console.error("Error deleting factory", error);
     }
   };
