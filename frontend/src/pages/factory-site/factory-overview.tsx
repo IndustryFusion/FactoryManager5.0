@@ -49,6 +49,17 @@ const FactoryOverview = () => {
       });
     }
   };
+
+  const showSuccess =(message:any)=>{
+    if (toast.current !== null) {
+      toast.current.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: message,
+        life: 2000
+      });
+    }
+  }
   // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: any[]): Factory[] => {
     return backendData.map((item: any) => {
@@ -248,7 +259,12 @@ const FactoryOverview = () => {
     try {
       await deleteFactory(factoryToDelete);
       await fetchFactoryLists();
-    } catch (error) {
+      showSuccess("Factory deleted successfully");
+    } catch (error:any) {
+      if(error.response.status === 404){
+        showError("Error deleting factory")
+      }
+
       console.error("Error deleting factory", error);
     }
   };

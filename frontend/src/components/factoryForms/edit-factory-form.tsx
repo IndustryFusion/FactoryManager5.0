@@ -51,6 +51,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [selectedCountry, setSelectedCountry] = useState<any>({});
     const [ validateFactory, setValidateFactory] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false);
+    const [validateShopFloor, setValidateShopFloor] = useState(false);
 
 
 

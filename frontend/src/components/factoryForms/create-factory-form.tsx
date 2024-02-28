@@ -175,7 +175,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             console.log(error, "what's the error");
 
             if (error.response.status === 404) {
-                showError("Please fill all required fields");
+                showError("Error saving factory");
             }
         }
     };
