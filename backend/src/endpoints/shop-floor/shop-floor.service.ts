@@ -21,7 +21,7 @@ export class ShopFloorService {
         Accept: 'application/ld+json',
       };
 
-      let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23floor_name==${data.properties['floor_name']}`;
+      let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23floor_name==%22${data.properties['floor_name']}%22`;
       let shopFloorData = await axios.get(checkUrl, { headers });
 
       if(!shopFloorData.data.length){
@@ -196,12 +196,30 @@ export class ShopFloorService {
         'Content-Type': 'application/ld+json',
         Accept: 'application/ld+json',
       };
-      const url = this.scorpioUrl + '/' + id + '/attrs';
-      const response = await axios.post(url, data, { headers });
-      return {
-        status: response.status,
-        data: response.data,
-      };
+      let flag = true;
+      if(data["http://www.industry-fusion.org/schema#floor_name"]) {
+        let floorName = data["http://www.industry-fusion.org/schema#floor_name"];
+        let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23floor_name==%22${floorName}%22`;
+        let shopFloorData = await axios.get(checkUrl, { headers });
+
+        if(shopFloorData.data.length) {
+          flag= false;
+        }
+      }
+      if(flag) {
+        const url = this.scorpioUrl + '/' + id + '/attrs';
+        const response = await axios.post(url, data, { headers });
+        return {
+          status: response.status,
+          data: response.data,
+        };
+      } else {
+        return {
+          "success": false,
+          "status": 409,
+          "message": "shopFloor Name Already Exists"
+        }
+      }
     } catch (err) {
       throw err;
     }
@@ -240,14 +258,16 @@ export class ShopFloorService {
             }
           }
         }
-        if(node[i].source.includes('asset')&& !assetObj.hasOwnProperty(id.split('_')[1])){
+        if(node[i].source.includes('asset') && node[i].target.split('_')[4]){
           let key = id.split('_')[1];
-          assetObj[key] = {};
-          assetObj[key][node[i].target.split('_')[1]] = assetObj[key][node[i].target.split('_')[1]] ? assetObj[key][node[i].target.split('_')[1]] : [];
-          for(let j = i+1; j < node.length; j++) {
-            if(node[j].source === node[i].target){
-              assetObj[key][node[i].target.split('_')[1]].push(node[j].target.split('_')[1]);
-            }
+          let relationKey = node[i].target.split('_')[1];
+          let relationData = node[i].target.split('_')[4];
+          assetObj[key] = assetObj[key] ? assetObj[key] : {};
+          if(assetObj[key][relationKey]){
+            let relationArr = assetObj[key][relationKey];
+            assetObj[key][relationKey] = [...relationArr, relationData]
+          } else {
+            assetObj[key][relationKey] = [ relationData ];
           }
         }
       }

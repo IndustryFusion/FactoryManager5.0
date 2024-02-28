@@ -125,11 +125,30 @@ export class FactorySiteService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id + '/attrs';
-      const response = await axios.post(url, data, {headers});
-      return {
-        status: response.status,
-        data: response.data
+
+      let flag = true;
+      if(data["http://www.industry-fusion.org/schema#factory_name"]) {
+        let factoryName = data["http://www.industry-fusion.org/schema#factory_name"];
+        let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23factory_name==%22${factoryName}%22`;
+        let factoryData = await axios.get(checkUrl, { headers });
+
+        if(factoryData.data.length) {
+          flag= false;
+        }
+      }
+      if(flag) {
+        const url = this.scorpioUrl + '/' + id + '/attrs';
+        const response = await axios.post(url, data, {headers});
+        return {
+          status: response.status,
+          data: response.data
+        }
+      } else {
+        return {
+          "success": false,
+          "status": 409,
+          "message": "Factory Name Already Exists"
+        }
       }
     } catch(err) {
       throw err;
