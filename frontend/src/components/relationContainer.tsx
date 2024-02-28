@@ -28,7 +28,7 @@ const Container: React.FC<ContainerProps> = ({ onAssetSelect }) => {
   >({});
 
   const handleNewAsset = () => {};
-
+  //
   const handleSelectAsset = async (asset: Asset) => {
     if (selectedAssets.includes(asset)) {
       setSelectedAssets((prevSelectedAssets) =>
