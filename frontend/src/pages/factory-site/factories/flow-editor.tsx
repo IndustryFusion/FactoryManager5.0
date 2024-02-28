@@ -7,33 +7,52 @@ import ReactFlow, {
   Controls,
   Background,
   ReactFlowProvider,
-  Connection,
   useNodesState,
   useEdgesState,
   OnSelectionChangeParams,
   Node,
-  Handle,
-  Edge,
 } from "reactflow";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "reactflow/dist/style.css";
 import { Button } from "primereact/button";
-import { ShopFloor } from "../types/shop-floor";
-import { string } from "prop-types";
 import axios from "axios";
 import { Toast } from "primereact/toast";
 import {
-  getshopFloorById,
   fetchAndDetermineSaveState,
   exportElementToJPEG,
   getShopFloorAndAssetData,
   extractHasRelations,
+  fetchAssetById,
 } from "@/utility/factory-site-utility";
-import ShopFloorList from "@/components/ShopFloorList";
+import { RelationsModal } from "@/components/reactFlowRelationModal";
 interface FlowEditorProps {
   factory: any;
   factoryId: string;
+}
+
+interface EdgeParams {
+  source: string;
+  target: string;
+}
+
+interface AssetRelations {
+  [parentId: string]: {
+    [relationType: string]: string[];
+  };
+}
+
+interface ShopFloorAssets {
+  [shopFloorId: string]: string[];
+}
+
+interface Edge {
+  id: string;
+  source: any;
+  target: string;
+}
+interface RelationCounts {
+  [key: string]: number;
 }
 
 interface FactoryRelationships {
@@ -59,8 +78,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     []
   );
   const [nodeUpdateTracker, setNodeUpdateTracker] = useState(0);
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
-  const [isDataLoading, setIsDataLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toast = useRef<any>(null);
   const [droppedShopFloors, setDroppedShopFloors] = useState<any[]>([]);
@@ -68,11 +85,17 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-  const [shopFloorAssets, setShopFloorAssets] = useState<any>({});
+  const [shopFloorAssets, setShopFloorAssets] = useState({});
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const elementRef = useRef(null);
   const [nodesInitialized, setNodesInitialized] = useState(false);
-  const [shopFloorID, setShopFloorID] = useState("");
+  const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [relationCounts, setRelationCounts] = useState({});
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+
+  const [selectedAsset, setSelectedAsset] = useState(null);
+
   useEffect(() => {
     if (factory && reactFlowInstance) {
       const factoryNodeId = `factory-${factory.id}`;
@@ -146,7 +169,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
               );
             }
           });
-          console.log("ShopFloor Assets:", shopFloorAssets);
         } else {
           console.log("Invalid data received from backend");
         }
@@ -161,11 +183,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   }, [onRestore]);
 
   const onSave = useCallback(async () => {
-    // Extracting shop floor IDs connected to the factory
-    const connectedShopFloors = nodes
-      .filter((node) => node.data.type === "shopFloor")
-      .map((node) => node.data.id);
-
     const payLoad = {
       factoryId: factoryId,
 
@@ -184,7 +201,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           type,
           data,
         })),
-        shopFloor: connectedShopFloors,
       },
     };
 
@@ -207,21 +223,105 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       setToastMessage("Error saving flowchart");
     }
   }, [nodes, edges, factoryId]);
+
   const handleExportClick = () => {
     if (elementRef.current) {
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
     }
   };
 
-  const onElementClick = (event: any, element: any) => {
-    console.log("Clicked element:", element);
-    // If you only want to log node details (and not edges), you can check the element's type
-    if (element.type !== "customEdge") {
-      // Assuming 'customEdge' is your edge type
-      console.log("Clicked node details:", element);
-    }
-  };
+  const onElementClick = useCallback(
+    (event: { clientX: number; clientY: number }, element: any) => {
+      console.log(event, "jjjj");
+      if (element.type === "asset") {
+        // Fetch asset details and set relations
+        fetchAssetById(element.data.id)
+          .then((relations: any) => {
+            setCurrentNodeRelations(relations);
+            setSelectedAsset(element.id); // Set the selected asset
+            setShowModal(true); // Show the modal
+            setModalPosition({ x: event.clientX, y: event.clientY }); // Set modal position
+          })
+          .catch((error) =>
+            console.error("Error fetching asset details:", error)
+          );
+      }
+    },
+    []
+  );
+  const handleRelationSubmit = (selectedRelations: any) => {
+    let newNodes = [...nodes];
+    let newEdges = [...edges];
+    const parentAssetNode = nodes.find((node) => node.id === selectedAsset);
 
+    if (!parentAssetNode) {
+      console.log("Parent asset node not found");
+      return;
+    }
+
+    let updatedRelationCounts: RelationCounts = { ...relationCounts };
+
+    selectedRelations.forEach((relationName: string) => {
+      // If the relationName doesn't exist in updatedRelationCounts, initialize it
+      if (!updatedRelationCounts[relationName]) {
+        updatedRelationCounts[relationName] = 0;
+      }
+    });
+
+    let xOffset = 150; // Horizontal offset between relation nodes
+    let startYOffset = 80; // Vertical offset from the parent asset to the first relation node
+    console.log(updatedRelationCounts, "The relation ID with incremented valu");
+    // Iterate over each selected relation
+    selectedRelations.forEach((relationName: string, index: number) => {
+      const isChecked = true;
+
+      if (isChecked) {
+        updatedRelationCounts[relationName]++;
+
+        const relationCount = updatedRelationCounts[relationName]
+          .toString()
+          .padStart(3, "0");
+        const relationNodeId = `relation_${relationName}_${relationCount}`;
+
+        const relationNode = {
+          id: relationNodeId,
+          label: relationName,
+          type: relationName,
+          position: {
+            x: parentAssetNode.position.x + xOffset * (index - 1), // Place horizontally
+            y: parentAssetNode.position.y + startYOffset, // Slightly below the parent asset
+          },
+          style: {
+            backgroundColor: "#ead6fd",
+            border: "none",
+            borderRadius: "45%",
+          },
+          data: {
+            label: relationName,
+            type: "relation",
+            parentId: selectedAsset,
+          },
+        };
+
+        newNodes.push(relationNode);
+
+        const newEdge: Edge = {
+          id: `reactflow__edge-${selectedAsset}-${relationNodeId}`,
+          source: selectedAsset,
+          target: relationNodeId,
+        };
+
+        newEdges.push(newEdge);
+      }
+    });
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+
+    setRelationCounts(updatedRelationCounts);
+
+    setShowModal(false);
+  };
   const onConnect = useCallback(
     (params: any) => {
       const { source, target } = params;
@@ -235,7 +335,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         targetNode.data.type === "asset"
       ) {
         setShopFloorAssets((prevAssets) => {
-          const updatedAssets:any = { ...prevAssets };
+          const updatedAssets: any = { ...prevAssets };
           const assets = updatedAssets[sourceNode.id] || [];
           updatedAssets[sourceNode.id] = [...assets, targetNode.id];
           return updatedAssets;
@@ -260,20 +360,42 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         const parentId = sourceNode.data.parentId;
         const childAssetId = targetNode.id;
         const relationType = sourceNode.data.label;
+        const meaningfulPartOfChildId = childAssetId
+          .replace(/^asset_/, "")
+          .replace(/_\d+$/, "");
 
+        const newRelationNodeId = `relation_${relationType}_${meaningfulPartOfChildId}`;
         if (parentId) {
-          setAssetRelations((prev) => {
-            const updatedRelations: any = { ...prev };
+          setAssetRelations((prev: AssetRelations) => {
+            const updatedRelations = { ...prev };
             if (!updatedRelations[parentId]) {
               updatedRelations[parentId] = {};
             }
-            if (!updatedRelations[parentId][relationType]) {
-              updatedRelations[parentId][relationType] = [];
+            const relationKey = `relation${relationType}_${childAssetId}`;
+            if (!updatedRelations[parentId][relationKey]) {
+              updatedRelations[parentId][relationKey] = [];
             }
-            updatedRelations[parentId][relationType].push(childAssetId);
+            updatedRelations[parentId][relationKey].push(childAssetId);
             return updatedRelations;
           });
+
           setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
+          setNodes((currentNodes) =>
+            currentNodes.map((node) => {
+              if (node.id === source) {
+                const updatedNodeData = {
+                  ...node.data,
+
+                  childId: [
+                    ...(node.data.childId || []),
+                    meaningfulPartOfChildId,
+                  ],
+                };
+                return { ...node, data: updatedNodeData };
+              }
+              return node;
+            })
+          );
         }
       } else if (
         sourceNode.data.type === "factory" &&
@@ -319,10 +441,10 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       selectedElements?.edges?.length > 0
     ) {
       const nodeIdsToDelete = new Set(
-        selectedElements.nodes.map((node: { id: any; }) => node.id)
+        selectedElements.nodes.map((node: { id: any }) => node.id)
       );
       const edgeIdsToDelete = new Set(
-        selectedElements.edges.map((edge: { id: any; }) => edge.id)
+        selectedElements.edges.map((edge: { id: any }) => edge.id)
       );
 
       // Filter nodes and edges to remove selected ones
@@ -330,7 +452,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       const newEdges = edges.filter((edge) => !edgeIdsToDelete.has(edge.id));
 
       // Update shopFloorAssets based on the remaining nodes
-      const newShopFloorAssets:any = { ...shopFloorAssets };
+      const newShopFloorAssets: any = { ...shopFloorAssets };
       Object.keys(newShopFloorAssets).forEach((key) => {
         newShopFloorAssets[key] = newShopFloorAssets[key].filter(
           (assetId: unknown) => !nodeIdsToDelete.has(assetId)
@@ -341,7 +463,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       });
 
       // Update assetRelations based on the remaining nodes and edges
-      const newAssetRelations:any = { ...assetRelations };
+      const newAssetRelations: any = { ...assetRelations };
       Object.keys(newAssetRelations).forEach((parentId) => {
         Object.keys(newAssetRelations[parentId]).forEach((relationType) => {
           newAssetRelations[parentId][relationType] = newAssetRelations[
@@ -401,6 +523,43 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     },
     [router]
   );
+
+  const createAssetNode = (
+    position,
+    item,
+    factoryNodeId,
+    idPrefix,
+    label,
+    relations
+  ) => {
+    const assetNode = {
+      id: idPrefix + `_${new Date().getTime()}`,
+      type: "asset",
+      position,
+      data: {
+        type: "asset",
+        label,
+        id: item.id,
+        relations: relations,
+      },
+      style: {
+        backgroundColor: "#caf1d8",
+        border: "none",
+      },
+    };
+
+    setNodes((nds) => [...nds, assetNode]);
+
+    setShopFloorAssets((prev) => ({
+      ...prev,
+      [factoryNodeId]: [...(prev[factoryNodeId] || []), item.id],
+    }));
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
@@ -414,60 +573,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         }
       );
 
-      // Filter out child nodes and edges, preserving the parent node
-      const filteredNodes = nodes.filter((node) =>
-        node.id.startsWith("factory")
-      );
-      const filteredEdges = edges.filter(
-        (edge) =>
-          edge.source.startsWith("factory") && edge.target.startsWith("factory")
-      );
-
-      setNodes(filteredNodes);
-      setEdges(filteredEdges);
-
-      // Prepare the payload for updating assets and relations
-      const shopFloorUpdates = Object.entries(shopFloorAssets)
-        .filter(([shopFloorId, _]) => shopFloorId.startsWith("shopFloor_"))
-        .reduce((acc: any, [shopFloorId, assets]) => {
-          acc[shopFloorId] = [];
-          return acc;
-        }, {});
-
-      const updateAssetPayload = {
-        shopFloors: shopFloorUpdates,
-      };
-
-      const updateRelationPayload = {
-        assetRelations: {},
-      };
-      console.log(updateAssetPayload, updateRelationPayload, "  The data");
-
-      await axios.patch(
-        `${API_URL}/shop-floor/update-asset`,
-        updateAssetPayload.shopFloors,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-
-      await axios.patch(
-        `${API_URL}/asset/update-relations`,
-        updateRelationPayload.assetRelations,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      // setShopFloorAssets([]);
-      // setAssetRelations([]);
       setToastMessage("Selected elements deleted successfully.");
       setIsSaveDisabled(false);
     } catch (error) {
@@ -539,33 +644,18 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
             break;
 
           case "asset":
-            const closestShopFloorId = determineClosestShopFloor(position);
             const factoryNodeId = `${factory.id}`;
             if (factoryNodeId) {
-              const assetNode = {
-                id: idPrefix + `_${new Date().getTime()}`,
-                type: "asset",
-
+              createAssetNode(
                 position,
-                data: {
-                  type: type,
-                  label,
-
-                  id: item.id,
-                },
-                style: {
-                  backgroundColor: "#caf1d8",
-                  border: "none",
-                },
-              };
-
-              setNodes((nds) => [...nds, assetNode]);
-
-              setShopFloorAssets((prev:any) => ({
-                ...prev,
-                [factoryNodeId]: [...(prev[factoryNodeId] || []), item.id],
-              }));
+                item,
+                factoryNodeId,
+                idPrefix,
+                label,
+                item.relations
+              );
             }
+
             break;
 
           case "relation":
@@ -624,234 +714,8 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   }, []);
 
   const handleUpdate = useCallback(async () => {
-    let shopFloorData = await getShopFloorAndAssetData(factoryId);
-
-    const relationList = await extractHasRelations(shopFloorData?.assetsData);
-
-    console.log(relationList, "RelationList");
-
-    shopFloorData = shopFloorData?.assetIds;
-
-    const simplifyAssetId = (assetId: string) => {
-      const parts = assetId.split("_");
-      const idPartsWithoutTimestamp = parts[1].split(":");
-      idPartsWithoutTimestamp[idPartsWithoutTimestamp.length - 1] =
-        idPartsWithoutTimestamp[idPartsWithoutTimestamp.length - 1].split(
-          ":"
-        )[0];
-      return idPartsWithoutTimestamp.join(":");
-    };
-
-    const getUniqueAssetsForShopFloor = (shopFloorId: string) => {
-      const directAssets = new Set(shopFloorAssets[shopFloorId] || []);
-
-      edges.forEach((edge) => {
-        const sourceNode = nodes.find((node) => node.id === edge.source);
-        const targetNode = nodes.find((node) => node.id === edge.target);
-
-        if (sourceNode && targetNode) {
-          if (
-            sourceNode.data.type === "relation" &&
-            targetNode.data.type === "asset"
-          ) {
-            if (sourceNode.data.parentId === shopFloorId) {
-              directAssets.add(simplifyAssetId(targetNode.id));
-            }
-          }
-        }
-      });
-
-      return Array.from(directAssets);
-    };
-
-    const shopFloorUpdates = Object.entries(shopFloorAssets)
-      .filter(([shopFloorId, _]) => shopFloorId.startsWith("shopFloor_"))
-      .reduce((acc: any, [shopFloorId, assets]) => {
-        const simplifiedAssets =
-          getUniqueAssetsForShopFloor(shopFloorId).map(simplifyAssetId);
-
-        const simplifiedShopFloorId = shopFloorId.replace(
-          /^shopFloor_urn:ngsi-ld:shopFloors:/,
-          ""
-        );
-
-        acc[`urn:ngsi-ld:shopFloors:${simplifiedShopFloorId}`] =
-          simplifiedAssets;
-
-        return acc;
-      }, {});
-
-    if (shopFloorData?.shopFloorId && shopFloorData?.assetIds) {
-      const simplifiedNewAssetId = simplifyAssetId(shopFloorData.assetIds);
-      const existingAssets = getUniqueAssetsForShopFloor(
-        shopFloorData.shopFloorId
-      );
-
-      // Check if the new asset ID is already included; if not, append it
-      if (!existingAssets.includes(simplifiedNewAssetId)) {
-        existingAssets.push(simplifiedNewAssetId);
-      }
-      // Construct the update payload for the specific shop floor
-      shopFloorUpdates[shopFloorData.shopFloorId] = existingAssets;
-
-      console.log(shopFloorData, " The Data");
-    }
-
-    const updateAssetPayload = {
-      shopFloors: shopFloorUpdates,
-    };
-
-    console.log("Updating assets YYY:", updateAssetPayload.shopFloors);
-
-    const simplifiedAssetRelations = Object.entries(assetRelations).reduce(
-      (acc: any, [assetId, relations]: any) => {
-        const simplifiedAssetId = simplifyAssetId(assetId);
-        acc[simplifiedAssetId] = Object.entries(relations).reduce(
-          (relAcc: any, [relationType, relatedAssets]: any) => {
-            relAcc[relationType] = relatedAssets.map(simplifyAssetId);
-            return relAcc;
-          },
-          {}
-        );
-        return acc;
-      },
-      {}
-    );
-    console.log(simplifiedAssetRelations, "ooooooooo");
-
-    const updateRelationPayload = {
-      assetRelations: simplifiedAssetRelations,
-    };
-    console.log(updateRelationPayload.assetRelations, "kkkkkkkkkkk");
-
-    function mergeRelations(relationList: any, simplifiedAssetRelations: any) {
-      // Iterate through each relation key in relationList
-      Object.entries(relationList).forEach(([relationKey, relationData]) => {
-        // Ensure relationData.object is treated as an array for consistency
-        const relationDataObjects = Array.isArray(relationData.object)
-          ? relationData.object
-          : [relationData.object];
-
-        // Iterate through each assetId and its relations in simplifiedAssetRelations
-        Object.entries(simplifiedAssetRelations).forEach(
-          ([assetId, relations]) => {
-            // Check if the current relationKey from relationList exists in the relations of the current asset
-            if (relations[relationKey]) {
-              // If so, filter out any objects that are already listed in relationDataObjects
-              const filteredObjects = relations[relationKey].filter(
-                (objId: any) => !relationDataObjects.includes(objId)
-              );
-
-              // If after filtering, there are no objects left, delete the relationKey from this asset's relations
-              if (filteredObjects.length === 0) {
-                delete relations[relationKey];
-              } else {
-                // Otherwise, update the relationKey with the filtered objects
-                relations[relationKey] = filteredObjects;
-              }
-            }
-
-            // Additionally, if relationList has new objects that are not in the current relations, add them
-            relationDataObjects.forEach((objId: any) => {
-              if (
-                !relations[relationKey] ||
-                !relations[relationKey].includes(objId)
-              ) {
-                if (!relations[relationKey]) {
-                  relations[relationKey] = [];
-                }
-                relations[relationKey].push(objId);
-              }
-            });
-          }
-        );
-      });
-
-      // Return the updated simplifiedAssetRelations after merging
-      return simplifiedAssetRelations;
-    }
-
-    const mergedRelations = mergeRelations(
-      relationList,
-      simplifiedAssetRelations
-    );
-
-    console.log(mergedRelations, simplifiedAssetRelations, "Merged Relations");
-
-    const payLoad = {
-      factoryId: factoryId,
-      factoryData: {
-        nodes: nodes.map(({ id, type, position, data, style }) => ({
-          id,
-          type,
-          position,
-          data,
-          style,
-        })),
-        edges: edges.map(({ id, source, target, type, data }) => ({
-          id,
-          source,
-          target,
-          type,
-          data,
-        })),
-        shopFloor: shopFloorData,
-      },
-    };
-
     try {
-      await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-
       setToastMessage("Flowchart updated successfully");
-
-      try {
-        if (Object.keys(updateAssetPayload.shopFloors).length > 0) {
-          console.log(updateAssetPayload.shopFloors, "Final data");
-          await axios.patch(
-            `${API_URL}/shop-floor/update-asset`,
-            updateAssetPayload.shopFloors,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              withCredentials: true,
-            }
-          );
-          console.log("Shop floor assets updated successfully.");
-        } else {
-          console.log("No shop floor assets to update.");
-        }
-        console.log(mergedRelations.length, "oooooooooooo");
-
-        if (Object.keys(mergedRelations).length > 0) {
-          await axios.patch(
-            `${API_URL}/asset/update-relation`,
-            mergedRelations,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              withCredentials: true,
-            }
-          );
-          console.log("Asset relations updated successfully.");
-        } else {
-          console.log("No asset relations to update.");
-        }
-
-        setToastMessage("Data updated successfully");
-      } catch (error) {
-        setToastMessage("Error updating data");
-        console.error("Error updating data:", error);
-      }
     } catch (error) {
       setToastMessage("Error updating data");
       console.error("Error updating data:", error);
@@ -859,120 +723,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
   const handleSave = useCallback(async () => {
-    const simplifyAssetId = (assetId: string) => {
-      const parts = assetId.split("_");
-      const idPartsWithoutTimestamp = parts[1].split(":");
-      idPartsWithoutTimestamp[idPartsWithoutTimestamp.length - 1] =
-        idPartsWithoutTimestamp[idPartsWithoutTimestamp.length - 1].split(
-          ":"
-        )[0];
-      return idPartsWithoutTimestamp.join(":");
-    };
-
-    const getUniqueAssetsForShopFloor = (shopFloorId: string) => {
-      const directAssets = new Set(shopFloorAssets[shopFloorId] || []);
-
-      edges.forEach((edge) => {
-        const sourceNode = nodes.find((node) => node.id === edge.source);
-        const targetNode = nodes.find((node) => node.id === edge.target);
-
-        if (sourceNode && targetNode) {
-          if (
-            sourceNode.data.type === "relation" &&
-            targetNode.data.type === "asset"
-          ) {
-            if (sourceNode.data.parentId === shopFloorId) {
-              directAssets.add(simplifyAssetId(targetNode.id));
-            }
-          }
-        }
-      });
-
-      return Array.from(directAssets);
-    };
-
-    const shopFloorUpdates = Object.entries(shopFloorAssets)
-      .filter(([shopFloorId, _]) => shopFloorId.startsWith("shopFloor_"))
-      .reduce((acc: any, [shopFloorId, assets]) => {
-        const simplifiedAssets =
-          getUniqueAssetsForShopFloor(shopFloorId).map(simplifyAssetId);
-
-        const simplifiedShopFloorId = shopFloorId.replace(
-          /^shopFloor_urn:ngsi-ld:shopFloors:/,
-          ""
-        );
-
-        acc[`urn:ngsi-ld:shopFloors:${simplifiedShopFloorId}`] =
-          simplifiedAssets;
-
-        return acc;
-      }, {});
-
-    const updateAssetPayload = {
-      shopFloors: shopFloorUpdates,
-    };
-
-    const simplifiedAssetRelations = Object.entries(assetRelations).reduce(
-      (acc: any, [assetId, relations]: any) => {
-        const simplifiedAssetId = simplifyAssetId(assetId);
-        acc[simplifiedAssetId] = Object.entries(relations).reduce(
-          (relAcc: any, [relationType, relatedAssets]: any) => {
-            relAcc[relationType] = relatedAssets.map(simplifyAssetId);
-            return relAcc;
-          },
-          {}
-        );
-        return acc;
-      },
-      {}
-    );
-
-    const updateRelationPayload = {
-      assetRelations: simplifiedAssetRelations,
-    };
-    console.log("Relation", updateRelationPayload.assetRelations);
-    console.log("Asset", updateAssetPayload.shopFloors);
     onSave();
-    try {
-      // Conditional API call for updating shop floor assets
-      if (Object.keys(updateAssetPayload.shopFloors).length > 0) {
-        await axios.patch(
-          `${API_URL}/shop-floor/update-asset`,
-          updateAssetPayload.shopFloors,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            withCredentials: true,
-          }
-        );
-        console.log("Shop floor assets updated successfully.");
-      } else {
-        console.log("No shop floor assets to update.");
-      }
-
-      // Conditional API call for updating asset relations
-      if (Object.keys(updateRelationPayload.assetRelations).length > 0) {
-        await axios.patch(
-          `${API_URL}/asset/update-relation`,
-          updateRelationPayload.assetRelations,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            withCredentials: true,
-          }
-        );
-        console.log("Asset relations updated successfully.");
-      } else {
-        console.log("No asset relations to update.");
-      }
-    } catch (error) {
-      console.error("Error while updating data:", error);
-      // Handle error appropriately
-    }
   }, [
     factory,
     shopFloorAssets,
@@ -984,6 +735,14 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
   return (
     <ReactFlowProvider>
+      {showModal && (
+        <RelationsModal
+          position={modalPosition}
+          relations={currentNodeRelations}
+          onSubmit={handleRelationSubmit}
+          onCancel={handleCloseModal}
+        />
+      )}
       <div style={{}}>
         <Button
           label="Save"
@@ -1039,6 +798,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           onSelectionChange={onSelectionChange}
           fitView
           ref={elementRef}
+          onNodeClick={onElementClick}
         >
           <MiniMap />
           <Controls />
