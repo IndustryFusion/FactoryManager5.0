@@ -4,7 +4,7 @@ import { Checkbox } from "primereact/checkbox";
 
 interface RelationsModalProps {
   position: { x: number; y: number };
-  relations: any;
+  relations?: any;
   onSubmit: (selectedRelations: string[]) => void;
   onCancel: () => void;
 }

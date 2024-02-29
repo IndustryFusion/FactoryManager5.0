@@ -501,7 +501,7 @@ export function extractHasRelations(assetData: any): { [key: string]: any } {
       }
     }
   });
-  console.log(hasRelations, "llllllllll");
+
   return hasRelations;
 }
 
