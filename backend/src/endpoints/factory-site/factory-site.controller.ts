@@ -3,10 +3,14 @@ import { FactorySiteService } from './factory-site.service';
 import * as jsonData from './factory-schema.json';
 import { getSessionToken } from '../session/session.service';
 import { Request, Response } from 'express';
+import { ShopFloorService } from '../shop-floor/shop-floor.service';
 
 @Controller('factory-site')
 export class FactorySiteController {
-  constructor(private readonly factorySiteService: FactorySiteService) {}
+  constructor(
+    private readonly factorySiteService: FactorySiteService,
+    private readonly shopFloorService: ShopFloorService
+    ) {}
 
   @Post()
   async create(@Body() data, @Req() req: Request) {
@@ -86,13 +90,15 @@ export class FactorySiteController {
   async remove(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.factorySiteService.remove(id, token);
+      const response = await this.factorySiteService.remove(id, token, this.shopFloorService);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
           status: response['status'],
           message: 'Deleted Successfully',
         }
+      } else {
+        return response;
       }
     } catch (err) {
       return { 

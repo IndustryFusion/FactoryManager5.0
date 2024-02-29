@@ -40,7 +40,7 @@ export class ShopFloorController {
           
           console.log('after shopfloor data ',shopFloorData)
           data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
-          const deleteResponse = await this.factorySiteService.remove(factoryId, token);
+          const deleteResponse = await this.factorySiteService.remove(factoryId, token, this.shopFloorService);
           if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
             const response = await axios.post(this.scorpioUrl, data, { headers });
             console.log('response ',response['status']);
@@ -188,7 +188,7 @@ export class ShopFloorController {
             }
             console.log('after shopfloor data ',shopFloorData)
             data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
-            const deleteResponse = await this.factorySiteService.remove(factoryId, token);
+            const deleteResponse = await this.factorySiteService.remove(factoryId, token, this.shopFloorService);
             if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
               const response = await axios.post(this.scorpioUrl, data, { headers });
               console.log('response ',response['status']);

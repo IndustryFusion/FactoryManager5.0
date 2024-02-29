@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FactorySiteDescriptionDto } from './dto/factorySiteDescription.dto';
+import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import axios from 'axios';
 @Injectable()
 export class FactorySiteService {
@@ -155,7 +156,7 @@ export class FactorySiteService {
     }
   }
 
-  async remove(id: string, token: string) {
+  async remove(id: string, token: string, shopFloorService: ShopFloorService) {
     try {
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -164,9 +165,11 @@ export class FactorySiteService {
       };
       const url = this.scorpioUrl + '/' + id;
       const response = await axios.delete(url, {headers});
-      return {
-        status: response.status,
-        data: response.data
+      if(response['status'] == 200 || response['status'] == 204) {
+        let deleteResponse = await shopFloorService.deleteScript(id, token);
+        return {
+          status: deleteResponse.status
+        }
       }
     } catch (err) {
       throw err;

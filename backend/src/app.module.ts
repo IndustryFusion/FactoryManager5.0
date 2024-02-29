@@ -27,6 +27,8 @@ import { FileService } from './endpoints/file/file.service';
 import { FactorySiteSchema, FactorySite } from './endpoints/schemas/factory-site.schema';
 import { ReactFlowController } from './endpoints/react-flow/react-flow.controller';
 import { ReactFlowService } from './endpoints/react-flow/react-flow.service';
+import { AllocatedAssetController } from './endpoints/allocated-asset/allocated-asset.controller';
+import { AllocatedAssetService } from './endpoints/allocated-asset/allocated-asset.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -52,7 +54,8 @@ console.log('FactorySite ',FactorySite)
     ShopFloorController,
     NonShopFloorAssetsController,
     FileController,
-    ReactFlowController
+    ReactFlowController,
+    AllocatedAssetController
   ],
   providers: [
     AppService,
@@ -67,7 +70,8 @@ console.log('FactorySite ',FactorySite)
     ShopFloorService,
     NonShopFloorAssetsService,
     FileService,
-    ReactFlowService
+    ReactFlowService,
+    AllocatedAssetService
   ]
 })
 export class AppModule {
