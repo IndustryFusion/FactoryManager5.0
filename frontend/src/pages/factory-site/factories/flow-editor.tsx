@@ -146,7 +146,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           borderRadius: "45%",
         },
         data: {
-          label: relationName,
+          label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
           parentId: selectedAsset,
         },
