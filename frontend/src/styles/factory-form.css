@@ -131,3 +131,8 @@ textarea {
   align-items: center;
   margin: 0;
 }
+.input-invalid-text{
+  font-size: 12px;
+  color: #ff0000;
+  font-weight: bold;
+}

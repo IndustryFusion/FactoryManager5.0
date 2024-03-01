@@ -130,6 +130,8 @@ export class ShopFloorController {
           status: response['status'],
           message: 'Updated Successfully',
         }
+      } else {
+        return response;
       }
     } catch (err) {
       console.log('err ',err);

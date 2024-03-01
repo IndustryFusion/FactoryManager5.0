@@ -38,6 +38,8 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     const [updateShopFloor, setUpdateShopFloor] = useState<Record<string, any>>({});
     const toast = useRef<Toast | null>(null);
     const [isEdit, setIsEdit] = useState(true);
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+    const [validateShopFloor, setValidateShopFloor] = useState(false);
 
     const findShopFloorTemplate = async () => {
         try {
@@ -50,7 +52,10 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             })
             setShopFloorTemplate(response.data)
             console.log("shop floor template:", response.data);
-        } catch (error) {
+        } catch (error: any) {
+            if (error.response.status === 404) {
+                showError("Fetching shopfloor template")
+            }
             console.error("Error fetching shopfloor template", error)
         }
     }
@@ -86,8 +91,11 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 console.log('flattenedData ', flattenedData)
                 setShopFloor(flattenedData);
             }
-        } catch (err) {
-            console.error("Error fetching shopfloor template", err)
+        } catch (error: any) {
+            if (error.response.status === 404) {
+                showError("Fetching shopfloor data")
+            }
+            console.error("Fetching shopfloor data")
         }
     }
 
@@ -96,21 +104,33 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         getShopFloorData();
     }, [editShopFloorProp])
 
+    console.log(updateShopFloor);
+
+
     const handleInputTextChange = (
         e: ChangeEvent<HTMLInputElement>,
         key: keyof ShopFloor
     ) => {
+
+
         setUpdateShopFloor({ ...updateShopFloor, [key]: e.target.value });
+
+
+
+        setValidateShopFloor(false);
     };
     const handleInputTextAreaChange = (
         e: ChangeEvent<HTMLTextAreaElement>,
         key: keyof ShopFloor
     ) => {
         setUpdateShopFloor({ ...updateShopFloor, [key]: e.target.value });
+
     };
+
     const handleDropdownChange = (e: { value: string }, key: keyof ShopFloor) => {
         setUpdateShopFloor({ ...updateShopFloor, [key]: e.value });
     };
+
     const handleFileUpload = async (e: { files: File[] }) => {
         const file = e.files[0];
         console.log("file name", file);
@@ -122,6 +142,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 setUpdateShopFloor({ ...updateShopFloor, thumbnail: uploadedUrl });
                 setUploadedFileName(file.name);
                 setUploading(false);
+                setSubmitDisabled(false);
             } catch (error) {
                 console.error("Error uploading file:", error);
                 setUploading(false);
@@ -133,37 +154,48 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         event.preventDefault();
         setUpdateShopFloor({});
         setIsEdit(true);
+        setValidateShopFloor(false);
     }
 
     const handleSave = async () => {
-        try {
-            console.log('updateShopFloor ', updateShopFloor);
-            const finalData = Object.keys(updateShopFloor).reduce((acc, key) => {
-                acc[`http://www.industry-fusion.org/schema#${key}`] = {
-                    type: "Property",
-                    value: updateShopFloor[key],
-                };
-                return acc;
-            }, {} as ShopFloor);
-            console.log('finalData ', finalData);
-            const response = await axios.patch(API_URL + `/shop-floor/${editShopFloorProp}`, finalData, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            })
+        if (updateShopFloor.floor_name === "") {
+            setValidateShopFloor(true);
+            showError("Please fill all required fields")
+        } else {
+            try {
+                console.log('updateShopFloor ', updateShopFloor);
 
-            const shopFloorResponse = response.data;
-            if (shopFloorResponse.status === 200 || shopFloorResponse.status == 204) {
-                showSuccess();
-            } else {
-                showError();
+                const finalData = Object.keys(updateShopFloor).reduce((acc, key) => {
+                    acc[`http://www.industry-fusion.org/schema#${key}`] = {
+                        type: "Property",
+                        value: updateShopFloor[key],
+                    };
+                    return acc;
+                }, {} as ShopFloor);
+
+                console.log('finalData ', finalData);
+
+                const response = await axios.patch(API_URL + `/shop-floor/${editShopFloorProp}`, finalData, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                })
+
+                const shopFloorResponse = response.data;
+                if (shopFloorResponse.status === 200 || shopFloorResponse.status == 204) {
+                    showSuccess();
+                } else {
+                    showError('Error Updating Shop Floor');
+                }
+
+            } catch (error: any) {
+                showError("Error saving shop floor");
+                console.error("Error saving shop floor", error)
             }
-
-        } catch (error) {
-            console.error("Error saving shop floor", error)
         }
+
     }
 
     const showSuccess = () => {
@@ -176,25 +208,22 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             });
         }
     };
-    const showError = () => {
+    const showError = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
-                severity: 'error', summary: 'Error',
-                detail: 'Error Updating Shop Floor', life: 3000
+                severity: 'error',
+                summary: 'Error',
+                detail: message,
+                life: 3000
             });
         }
     }
 
     const renderFields = (key: string, property: Property) => {
-        let value;
-        if (updateShopFloor[key]) {
+        let value = shopFloor[key];
+        if (updateShopFloor.hasOwnProperty(key)) {
             value = updateShopFloor[key];
-        } else {
-            value = shopFloor[key];
         }
-
-        console.log('key ', key)
-        console.log('value ', value)
         return (
             <>
                 {property.type === "string" &&
@@ -212,13 +241,15 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                             :
                             <InputText
                                 id={key}
-                                value={value || ""}
+                                value={value}
                                 type="text"
                                 placeholder={property?.description}
                                 onChange={(e) => handleInputTextChange(e, key)}
                             />
                         }
-
+                        {key === "floor_name" && validateShopFloor &&
+                            <p className="input-invalid-text" >ShopFloor Name is required</p>
+                        }
                     </div>
                 }
                 {property.type === "object" &&
@@ -235,6 +266,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                                 isEditProp={isEdit}
                                 fileProp={value}
                                 setIsEditProp={setIsEdit}
+                                setSubmitDisabledProp={setSubmitDisabled}
                             />
                         </div>
                     )
@@ -266,7 +298,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
-              onClick={()=>setIsEditProp(false)}
+                onClick={() => setIsEditProp(false)}
             />
             <Button
                 severity="secondary" text raised
@@ -279,6 +311,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 label="Submit"
                 onClick={handleSave}
                 className="border-none  ml-2 mr-2"
+                disabled={submitDisabled}
             />
         </div>
     )
