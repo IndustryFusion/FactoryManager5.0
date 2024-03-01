@@ -115,29 +115,34 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       console.error("Selected asset node not found");
       return;
     }
-    const newCount = (relationCounts[relationsInput] || 0) + 1;
-    const updatedRelationCounts = {
-      ...relationCounts,
-      [relationsInput]: newCount,
-    };
-    setRelationCounts(updatedRelationCounts);
 
+    // Ensure we handle both single and multiple relations uniformly
     const relations = Array.isArray(relationsInput)
       ? relationsInput
       : [relationsInput];
 
-    let existingRelationsCount = nodes.filter(
-      (node) =>
-        node.data.type === "relation" && node.data.parentId === selectedAsset
-    ).length;
-    let baseXOffset = 200 + existingRelationsCount * 200; // Increment starting x position based on existing relations
+    relations.forEach((relationName) => {
+      // Increment the count for this specific relation, or initialize it if not present
+      const newCount = (relationCounts[relationName] || 0) + 1;
+      const updatedRelationCounts = {
+        ...relationCounts,
+        [relationName]: newCount,
+      };
+      // Persist the updated counts
+      setRelationCounts(updatedRelationCounts);
 
-    relations.forEach((relationName, index) => {
-      const xOffset = index + 10; // Horizontal spacing between each relation node
+      // Calculate position based on existing relations to avoid overlap
+      let existingRelationsCount = nodes.filter(
+        (node) =>
+          node.data.type === "relation" && node.data.parentId === selectedAsset
+      ).length;
+      let baseXOffset = 200 + existingRelationsCount * 200;
 
+      // Create the ID using the updated count
       const relationNodeId = `relation-${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
+
       const newRelationNode = {
         id: relationNodeId,
         style: {
@@ -151,23 +156,22 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           parentId: selectedAsset,
         },
         position: {
-          x: assetNode.position.x + baseXOffset + xOffset, // calculated x offset
-          y: assetNode.position.y + 200, // Fixed vertical offset
+          x: assetNode.position.x + baseXOffset, // adjusted x offset
+          y: assetNode.position.y + 200, // fixed y offset for visual consistency
         },
       };
 
+      // Define the new edge connecting the asset node to the new relation node
       const newEdge: any = {
         id: `reactflow_edge-${selectedAsset}-${relationNodeId}`,
         source: selectedAsset,
         target: relationNodeId,
       };
 
-      // Update state with new node and edge
+      // Update state with the new node and edge, ensuring the UI reflects these changes
       setNodes((prevNodes) => [...prevNodes, newRelationNode]);
       setEdges((prevEdges) => addEdge(newEdge, prevEdges));
-      console.log(edges, "edges value");
     });
-    [nodes, edges, relationCounts];
   };
 
   useEffect(() => {
@@ -230,19 +234,33 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           response.data.factoryData.nodes &&
           response.data.factoryData.edges
         ) {
+          // First, set the nodes and edges as usual
           setNodes(response.data.factoryData.nodes);
           setEdges(response.data.factoryData.edges);
-          nodes.forEach((node) => {
-            if (node.type === "shopFloor") {
-              // If the node is a shopFloor, add it to the shopFloorAssets list
-              shopFloorAssets!.push(node);
-            } else if (node.type === "asset") {
-              // If the node is an asset, check if it has any incoming edges
-              const incomingEdges = edges.filter(
-                (edge) => edge.target === node.id
-              );
+
+          // Then, analyze the relation nodes to update relationCounts
+          const updatedRelationCounts: any = {};
+
+          response.data.factoryData.nodes.forEach((node) => {
+            if (node.data.type === "relation") {
+              // Assuming node IDs follow the format "relation-relationName_count"
+              const match = node.id.match(/relation-(.+)_([0-9]+)/);
+              if (match) {
+                const [, relationName, count] = match;
+                const numericCount = parseInt(count, 10);
+                // Update the relationCounts state with the highest count for each relation
+                if (
+                  !updatedRelationCounts[relationName] ||
+                  updatedRelationCounts[relationName] < numericCount
+                ) {
+                  updatedRelationCounts[relationName] = numericCount;
+                }
+              }
             }
           });
+
+          // Update the relationCounts state to reflect the highest counts found
+          setRelationCounts(updatedRelationCounts);
         } else {
           console.log("Invalid data received from backend");
         }
@@ -250,7 +268,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         console.error("Error fetching flowchart data:", error);
       }
     }
-  }, [setNodes, setEdges, factoryId]);
+  }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   useEffect(() => {
     onRestore();
@@ -339,6 +357,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       } else {
         setToastMessage(response.data.message);
       }
+      onRestore();
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -585,6 +604,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       );
 
       setToastMessage("Selected elements deleted successfully.");
+      onRestore();
       setIsSaveDisabled(false);
     } catch (error) {
       console.error("Error deleting elements:", error);
@@ -745,7 +765,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     setShowModal(false);
   };
   const handleUpdate = useCallback(async () => {
-    onUpdate();
+    await onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
   const handleSave = useCallback(async () => {
