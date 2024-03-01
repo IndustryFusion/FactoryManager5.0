@@ -25,7 +25,11 @@ import {
   extractHasRelations,
   fetchAssetById,
 } from "@/utility/factory-site-utility";
+
+import EdgeAddContext from "@/context/EdgeAddContext";
 import { RelationsModal } from "@/components/reactFlowRelationModal";
+import CustomAssetNode from "@/components/customAssetNode";
+
 interface FlowEditorProps {
   factory: any;
   factoryId: string;
@@ -65,6 +69,10 @@ interface FactoryNodeData {
   label: any;
   type: any;
 }
+const nodeTypes = {
+  asset: CustomAssetNode,
+};
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -91,10 +99,80 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [relationCounts, setRelationCounts] = useState({});
+
+  const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
+    {}
+  );
+
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [selectedNodeData, setSelectedNodeData] = useState(null);
 
   const [selectedAsset, setSelectedAsset] = useState(null);
+
+  const onEdgeAdd = (assetId: string, relationsInput: any) => {
+    const assetNode = nodes.find((node) => node.id === selectedAsset);
+    if (!assetNode) {
+      console.error("Selected asset node not found");
+      return;
+    }
+
+    // Ensure we handle both single and multiple relations uniformly
+    const relations = Array.isArray(relationsInput)
+      ? relationsInput
+      : [relationsInput];
+
+    relations.forEach((relationName) => {
+      // Increment the count for this specific relation, or initialize it if not present
+      const newCount = (relationCounts[relationName] || 0) + 1;
+      const updatedRelationCounts = {
+        ...relationCounts,
+        [relationName]: newCount,
+      };
+      // Persist the updated counts
+      setRelationCounts(updatedRelationCounts);
+
+      // Calculate position based on existing relations to avoid overlap
+      let existingRelationsCount = nodes.filter(
+        (node) =>
+          node.data.type === "relation" && node.data.parentId === selectedAsset
+      ).length;
+      let baseXOffset = 200 + existingRelationsCount * 200;
+
+      // Create the ID using the updated count
+      const relationNodeId = `relation-${relationName}_${String(
+        newCount
+      ).padStart(3, "0")}`;
+
+      const newRelationNode = {
+        id: relationNodeId,
+        style: {
+          backgroundColor: "#ead6fd",
+          border: "none",
+          borderRadius: "45%",
+        },
+        data: {
+          label: `${relationName}_${String(newCount).padStart(3, "0")}`,
+          type: "relation",
+          parentId: selectedAsset,
+        },
+        position: {
+          x: assetNode.position.x + baseXOffset, // adjusted x offset
+          y: assetNode.position.y + 200, // fixed y offset for visual consistency
+        },
+      };
+
+      // Define the new edge connecting the asset node to the new relation node
+      const newEdge: any = {
+        id: `reactflow_edge-${selectedAsset}-${relationNodeId}`,
+        source: selectedAsset,
+        target: relationNodeId,
+      };
+
+      // Update state with the new node and edge, ensuring the UI reflects these changes
+      setNodes((prevNodes) => [...prevNodes, newRelationNode]);
+      setEdges((prevEdges) => addEdge(newEdge, prevEdges));
+    });
+  };
 
   useEffect(() => {
     if (factory && reactFlowInstance) {
@@ -156,19 +234,33 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
           response.data.factoryData.nodes &&
           response.data.factoryData.edges
         ) {
+          // First, set the nodes and edges as usual
           setNodes(response.data.factoryData.nodes);
           setEdges(response.data.factoryData.edges);
-          nodes.forEach((node) => {
-            if (node.type === "shopFloor") {
-              // If the node is a shopFloor, add it to the shopFloorAssets list
-              shopFloorAssets!.push(node);
-            } else if (node.type === "asset") {
-              // If the node is an asset, check if it has any incoming edges
-              const incomingEdges = edges.filter(
-                (edge) => edge.target === node.id
-              );
+
+          // Then, analyze the relation nodes to update relationCounts
+          const updatedRelationCounts: any = {};
+
+          response.data.factoryData.nodes.forEach((node) => {
+            if (node.data.type === "relation") {
+              // Assuming node IDs follow the format "relation-relationName_count"
+              const match = node.id.match(/relation-(.+)_([0-9]+)/);
+              if (match) {
+                const [, relationName, count] = match;
+                const numericCount = parseInt(count, 10);
+                // Update the relationCounts state with the highest count for each relation
+                if (
+                  !updatedRelationCounts[relationName] ||
+                  updatedRelationCounts[relationName] < numericCount
+                ) {
+                  updatedRelationCounts[relationName] = numericCount;
+                }
+              }
             }
           });
+
+          // Update the relationCounts state to reflect the highest counts found
+          setRelationCounts(updatedRelationCounts);
         } else {
           console.log("Invalid data received from backend");
         }
@@ -176,11 +268,58 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         console.error("Error fetching flowchart data:", error);
       }
     }
-  }, [setNodes, setEdges, factoryId]);
+  }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   useEffect(() => {
     onRestore();
   }, [onRestore]);
+
+  const onUpdate = useCallback(async () => {
+    const payLoad = {
+      factoryId: factoryId,
+
+      factoryData: {
+        nodes: nodes.map(({ id, type, position, data, style }) => ({
+          id,
+          type,
+          position,
+          data,
+          style,
+        })),
+        edges: edges.map(({ id, source, target, type, data }) => ({
+          id,
+          source,
+          target,
+          type,
+          data,
+        })),
+      },
+    };
+    console.log(payLoad, "kkkkkkkkkk");
+    try {
+      const response = await axios.patch(
+        `${API_URL}/react-flow/${factoryId}`,
+        payLoad,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+
+      if (response.data.success) {
+        setToastMessage("Flowchart Updated successfully");
+      } else {
+        setToastMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error saving flowchart:", error);
+      setToastMessage("Error saving flowchart");
+    }
+  }, [nodes, edges, factoryId]);
 
   const onSave = useCallback(async () => {
     const payLoad = {
@@ -218,6 +357,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       } else {
         setToastMessage(response.data.message);
       }
+      onRestore();
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -230,98 +370,23 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     }
   };
 
-  const onElementClick = useCallback(
-    (event: { clientX: number; clientY: number }, element: any) => {
-      console.log(event, "jjjj");
-      if (element.type === "asset") {
-        // Fetch asset details and set relations
-        fetchAssetById(element.data.id)
-          .then((relations: any) => {
-            setCurrentNodeRelations(relations);
-            setSelectedAsset(element.id); // Set the selected asset
-            setShowModal(true); // Show the modal
-            setModalPosition({ x: event.clientX, y: event.clientY }); // Set modal position
-          })
-          .catch((error) =>
-            console.error("Error fetching asset details:", error)
-          );
-      }
-    },
-    []
-  );
-  const handleRelationSubmit = (selectedRelations: any) => {
-    let newNodes = [...nodes];
-    let newEdges = [...edges];
-    const parentAssetNode = nodes.find((node) => node.id === selectedAsset);
-
-    if (!parentAssetNode) {
-      console.log("Parent asset node not found");
-      return;
+  const onElementClick = useCallback((event: any, element: any) => {
+    if (element.type === "asset") {
+      // Fetch asset details and set relations
+      fetchAssetById(element.data.id)
+        .then((relations: any) => {
+          setCurrentNodeRelations(relations);
+          setSelectedAsset(element.id); // Set the selected asset
+          setSelectedNodeData(element.data);
+          setShowModal(true); // Show the modal
+          setModalPosition({ x: event.clientX, y: event.clientY }); // Set modal position
+        })
+        .catch((error) =>
+          console.error("Error fetching asset details:", error)
+        );
     }
+  }, []);
 
-    let updatedRelationCounts: RelationCounts = { ...relationCounts };
-
-    selectedRelations.forEach((relationName: string) => {
-      // If the relationName doesn't exist in updatedRelationCounts, initialize it
-      if (!updatedRelationCounts[relationName]) {
-        updatedRelationCounts[relationName] = 0;
-      }
-    });
-
-    let xOffset = 150; // Horizontal offset between relation nodes
-    let startYOffset = 80; // Vertical offset from the parent asset to the first relation node
-    console.log(updatedRelationCounts, "The relation ID with incremented valu");
-    // Iterate over each selected relation
-    selectedRelations.forEach((relationName: string, index: number) => {
-      const isChecked = true;
-
-      if (isChecked) {
-        updatedRelationCounts[relationName]++;
-
-        const relationCount = updatedRelationCounts[relationName]
-          .toString()
-          .padStart(3, "0");
-        const relationNodeId = `relation_${relationName}_${relationCount}`;
-
-        const relationNode = {
-          id: relationNodeId,
-          label: relationName,
-          type: relationName,
-          position: {
-            x: parentAssetNode.position.x + xOffset * (index - 1), // Place horizontally
-            y: parentAssetNode.position.y + startYOffset, // Slightly below the parent asset
-          },
-          style: {
-            backgroundColor: "#ead6fd",
-            border: "none",
-            borderRadius: "45%",
-          },
-          data: {
-            label: relationName,
-            type: "relation",
-            parentId: selectedAsset,
-          },
-        };
-
-        newNodes.push(relationNode);
-
-        const newEdge: Edge = {
-          id: `reactflow__edge-${selectedAsset}-${relationNodeId}`,
-          source: selectedAsset,
-          target: relationNodeId,
-        };
-
-        newEdges.push(newEdge);
-      }
-    });
-
-    setNodes(newNodes);
-    setEdges(newEdges);
-
-    setRelationCounts(updatedRelationCounts);
-
-    setShowModal(false);
-  };
   const onConnect = useCallback(
     (params: any) => {
       const { source, target } = params;
@@ -329,7 +394,19 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       const targetNode: any = nodes.find((node) => node.id === target);
 
       if (!sourceNode || !targetNode) return;
+      // Check if the source node is a relation and it already has an outgoing connection
+      if (sourceNode.data.type === "relation") {
+        const alreadyHasChild = edges.some((edge) => edge.source === source);
 
+        if (alreadyHasChild) {
+          toast.current.show({
+            severity: "warn",
+            summary: "Operation not allowed",
+            detail: "A relation can only have one child node.",
+          });
+          return;
+        }
+      }
       if (
         sourceNode.data.type === "shopFloor" &&
         targetNode.data.type === "asset"
@@ -359,44 +436,39 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       ) {
         const parentId = sourceNode.data.parentId;
         const childAssetId = targetNode.id;
-        const relationType = sourceNode.data.label;
-        const meaningfulPartOfChildId = childAssetId
-          .replace(/^asset_/, "")
-          .replace(/_\d+$/, "");
 
-        const newRelationNodeId = `relation_${relationType}_${meaningfulPartOfChildId}`;
-        if (parentId) {
-          setAssetRelations((prev: AssetRelations) => {
-            const updatedRelations = { ...prev };
-            if (!updatedRelations[parentId]) {
-              updatedRelations[parentId] = {};
-            }
-            const relationKey = `relation${relationType}_${childAssetId}`;
-            if (!updatedRelations[parentId][relationKey]) {
-              updatedRelations[parentId][relationKey] = [];
-            }
-            updatedRelations[parentId][relationKey].push(childAssetId);
-            return updatedRelations;
-          });
+        const newRelationNodeId = `${sourceNode.id}_${childAssetId}`;
 
-          setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
-          setNodes((currentNodes) =>
-            currentNodes.map((node) => {
-              if (node.id === source) {
-                const updatedNodeData = {
-                  ...node.data,
+        // Update the relation node ID with the new ID
+        const updatedNodes = nodes.map((node) => {
+          if (node.id === sourceNode.id) {
+            return { ...node, id: newRelationNodeId };
+          }
+          return node;
+        });
 
-                  childId: [
-                    ...(node.data.childId || []),
-                    meaningfulPartOfChildId,
-                  ],
-                };
-                return { ...node, data: updatedNodeData };
-              }
-              return node;
-            })
-          );
-        }
+        // Update the edges with the new source node ID for any edge connected to the updated relation node
+        const updatedEdges = edges.map((edge) => {
+          if (edge.source === sourceNode.id) {
+            return { ...edge, source: newRelationNodeId };
+          } else if (edge.target === sourceNode.id) {
+            return { ...edge, target: newRelationNodeId };
+          }
+          return edge;
+        });
+
+        // Add a new edge for the current connection
+        const newEdge = {
+          id: `reactflow_edge-${newRelationNodeId}`,
+          source: newRelationNodeId,
+          target: childAssetId,
+          animated: true,
+        };
+
+        setNodes(updatedNodes);
+        setEdges([...updatedEdges, newEdge]);
+
+        console.log("Updated Edges:", [...updatedEdges, newEdge]);
       } else if (
         sourceNode.data.type === "factory" &&
         targetNode.data.type === "shopFloor"
@@ -441,68 +513,62 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       selectedElements?.edges?.length > 0
     ) {
       const nodeIdsToDelete = new Set(
-        selectedElements.nodes.map((node: { id: any }) => node.id)
+        selectedElements.nodes?.map((node: any) => node.id)
       );
       const edgeIdsToDelete = new Set(
-        selectedElements.edges.map((edge: { id: any }) => edge.id)
+        selectedElements.edges?.map((edge: any) => edge.id)
       );
 
-      // Filter nodes and edges to remove selected ones
-      const newNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
-      const newEdges = edges.filter((edge) => !edgeIdsToDelete.has(edge.id));
-
-      // Update shopFloorAssets based on the remaining nodes
-      const newShopFloorAssets: any = { ...shopFloorAssets };
-      Object.keys(newShopFloorAssets).forEach((key) => {
-        newShopFloorAssets[key] = newShopFloorAssets[key].filter(
-          (assetId: unknown) => !nodeIdsToDelete.has(assetId)
-        );
-        if (newShopFloorAssets[key].length === 0) {
-          delete newShopFloorAssets[key]; // Remove the key if no assets are left
+      // Collect edges that should be deleted due to node deletion
+      const connectedEdgeIdsToDelete = new Set();
+      edges.forEach((edge) => {
+        if (
+          nodeIdsToDelete.has(edge.source) ||
+          nodeIdsToDelete.has(edge.target)
+        ) {
+          connectedEdgeIdsToDelete.add(edge.id);
         }
       });
 
-      // Update assetRelations based on the remaining nodes and edges
-      const newAssetRelations: any = { ...assetRelations };
-      Object.keys(newAssetRelations).forEach((parentId) => {
-        Object.keys(newAssetRelations[parentId]).forEach((relationType) => {
-          newAssetRelations[parentId][relationType] = newAssetRelations[
-            parentId
-          ][relationType].filter(
-            (childAssetId: unknown) => !nodeIdsToDelete.has(childAssetId)
+      // Prepare to track updates to relation node IDs
+      let newNodes = [...nodes];
+      let relationNodeUpdates = new Map();
+
+      // Check each edge for deletion to see if it affects a relation node
+      connectedEdgeIdsToDelete.forEach((edgeId) => {
+        const edgeToDelete = edges.find((edge) => edge.id === edgeId);
+        if (edgeToDelete) {
+          // Focus on updating relation node if it's the target of the deleted edge
+          const targetNode = newNodes.find(
+            (node) => node.id === edgeToDelete.source
           );
-          if (newAssetRelations[parentId][relationType].length === 0) {
-            delete newAssetRelations[parentId][relationType]; // Remove the relation type if no child assets are left
+          if (targetNode && targetNode.data.type === "relation") {
+            //  the relation node's ID by removing asset-specific identifier
+            const newId = targetNode.id.split("_asset")[0]; // removes everything after "_asset"
+            relationNodeUpdates.set(targetNode.id, newId);
+            targetNode.id = newId; // update ID in newNodes
           }
-        });
-        if (Object.keys(newAssetRelations[parentId]).length === 0) {
-          delete newAssetRelations[parentId]; // Remove the parent asset if it has no relations left
         }
       });
+
+      // Remove deleted nodes and update edges to reflect any ID changes
+      newNodes = newNodes.filter((node) => !nodeIdsToDelete.has(node.id));
+      const newEdges = edges
+        .filter((edge) => !connectedEdgeIdsToDelete.has(edge.id))
+        .map((edge) => {
+          // Adjust source - target IDs based on earlier updates
+          edge.source = relationNodeUpdates.get(edge.source) || edge.source;
+          edge.target = relationNodeUpdates.get(edge.target) || edge.target;
+          return edge;
+        });
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setShopFloorAssets(newShopFloorAssets);
-      setAssetRelations(newAssetRelations); // Update state with the modified asset relations
 
-      // Log the updated state for verification
-      console.log(
-        "Updated ShopFloorAssets after deletion:",
-        newShopFloorAssets
-      );
-      console.log("Updated AssetRelations after deletion:", newAssetRelations);
+      // Clear the selection to prevent errors
+      setSelectedElements(null);
     }
-  }, [
-    selectedElements,
-    nodes,
-    edges,
-    shopFloorAssets,
-    assetRelations,
-    setNodes,
-    setEdges,
-    setShopFloorAssets,
-    setAssetRelations,
-  ]);
+  }, [selectedElements, nodes, edges, setNodes, setEdges, setSelectedElements]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleBackspacePress);
@@ -524,42 +590,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     [router]
   );
 
-  const createAssetNode = (
-    position,
-    item,
-    factoryNodeId,
-    idPrefix,
-    label,
-    relations
-  ) => {
-    const assetNode = {
-      id: idPrefix + `_${new Date().getTime()}`,
-      type: "asset",
-      position,
-      data: {
-        type: "asset",
-        label,
-        id: item.id,
-        relations: relations,
-      },
-      style: {
-        backgroundColor: "#caf1d8",
-        border: "none",
-      },
-    };
-
-    setNodes((nds) => [...nds, assetNode]);
-
-    setShopFloorAssets((prev) => ({
-      ...prev,
-      [factoryNodeId]: [...(prev[factoryNodeId] || []), item.id],
-    }));
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
@@ -574,6 +604,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       );
 
       setToastMessage("Selected elements deleted successfully.");
+      onRestore();
       setIsSaveDisabled(false);
     } catch (error) {
       console.error("Error deleting elements:", error);
@@ -645,15 +676,33 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
           case "asset":
             const factoryNodeId = `${factory.id}`;
+            setSelectedNodeData(item);
+
             if (factoryNodeId) {
-              createAssetNode(
+              const assetNode = {
+                id: idPrefix + `_${new Date().getTime()}`,
+                type: "asset",
+
                 position,
-                item,
-                factoryNodeId,
-                idPrefix,
-                label,
-                item.relations
-              );
+                data: {
+                  type: type,
+                  label,
+
+                  id: item.id,
+                },
+
+                style: {
+                  backgroundColor: "#caf1d8",
+                  border: "none",
+                },
+              };
+
+              setNodes((nds) => [...nds, assetNode]);
+
+              setShopFloorAssets((prev: any) => ({
+                ...prev,
+                [factoryNodeId]: [...(prev[factoryNodeId] || []), item.id],
+              }));
             }
 
             break;
@@ -712,14 +761,11 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   const onInit = useCallback((instance: any) => {
     setReactFlowInstance(instance);
   }, []);
-
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
   const handleUpdate = useCallback(async () => {
-    try {
-      setToastMessage("Flowchart updated successfully");
-    } catch (error) {
-      setToastMessage("Error updating data");
-      console.error("Error updating data:", error);
-    }
+    await onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
   const handleSave = useCallback(async () => {
@@ -735,76 +781,72 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
   return (
     <ReactFlowProvider>
-      {showModal && (
-        <RelationsModal
-          position={modalPosition}
-          relations={currentNodeRelations}
-          onSubmit={handleRelationSubmit}
-          onCancel={handleCloseModal}
-        />
-      )}
-      <div style={{}}>
-        <Button
-          label="Save"
-          onClick={handleSave}
-          className="m-2"
-          raised
-          disabled={isSaveDisabled}
-        />
+      <EdgeAddContext.Provider value={{ onEdgeAdd }}>
+        {" "}
+        <div style={{}}>
+          <Button
+            label="Save"
+            onClick={handleSave}
+            className="m-2"
+            raised
+            disabled={isSaveDisabled}
+          />
 
-        <Button
-          label="Undo"
-          onClick={onRestore}
-          className="p-button-secondary m-2"
-          raised
-        />
-        <Button
-          label="Update"
-          onClick={handleUpdate}
-          className="p-button-success m-2"
-          raised
-        />
+          <Button
+            label="Undo"
+            onClick={onRestore}
+            className="p-button-secondary m-2"
+            raised
+          />
+          <Button
+            label="Update"
+            onClick={handleUpdate}
+            className="p-button-success m-2"
+            raised
+          />
 
-        <Button
-          label="Delete"
-          onClick={handleDelete}
-          className="p-button-danger m-2"
-          raised
-        />
+          <Button
+            label="Delete"
+            onClick={handleDelete}
+            className="p-button-danger m-2"
+            raised
+          />
 
-        <Button
-          label="Export as JPEG"
-          className="m-2"
-          onClick={handleExportClick}
-        />
+          <Button
+            label="Export as JPEG"
+            className="m-2"
+            onClick={handleExportClick}
+          />
 
-        <Toast ref={toast} />
-      </div>
-      <div
-        ref={reactFlowWrapper}
-        style={{ height: "95%", width: "100%" }}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-      >
-        <ReactFlow
-          nodesDraggable={true}
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={onInit}
-          onNodeDoubleClick={onNodeDoubleClick}
-          onSelectionChange={onSelectionChange}
-          fitView
-          ref={elementRef}
-          onNodeClick={onElementClick}
+          <Toast ref={toast} />
+        </div>
+        <div
+          ref={reactFlowWrapper}
+          style={{ height: "95%", width: "100%" }}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
         >
-          <MiniMap />
-          <Controls />
-          <Background />
-        </ReactFlow>
-      </div>
+          <ReactFlow
+            nodesDraggable={true}
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onSelectionChange={onSelectionChange}
+            fitView
+            ref={elementRef}
+            onNodeClick={onElementClick}
+            nodeTypes={nodeTypes}
+          >
+            <MiniMap />
+            <Controls />
+            <Background />
+          </ReactFlow>
+        </div>
+      </EdgeAddContext.Provider>
     </ReactFlowProvider>
   );
 };
