@@ -139,7 +139,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       let baseXOffset = 200 + existingRelationsCount * 200;
 
       // Create the ID using the updated count
-      const relationNodeId = `relation-${relationName}_${String(
+      const relationNodeId = `relation_${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
 
@@ -310,8 +310,26 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         }
       );
 
-      if (response.data.success) {
+      if (response.data == 200) {
         setToastMessage("Flowchart Updated successfully");
+      } else {
+        setToastMessage(response.data.message);
+      }
+      const response1 = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+
+      if (response1.data == 200) {
+        setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage(response.data.message);
       }
@@ -352,17 +370,77 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         withCredentials: true,
       });
 
-      if (response.data.success) {
+      if (response.data == 200) {
         setToastMessage("Flowchart saved successfully");
       } else {
         setToastMessage(response.data.message);
       }
-      onRestore();
+
+      const response1 = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+      console.log("edges data ", payLoad.factoryData.edges);
+
+      if (response1.data == 200) {
+        setToastMessage("Scorpio updated successfully");
+      } else {
+        setToastMessage(response.data.message);
+      }
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
     }
   }, [nodes, edges, factoryId]);
+  //
+  const handleDelete = async () => {
+    try {
+      const response1 = await axios.delete(
+        `${API_URL}/react-flow/${factoryId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      const response2 = await axios.delete(
+        `${API_URL}/shop-floor/delete-react/${factoryId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (response1.data.success && response2.data.success) {
+        setToastMessage(
+          "Selected elements and related data deleted successfully."
+        );
+      } else {
+        setToastMessage("Partial deletion: Please check the data.");
+      }
+    } catch (error) {
+      console.error("Error deleting elements:", error);
+      setToastMessage("Error deleting elements.");
+    } finally {
+      // Regardless of the result, try to refresh the state to reflect the current backend state
+
+      setIsSaveDisabled(false);
+    }
+  };
 
   const handleExportClick = () => {
     if (elementRef.current) {
@@ -590,28 +668,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     [router]
   );
 
-  const handleDelete = async () => {
-    try {
-      const response = await axios.delete(
-        `${API_URL}/react-flow/${factoryId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-
-      setToastMessage("Selected elements deleted successfully.");
-      onRestore();
-      setIsSaveDisabled(false);
-    } catch (error) {
-      console.error("Error deleting elements:", error);
-      setToastMessage("Error deleting elements.");
-    }
-  };
-
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -765,7 +821,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     setShowModal(false);
   };
   const handleUpdate = useCallback(async () => {
-    await onUpdate();
+    onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
   const handleSave = useCallback(async () => {
