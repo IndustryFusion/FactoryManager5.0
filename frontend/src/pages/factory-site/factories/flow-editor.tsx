@@ -139,7 +139,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       let baseXOffset = 200 + existingRelationsCount * 200;
 
       // Create the ID using the updated count
-      const relationNodeId = `relation-${relationName}_${String(
+      const relationNodeId = `relation_${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
 
@@ -312,6 +312,25 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
       if (response.data.success) {
         setToastMessage("Flowchart Updated successfully");
+      } else {
+        setToastMessage(response.data.message);
+      }
+      const response1 = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+      console.log("edges data ", payLoad.factoryData.edges);
+
+      if (response1.data.success) {
+        setToastMessage("Flowchart edges updated successfully");
       } else {
         setToastMessage(response.data.message);
       }
@@ -590,6 +609,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     [router]
   );
 
+  //
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
@@ -765,7 +785,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     setShowModal(false);
   };
   const handleUpdate = useCallback(async () => {
-    await onUpdate();
+    onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
   const handleSave = useCallback(async () => {

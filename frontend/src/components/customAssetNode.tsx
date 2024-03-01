@@ -22,6 +22,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const [selectedRelations, setSelectedRelations] = useState<string[]>([]);
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
+  const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
   const { onEdgeAdd } = useContext(EdgeAddContext);
 
   useEffect(() => {
@@ -55,22 +56,39 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     event.stopPropagation();
   };
   const handleRelationsChange = (e: any) => {
-    if (Array.isArray(e.value)) {
-      const newRelations = e.value.filter(
-        (relation: string) => !processedRelations.includes(relation)
+    const currentSelectedRelations = e.value;
+    const newlySelectedRelations = currentSelectedRelations.filter(
+      (relation: any) =>
+        !processedRelations.includes(relation) ||
+        deletedRelations.includes(relation)
+    );
+
+    const newlyDeletedRelations = selectedRelations.filter(
+      (relation) => !currentSelectedRelations.includes(relation)
+    );
+
+    setSelectedRelations(currentSelectedRelations);
+
+    // Process newly selected relations
+    newlySelectedRelations.forEach((relationLabel: any) => {
+      onEdgeAdd(data.id, relationLabel);
+
+      setProcessedRelations((prev) => [...prev, relationLabel]);
+      setDeletedRelations((prev) =>
+        prev.filter((rel) => rel !== relationLabel)
       );
+    });
 
-      setSelectedRelations(e.value);
+    // Handle newly deleted relations
+    newlyDeletedRelations.forEach((relationLabel) => {
+      setDeletedRelations((prev) => [...prev, relationLabel]);
 
-      newRelations.forEach((relationLabel: string) => {
-        onEdgeAdd(data.id, relationLabel);
-      });
-
-      setProcessedRelations((prev) => [...prev, ...newRelations]);
-    } else {
-      setSelectedRelations([]);
-    }
+      setProcessedRelations((prev) =>
+        prev.filter((rel) => rel !== relationLabel)
+      );
+    });
   };
+
   return (
     <div
       style={{
