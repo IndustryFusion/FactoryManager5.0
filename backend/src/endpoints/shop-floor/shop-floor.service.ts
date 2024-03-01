@@ -331,7 +331,7 @@ export class ShopFloorService {
       }
 
       for(let i = 0; i < assetList.length; i++){
-        let assetData = await this.assetService.getAssetDataById(assetList[i], token);
+        let assetData = await this.assetService.getAssetDataById(assetList[i].object, token);
         for (const key in assetData) {
           if (key.includes('has')) {
             assetData[key] = {
