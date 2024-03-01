@@ -96,6 +96,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           display="chip"
           style={{ width: "100%" }}
           onClick={handleDropdownClick}
+          className="w-full sm:w-10rem"
         />
       </div>
       <Handle type="source" position={Position.Bottom} />

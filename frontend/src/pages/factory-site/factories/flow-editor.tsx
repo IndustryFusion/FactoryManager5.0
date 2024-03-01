@@ -1,5 +1,3 @@
-//new code FlowEditor
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import { useHotkeys } from "react-hotkeys-hook"; // Import the hook for handling keyboard shortcuts
@@ -101,7 +99,11 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [relationCounts, setRelationCounts] = useState({});
+
+  const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
+    {}
+  );
+
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [selectedNodeData, setSelectedNodeData] = useState(null);
 
@@ -113,6 +115,12 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       console.error("Selected asset node not found");
       return;
     }
+    const newCount = (relationCounts[relationsInput] || 0) + 1;
+    const updatedRelationCounts = {
+      ...relationCounts,
+      [relationsInput]: newCount,
+    };
+    setRelationCounts(updatedRelationCounts);
 
     const relations = Array.isArray(relationsInput)
       ? relationsInput
@@ -125,9 +133,11 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     let baseXOffset = 200 + existingRelationsCount * 200; // Increment starting x position based on existing relations
 
     relations.forEach((relationName, index) => {
-      const xOffset = index * 300; // Horizontal spacing between each relation node
+      const xOffset = index + 10; // Horizontal spacing between each relation node
 
-      const relationNodeId = `relation-${relationName}-${Math.random()}`;
+      const relationNodeId = `relation-${relationName}_${String(
+        newCount
+      ).padStart(3, "0")}`;
       const newRelationNode = {
         id: relationNodeId,
         style: {
@@ -146,7 +156,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
         },
       };
 
-      const newEdge = {
+      const newEdge: any = {
         id: `reactflow_edge-${selectedAsset}-${relationNodeId}`,
         source: selectedAsset,
         target: relationNodeId,
@@ -155,8 +165,9 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       // Update state with new node and edge
       setNodes((prevNodes) => [...prevNodes, newRelationNode]);
       setEdges((prevEdges) => addEdge(newEdge, prevEdges));
-      console.log(edges, "kkkkkkkkk");
+      console.log(edges, "edges value");
     });
+    [nodes, edges, relationCounts];
   };
 
   useEffect(() => {
@@ -187,80 +198,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       setNodesInitialized(true);
     }
   }, [factory, reactFlowInstance, setNodes]);
-  // const handleRelationSubmit = (
-  //   selectedRelations: any,
-  //   selectedAssetId: string
-  // ) => {
-  //   let newNodes = [...nodes];
-  //   let newEdges = [...edges];
-  //   const parentAssetNode = nodes.find((node) => node.id === selectedAssetId);
 
-  //   if (!parentAssetNode) {
-  //     console.log("Parent asset node not found");
-  //     return;
-  //   }
-
-  //   let updatedRelationCounts: RelationCounts = { ...relationCounts };
-
-  //   selectedRelations.forEach((relationName: string) => {
-  //     // If the relationName doesn't exist in updatedRelationCounts, initialize it
-  //     if (!updatedRelationCounts[relationName]) {
-  //       updatedRelationCounts[relationName] = 0;
-  //     }
-  //   });
-
-  //   let xOffset = 150; // Horizontal offset between relation nodes
-  //   let startYOffset = 80; // Vertical offset from the parent asset to the first relation node
-  //   console.log(updatedRelationCounts, "The relation ID with incremented valu");
-  //   // Iterate over each selected relation
-  //   selectedRelations.forEach((relationName: string, index: number) => {
-  //     const isChecked = true;
-
-  //     if (isChecked) {
-  //       updatedRelationCounts[relationName]++;
-
-  //       const relationCount = updatedRelationCounts[relationName]
-  //         .toString()
-  //         .padStart(3, "0");
-  //       const relationNodeId = `relation_${relationName}_${relationCount}`;
-
-  //       const relationNode = {
-  //         id: relationNodeId,
-  //         label: relationName,
-  //         type: relationName,
-  //         position: {
-  //           x: parentAssetNode.position.x + xOffset * (index - 1), // Place horizontally
-  //           y: parentAssetNode.position.y + startYOffset, // Slightly below the parent asset
-  //         },
-  //         style: {
-  //           backgroundColor: "#ead6fd",
-  //           border: "none",
-  //           borderRadius: "45%",
-  //         },
-  //         data: {
-  //           label: relationName,
-  //           type: "relation",
-  //           parentId: selectedAsset,
-  //         },
-  //       };
-
-  //       newNodes.push(relationNode);
-
-  //       const newEdge: Edge = {
-  //         id: `reactflow_edge-${selectedAsset}-${relationNodeId}`,
-  //         source: selectedAsset,
-  //         target: relationNodeId,
-  //       };
-
-  //       newEdges.push(newEdge);
-  //     }
-  //   });
-
-  //   setNodes(newNodes);
-  //   setEdges(newEdges);
-
-  //   setRelationCounts(updatedRelationCounts);
-  // };
   useEffect(() => {
     if (nodesInitialized) {
       const fetchDataAndDetermineSaveState = async () => {
@@ -320,30 +258,30 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
   const onUpdate = useCallback(async () => {
     const payLoad = {
-      // factoryId: factoryId,
+      factoryId: factoryId,
 
-      // factoryData: {
-      //   nodes: nodes.map(({ id, type, position, data, style }) => ({
-      //     id,
-      //     type,
-      //     position,
-      //     data,
-      //     style,
-      //   })),
-      edges: edges.map(({ id, source, target, type, data }) => ({
-        id,
-        source,
-        target,
-        type,
-        data,
-      })),
+      factoryData: {
+        nodes: nodes.map(({ id, type, position, data, style }) => ({
+          id,
+          type,
+          position,
+          data,
+          style,
+        })),
+        edges: edges.map(({ id, source, target, type, data }) => ({
+          id,
+          source,
+          target,
+          type,
+          data,
+        })),
+      },
     };
-    // };
     console.log(payLoad, "kkkkkkkkkk");
     try {
       const response = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
-        payLoad.edges,
+        payLoad,
         {
           headers: {
             "Content-Type": "application/json",
@@ -502,7 +440,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
 
         // Add a new edge for the current connection
         const newEdge = {
-          id: `reactflow_edge-${newRelationNodeId}-${childAssetId}`,
+          id: `reactflow_edge-${newRelationNodeId}`,
           source: newRelationNodeId,
           target: childAssetId,
           animated: true,
@@ -556,68 +494,62 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       selectedElements?.edges?.length > 0
     ) {
       const nodeIdsToDelete = new Set(
-        selectedElements.nodes.map((node: { id: any }) => node.id)
+        selectedElements.nodes?.map((node: any) => node.id)
       );
       const edgeIdsToDelete = new Set(
-        selectedElements.edges.map((edge: { id: any }) => edge.id)
+        selectedElements.edges?.map((edge: any) => edge.id)
       );
 
-      // Filter nodes and edges to remove selected ones
-      const newNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
-      const newEdges = edges.filter((edge) => !edgeIdsToDelete.has(edge.id));
-
-      // Update shopFloorAssets based on the remaining nodes
-      const newShopFloorAssets: any = { ...shopFloorAssets };
-      Object.keys(newShopFloorAssets).forEach((key) => {
-        newShopFloorAssets[key] = newShopFloorAssets[key].filter(
-          (assetId: unknown) => !nodeIdsToDelete.has(assetId)
-        );
-        if (newShopFloorAssets[key].length === 0) {
-          delete newShopFloorAssets[key]; // Remove the key if no assets are left
+      // Collect edges that should be deleted due to node deletion
+      const connectedEdgeIdsToDelete = new Set();
+      edges.forEach((edge) => {
+        if (
+          nodeIdsToDelete.has(edge.source) ||
+          nodeIdsToDelete.has(edge.target)
+        ) {
+          connectedEdgeIdsToDelete.add(edge.id);
         }
       });
 
-      // Update assetRelations based on the remaining nodes and edges
-      const newAssetRelations: any = { ...assetRelations };
-      Object.keys(newAssetRelations).forEach((parentId) => {
-        Object.keys(newAssetRelations[parentId]).forEach((relationType) => {
-          newAssetRelations[parentId][relationType] = newAssetRelations[
-            parentId
-          ][relationType].filter(
-            (childAssetId: unknown) => !nodeIdsToDelete.has(childAssetId)
+      // Prepare to track updates to relation node IDs
+      let newNodes = [...nodes];
+      let relationNodeUpdates = new Map();
+
+      // Check each edge for deletion to see if it affects a relation node
+      connectedEdgeIdsToDelete.forEach((edgeId) => {
+        const edgeToDelete = edges.find((edge) => edge.id === edgeId);
+        if (edgeToDelete) {
+          // Focus on updating relation node if it's the target of the deleted edge
+          const targetNode = newNodes.find(
+            (node) => node.id === edgeToDelete.source
           );
-          if (newAssetRelations[parentId][relationType].length === 0) {
-            delete newAssetRelations[parentId][relationType]; // Remove the relation type if no child assets are left
+          if (targetNode && targetNode.data.type === "relation") {
+            //  the relation node's ID by removing asset-specific identifier
+            const newId = targetNode.id.split("_asset")[0]; // removes everything after "_asset"
+            relationNodeUpdates.set(targetNode.id, newId);
+            targetNode.id = newId; // update ID in newNodes
           }
-        });
-        if (Object.keys(newAssetRelations[parentId]).length === 0) {
-          delete newAssetRelations[parentId]; // Remove the parent asset if it has no relations left
         }
       });
+
+      // Remove deleted nodes and update edges to reflect any ID changes
+      newNodes = newNodes.filter((node) => !nodeIdsToDelete.has(node.id));
+      const newEdges = edges
+        .filter((edge) => !connectedEdgeIdsToDelete.has(edge.id))
+        .map((edge) => {
+          // Adjust source - target IDs based on earlier updates
+          edge.source = relationNodeUpdates.get(edge.source) || edge.source;
+          edge.target = relationNodeUpdates.get(edge.target) || edge.target;
+          return edge;
+        });
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setShopFloorAssets(newShopFloorAssets);
-      setAssetRelations(newAssetRelations); // Update state with the modified asset relations
 
-      // Log the updated state for verification
-      console.log(
-        "Updated ShopFloorAssets after deletion:",
-        newShopFloorAssets
-      );
-      console.log("Updated AssetRelations after deletion:", newAssetRelations);
+      // Clear the selection to prevent errors
+      setSelectedElements(null);
     }
-  }, [
-    selectedElements,
-    nodes,
-    edges,
-    shopFloorAssets,
-    assetRelations,
-    setNodes,
-    setEdges,
-    setShopFloorAssets,
-    setAssetRelations,
-  ]);
+  }, [selectedElements, nodes, edges, setNodes, setEdges, setSelectedElements]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleBackspacePress);
@@ -638,25 +570,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
     },
     [router]
   );
-
-  const createAssetNode = (
-    position: { x: number; y: number },
-    item: { id: string; label: string; relations: string[] },
-    idPrefix: string
-  ): void => {
-    const assetNode: Node = {
-      id: `${idPrefix}_${new Date().getTime()}`,
-      type: "asset",
-      position,
-      data: {
-        label: item.label,
-        id: item.id,
-        relations: item.relations,
-      },
-    };
-
-    setNodes((nds) => [...nds, assetNode]);
-  };
 
   const handleDelete = async () => {
     try {
