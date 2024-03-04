@@ -9,7 +9,8 @@ import { exportElementToJPEG } from "@/utility/factory-site-utility";
 import { Asset } from "../../../interfaces/assetTypes";
 import HorizontalNavbar from "../../../components/horizontal-navbar";
 import Footer from "../../../components/footer";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
+import { ShopFloorProvider } from "@/context/shopFloorContext";
 
 import {
   getshopFloorById,
@@ -64,34 +65,38 @@ const ShopFloorManager: React.FC = () => {
         }}
         className="bg-gray-100"
       >
-        <div
-          style={{
-            flex: 1,
-            borderRight: "1px solid #ccc",
-            padding: "10px",
-            maxWidth: "18%",
-            maxHeight: "100%",
-          }}
-        >
-          <ShopFloorList factoryId={factoryId} />
-        </div>
-        <div
-          ref={elementRef}
-          style={{
-            flex: 2,
-            border: "1px solid #ccc",
-            borderRadius: "10px",
-            padding: "10px",
-            maxWidth: "73%",
-            maxHeight: "98%",
-          }}
-        >
-          {factoryDetails && (
-            <FlowEditor factoryId={factoryId} factory={factoryDetails} />
-          )}
+        <ShopFloorProvider>
+          {" "}
+          <div
+            style={{
+              flex: 1,
+              borderRight: "1px solid #ccc",
+              padding: "10px",
+              maxWidth: "18%",
+              maxHeight: "100%",
+            }}
+          >
+            <ShopFloorList factoryId={factoryId} />
+          </div>
+          <div
+            ref={elementRef}
+            style={{
+              flex: 2,
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              padding: "10px",
+              maxWidth: "73%",
+              maxHeight: "98%",
+            }}
+          >
+            {factoryDetails && (
+              <FlowEditor factoryId={factoryId} factory={factoryDetails} />
+            )}
 
-          {!factoryDetails && <div>Loading factory details...</div>}
-        </div>
+            {!factoryDetails && <div>Loading factory details...</div>}
+          </div>
+        </ShopFloorProvider>
+
         <div
           style={{
             flex: 1,

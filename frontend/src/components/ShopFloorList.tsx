@@ -8,7 +8,7 @@ import { ShopFloor } from "../pages/factory-site/types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import EditShopFloor from "./shopFloorForms/edit-shopFloor-form";
 
 import { Toast } from "primereact/toast";
@@ -73,7 +73,10 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
     }
 
     try {
-      const response = await deleteShopFloorById(selectedShopFloorId, factoryId);
+      const response = await deleteShopFloorById(
+        selectedShopFloorId,
+        factoryId
+      );
       setShopFloors((prevShopFloors) =>
         prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
       );
@@ -119,11 +122,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
 
   return (
     <>
-      <Card style={{ height: "99%", fontSize: "15px", overflowY:"scroll" }}>
+      <Card style={{ height: "99%", fontSize: "15px", overflowY: "scroll" }}>
         <Toast ref={toast} />
 
         <div>
-          <h3 className="font-medium text-xl" style={{ marginTop: "2%", marginLeft:"5%" }}>
+          <h3
+            className="font-medium text-xl"
+            style={{ marginTop: "2%", marginLeft: "5%" }}
+          >
             Shop Floors
           </h3>
           <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
@@ -182,7 +188,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
           editShopFloorProp={editShopFloor}
         />
       )}
-       {isVisible && (
+      {isVisible && (
         <CreateShopFloor
           isVisibleProp={isVisible}
           setIsVisibleProp={setIsVisible}
