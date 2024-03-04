@@ -15,8 +15,8 @@ export class ShopFloorController {
   async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.shopFloorService.create(data, token);
-      if(response['status'] == 200 || response['status'] == 201) {
+      const createResponse = await this.shopFloorService.create(data, token);
+      if(createResponse['status'] == 200 || createResponse['status'] == 201) {
         try{
           const headers = {
             Authorization: 'Bearer ' + token,
@@ -28,7 +28,7 @@ export class ShopFloorController {
           let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
           let obj = {
             type: 'Relationship',
-            object: response.id
+            object: createResponse.id
           }
           if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
             shopFloorData = [...shopFloorData, obj];
@@ -49,7 +49,8 @@ export class ShopFloorController {
                 success: true,
                 status: response['status'],
                 message: 'shop-floor created and added in factory-site successfully',
-                id: response['id']
+                id: createResponse['id'],
+                floorName: createResponse['floorName']
               }
             } 
           }
@@ -62,7 +63,7 @@ export class ShopFloorController {
           };
         }
       } else{
-        return response;
+        return createResponse;
       }
     } catch (err) {
       return { 
