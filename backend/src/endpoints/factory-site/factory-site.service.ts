@@ -175,4 +175,24 @@ export class FactorySiteService {
       throw err;
     }
   }
+
+  async removeScript(id: string, token: string) {
+    try {
+      console.log('inside remove script');
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      const url = this.scorpioUrl + '/' + id;
+      const response = await axios.delete(url, {headers});
+      console.log('delete response ',response.status);
+      return {
+        status: response.status,
+        data: response.data
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
 }
