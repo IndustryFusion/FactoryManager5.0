@@ -78,6 +78,7 @@ export class ShopFloorService {
           statusText: response.statusText,
           data: response.data,
           id: result.id,
+          floorName: result['http://www.industry-fusion.org/schema#floor_name']
         }
       } else{
         return {
