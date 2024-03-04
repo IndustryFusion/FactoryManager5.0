@@ -182,7 +182,7 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ factory, factoryId }) => {
       const newNode = {
         id: shopFloorNodeId,
         type: "shopFloor",
-        data: { label: `${latestShopFloor.name}`, undeletable: true },
+        data: { label: `${latestShopFloor.name}` },
         position: {
           x: (Math.random() * window.innerWidth) / 2,
           y: (Math.random() * window.innerHeight) / 2,

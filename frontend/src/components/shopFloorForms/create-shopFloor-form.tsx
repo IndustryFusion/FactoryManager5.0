@@ -160,12 +160,14 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
 
       const shopFloorResponse = response.data;
+
       if (shopFloorResponse.status === 201) {
         showSuccess();
-        console.log(response, "KKO");
+
         const newShopFloor: any = {
-          id: "newId",
-          name: "New Shop Floor Name",
+          id: response.data.id,
+          name: response.data.floorName,
+          type: "shopFloor",
         };
         addShopFloor(newShopFloor);
         // setIsVisibleProp(false);

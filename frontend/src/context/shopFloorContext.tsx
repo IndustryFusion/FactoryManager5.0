@@ -14,7 +14,7 @@ interface ShopFloor {
 interface ShopFloorContextType {
   shopFloors: ShopFloor[];
   addShopFloor: (shopFloor: ShopFloor) => void;
-  latestShopFloor: ShopFloor | null; // Add this line
+  latestShopFloor: ShopFloor | null;
 }
 
 const ShopFloorContext = createContext<ShopFloorContextType | undefined>(
@@ -27,7 +27,7 @@ export const ShopFloorProvider: React.FC<{ children: ReactNode }> = ({
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [latestShopFloor, setLatestShopFloor] = useState<ShopFloor | null>(
     null
-  ); // Add this line
+  );
 
   const addShopFloor = (shopFloor: ShopFloor) => {
     setShopFloors((prev) => [...prev, shopFloor]);
