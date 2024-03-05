@@ -29,6 +29,8 @@ import { ReactFlowController } from './endpoints/react-flow/react-flow.controlle
 import { ReactFlowService } from './endpoints/react-flow/react-flow.service';
 import { AllocatedAssetController } from './endpoints/allocated-asset/allocated-asset.controller';
 import { AllocatedAssetService } from './endpoints/allocated-asset/allocated-asset.service';
+import { PowerConsumptionController } from './endpoints/power-consumption/power-consumption.controller';
+import { PowerConsumptionService } from './endpoints/power-consumption/power-consumption.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -55,7 +57,8 @@ console.log('FactorySite ',FactorySite)
     NonShopFloorAssetsController,
     FileController,
     ReactFlowController,
-    AllocatedAssetController
+    AllocatedAssetController,
+    PowerConsumptionController
   ],
   providers: [
     AppService,
@@ -71,7 +74,8 @@ console.log('FactorySite ',FactorySite)
     NonShopFloorAssetsService,
     FileService,
     ReactFlowService,
-    AllocatedAssetService
+    AllocatedAssetService,
+    PowerConsumptionService
   ]
 })
 export class AppModule {
