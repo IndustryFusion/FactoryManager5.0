@@ -16,8 +16,12 @@ import CreateShopFloor from "./shopFloorForms/create-shopFloor-form";
 
 interface ShopfloorListProps {
   factoryId: string;
+  onShopFloorDeleted: (shopFloorId: string) => void;
 }
-const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
+const ShopFloorList: React.FC<ShopfloorListProps> = ({
+  factoryId,
+  onShopFloorDeleted,
+}) => {
   const [shopFloors, setShopFloors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +89,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ factoryId }) => {
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
+      onShopFloorDeleted(selectedShopFloorId);
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current.show({

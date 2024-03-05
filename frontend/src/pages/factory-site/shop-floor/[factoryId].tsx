@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import FlowEditor from "../factories/flow-editor";
@@ -24,6 +24,7 @@ const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
   const router = useRouter();
   const elementRef = useRef(null);
+  const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -32,7 +33,6 @@ const ShopFloorManager: React.FC = () => {
       ? router.query.factoryId[0]
       : "";
 
-  console.log("id ", factoryId);
   useEffect(() => {
     const fetchShopFloorById = async (factoryId: any) => {
       try {
@@ -51,7 +51,10 @@ const ShopFloorManager: React.FC = () => {
       }
     }
   }, [factoryId, router.isReady]);
-
+  const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
+    console.log(`Shop floor ${deletedShopFloorId} deleted`);
+    setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
+  }, []);
   return (
     <>
       <HorizontalNavbar />
@@ -76,7 +79,10 @@ const ShopFloorManager: React.FC = () => {
               maxHeight: "100%",
             }}
           >
-            <ShopFloorList factoryId={factoryId} />
+            <ShopFloorList
+              factoryId={factoryId}
+              onShopFloorDeleted={handleShopFloorDeleted}
+            />
           </div>
           <div
             ref={elementRef}
@@ -90,7 +96,11 @@ const ShopFloorManager: React.FC = () => {
             }}
           >
             {factoryDetails && (
-              <FlowEditor factoryId={factoryId} factory={factoryDetails} />
+              <FlowEditor
+                factoryId={factoryId}
+                factory={factoryDetails}
+                deletedShopFloors={deletedShopFloors}
+              />
             )}
 
             {!factoryDetails && <div>Loading factory details...</div>}
