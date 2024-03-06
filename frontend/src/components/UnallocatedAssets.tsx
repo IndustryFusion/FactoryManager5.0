@@ -180,14 +180,14 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           ))}
         </ul>
       </Card>
-      {/* <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
+      <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
         <h3
           className="font-medium text-xl"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
           Allocated Asset
-        </h3> */}
-      {/* <ul>
+        </h3>
+        {/* <ul>
           {Array.isArray(allocatedAssets) ? (
             allocatedAssets.map((asset, index) => (
               <li key={index} draggable={true}>
@@ -198,7 +198,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
             <li draggable={true}>{allocatedAssets.id}</li>
           )}
         </ul> */}
-      {/* </Card> */}
+      </Card>
     </React.Fragment>
   );
 };

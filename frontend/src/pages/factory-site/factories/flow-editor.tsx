@@ -765,14 +765,6 @@ const FlowEditor: React.FC<
     toast,
   ]);
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleBackspacePress);
-
-    return () => {
-      document.removeEventListener("keydown", handleBackspacePress);
-    };
-  }, [handleBackspacePress]);
-
   useHotkeys(
     "backspace",
     (event) => {
