@@ -78,7 +78,6 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
 > = ({ factory, factoryId, deletedShopFloors }) => {
-  
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<any | null>(null);
@@ -234,7 +233,7 @@ const FlowEditor: React.FC<
         )
       );
     });
-  }, [deletedShopFloors, setNodes, setEdges]);
+  }, [deletedShopFloors, setNodes, setEdges, nodes]);
   useEffect(() => {
     if (factory && reactFlowInstance) {
       const factoryNodeId = `factory-${factory.id}`;
@@ -371,10 +370,10 @@ const FlowEditor: React.FC<
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
+          // params: { id: factoryId },
         }
       );
-      console.log(response, "onUpdate first");
+
       if (response.status == 200 || response.status == 204) {
         setToastMessage("Flowchart Updated successfully");
       } else {
@@ -389,10 +388,9 @@ const FlowEditor: React.FC<
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
         }
       );
-      console.log(response1, "onUpdate 2nd");
+      console.log(payLoad.factoryData.edges, "edges update");
       if (response1.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -442,7 +440,7 @@ const FlowEditor: React.FC<
       }
 
       const response1 = await axios.patch(
-        `${API_URL}/shop-floor/update-react`,
+        `${API_URL}/shop-floor/update-react/`,
         payLoad.factoryData.edges,
         {
           headers: {
@@ -453,8 +451,7 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
-      console.log("edges data ", payLoad.factoryData.edges);
-      console.log(response1, "Onsave 2nd");
+
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -485,8 +482,9 @@ const FlowEditor: React.FC<
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
     try {
-      const response1 = await axios.delete(
+      const response1 = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
+        edges,
         {
           headers: {
             "Content-Type": "application/json",
@@ -704,9 +702,10 @@ const FlowEditor: React.FC<
       return;
     }
 
-    // exclude the factiry and shopFloor Nodes from deletion
+    // Exclude the factory and shopFloor Nodes from deletion
     const containsNonDeletableNodes = selectedElements.nodes?.some(
-      (node: Node) => node.data.type === "factory" || node.type === "shopFloor"
+      (node: Node) =>
+        node.data.type === "factory" || node.data.type === "shopFloor"
     );
 
     if (containsNonDeletableNodes) {
@@ -719,41 +718,43 @@ const FlowEditor: React.FC<
       return;
     }
 
-    // filter out deletable nodes and edges
     const nodeIdsToDelete = new Set(
-      selectedElements.nodes?.map((node: Node) => node.id) ?? []
+      selectedElements.nodes?.map((node: Node) => node.id)
     );
+    let updatedNodes = [...nodes];
+    let updatedEdges = [...edges];
 
-    const edgeIdsToDelete = new Set();
-
-    // Check each selected edge to determine if it can be deleted
-    selectedElements.edges?.forEach((edge: Edge) => {
-      const sourceNode = nodes.find((node) => node.id === edge.source);
-      const targetNode = nodes.find((node) => node.id === edge.target);
-
-      // Prevent deletion of edges directly connecting factory to shopFloor
-      if (
-        !(
-          sourceNode &&
-          targetNode &&
-          ((sourceNode.data.type === "factory" &&
-            targetNode.data.type === "shopFloor") ||
-            (sourceNode.data.type === "shopFloor" &&
-              targetNode.data.type === "factory"))
-        )
-      ) {
-        edgeIdsToDelete.add(edge.id);
+    // Updating relation nodes and edges if their child is being deleted
+    edges.forEach((edge) => {
+      if (nodeIdsToDelete.has(edge.target)) {
+        const sourceNode = nodes.find((node) => node.id === edge.source);
+        if (sourceNode && sourceNode.data.type === "relation") {
+          //  if the node ID indicates it's connected to a specific child
+          const newId = sourceNode.id.split("_asset_")[0]; // relation node ID format is "relation_<relationName>_<uniqueId>_asset_<assetId>"
+          // Update node ID and edges
+          updatedNodes = updatedNodes.map((node) =>
+            node.id === sourceNode.id ? { ...node, id: newId } : node
+          );
+          updatedEdges = updatedEdges.map((edge) => ({
+            ...edge,
+            source: edge.source === sourceNode.id ? newId : edge.source,
+            target: edge.target === sourceNode.id ? newId : edge.target,
+          }));
+        }
       }
     });
 
-    // Filter out nodes and edges that are not marked for deletion
-    const newNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    const newEdges = edges.filter((edge) => !edgeIdsToDelete.has(edge.id));
+    // Filter out the nodes and edges  to be deleted
+    updatedNodes = updatedNodes.filter((node) => !nodeIdsToDelete.has(node.id));
+    updatedEdges = updatedEdges.filter(
+      (edge) =>
+        !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
+    );
 
-    // Update state with filtered nodes and edges
-    setNodes(newNodes);
-    setEdges(newEdges);
-    setSelectedElements(null); // Clear selection
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+
+    setSelectedElements(null);
   }, [
     selectedElements,
     nodes,
@@ -764,15 +765,14 @@ const FlowEditor: React.FC<
     toast,
   ]);
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleBackspacePress);
-
-    return () => {
-      document.removeEventListener("keydown", handleBackspacePress);
-    };
-  }, [handleBackspacePress]);
-
-  useHotkeys("backspace", handleBackspacePress);
+  useHotkeys(
+    "backspace",
+    (event) => {
+      event.preventDefault(); // Prevent the default backspace behavior (e.g., navigating back)
+      handleBackspacePress();
+    },
+    [handleBackspacePress]
+  );
 
   const onNodeDoubleClick = useCallback(
     (event: any, node: any) => {
@@ -794,7 +794,7 @@ const FlowEditor: React.FC<
 
       try {
         const { item, type, asset_category } = JSON.parse(data);
-       
+
         console.log(
           "Parsed item:",
           item,

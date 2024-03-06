@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
+  fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
 // import { Asset } from "../interfaces/assetTypes";
 import "../styles/AssetList.css";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import { InputText } from "primereact/inputtext";
+import { AllocatedAsset } from "@/interfaces/assetTypes";
 
 interface AssetListProps {
   factoryId: string;
@@ -35,6 +38,13 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
 
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [allocatedAssets, setAllocatedAssets] = useState<
+    AllocatedAsset[] | AllocatedAsset
+  >([]);
+
   useEffect(() => {
     const fetchNonShopFloorAssets = async (factoryId: any) => {
       try {
@@ -46,7 +56,10 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           asset_category: fetchedAssetIds[key].asset_category?.value,
         }));
         setAssets(fetchedAssets);
+
         console.log(assets, "the unalocated asset");
+        const allocatedAssets = await fetchAllocatedAssets();
+        setAllocatedAssets(allocatedAssets);
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch non-shop-floor assets:", err);
@@ -64,7 +77,12 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       }
     }
   }, [factoryId, router.isReady]);
-
+  useEffect(() => {
+    const results = assets.filter((asset) =>
+      asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredAssets(results);
+  }, [searchTerm, assets]);
   const handleAssetClick = async (assetId: string) => {
     try {
       const details = await getNonShopFloorAssetDetails(assetId);
@@ -141,8 +159,16 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         >
           Unallocated Assets
         </h3>
+        <div className="p-input-icon-left">
+          <i className="pi pi-search" />
+          <InputText
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name..."
+          />
+        </div>
         <ul>
-          {assets.map((asset, index) => (
+          {filteredAssets.map((asset, index) => (
             <li
               key={index}
               draggable={true}
@@ -159,9 +185,19 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           className="font-medium text-xl"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
-          Asset Relations
+          Allocated Asset
         </h3>
-        {selectedAssetDetails && <div>{renderRelations()}</div>}
+        {/* <ul>
+          {Array.isArray(allocatedAssets) ? (
+            allocatedAssets.map((asset, index) => (
+              <li key={index} draggable={true}>
+                {asset.id}
+              </li>
+            ))
+          ) : (
+            <li draggable={true}>{allocatedAssets.id}</li>
+          )}
+        </ul> */}
       </Card>
     </React.Fragment>
   );

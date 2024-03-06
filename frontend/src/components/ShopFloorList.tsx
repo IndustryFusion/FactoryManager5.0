@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import {
   getShopFloors,
   getshopFloorById,
@@ -13,7 +13,7 @@ import EditShopFloor from "./shopFloorForms/edit-shopFloor-form";
 
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shopFloor-form";
-
+import { InputText } from "primereact/inputtext";
 interface ShopfloorListProps {
   factoryId: string;
   onShopFloorDeleted: (shopFloorId: string) => void;
@@ -34,6 +34,15 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
   const toast = useRef<any>(null);
+  const [filteredShopFloors, setFilteredShopFloors] = useState<any[]>([]);
+  const [searchValue, setSearchValue] = useState<string>("");
+  useEffect(() => {
+    // Update filteredShopFloors every time shopFloors or searchValue changes
+    const filteredFloors = shopFloors.filter((floor) =>
+      floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
+    );
+    setFilteredShopFloors(filteredFloors);
+  }, [shopFloors, searchValue]);
 
   useEffect(() => {
     const fetchShopFloors = async (factoryId: any) => {
@@ -48,6 +57,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               floor["http://www.industry-fusion.org/schema#floor_name"].value,
           }))
         );
+
         setLoading(false);
       } catch (error: any) {
         console.error("Failed to fetch shop floors:", error);
@@ -84,6 +94,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       setShopFloors((prevShopFloors) =>
         prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
       );
+
       toast.current.show({
         severity: "success",
         summary: "Success",
@@ -137,7 +148,20 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           >
             Shop Floors
           </h3>
-          <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
+          <div className="p-input-icon-left flex align-items-center ml-4">
+            <i className="pi pi-search" />
+            <InputText
+              value={searchValue}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearchValue(e.target.value)
+              }
+              placeholder="Search by name..."
+              style={{ width: "70%", marginRight: "1rem" }}
+            >
+              <i className="pi pi-search" slot="prefix"></i>
+            </InputText>
+          </div>
+          <div className="form-btn-container mb-2 flex  ml-4 mt-4">
             <Button
               label="New"
               severity="success"
@@ -166,7 +190,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             />
           </div>
           <ul className="list-disc" style={{ marginTop: "20px" }}>
-            {shopFloors.map((floor) => (
+            {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}
                 draggable

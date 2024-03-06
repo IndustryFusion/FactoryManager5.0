@@ -5,6 +5,7 @@ import { Factory } from "@/interfaces/factoryType";
 import { Asset } from "@/interfaces/assetTypes";
 import { MdQueryBuilder } from "react-icons/md";
 import html2canvas from "html2canvas";
+import { AllocatedAsset } from "@/interfaces/assetTypes";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -384,21 +385,12 @@ export const fetchAndDetermineSaveState = async (
       withCredentials: true,
     });
 
-    if (response.data && response.data.factoryData) {
-      const factoryNode = response.data.factoryData.nodes.find(
-        (node: any) => node.type && node.type.hasShopFloor
-      );
-      const backendShopFloors = factoryNode?.type?.hasShopFloor?.object || [];
+    const fetchedFactoryId = response.data.factoryId;
 
-      const currentShopFloors = nodes
-        .filter((node) => node.data.type === "shopFloor")
-        .map((node) => node.data.id);
-
-      const disableSave = currentShopFloors.some((sf) =>
-        backendShopFloors.includes(sf)
-      );
-
-      setIsSaveDisabled(disableSave);
+    if (factoryId === fetchedFactoryId) {
+      setIsSaveDisabled(true);
+    } else {
+      setIsSaveDisabled(false);
     }
   } catch (error) {
     console.error("Error fetching factory data:", error);
@@ -541,5 +533,28 @@ export const fetchAssetById = async (assetId: string) => {
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
+  }
+};
+
+export const fetchAllocatedAssets = async (): Promise<AllocatedAsset[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/allocated-asset`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    console.log(response, "the data alocated");
+    if (!response.data) {
+      throw new Error("Network response was not ok");
+    }
+    const data: AllocatedAsset[] = response.data;
+
+    console.log(data, "aloocated asset");
+    return data;
+  } catch (error) {
+    console.error("Error fetching allocated assets:", error);
+    throw new Error("Failed to fetch allocated assets");
   }
 };
