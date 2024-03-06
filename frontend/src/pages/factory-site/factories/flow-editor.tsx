@@ -754,7 +754,7 @@ const FlowEditor: React.FC<
     setNodes(updatedNodes);
     setEdges(updatedEdges);
 
-    setSelectedElements(null); // Clear selection
+    setSelectedElements(null);
   }, [
     selectedElements,
     nodes,
