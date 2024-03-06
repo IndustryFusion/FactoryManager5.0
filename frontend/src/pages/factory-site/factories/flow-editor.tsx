@@ -78,7 +78,6 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
 > = ({ factory, factoryId, deletedShopFloors }) => {
-  
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<any | null>(null);
@@ -234,7 +233,7 @@ const FlowEditor: React.FC<
         )
       );
     });
-  }, [deletedShopFloors, setNodes, setEdges]);
+  }, [deletedShopFloors, setNodes, setEdges, nodes]);
   useEffect(() => {
     if (factory && reactFlowInstance) {
       const factoryNodeId = `factory-${factory.id}`;
@@ -371,10 +370,10 @@ const FlowEditor: React.FC<
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
+          // params: { id: factoryId },
         }
       );
-      console.log(response, "onUpdate first");
+
       if (response.status == 200 || response.status == 204) {
         setToastMessage("Flowchart Updated successfully");
       } else {
@@ -389,10 +388,9 @@ const FlowEditor: React.FC<
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
         }
       );
-      console.log(response1, "onUpdate 2nd");
+      console.log(payLoad.factoryData.edges, "edges update");
       if (response1.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -442,7 +440,7 @@ const FlowEditor: React.FC<
       }
 
       const response1 = await axios.patch(
-        `${API_URL}/shop-floor/update-react`,
+        `${API_URL}/shop-floor/update-react/`,
         payLoad.factoryData.edges,
         {
           headers: {
@@ -453,8 +451,7 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
-      console.log("edges data ", payLoad.factoryData.edges);
-      console.log(response1, "Onsave 2nd");
+
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -485,8 +482,9 @@ const FlowEditor: React.FC<
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
     try {
-      const response1 = await axios.delete(
+      const response1 = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
+        edges,
         {
           headers: {
             "Content-Type": "application/json",
@@ -724,7 +722,11 @@ const FlowEditor: React.FC<
       selectedElements.nodes?.map((node: Node) => node.id) ?? []
     );
 
-    const edgeIdsToDelete = new Set();
+    const edgesToDelete = edges.filter(
+      (edge) =>
+        nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
+    );
+    const edgeIdsToDelete = new Set(edgesToDelete.map((edge) => edge.id));
 
     // Check each selected edge to determine if it can be deleted
     selectedElements.edges?.forEach((edge: Edge) => {
@@ -753,6 +755,7 @@ const FlowEditor: React.FC<
     // Update state with filtered nodes and edges
     setNodes(newNodes);
     setEdges(newEdges);
+
     setSelectedElements(null); // Clear selection
   }, [
     selectedElements,
@@ -772,7 +775,14 @@ const FlowEditor: React.FC<
     };
   }, [handleBackspacePress]);
 
-  useHotkeys("backspace", handleBackspacePress);
+  useHotkeys(
+    "backspace",
+    (event) => {
+      event.preventDefault(); // Prevent the default backspace behavior (e.g., navigating back)
+      handleBackspacePress();
+    },
+    [handleBackspacePress]
+  );
 
   const onNodeDoubleClick = useCallback(
     (event: any, node: any) => {
@@ -794,7 +804,7 @@ const FlowEditor: React.FC<
 
       try {
         const { item, type, asset_category } = JSON.parse(data);
-       
+
         console.log(
           "Parsed item:",
           item,
