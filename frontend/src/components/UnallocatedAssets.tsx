@@ -16,6 +16,7 @@ interface AssetListProps {
 interface Asset {
   id: string;
   product_name: string;
+  asset_category: string;
 }
 
 const UnallocatedAssets: React.FC<AssetListProps> = ({
@@ -38,9 +39,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     const fetchNonShopFloorAssets = async (factoryId: any) => {
       try {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
+        console.log(fetchedAssetIds, "test1");
         const fetchedAssets: any = Object.keys(fetchedAssetIds).map((key) => ({
           id: fetchedAssetIds[key].id,
           product_name: fetchedAssetIds[key].product_name?.value,
+          asset_category: fetchedAssetIds[key].asset_category?.value,
         }));
         setAssets(fetchedAssets);
         console.log(assets, "the unalocated asset");

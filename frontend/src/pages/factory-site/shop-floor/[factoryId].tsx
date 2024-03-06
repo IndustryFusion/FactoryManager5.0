@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import FlowEditor from "../factories/flow-editor";
@@ -9,7 +9,8 @@ import { exportElementToJPEG } from "@/utility/factory-site-utility";
 import { Asset } from "../../../interfaces/assetTypes";
 import HorizontalNavbar from "../../../components/horizontal-navbar";
 import Footer from "../../../components/footer";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
+import { ShopFloorProvider } from "@/context/shopFloorContext";
 
 import {
   getshopFloorById,
@@ -23,6 +24,7 @@ const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
   const router = useRouter();
   const elementRef = useRef(null);
+  const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -31,7 +33,6 @@ const ShopFloorManager: React.FC = () => {
       ? router.query.factoryId[0]
       : "";
 
-  console.log("id ", factoryId);
   useEffect(() => {
     const fetchShopFloorById = async (factoryId: any) => {
       try {
@@ -50,7 +51,10 @@ const ShopFloorManager: React.FC = () => {
       }
     }
   }, [factoryId, router.isReady]);
-
+  const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
+    console.log(`Shop floor ${deletedShopFloorId} deleted`);
+    setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
+  }, []);
   return (
     <>
       <HorizontalNavbar />
@@ -64,34 +68,45 @@ const ShopFloorManager: React.FC = () => {
         }}
         className="bg-gray-100"
       >
-        <div
-          style={{
-            flex: 1,
-            borderRight: "1px solid #ccc",
-            padding: "10px",
-            maxWidth: "18%",
-            maxHeight: "100%",
-          }}
-        >
-          <ShopFloorList factoryId={factoryId} />
-        </div>
-        <div
-          ref={elementRef}
-          style={{
-            flex: 2,
-            border: "1px solid #ccc",
-            borderRadius: "10px",
-            padding: "10px",
-            maxWidth: "73%",
-            maxHeight: "98%",
-          }}
-        >
-          {factoryDetails && (
-            <FlowEditor factoryId={factoryId} factory={factoryDetails} />
-          )}
+        <ShopFloorProvider>
+          {" "}
+          <div
+            style={{
+              flex: 1,
+              borderRight: "1px solid #ccc",
+              padding: "10px",
+              maxWidth: "18%",
+              maxHeight: "100%",
+            }}
+          >
+            <ShopFloorList
+              factoryId={factoryId}
+              onShopFloorDeleted={handleShopFloorDeleted}
+            />
+          </div>
+          <div
+            ref={elementRef}
+            style={{
+              flex: 2,
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              padding: "10px",
+              maxWidth: "73%",
+              maxHeight: "98%",
+            }}
+          >
+            {factoryDetails && (
+              <FlowEditor
+                factoryId={factoryId}
+                factory={factoryDetails}
+                deletedShopFloors={deletedShopFloors}
+              />
+            )}
 
-          {!factoryDetails && <div>Loading factory details...</div>}
-        </div>
+            {!factoryDetails && <div>Loading factory details...</div>}
+          </div>
+        </ShopFloorProvider>
+
         <div
           style={{
             flex: 1,
