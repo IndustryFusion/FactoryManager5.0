@@ -6,6 +6,7 @@ import axios from "axios";
 import { Asset } from "@/interfaces/assetTypes";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import { getDatesInRange } from "@/utility/chart-utility";
 
 export interface Datasets {
     label?: string;
@@ -25,15 +26,17 @@ export interface pgData {
     value: string;
 }
 interface DashboardChartProps {
-    machineStateProp?:string;
+    machineStateProp?: string;
     setMachineStateProp: Dispatch<SetStateAction<string>>;
-  }
+}
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const DashboardChart: React.FC<DashboardChartProps> = ({ setMachineStateProp}) => {
-    const [chartData, setChartData] = useState<ChartData[]>([]);
-    const [options, setOptions] = useState<ChartOptionsState>({});
+const DashboardChart = () => {
+    // const [chartData, setChartData] = useState<ChartData[]>([]);
+    // const [options, setOptions] = useState<ChartOptionsState>({});
+    const [chartData, setChartData] = useState({});
+    const [chartOptions, setChartOptions] = useState({});
     const router = useRouter();
 
     const mapBackendDataToAssetState = (backendData: any) => {
@@ -51,7 +54,7 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ setMachineStateProp}) =
     };
 
     const fetchDataAndAssign = async () => {
-        let entityId = 'urn:ngsi-ld:asset:2:602';
+        let entityId = 'urn:ngsi-ld:asset:2:101';
         let attributeIds: string[] | undefined = await fetchAssets(entityId);
         const lineOptions: ChartOptions = {
             plugins: {
@@ -157,12 +160,7 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ setMachineStateProp}) =
             factoryData.forEach((data: pgData) => {
                 const date = new Date(data.observedAt);
                 const hours = date.getHours();
-
-                // Check if the hour is a multiple of 3
-
                 const formattedDate = date.toISOString().slice(0, 16).replace('T', ' ');
-                // console.log(formattedDate, "what;s the date");
-
                 labels.push(formattedDate);
                 datasets[0].data.push(Number(data.value));
 
@@ -210,22 +208,128 @@ const DashboardChart: React.FC<DashboardChartProps> = ({ setMachineStateProp}) =
             router.push("/login");
         } else {
             if (router.isReady) {
-            const {} = router.query;
-            fetchDataAndAssign();
+                const { } = router.query;
+                //fetchDataAndAssign();
+
             }
         }
+
     }, [router.isReady])
 
 
+   // data mapping to chart based on each value of array to each day here
+    const onlineTimeData = ['12:07:57', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
+    const offlineTimeData = ['4:09:90', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
+
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6);
+
+    // Get an array of dates from today to 7 days ago
+    const dateRange = getDatesInRange(sevenDaysAgo, today);
+    const descendingDateRange = dateRange.reverse();
+
+    const convertToSeconds = (timeData: any) => {
+        const secondsData = timeData.map((time) => {
+            const [hours, minutes, seconds] = time.split(':').map(Number);
+            return hours * 3600 + minutes * 60 + seconds;
+        });
+        return secondsData;
+    }
+    const onlineData = convertToSeconds(onlineTimeData);
+    const offlineData = convertToSeconds(offlineTimeData);
+
+    //bar chart data 
+    useEffect(() => {
+        const documentStyle = getComputedStyle(document.documentElement);
+        const textColor = documentStyle.getPropertyValue('--text-color');
+        const textColorSecondary = documentStyle.getPropertyValue(
+            '--text-color-secondary'
+        );
+        const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+        const data = {
+            labels: descendingDateRange,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Online',
+                    backgroundColor: documentStyle.getPropertyValue('--green-500'),
+                    data: onlineData,
+                },
+                {
+                    type: 'bar',
+                    label: 'Offline',
+                    backgroundColor: documentStyle.getPropertyValue('--blue-500'),
+                    data: offlineData,
+                },
+            ],
+        };
+        const options = {
+            maintainAspectRatio: false,
+            aspectRatio: 0.8,
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: (context) => {
+                            const { dataset, dataIndex } = context;
+                            const value = dataset.data[dataIndex];
+                            const hours = Math.floor(value / 3600);
+                            const minutes = Math.floor((value % 3600) / 60);
+                            const seconds = value % 60;
+                            return `${hours.toString().padStart(2, '0')}:${minutes
+                                .toString()
+                                .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        },
+                    },
+                },
+                legend: {
+                    labels: {
+                        color: textColor,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        color: textColorSecondary,
+                    },
+                    grid: {
+                        color: surfaceBorder,
+                    },
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        color: textColorSecondary,
+                        suggestedMin: 0, // Assuming 0 is the minimum value
+                        suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
+                        stepSize: 10800, // Step size in seconds (1 hour)
+                        callback: (value: any) => {
+                            // Convert seconds back to "hh:mm:ss" format for display
+                            const hours = Math.floor(value / 3600);
+                            const minutes = Math.floor((value % 3600) / 60);
+                            const seconds = value % 60;
+
+                            return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
+                        },
+                    },
+                },
+            },
+        };
+
+        setChartData(data);
+        setChartOptions(options);
+    }, []);
+
     return (
         <>
-            <div className="col-12 xl:col-6 chart-content" style={{zoom:"80%"}}>
+            <div className="chart-content" >
                 <div className="card">
-                <h5 className="heading-text">Machine State Overview</h5>
-                    {chartData.map((value) => (
-                        <Chart type="line" data={value} options={options.lineOptions}></Chart>
-                    ))}
-              
+                    <h5 className="heading-text">Machine State Overview</h5>
+                    <Chart type="bar" data={chartData} options={chartOptions} />
                 </div>
             </div>
         </>

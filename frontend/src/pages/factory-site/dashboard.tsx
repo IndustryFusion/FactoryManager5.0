@@ -64,10 +64,8 @@ const Dashboard = () => {
           </div>
           <DashboardAssets />
         </div>
-        <DashboardChart
-        setMachineStateProp={setMachineState}
-      />
-    </div >
+        <DashboardChart/>
+      </div >
     </>
   )
 }
