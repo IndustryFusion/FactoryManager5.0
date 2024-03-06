@@ -702,9 +702,10 @@ const FlowEditor: React.FC<
       return;
     }
 
-    // exclude the factiry and shopFloor Nodes from deletion
+    // Exclude the factory and shopFloor Nodes from deletion
     const containsNonDeletableNodes = selectedElements.nodes?.some(
-      (node: Node) => node.data.type === "factory" || node.type === "shopFloor"
+      (node: Node) =>
+        node.data.type === "factory" || node.data.type === "shopFloor"
     );
 
     if (containsNonDeletableNodes) {
@@ -717,44 +718,41 @@ const FlowEditor: React.FC<
       return;
     }
 
-    // filter out deletable nodes and edges
     const nodeIdsToDelete = new Set(
-      selectedElements.nodes?.map((node: Node) => node.id) ?? []
+      selectedElements.nodes?.map((node: Node) => node.id)
     );
+    let updatedNodes = [...nodes];
+    let updatedEdges = [...edges];
 
-    const edgesToDelete = edges.filter(
-      (edge) =>
-        nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
-    );
-    const edgeIdsToDelete = new Set(edgesToDelete.map((edge) => edge.id));
-
-    // Check each selected edge to determine if it can be deleted
-    selectedElements.edges?.forEach((edge: Edge) => {
-      const sourceNode = nodes.find((node) => node.id === edge.source);
-      const targetNode = nodes.find((node) => node.id === edge.target);
-
-      // Prevent deletion of edges directly connecting factory to shopFloor
-      if (
-        !(
-          sourceNode &&
-          targetNode &&
-          ((sourceNode.data.type === "factory" &&
-            targetNode.data.type === "shopFloor") ||
-            (sourceNode.data.type === "shopFloor" &&
-              targetNode.data.type === "factory"))
-        )
-      ) {
-        edgeIdsToDelete.add(edge.id);
+    // Updating relation nodes and edges if their child is being deleted
+    edges.forEach((edge) => {
+      if (nodeIdsToDelete.has(edge.target)) {
+        const sourceNode = nodes.find((node) => node.id === edge.source);
+        if (sourceNode && sourceNode.data.type === "relation") {
+          //  if the node ID indicates it's connected to a specific child
+          const newId = sourceNode.id.split("_asset_")[0]; // relation node ID format is "relation_<relationName>_<uniqueId>_asset_<assetId>"
+          // Update node ID and edges
+          updatedNodes = updatedNodes.map((node) =>
+            node.id === sourceNode.id ? { ...node, id: newId } : node
+          );
+          updatedEdges = updatedEdges.map((edge) => ({
+            ...edge,
+            source: edge.source === sourceNode.id ? newId : edge.source,
+            target: edge.target === sourceNode.id ? newId : edge.target,
+          }));
+        }
       }
     });
 
-    // Filter out nodes and edges that are not marked for deletion
-    const newNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    const newEdges = edges.filter((edge) => !edgeIdsToDelete.has(edge.id));
+    // Filter out the nodes and edges  to be deleted
+    updatedNodes = updatedNodes.filter((node) => !nodeIdsToDelete.has(node.id));
+    updatedEdges = updatedEdges.filter(
+      (edge) =>
+        !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
+    );
 
-    // Update state with filtered nodes and edges
-    setNodes(newNodes);
-    setEdges(newEdges);
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
 
     setSelectedElements(null); // Clear selection
   }, [
