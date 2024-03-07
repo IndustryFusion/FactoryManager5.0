@@ -93,17 +93,17 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     <div
       style={{
         padding: "10px",
-        border: "1px solid #ddd",
+        border: "1px none #ddd",
         borderRadius: "4px",
         backgroundColor: "#caf1d8",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        height: "150px",
+        height: "100px",
       }}
     >
       <Handle type="target" position={Position.Top} />
-      <strong>{data.label}</strong>
+      <small>{data.label}</small>
       <div style={{ marginTop: "10px" }}>
         <MultiSelect
           value={selectedRelations}

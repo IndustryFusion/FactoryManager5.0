@@ -264,7 +264,7 @@ const CombineSensorChart: React.FC = () => {
   }, [layoutConfig, selectedInterval, router.isReady]);
 
   return (
-    <div style={{zoom:"90%"}}>
+    <div style={{zoom:"80%"}}>
       <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
       <div className="grid p-fluid">
         <div className="col-12">

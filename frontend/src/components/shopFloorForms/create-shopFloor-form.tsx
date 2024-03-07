@@ -163,7 +163,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
 
       if (shopFloorResponse.status === 201) {
         showSuccess();
-
+        setIsVisibleProp(false);
         const newShopFloor: any = {
           id: response.data.id,
           name: response.data.floorName,

@@ -95,7 +95,7 @@ const FactoryOverview = () => {
       setFactorySite(mappedData);
       // console.log(mappedData, "factory response here");
     } catch (error: any) {
-      if (error.response.status === 404) {
+      if (error.response && error.response?.status === 404) {
         showError("Getting factory lists");
       }
     }
@@ -261,7 +261,7 @@ const FactoryOverview = () => {
       await fetchFactoryLists();
       showSuccess("Factory deleted successfully");
     } catch (error:any) {
-      if(error.response.status === 404){
+      if( error.response && error.response?.status === 404){
         showError("Error deleting factory")
       }
       console.error("Error deleting factory", error);
