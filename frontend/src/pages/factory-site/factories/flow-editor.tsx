@@ -178,7 +178,7 @@ const FlowEditor: React.FC<
   };
 
   useEffect(() => {
-    if (latestShopFloor) {
+    if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory-${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
       const shopFloorNodeId = `shopFloor_${latestShopFloor.id}`;
@@ -217,7 +217,7 @@ const FlowEditor: React.FC<
         setEdges((eds) => [...eds, newEdge]);
       }
     }
-  }, [latestShopFloor, nodes, setNodes, setEdges]);
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges]);
 
   useEffect(() => {
     deletedShopFloors.forEach((deletedShopFloorId) => {
