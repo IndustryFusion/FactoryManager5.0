@@ -10,12 +10,11 @@ import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
 import CombineSensorChart from "@/components/dashboard/senosor-linear-charts";
+import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const ALERTA_URL = "https://development.industry-fusion.com/alerta/api";
-const ALERT_KEY = "5Bk2uPV5PUJkxNMAp9tVWvt1iH3l4LW9";
+const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
 
@@ -57,15 +56,20 @@ const Dashboard = () => {
         <HorizontalNavbar />
         <DashboardCards machineStateProp={machineState} />
         <div className="flex flex-column md:flex-row" style={{height:"80%", width:"100%" }}>
-          <div className="flex border-round m-2" style={{width:"75%"}}>
+          <div className="flex border-round m-2" style={{width:"77%"}}>
             <div className="card h-auto" style={{width:"100%"}} >
               <CombineSensorChart />
             </div>
           </div>
           <DashboardAssets />
         </div>
-        <DashboardChart/>
-      </div >
+        <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
+          <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
+            <PowerCo2Chart/>
+          </div>
+          <DashboardChart/>
+          </div>     
+      </div>
     </>
   )
 }

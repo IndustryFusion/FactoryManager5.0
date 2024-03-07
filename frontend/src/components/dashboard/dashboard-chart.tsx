@@ -217,7 +217,7 @@ const DashboardChart = () => {
     }, [router.isReady])
 
 
-   // data mapping to chart based on each value of array to each day here
+    // data mapping to chart based on each value of array to each day here
     const onlineTimeData = ['12:07:57', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
     const offlineTimeData = ['4:09:90', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
 
@@ -253,13 +253,13 @@ const DashboardChart = () => {
                 {
                     type: 'bar',
                     label: 'Online',
-                    backgroundColor: documentStyle.getPropertyValue('--green-500'),
+                    backgroundColor: documentStyle.getPropertyValue('--green-400'),
                     data: onlineData,
                 },
                 {
                     type: 'bar',
                     label: 'Offline',
-                    backgroundColor: documentStyle.getPropertyValue('--blue-500'),
+                    backgroundColor: documentStyle.getPropertyValue('--red-400'),
                     data: offlineData,
                 },
             ],
@@ -325,14 +325,10 @@ const DashboardChart = () => {
     }, []);
 
     return (
-        <>
-            <div className="chart-content" >
-                <div className="card">
-                    <h5 className="heading-text">Machine State Overview</h5>
-                    <Chart type="bar" data={chartData} options={chartOptions} />
-                </div>
-            </div>
-        </>
+        <div className="card h-auto" style={{width:"40%"}}>
+            <h5 className="heading-text">Machine State Overview</h5>
+            <Chart type="bar" data={chartData} options={chartOptions} />
+        </div>
     )
 }
 

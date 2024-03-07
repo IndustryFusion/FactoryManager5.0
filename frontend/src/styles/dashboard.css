@@ -43,13 +43,13 @@
 }
 
 .dashboard-card-container {
-    gap: 1.2rem;
+    gap: 6rem;
     justify-content: center;
     margin-top: 5rem;
 }
 
 .dashboard-card {
-    width: 450px;
+    width: 500px;
 }
 .finish-btn{
     display: flex;

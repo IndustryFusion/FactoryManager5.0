@@ -76,14 +76,16 @@ const DashboardAssets = () => {
 
   return (
     <div style={{zoom:"80%"}}>
-      <div className="dashboard-assets assets-content" style={{width:"100%", height:"100%"}}>
-        <div className="card h-auto" style={{width:"100%",height:"100%"}}>
+      <div className="dashboard-assets" style={{width:"100%"}}>
+        <div className="card h-auto" style={{width:"100%"}}>
           <h5 className="heading-text">Assets</h5>
           <DataTable
             rows={5}
             paginator
             value={assetData}
             className="dashboard-assets"
+            scrollable={true}
+            scrollHeight="750px"
             onRowClick={(e) => handleClick(e.data as Asset)}
           >
             <Column

@@ -222,7 +222,7 @@ const CombineSensorChart: React.FC = () => {
   };
   useEffect(() => {
     const fetchDataAndAssign = async () => {
-      let entityId = "urn:ngsi-ld:asset:2:602";
+      let entityId = "urn:ngsi-ld:asset:2:101";
       let attributeIds = await fetchAsset(entityId);
       if (attributeIds && attributeIds.length > 0) {
         const chartData: ChartDataState = { labels: [], datasets: [] };
@@ -264,7 +264,7 @@ const CombineSensorChart: React.FC = () => {
   }, [layoutConfig, selectedInterval, router.isReady]);
 
   return (
-    <div style={{zoom:"80%"}}>
+    <div style={{zoom:"90%"}}>
       <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
       <div className="grid p-fluid">
         <div className="col-12">

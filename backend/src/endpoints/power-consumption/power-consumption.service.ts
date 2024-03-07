@@ -16,7 +16,7 @@ export class PowerConsumptionService {
       console.log('startTimeOfDay ',startTimeOfDay);
       const url = this.timescaleUrl + '?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTimeOfDay}&observedAt=lte.${currentTime}&order=observedAt.asc`;
       const response = await axios.get(url, {headers});
-      console.log('response ',response.data)
+      console.log('responsePgrest ',response.data)
       if(response.data.length > 0) {
         let startValue = response.data[0].value;
         let endValue = response.data[response.data.length - 1].value;
@@ -43,8 +43,10 @@ export class PowerConsumptionService {
         console.log('startTime ',startTime);
         console.log('endTime ',endTime);
         lastSevenDays.push(day.format('MMMM Do'));
-        const url = this.timescaleUrl + '?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc`;
+        const url = this.timescaleUrl + '?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
         const response = await axios.get(url, {headers});
+        console.log("responsePgRest start", response.data[0]);
+        console.log("responsePgRest end", response.data[response.data.length - 1]);
         if(response.data.length > 0){
           let startValue = response.data[0].value;
           let endValue = response.data[response.data.length - 1].value;
