@@ -103,6 +103,38 @@ export class AllocatedAssetService {
         headers
       });
       
+      let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
+      if (assetIds.length > 0) {
+        let finalArray = [];
+        for (let i = 0; i < assetIds.length; i++) {
+          let id = assetIds[i];
+          const assetData = await this.assetService.getAssetDataById(id, token);
+          const finalData = {
+            id,
+            product_name: assetData['http://www.industry-fusion.org/schema#product_name'],
+            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']
+          };
+          finalArray.push(finalData);
+        }
+      }
+    } catch(err) {
+      return err;
+    }
+  }
+
+  async getAllocatedAssets(token: string) {
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      //fetch the allocated assets from scorpio
+      const fetchUrl = `${this.scorpioUrl}/urn:ngsi-ld:allocated-assets-store`;
+      let response = await axios.get(fetchUrl, {
+        headers
+      });
+      
       return response.data["http://www.industry-fusion.org/schema#last-data"].object;
     } catch(err) {
       return err;
