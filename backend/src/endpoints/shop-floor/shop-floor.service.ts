@@ -249,13 +249,57 @@ export class ShopFloorService {
       let shopFloorobj = {}, assetObj = {};
       for(let i = 0; i < node.length; i++){
         let id = node[i].source;
+        if(node[i].source.includes('factories')){
+          let check = false;
+          for(let j = i+1; j < node.length; j++) {
+            if(node[j].source.includes(node[i].target)){
+              check = true;
+            }
+          }
+          if(!check){
+            let updateData = {
+              'http://www.industry-fusion.org/schema#hasAsset': {
+                type: 'Relationship',
+                object: ''
+              }
+            }
+            let response = await this.update(node[i].target.split('_').pop(), updateData, token);
+            if(response['status'] == 200 || response['status'] == 204){
+              continue;
+            } else {
+              return response;
+            }
+          }
+        }
         if(node[i].source.includes('shopFloor') && !shopFloorobj.hasOwnProperty(id.split('_').pop())){
           let key = id.split('_').pop();
           shopFloorobj[key] = shopFloorobj[key] ? shopFloorobj[key] : [];
           shopFloorobj[key].push(node[i].target.split('_')[1]);
+          let check = false;
           for(let j = i+1; j < node.length; j++) {
             if(node[j].source === id){
               shopFloorobj[key].push(node[j].target.split('_')[1]);
+            }
+            if(node[i].target === node[j].source){
+              check = true;
+            }
+          }
+          if(!check){
+            let updateData = {};
+            let assetData = await this.assetService.getAssetDataById(node[i].target.split('_')[1], token);
+            for (const key in assetData){
+              if (key.includes('has')){
+                updateData[key] = {
+                  type: 'Relationship',
+                  object: ''
+                }
+              }
+            }
+            let response = await this.assetService.updateAssetById(node[i].target.split('_')[1], updateData, token);
+            if(response['status'] == 200 || response['status'] == 204){
+              continue;
+            } else {
+              return response;
             }
           }
         }
