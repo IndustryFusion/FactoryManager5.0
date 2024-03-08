@@ -182,11 +182,10 @@ const FlowEditor: React.FC<
       const factoryNodeId = `factory-${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
       const shopFloorNodeId = `shopFloor_${latestShopFloor.id}`;
-      console.log(shopFloorNodeId, "node first");
 
       // Prevent adding the node if it already exists
       const nodeExists = nodes.some((node) => node.id === shopFloorNodeId);
-      console.log(nodeExists, "node exist");
+
       if (factoryNode && !nodeExists) {
         // Calculate positions based on existing shopFloor nodes
         const gapX = 250; // Horizontal gap between shopFloor nodes
@@ -208,8 +207,6 @@ const FlowEditor: React.FC<
         };
 
         setNodes((nds) => [...nds, newNode]);
-
-        console.log(nodes, "Node");
 
         const newEdge = {
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}`,
@@ -280,7 +277,7 @@ const FlowEditor: React.FC<
 
       fetchDataAndDetermineSaveState().catch(console.error);
     }
-  }, [nodes, nodesInitialized, factoryId, API_URL]);
+  }, [nodesInitialized, factoryId, API_URL]);
 
   const onRestore = useCallback(async () => {
     if (factoryId) {
@@ -292,7 +289,7 @@ const FlowEditor: React.FC<
           },
           withCredentials: true,
         });
-        console.log(response.data, " the backend data flowChart");
+
         if (
           response.data &&
           response.data.factoryData.nodes &&
@@ -391,7 +388,7 @@ const FlowEditor: React.FC<
         }
       );
       console.log(payLoad.factoryData.edges, "edges update");
-      if (response1.status == 200) {
+      if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Scorpio already has these data");
