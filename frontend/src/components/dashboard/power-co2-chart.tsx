@@ -98,7 +98,7 @@ const PowerCo2Chart = () => {
                         position: 'right',
                         ticks: {
                             color: textColorSecondary,
-                            stepSize: 1000
+                            stepSize: 10000
                         },
                         grid: {
                             color: surfaceBorder

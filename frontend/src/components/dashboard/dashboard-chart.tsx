@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ChartData, ChartOptions } from 'chart.js';
 import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
@@ -37,6 +38,7 @@ const DashboardChart = () => {
     // const [options, setOptions] = useState<ChartOptionsState>({});
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
+    const [documentStyle, setDocumentStyle] = useState(null);
     const router = useRouter();
 
     const mapBackendDataToAssetState = (backendData: any) => {
@@ -216,11 +218,6 @@ const DashboardChart = () => {
 
     }, [router.isReady])
 
-
-    // data mapping to chart based on each value of array to each day here
-    const onlineTimeData = ['12:07:57', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
-    const offlineTimeData = ['4:09:90', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
-
     const today = new Date();
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 6);
@@ -236,9 +233,73 @@ const DashboardChart = () => {
         });
         return secondsData;
     }
-    const onlineData = convertToSeconds(onlineTimeData);
-    const offlineData = convertToSeconds(offlineTimeData);
 
+
+    // data mapping to chart based on each value of array to each day here
+    // const onlineTimeData = ['12:10:58', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
+    // const offlineTimeData = ['2:25:03', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
+    // const realOfflineTimeData = ['14:25:03'];
+
+    // const onlineData = convertToSeconds(onlineTimeData);
+    // const offlineData = convertToSeconds(offlineTimeData);
+    // const realOfflineTimeValues = convertToSeconds(realOfflineTimeData );
+
+
+    const formatChartData = (dataset:any) => {
+        const documentStyle = getComputedStyle(document.documentElement);
+       // Flatten and group by date
+    const groupedByDate = dataset.reduce((acc, item) => {
+        const date = Object.keys(item)[0];
+        const onlineTimes = convertToSeconds(item[date].online);
+        const offlineTimes = convertToSeconds(item[date].offline);
+        console.log(onlineTimes, "online time inside formatChartData");
+        console.log(offlineTimes, "offline time inside formatChartDtaa");
+        
+        
+
+        // Flatten online and offline times into a single array
+        const times = [...onlineTimes, ...offlineTimes].map((time, index) => ({
+            date,
+            time,
+            type: index < onlineTimes.length ? 'online' : 'offline',
+        }));
+
+        console.log(times , "what's the times");
+        
+        // Group by date
+        acc[date] = times;
+        return acc;
+    }, {});
+
+    console.log(groupedByDate, "what's in this groupedByDate");
+    console.log("it's date values",  Object.keys(groupedByDate));
+    
+    console.log(dataset, "what's this dataset");
+    
+
+    // Format for Chart.js
+    const labels = Object.keys(groupedByDate);
+    const datasets = ['online','offline'].map((type) =>
+    {
+        console.log(type, "what's in this")
+        return(
+  
+            {
+                label: type.charAt(0).toUpperCase() + type.slice(1),
+                backgroundColor: type === 'online' ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
+                data: labels.flatMap((date) => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
+            
+            }
+        )
+    } );
+
+    return {
+        labels,
+        datasets,
+    };
+    };
+
+ 
     //bar chart data 
     useEffect(() => {
         const documentStyle = getComputedStyle(document.documentElement);
@@ -247,24 +308,51 @@ const DashboardChart = () => {
             '--text-color-secondary'
         );
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-        const data = {
-            labels: descendingDateRange,
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Online',
-                    backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                    data: onlineData,
-                },
-                {
-                    type: 'bar',
-                    label: 'Offline',
-                    backgroundColor: documentStyle.getPropertyValue('--red-400'),
-                    data: offlineData,
-                },
-            ],
-        };
+
+       
+
+    const dataset = [
+        {
+            "11/03/2024": {
+                online: ['2:00:00'],
+                offline: ['4:25:03'],
+                online_1: ['5:40:00'],
+                offline_1:['7:07:67']
+                
+            }
+        },
+        {
+            "10/03/2024": {
+                online: ['9:08:27'],
+                offline: ['12:00:00'],
+                online_1: ['5:40:00'],
+                offline_1:['7:07:67']
+            }
+        }
+    ];
+    
+    const chartDataValue = formatChartData(dataset);
+    // console.log(chartDataValue, "what all values are");
+
+        // const data = {
+        //     labels: descendingDateRange,
+        //     datasets: [
+        //         {
+        //             type: 'bar',
+        //             label: 'Online',
+        //             backgroundColor: documentStyle.getPropertyValue('--green-400'),
+        //             data: onlineData,
+        //         },
+        //         {
+        //             type: 'bar',
+        //             label: 'Offline',
+        //             backgroundColor: documentStyle.getPropertyValue('--red-400'),
+        //             data: offlineData,
+        //         },
+        //     ],
+        // };
         const options = {
+            indexAxis: 'y',
             maintainAspectRatio: false,
             aspectRatio: 0.8,
             plugins: {
@@ -274,6 +362,8 @@ const DashboardChart = () => {
                     callbacks: {
                         label: (context) => {
                             const { dataset, dataIndex } = context;
+                            // console.log(dataset, "what's in this");
+                            
                             const value = dataset.data[dataIndex];
                             const hours = Math.floor(value / 3600);
                             const minutes = Math.floor((value % 3600) / 60);
@@ -291,7 +381,7 @@ const DashboardChart = () => {
                 },
             },
             scales: {
-                x: {
+                y: {
                     stacked: true,
                     ticks: {
                         color: textColorSecondary,
@@ -300,7 +390,7 @@ const DashboardChart = () => {
                         color: surfaceBorder,
                     },
                 },
-                y: {
+                x: {
                     stacked: true,
                     ticks: {
                         color: textColorSecondary,
@@ -315,12 +405,13 @@ const DashboardChart = () => {
 
                             return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
                         },
-                    },
+                    }
+                  
                 },
             },
         };
 
-        setChartData(data);
+        setChartData(chartDataValue);
         setChartOptions(options);
     }, []);
 
