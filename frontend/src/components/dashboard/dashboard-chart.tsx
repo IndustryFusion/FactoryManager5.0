@@ -7,7 +7,7 @@ import axios from "axios";
 import { Asset } from "@/interfaces/assetTypes";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import { getDatesInRange } from "@/utility/chart-utility";
+import { calculateDifference, convertSecondstoTime, convertToSeconds, convertToSecondsTime, getDatesInRange, groupedByDate, machineData, mapBackendDataToAssetState } from "@/utility/chart-utility";
 
 export interface Datasets {
     label?: string;
@@ -41,70 +41,12 @@ const DashboardChart = () => {
     const [documentStyle, setDocumentStyle] = useState(null);
     const router = useRouter();
 
-    const mapBackendDataToAssetState = (backendData: any) => {
-        const modifiedObject: any = {};
-        // Iterate over the properties of the object
-        Object.keys(backendData).forEach((key) => {
-            if (key.includes("http://www.industry-fusion.org/fields#")) {
-                const newKey = key.replace("http://www.industry-fusion.org/fields#", "");
-                modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
-            } else {
-                modifiedObject[key] = backendData[key];
-            }
-        });
-        return modifiedObject;
-    };
+   
 
     const fetchDataAndAssign = async () => {
         let entityId = 'urn:ngsi-ld:asset:2:101';
         let attributeIds: string[] | undefined = await fetchAssets(entityId);
-        const lineOptions: ChartOptions = {
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                // x: {
-                //   ticks: {
-                //     autoSkip: false,
-                //     maxTicksLimit: 20,
-                //     callback: function (label, index, labels) {
-
-                //       // Check if this is a tick we want to show based on the index
-                //       if (index % 3 === 0) {
-                //         // Parse the timestamp into a Date object
-                //         const dateObj = new Date(label);
-                //         // Format the date and time
-                //         const formattedDate = dateObj.toLocaleDateString('en-US'); // Adjust for your locale
-                //         const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                //         // Return the combined date and time string
-                //         return `${formattedDate} ${formattedTime}`;
-                //       } else {
-                //         // For other ticks, return an empty string to hide them
-                //         return '';
-                //       }
-                //     },
-                //   },
-                // }
-
-                y: {
-                    ticks: {
-
-                        callback: function (value, index, values) {
-                            if (value === 2) {
-                                return 'Online';
-                            } else if (index === 0) {
-                                return 'Offline';
-                            } else {
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
+       
         if (attributeIds)
             // console.log(attributeIds[2], "attributeId here")
 
@@ -127,6 +69,7 @@ const DashboardChart = () => {
             lineOptions
         });
     }
+
     const fetchData = async (attributeId: string, entityId: string) => {
         const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
         const labels: string[] = [], datasets: Datasets[] = [
@@ -205,6 +148,8 @@ const DashboardChart = () => {
         }
     };
 
+
+
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
@@ -221,28 +166,11 @@ const DashboardChart = () => {
     const today = new Date();
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 6);
-
     // Get an array of dates from today to 7 days ago
     const dateRange = getDatesInRange(sevenDaysAgo, today);
     const descendingDateRange = dateRange.reverse();
 
-    const convertToSeconds = (timeData: any) => {
-        const secondsData = timeData.map((time) => {
-            const [hours, minutes, seconds] = time.split(':').map(Number);
-            return hours * 3600 + minutes * 60 + seconds;
-        });
-        return secondsData;
-    }
-
-
-    // data mapping to chart based on each value of array to each day here
-    // const onlineTimeData = ['12:10:58', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
-    // const offlineTimeData = ['2:25:03', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
-    // const realOfflineTimeData = ['14:25:03'];
-
-    // const onlineData = convertToSeconds(onlineTimeData);
-    // const offlineData = convertToSeconds(offlineTimeData);
-    // const realOfflineTimeValues = convertToSeconds(realOfflineTimeData );
+   
 
 
     const formatChartData = (dataset:any) => {
@@ -297,8 +225,6 @@ const DashboardChart = () => {
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
 
        
-    console.log(descendingDateRange, "all dates");
-
     const dataset = [
         {
             [descendingDateRange[0]]: {
@@ -318,28 +244,27 @@ const DashboardChart = () => {
             }
         }
     ];
+
+    const uniqueDates = [...new Set(machineData.map(item => item.observedAt.split('T')[0]))].sort((a, b) => b - a);
+
+console.log("dates from data", uniqueDates);
+console.log(groupedByDate, "its object here");
+
+// Format the grouped data into the desired structure
+const newDataset = uniqueDates.map(date => {
+    return {
+        [date]: {
+            online: groupedByDate[date]?.online || [],
+            offline: groupedByDate[date]?.offline || [],
+            // Assuming online_1 and offline_1 are additional values you want to include
+            online_1: [], // Example: Add your logic to populate these
+            offline_1: [] // Example: Add your logic to populate these
+        }
+    };
+});
     
-    const chartDataValue = formatChartData(dataset);
+    const chartDataValue = formatChartData(newDataset);
 
-    // console.log(chartDataValue, "what all values are");
-
-        // const data = {
-        //     labels: descendingDateRange,
-        //     datasets: [
-        //         {
-        //             type: 'bar',
-        //             label: 'Online',
-        //             backgroundColor: documentStyle.getPropertyValue('--green-400'),
-        //             data: onlineData,
-        //         },
-        //         {
-        //             type: 'bar',
-        //             label: 'Offline',
-        //             backgroundColor: documentStyle.getPropertyValue('--red-400'),
-        //             data: offlineData,
-        //         },
-        //     ],
-        // };
         const options = {
             indexAxis: 'y',
             maintainAspectRatio: false,
@@ -403,6 +328,7 @@ const DashboardChart = () => {
         setChartData(chartDataValue);
         setChartOptions(options);
     }, []);
+
 
     return (
         <div className="card h-auto" style={{width:"40%"}}>
