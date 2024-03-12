@@ -37,6 +37,15 @@ export class ReactFlowService {
     }
   }
 
+  async findAll() {
+    try {
+      let result = await this.factoryModel.find({});
+      return result;
+    }catch(err) {
+      throw err;
+    }
+  }
+
   async update(factoryId: string, data: ReactFlowDto) {
     try {
       const updatedUser = await this.factoryModel.updateOne({factoryId} , data, {
