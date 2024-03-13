@@ -98,6 +98,7 @@ export class ReactFlowService {
       result.nodes.push(factoryNode);
 
       const shopFloorData = await this.shopFloorService.findAll(factoryId, token);
+      console.log(" shopFloorData 111", shopFloorData)
       for (const shopFloor of shopFloorData) {
         const shopFloorNode = {
           id: `shopFloor_${shopFloor.id}`,
@@ -119,17 +120,17 @@ export class ReactFlowService {
         for (const asset of assets) {
           await this.processAsset(asset, token, result, shopFloorNode.id); 
         }
+       
       }
-
-        const reactFlowData: ReactFlowDto = {
+      
+      const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
+      const reactFlowData: ReactFlowDto = {
             factoryId: factoryId,
             factoryData: {
                 nodes: result.nodes,
                 edges: result.edges
             }
         };
-
-        const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
 
         if (existingFactoryData) {
        
