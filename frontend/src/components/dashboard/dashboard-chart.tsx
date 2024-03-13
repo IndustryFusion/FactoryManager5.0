@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { calculateDifference, convertSecondstoTime, convertToSeconds, convertToSecondsTime, getDatesInRange, groupedByDate, machineData, mapBackendDataToAssetState } from "@/utility/chart-utility";
 
+
 export interface Datasets {
     label?: string;
     data: number[];
@@ -41,12 +42,10 @@ const DashboardChart = () => {
     const [documentStyle, setDocumentStyle] = useState(null);
     const router = useRouter();
 
-   
-
     const fetchDataAndAssign = async () => {
         let entityId = 'urn:ngsi-ld:asset:2:101';
         let attributeIds: string[] | undefined = await fetchAssets(entityId);
-       
+
         if (attributeIds)
             // console.log(attributeIds[2], "attributeId here")
 
@@ -149,7 +148,6 @@ const DashboardChart = () => {
     };
 
 
-
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
@@ -170,10 +168,7 @@ const DashboardChart = () => {
     const dateRange = getDatesInRange(sevenDaysAgo, today);
     const descendingDateRange = dateRange.reverse();
 
-   
-
-
-    const formatChartData = (dataset:any) => {
+    const formatChartData = (dataset: any) => {
         const documentStyle = getComputedStyle(document.documentElement);
         const groupedByDate = dataset.reduce((acc, item) => {
             const date = Object.keys(item)[0];
@@ -181,7 +176,7 @@ const DashboardChart = () => {
             const offlineTimes = convertToSeconds(item[date].offline);
             const online_1Times = convertToSeconds(item[date].online_1);
             const offline_1Times = convertToSeconds(item[date].offline_1);
-    
+
             // Flatten online, offline, online_1, and offline_1 times into a single array
             const times = [
                 ...onlineTimes.map(time => ({ date, time, type: 'online' })),
@@ -189,32 +184,46 @@ const DashboardChart = () => {
                 ...online_1Times.map(time => ({ date, time, type: 'online_1' })),
                 ...offline_1Times.map(time => ({ date, time, type: 'offline_1' }))
             ];
-    
+             times.sort((a, b) => b.time - a.time);
+
+            // console.log("what's the times here", times);
             acc[date] = times;
             return acc;
         }, {});
+
     
+        console.log(dataset, "what's the dataset here");
+        console.log(groupedByDate, "what's this here in groupedbydate");
+        // console.log("convert to array", Object.entries(groupedByDate));
+
         const labels = Object.keys(groupedByDate);
-        const datasets = ['online', 'offline',
-                           'online_1', 'offline_1'].map((type) => {
-            const result = {
+        let uniqueTypes;
+        for(let date in groupedByDate){
+            // console.log(date, "what's the datehere");
+            uniqueTypes =  groupedByDate[date].map(item => item.type);
+            // console.log(uniqueTypes, "what's here in uniqueTypes");
+        }
+      
+        const datasets = uniqueTypes.map(type => {
+            const dataValue = labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
+            console.log(dataValue, "what's this here dataValue");
+            console.log(labels, "what's in the labels");
+            return {
                 label: type.charAt(0).toUpperCase() + type.slice(1),
                 backgroundColor: type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
-                data: labels.flatMap((date) => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
+                data: labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
             };
-            console.log(result, "what's the result");
-            
-            return result;
         });
-    
+                console.log(datasets, "what's in this datsets");
+
         return {
             labels,
             datasets,
         };
     };
-    
 
- 
+
+
     //bar chart data 
     useEffect(() => {
         const documentStyle = getComputedStyle(document.documentElement);
@@ -224,46 +233,43 @@ const DashboardChart = () => {
         );
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
 
-       
-    const dataset = [
-        {
-            [descendingDateRange[0]]: {
-                online: ['2:00:00'],
-                offline: ['4:25:03'],
-                online_1: ['5:40:00'],
-                offline_1:['4:07:67']
-                
+        const dataset = [
+            {
+                [descendingDateRange[0]]: {
+                    online: ['12:00:00'],
+                    offline: ['5:25:03'],
+                    online_1: ['5:40:00'],
+                    offline_1: ['4:07:67']
+
+                }
+            },
+            {
+                [descendingDateRange[1]]: {
+                    online: ['3:08:27'],
+                    offline: ['10:00:00'],
+                    online_1: ['2:40:00'],
+                    offline_1: ['7:07:67']
+                }
             }
-        },
-        {
-            [descendingDateRange[1]]: {
-                online: ['3:08:27'],
-                offline: ['10:00:00'],
-                online_1: ['2:40:00'],
-                offline_1:['7:07:67']
-            }
-        }
-    ];
+        ];
 
-    const uniqueDates = [...new Set(machineData.map(item => item.observedAt.split('T')[0]))].sort((a, b) => b - a);
+        const uniqueDates = [...new Set(machineData.map(item => item.observedAt.split('T')[0]))].sort((a, b) => b - a);
 
-console.log("dates from data", uniqueDates);
-console.log(groupedByDate, "its object here");
+        // Format the grouped data into the desired structure
+        const newDataset = uniqueDates.map(date => {
+            return {
+                [date]: {
+                    offline: groupedByDate[date]?.offline || [],
+                    online: groupedByDate[date]?.online || [],
+                    // Assuming online_1 and offline_1 are additional values you want to include
+                    online_1: [], // Example: Add your logic to populate these
+                    offline_1: [] // Example: Add your logic to populate these
+                }
+            };
+        });
 
-// Format the grouped data into the desired structure
-const newDataset = uniqueDates.map(date => {
-    return {
-        [date]: {
-            online: groupedByDate[date]?.online || [],
-            offline: groupedByDate[date]?.offline || [],
-            // Assuming online_1 and offline_1 are additional values you want to include
-            online_1: [], // Example: Add your logic to populate these
-            offline_1: [] // Example: Add your logic to populate these
-        }
-    };
-});
-    
-    const chartDataValue = formatChartData(newDataset);
+        const chartDataValue = formatChartData(newDataset);
+        // console.log(chartDataValue, "what's chartDtaValue");
 
         const options = {
             indexAxis: 'y',
@@ -277,7 +283,7 @@ const newDataset = uniqueDates.map(date => {
                         label: (context) => {
                             const { dataset, dataIndex } = context;
                             // console.log(dataset, "what's in this");
-                            
+
                             const value = dataset.data[dataIndex];
                             const hours = Math.floor(value / 3600);
                             const minutes = Math.floor((value % 3600) / 60);
@@ -320,7 +326,7 @@ const newDataset = uniqueDates.map(date => {
                             return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
                         },
                     }
-                  
+
                 },
             },
         };
@@ -331,7 +337,7 @@ const newDataset = uniqueDates.map(date => {
 
 
     return (
-        <div className="card h-auto" style={{width:"40%"}}>
+        <div className="card h-auto" style={{ width: "40%" }}>
             <h5 className="heading-text">Machine State Overview</h5>
             <Chart type="bar" data={chartData} options={chartOptions} />
         </div>

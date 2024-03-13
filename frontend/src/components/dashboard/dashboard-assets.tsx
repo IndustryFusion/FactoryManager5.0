@@ -41,6 +41,8 @@ const DashboardAssets = () => {
       const response = await fetchAsset();
       if (response !== undefined) {
         setAssetData(response);
+        console.log(response, "all assets");
+        
       } else {
         console.error("Fetch returned undefined");
       }

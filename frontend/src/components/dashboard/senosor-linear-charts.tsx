@@ -192,7 +192,7 @@ const CombineSensorChart: React.FC = () => {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
   const handleDatasetClick = (datasetIndex: number) => {
-    console.log("Dataset button clicked:", datasetIndex);
+    // console.log("Dataset button clicked:", datasetIndex);
     setSelectedDatasetIndex(datasetIndex); // Update the selected dataset index
   };
 
@@ -237,7 +237,7 @@ const CombineSensorChart: React.FC = () => {
 
           // Exclude the dataset with the label "machine-state"
           if (newDataset.label !== "machine-state") {
-            console.log(`Dataset ${i}:`, newDataset); // Log each dataset
+            // console.log(`Dataset ${i}:`, newDataset); // Log each dataset
 
             if (i === 0) {
               chartData.labels = labels; // Use the correct property name
@@ -246,10 +246,10 @@ const CombineSensorChart: React.FC = () => {
           }
         }
 
-        console.log("Final Chart Data:", chartData); // Log final chart data
+        // console.log("Final Chart Data:", chartData); // Log final chart data
         setChartData(chartData);
       } else {
-        console.log("No attribute set available");
+        // console.log("No attribute set available");
       }
     };
 
