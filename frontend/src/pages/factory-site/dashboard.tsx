@@ -13,6 +13,8 @@ import CombineSensorChart from "@/components/dashboard/senosor-linear-charts";
 import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
+import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
+import { fetchAsset } from "@/utility/asset-utility";
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -22,6 +24,8 @@ const Dashboard = () => {
   const [machineState, setMachineState] = useState("0");
   const { layoutConfig } = useContext(LayoutContext);
   const router = useRouter();
+  // const {setEntityIdValue} = useDashboard();
+
 
   const fetchNotifications = async () => {
     try {
@@ -37,7 +41,8 @@ const Dashboard = () => {
       console.error("Error:", error);
     }
   }
-
+  
+ 
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -47,14 +52,16 @@ const Dashboard = () => {
         fetchNotifications();
       }
     }
+    
   }, [router.isReady])
 
 
   return (
     <>
+    <DashboardProvider>
       <div className="dashboard-container" style={{ zoom: "95%" }}>
         <HorizontalNavbar />
-        <DashboardCards machineStateProp={machineState} />
+        <DashboardCards  />
         <div className="flex flex-column md:flex-row" style={{height:"80%", width:"100%" }}>
           <div className="flex border-round m-2" style={{width:"77%"}}>
             <div className="card h-auto" style={{width:"100%"}} >
@@ -65,11 +72,12 @@ const Dashboard = () => {
         </div>
         <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
           <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
-            <PowerCo2Chart/>
+            <PowerCo2Chart />
           </div>
           <DashboardChart/>
           </div>     
       </div>
+      </DashboardProvider>
     </>
   )
 }

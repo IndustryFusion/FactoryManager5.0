@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
-  const [alertsCount, setAlertsCount] = useState<number>(8);
+  const [alertsCount, setAlertsCount] = useState<number>(18);
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
   const [assetData, setAssetData] = useState({

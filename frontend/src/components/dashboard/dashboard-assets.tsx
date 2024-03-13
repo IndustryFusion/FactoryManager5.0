@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
+import { useDashboard } from "@/context/dashboardContext";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -16,6 +17,8 @@ const DashboardAssets = () => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
   const router = useRouter();
+
+  const { entityIdValue, setEntityIdValue, machineStateValue, setMachineStateValue } = useDashboard();
 
   const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
@@ -40,7 +43,15 @@ const DashboardAssets = () => {
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
+
+        const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
+        // console.log(response[0] ,"allassets");
+        console.log(filteredAssets[0], "filtered asets");
+
         setAssetData(response);
+        console.log(response, "allresponse");
+
+        setEntityIdValue(filteredAssets[0]);
       } else {
         console.error("Fetch returned undefined");
       }
@@ -54,12 +65,11 @@ const DashboardAssets = () => {
       router.push("/login");
     } else {
       if (router.isReady) {
-        const {} = router.query;
+        const { } = router.query;
         handleAsset();
       }
-    }  
+    }
   }, [router.isReady])
-
 
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
@@ -73,11 +83,10 @@ const DashboardAssets = () => {
     }
   };
 
-
   return (
-    <div style={{zoom:"80%"}}>
-      <div className="dashboard-assets" style={{width:"100%"}}>
-        <div className="card h-auto" style={{width:"100%"}}>
+    <div style={{ zoom: "80%" }}>
+      <div className="dashboard-assets" style={{ width: "100%" }}>
+        <div className="card h-auto " style={{ width: "100%" }}>
           <h5 className="heading-text">Assets</h5>
           <DataTable
             rows={5}

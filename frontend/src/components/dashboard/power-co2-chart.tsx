@@ -1,8 +1,11 @@
 'use client';
+import dynamic from 'next/dynamic';
 import { Chart } from 'primereact/chart';
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { useDashboard } from '@/context/dashboardContext';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
 
 export interface Datasets {
     label: string;
@@ -21,11 +24,16 @@ export interface pgData {
 
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
+    const {entityIdValue, setEntityIdValue} = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
+ 
 
     const fetchData = async () => {
         try {
             const response = await axios.get(API_URL + '/power-consumption/chart', {
+                // params:{
+                //  assetId: entityIdValue,   
+                // },
               headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
