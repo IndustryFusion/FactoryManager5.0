@@ -19,10 +19,10 @@ export class PowerConsumptionController {
   }
 
   @Get('/chart')
-  async findChartData(@Query() queryParams: any, @Req() req: Request) {
+  async findChartData(@Query('asset-id') assetId: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.powerConsumptionService.findChartData(queryParams, token);
+      let response = await this.powerConsumptionService.findChartData(assetId, token);
       return response;
     } catch(err) {
       throw new NotFoundException();
