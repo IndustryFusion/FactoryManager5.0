@@ -120,12 +120,9 @@ export class ReactFlowService {
         for (const asset of assets) {
           await this.processAsset(asset, token, result, shopFloorNode.id); 
         }
-
-         
-
        
       }
-
+      
       const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
       const reactFlowData: ReactFlowDto = {
             factoryId: factoryId,
@@ -135,7 +132,6 @@ export class ReactFlowService {
             }
         };
 
-     
         if (existingFactoryData) {
        
           await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
