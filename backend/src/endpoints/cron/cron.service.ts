@@ -20,7 +20,8 @@ export class CronService {
     private readonly templatesService: TemplatesService,
     ) {}
 
-  @Cron('* * * * *')
+  // this method run at every end of the day
+  @Cron('0 0 * * *')
   async handleCron() {
     console.log('time ', new Date());
     const url = 'http://localhost:4002/cron'; // Replace with your actual URL
@@ -103,11 +104,11 @@ export class CronService {
                 if(key.includes('has')){
                   let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
                   if(templateData[0].properties[templateKey].type == 'material'){
-                    if(Array.isArray(assetData[j][key].object)){
-                      let materialArr = assetData[j][key].object;
+                    if(Array.isArray(assetData[j][key])){
+                      let materialArr = assetData[j][key];
                       let count = 0;
                       for(let idx = 0; idx < materialArr.length; idx++){
-                        let target = materialArr[idx];
+                        let target = materialArr[idx].object;
                         for(let k = 0; k < edges.length; k++){
                           console.log('source ',edges[k].source);
                           console.log('check source ',assetData[j].id);
