@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Asset } from "@/interfaces/assetTypes";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
@@ -14,7 +14,11 @@ import OnboardForm from "./onboard-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const DashboardAssets = () => {
+interface DashboardAssetsProps {
+  setBlockerProp: Dispatch<SetStateAction<boolean>>
+}
+
+const DashboardAssets:React.FC<DashboardAssetsProps> = ({setBlockerProp}) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
@@ -141,6 +145,7 @@ const DashboardAssets = () => {
        showBlockerProp={showBlocker}
         setShowBlockerProp={setShowBlocker}
         asset={selectedRowAsset}
+        setBlocker={setBlockerProp}
        />
       }
     </div>

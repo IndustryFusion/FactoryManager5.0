@@ -7,28 +7,26 @@ import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { InputNumber } from "primereact/inputnumber";
 import { Password } from "primereact/password";
+import { useDashboard } from "@/context/dashboardContext";
 
 
 interface OnboardFormProps {
     showBlockerProp: boolean;
     setShowBlockerProp: Dispatch<SetStateAction<boolean>>;
-    asset:any;
+    asset: any;
+    setBlocker: Dispatch<SetStateAction<boolean>>
 }
-const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlockerProp, asset }) => {
-
-    console.log(asset, "selectd asset here");
-    
-
+const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlockerProp, asset, setBlocker }) => {
     const [onboardForm, setOnboardForm] = useState(
         {
             ip_address: "",
             main_topic: "",
-            protocol:asset?.asset_communication_protocol,
+            protocol: asset?.asset_communication_protocol,
             app_config: "",
             pod_name: `${asset?.product_name}-${asset?.asset_communication_protocol}`,
             pdt_mqtt_hostname: "",
             pdt_mqtt_port: 0,
-            secure_config: true,
+            secure_config: "",
             device_id: asset?.id,
             gateway_id: asset?.id,
             keycloak_url: "",
@@ -41,12 +39,22 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
         }
     )
 
-    const handleInputChange = (e: any, key: any) => {
-
+    useEffect(() => {
+        if (showBlockerProp) {
+           const dialogContent = document.querySelector('.dialog-content');
+           if (dialogContent) {
+             dialogContent.scrollTop = 0;
+           }
+        }
+       }, [showBlockerProp]);
+       
+  
+    const handleInputChange = (value: any, key: any) => {
         if (key === "pdt_mqtt_port") {
-            setOnboardForm({ ...onboardForm, [key]: Number(e.target.value) })
-        } else {
-            setOnboardForm({ ...onboardForm, [key]: e.target.value })
+            setOnboardForm({ ...onboardForm, [key]: Number(value) })
+         }       
+        else {
+            setOnboardForm({ ...onboardForm, [key]: value })
         }
     }
     const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
@@ -54,7 +62,16 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
     }
 
     console.log(onboardForm, "what are the valuese here");
+    console.log(asset, "selectd asset here");
 
+    const handleSubmit =(e:any)=>{
+        e.preventDefault();
+        console.log(onboardForm, "all values");
+        const jsonFormData = JSON.stringify(onboardForm);
+    console.log(jsonFormData, "all values in JSON format");
+        setShowBlockerProp(false); 
+        setBlocker(true);   
+    }
 
     return (
         <>
@@ -64,11 +81,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                     style={{ width: '40rem' }} onHide={() => setShowBlockerProp(false)}
                     draggable={false} resizable={false}
                 >
+                    <div className="dialog-content dialog-content-top">
                     <p className="m-0">
                         Please onboard the asset gateway before moving to dashboard. After onboarding click on 'finish' button </p>
                     <p className="m-0 mt-1 mb-3"></p>
 
-                    <form >
+                    <form onSubmit={handleSubmit}>
                         <div className="p-fluid p-formgrid p-grid ">
                             <div className="field">
                                 <label htmlFor="ip_address" >IP Address</label>
@@ -77,7 +95,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     value={onboardForm.ip_address}
                                     type="text"
                                     placeholder="192.168.49.26"
-                                    onChange={(e) => handleInputChange(e, "ip_address")}
+                                    onChange={(e) => handleInputChange(e.target.value, "ip_address")}
                                 />
                             </div>
                             <div className="field">
@@ -87,7 +105,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     value={onboardForm.main_topic}
                                     type="text"
                                     placeholder="airtracker-74145/relay1"
-                                    onChange={(e) => handleInputChange(e, "main_topic")}
+                                    onChange={(e) => handleInputChange(e.target.value, "main_topic")}
                                 />
                             </div>
                             <div className="field">
@@ -123,16 +141,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     value={onboardForm.pdt_mqtt_hostname}
                                     type="text"
                                     placeholder="devalerta.industry-fusion.com"
-                                    onChange={(e) => handleInputChange(e, "pdt_mqtt_hostname")}
+                                    onChange={(e) => handleInputChange(e.target.value, "pdt_mqtt_hostname")}
                                 />
                             </div>
                             <div className="field">
                                 <label htmlFor="pdt_mqtt_port">Pdt Mqtt Port</label>
                                 <InputNumber
                                     id="pdt_mqtt_port"
-                                    value={onboardForm.pdt_mqtt_port}
+                                    // value={onboardForm.pdt_mqtt_port}
                                     placeholder="8883"
-                                    onChange={(e) => handleInputChange(e, "pdt_mqtt_port")}
+                                    onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
+
                                 />
                             </div>
                             <div className="field">
@@ -141,7 +160,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     id="secure_config"
                                     value={onboardForm.secure_config}
                                     placeholder="true"
-                                    onChange={(e) => handleInputChange(e, "secure_config")}
+                                    onChange={(e) => handleInputChange(e.target.value, "secure_config")}
                                 />
                             </div>
                             <div className="field">
@@ -164,23 +183,23 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     id="keycloak_url"
                                     value={onboardForm.keycloak_url}
                                     placeholder="https://development.industry-fusion.com/auth/realms"
-                                    onChange={e => handleInputChange(e, "keycloak_url")}
+                                    onChange={e => handleInputChange(e.target.value, "keycloak_url")}
                                 />
                             </div>
                             <div className="field">
                                 <label htmlFor="realm_password">Realm Password</label>
-                                <Password 
-                                value={onboardForm.realm_password} 
+                                <Password
+                                    value={onboardForm.realm_password}
                                     toggleMask
-                                    onChange={(e)=>handleInputChange(e, "realm_password")}
-                                    />
+                                    onChange={(e) => handleInputChange(e.target.value, "realm_password")}
+                                />
                             </div>
                             <div className="field">
                                 <label htmlFor="username_config">Username Config</label>
                                 <InputText
                                     id="username_config"
                                     value={onboardForm.username_config}
-                                    onChange={e => handleInputChange(e, "username_config")}
+                                    onChange={e => handleInputChange(e.target.value, "username_config")}
                                 />
                             </div>
                             <div className="field">
@@ -188,7 +207,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                 <InputText
                                     id="password_config"
                                     value={onboardForm.password_config}
-                                    onChange={e => handleInputChange(e, "password_config")}
+                                    onChange={e => handleInputChange(e.target.value, "password_config")}
                                 />
                             </div>
                             <div className="field">
@@ -196,7 +215,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                 <InputText
                                     id="dataservice_image_config"
                                     value={onboardForm.dataservice_image_config}
-                                    onChange={e => handleInputChange(e, "dataservice_image_config")}
+                                    onChange={e=> handleInputChange(e.target.value, "dataservice_image_config")}
                                     placeholder="fusionmqttdataservice:latest"
                                 />
                             </div>
@@ -204,21 +223,22 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                 <label htmlFor="agentservice_image_config">Agentservice Image Config</label>
                                 <InputText
                                     id="agentservice_image_config"
-                                    value={onboardForm.password_config}
-                                    onChange={e => handleInputChange(e, "agentservice_image_config")}
+                                    value={onboardForm.agentservice_image_config}
+                                    onChange={e => handleInputChange(e.target.value, "agentservice_image_config")}
                                     placeholder="iff-iot-agent:v0.0.2"
                                 />
                             </div>
 
                         </div>
-                    </form>
-
-
+                        
                     <div>
                         <div className="finish-btn">
                             <Button
-                                label="Submit" onClick={() => setShowBlockerProp(false)} autoFocus />
+                            type="submit"
+                                label="Submit"  autoFocus />
                         </div>
+                    </div>
+                    </form>
                     </div>
                 </Dialog>
             </div>

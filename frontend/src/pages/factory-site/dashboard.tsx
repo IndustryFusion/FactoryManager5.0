@@ -15,6 +15,7 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
 import { fetchAsset } from "@/utility/asset-utility";
+import { ProgressSpinner } from "primereact/progressspinner";
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -23,8 +24,11 @@ const Dashboard = () => {
   const [count, setCount] = useState(0);
   const [machineState, setMachineState] = useState("0");
   const { layoutConfig } = useContext(LayoutContext);
+  const [blocker, setBlocker]= useState(false);
+  const [countDown, setCountDown] = useState(0);
+  const [runTimer, setRunTimer] = useState(false);
   const router = useRouter();
-  // const {setEntityIdValue} = useDashboard();
+
 
 
   const fetchNotifications = async () => {
@@ -50,15 +54,62 @@ const Dashboard = () => {
       if (router.isReady) {
         const { } = router.query;
         fetchNotifications();
-      }
-    }
-    
+      }   
+    }   
   }, [router.isReady])
+
+// Effect to start the timer when blocker is true
+useEffect(() => {
+  if (blocker && !runTimer) {
+     setRunTimer(true);
+     setCountDown(60 * 5); // Set countdown to 5 minutes
+  }
+ }, [blocker, runTimer]);
+ 
+ // Effect to manage the countdown timer
+ useEffect(() => {
+  let timerId;
+ 
+  if (runTimer) {
+     timerId = setInterval(() => {
+       setCountDown((countDown) => countDown - 1);
+     }, 1000);
+  } else {
+     clearInterval(timerId);
+  }
+ 
+  return () => clearInterval(timerId);
+ }, [runTimer]);
+
+
+useEffect(() => {
+ if (countDown < 0 && runTimer) {
+    console.log("expired");
+    setRunTimer(false);
+    setCountDown(0);
+ }
+}, [countDown, runTimer]);
+
 
 
   return (
     <>
     <DashboardProvider>
+      {blocker && 
+      <div className="blocker">
+        <div className="card blocker-card">
+          <p>Restart the Machine to finish onboarding</p>
+          <div className="loading-spinner">
+          <ProgressSpinner />
+          </div>
+          <div>
+          <p>Time Remaining:
+            <span style={{color:"red",marginRight:"5px"}}>{Math.floor(countDown / 60)}:{countDown % 60 < 10 ? '0' : ''}{countDown % 60}</span>
+              mins</p>
+          </div>
+        </div>
+      </div>
+      }
       <div className="dashboard-container" style={{ zoom: "95%" }}>
         <HorizontalNavbar />
         <DashboardCards  />
@@ -68,7 +119,7 @@ const Dashboard = () => {
               <CombineSensorChart />
             </div>
           </div>
-          <DashboardAssets />
+          <DashboardAssets setBlockerProp={setBlocker}/>
         </div>
         <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
           <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>

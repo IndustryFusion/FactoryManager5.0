@@ -15,6 +15,7 @@ export const DashboardProvider:React.FC<{ children: ReactNode }> = ({
   }) =>{
     const [entityIdValue, setEntityIdValue]=useState("");
     const [machineStateValue, setMachineStateValue] = useState("0");
+    const [blocker, setBlocker]= useState(false);
 
     return(
         <DashboardContext.Provider
@@ -22,7 +23,8 @@ export const DashboardProvider:React.FC<{ children: ReactNode }> = ({
            entityIdValue,
            setEntityIdValue,
            machineStateValue, 
-           setMachineStateValue
+           setMachineStateValue,
+           blocker, setBlocker
           }}
       >
         {children}
