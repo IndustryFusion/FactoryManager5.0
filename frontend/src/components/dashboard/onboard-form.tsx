@@ -1,5 +1,5 @@
 
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { useForm } from "react-hook-form";
 import { Button } from "primereact/button";
@@ -8,6 +8,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { InputNumber } from "primereact/inputnumber";
 import { Password } from "primereact/password";
 import { useDashboard } from "@/context/dashboardContext";
+import { ScrollPanel } from "primereact/scrollpanel";
 
 
 interface OnboardFormProps {
@@ -38,21 +39,18 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
 
         }
     )
+    const scrollPanelRef = useRef(null);
 
-    useEffect(() => {
-        if (showBlockerProp) {
-           const dialogContent = document.querySelector('.dialog-content');
-           if (dialogContent) {
-             dialogContent.scrollTop = 0;
-           }
-        }
-       }, [showBlockerProp]);
-       
-  
+    // useEffect(() => {
+    //     if (showBlockerProp && scrollPanelRef.current) {
+    //         scrollPanelRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    //     }
+    // }, [showBlockerProp]);
+
     const handleInputChange = (value: any, key: any) => {
         if (key === "pdt_mqtt_port") {
             setOnboardForm({ ...onboardForm, [key]: Number(value) })
-         }       
+        }
         else {
             setOnboardForm({ ...onboardForm, [key]: value })
         }
@@ -61,32 +59,39 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
         setOnboardForm({ ...onboardForm, [key]: e.target.value })
     }
 
-    console.log(onboardForm, "what are the valuese here");
-    console.log(asset, "selectd asset here");
-
-    const handleSubmit =(e:any)=>{
+    const handleSubmit = (e: any) => {
         e.preventDefault();
         console.log(onboardForm, "all values");
         const jsonFormData = JSON.stringify(onboardForm);
-    console.log(jsonFormData, "all values in JSON format");
-        setShowBlockerProp(false); 
-        setBlocker(true);   
+        console.log(jsonFormData, "all values in JSON format");
+        setShowBlockerProp(false);
+        setBlocker(true);
     }
 
+    const headerElement =(
+        <p className="m-0"> Please onboard the asset gateway before moving to dashboard. After onboarding click on 'submit' button </p>
+    )
+    const footerContent=(
+        <div>
+        <div className="finish-btn">
+            <Button
+               onClick={handleSubmit}
+                label="Submit" autoFocus />
+        </div>
+    </div>
+    )
+    
     return (
         <>
-            <div className="card flex justify-content-center">
+       <div className="card flex justify-content-center">
                 <Dialog visible={showBlockerProp} modal
-                    position="top"
+                   header={headerElement}
+                   footer={footerContent}
                     style={{ width: '40rem' }} onHide={() => setShowBlockerProp(false)}
                     draggable={false} resizable={false}
                 >
-                    <div className="dialog-content dialog-content-top">
-                    <p className="m-0">
-                        Please onboard the asset gateway before moving to dashboard. After onboarding click on 'finish' button </p>
-                    <p className="m-0 mt-1 mb-3"></p>
-
-                    <form onSubmit={handleSubmit}>
+                    <ScrollPanel ref={scrollPanelRef} style={{ width: '100%', height: '100%' }}>                  
+                    <form >
                         <div className="p-fluid p-formgrid p-grid ">
                             <div className="field">
                                 <label htmlFor="ip_address" >IP Address</label>
@@ -124,6 +129,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     rows={10}
                                     cols={30}
                                     onChange={(e) => handleInputTextAreaChange(e, "app_config")}
+                                    
                                 />
                             </div>
                             <div className="field">
@@ -150,6 +156,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     id="pdt_mqtt_port"
                                     // value={onboardForm.pdt_mqtt_port}
                                     placeholder="8883"
+                                    useGrouping={false}
                                     onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
 
                                 />
@@ -215,7 +222,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                 <InputText
                                     id="dataservice_image_config"
                                     value={onboardForm.dataservice_image_config}
-                                    onChange={e=> handleInputChange(e.target.value, "dataservice_image_config")}
+                                    onChange={e => handleInputChange(e.target.value, "dataservice_image_config")}
                                     placeholder="fusionmqttdataservice:latest"
                                 />
                             </div>
@@ -230,18 +237,11 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                             </div>
 
                         </div>
-                        
-                    <div>
-                        <div className="finish-btn">
-                            <Button
-                            type="submit"
-                                label="Submit"  autoFocus />
-                        </div>
-                    </div>
                     </form>
-                    </div>
-                </Dialog>
-            </div>
+                </ScrollPanel>
+            </Dialog>
+
+        </div >
         </>
     )
 }

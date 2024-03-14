@@ -16,9 +16,10 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface DashboardAssetsProps {
   setBlockerProp: Dispatch<SetStateAction<boolean>>
+  setPrefixedAssetPropertyProp: any
 }
 
-const DashboardAssets:React.FC<DashboardAssetsProps> = ({setBlockerProp}) => {
+const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
@@ -83,7 +84,7 @@ const DashboardAssets:React.FC<DashboardAssetsProps> = ({setBlockerProp}) => {
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
     setSelectedRowAsset(selectedAsset)
-
+    setPrefixedAssetPropertyProp(prefixedKeys);
     console.log(prefixedKeys, "what's here");
     console.log(prefixedKeys.length, "the length of prefix");
 
@@ -141,12 +142,12 @@ const DashboardAssets:React.FC<DashboardAssetsProps> = ({setBlockerProp}) => {
         </div>
       </div>
       {showBlocker &&
-       <OnboardForm
-       showBlockerProp={showBlocker}
-        setShowBlockerProp={setShowBlocker}
-        asset={selectedRowAsset}
-        setBlocker={setBlockerProp}
-       />
+        <OnboardForm
+          showBlockerProp={showBlocker}
+          setShowBlockerProp={setShowBlocker}
+          asset={selectedRowAsset}
+          setBlocker={setBlockerProp}
+        />
       }
     </div>
   )

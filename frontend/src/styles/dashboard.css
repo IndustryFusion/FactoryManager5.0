@@ -87,7 +87,10 @@
 .dialog-content-top {
     justify-content: flex-start;
  }
-   
+ .p-dialog .p-dialog-header .p-dialog-title {
+    font-weight: 600;
+    font-size: 1rem;
+} 
 
 @media screen and (min-width: 1550px){
     .chart-content,

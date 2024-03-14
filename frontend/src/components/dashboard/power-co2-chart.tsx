@@ -27,13 +27,15 @@ const PowerCo2Chart = () => {
     const {entityIdValue, setEntityIdValue} = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
  
+    console.log(entityIdValue, "assetId value");
+    
 
     const fetchData = async () => {
         try {
             const response = await axios.get(API_URL + '/power-consumption/chart', {
-                // params:{
-                //  assetId: entityIdValue,   
-                // },
+                params:{
+                    'asset-id': entityIdValue,   
+                },
               headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",

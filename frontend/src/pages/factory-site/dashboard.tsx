@@ -16,6 +16,7 @@ import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
 import { fetchAsset } from "@/utility/asset-utility";
 import { ProgressSpinner } from "primereact/progressspinner";
+import { Button } from "primereact/button";
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -27,6 +28,8 @@ const Dashboard = () => {
   const [blocker, setBlocker]= useState(false);
   const [countDown, setCountDown] = useState(0);
   const [runTimer, setRunTimer] = useState(false);
+  const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
+
   const router = useRouter();
 
 
@@ -58,37 +61,42 @@ const Dashboard = () => {
     }   
   }, [router.isReady])
 
-// Effect to start the timer when blocker is true
-useEffect(() => {
-  if (blocker && !runTimer) {
-     setRunTimer(true);
-     setCountDown(60 * 5); // Set countdown to 5 minutes
-  }
- }, [blocker, runTimer]);
- 
- // Effect to manage the countdown timer
- useEffect(() => {
-  let timerId;
- 
-  if (runTimer) {
-     timerId = setInterval(() => {
-       setCountDown((countDown) => countDown - 1);
-     }, 1000);
-  } else {
-     clearInterval(timerId);
-  }
- 
-  return () => clearInterval(timerId);
- }, [runTimer]);
+  useEffect(() => {
+    let timerId;
+   
+    // Start the timer if blocker is true and runTimer is false
+    if (blocker && !runTimer) {
+       setRunTimer(true);
+       setCountDown(60 * 5); // Set countdown to 5 minutes
+    }
+   
+    // Manage the countdown timer
+    if (runTimer) {
+       timerId = setInterval(() => {
+         setCountDown((countDown) => countDown - 1);
+       }, 1000);
+    } else {
+       clearInterval(timerId);
+    }
+   
+    // Handle countdown expiration
+    if (countDown === 0 && runTimer) {
+       console.log("expired");
+       setRunTimer(false);
+       setCountDown(0);
+       setBlocker(false);
+    }
+  //   if (prefixedAssetProperty.length === 0) {
+  //     setBlocker(true);
+  //     setRunTimer(true);
+  //     setCountDown(60 * 5); // Reset countdown to 5 minutes
+  //  }
+   
+    // Cleanup function to clear the interval
+    return () => clearInterval(timerId);
+   }, [blocker, runTimer, countDown, prefixedAssetProperty.length]);
 
-
-useEffect(() => {
- if (countDown < 0 && runTimer) {
-    console.log("expired");
-    setRunTimer(false);
-    setCountDown(0);
- }
-}, [countDown, runTimer]);
+console.log(prefixedAssetProperty , "prefix value here");
 
 
 
@@ -107,6 +115,15 @@ useEffect(() => {
             <span style={{color:"red",marginRight:"5px"}}>{Math.floor(countDown / 60)}:{countDown % 60 < 10 ? '0' : ''}{countDown % 60}</span>
               mins</p>
           </div>
+          <div className="flex justify-content-end">
+          <Button
+                label="Cancel"
+                severity="danger" outlined
+                className="mr-2"
+                type="button"
+                onClick={() => setBlocker(false)}
+            />
+          </div>
         </div>
       </div>
       }
@@ -119,7 +136,10 @@ useEffect(() => {
               <CombineSensorChart />
             </div>
           </div>
-          <DashboardAssets setBlockerProp={setBlocker}/>
+          <DashboardAssets 
+          setBlockerProp={setBlocker}
+          setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
+          />
         </div>
         <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
           <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
