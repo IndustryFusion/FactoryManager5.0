@@ -33,8 +33,7 @@ const login = async (username: string, password: string): Promise<LoginResponse>
         if (response.data) 
         {
             // Securely store tokens in cookies
-            Cookies.set('access_token', response.data.access_token, { expires: 86400, secure: true, httpOnly: true, sameSite: 'Strict' });
-            Cookies.set('refresh_token', response.data.refresh_token, { expires: 86400, secure: true, httpOnly: true, sameSite: 'Strict' });
+            Cookies.set('login_flag', "true", { expires: 86400 });
         }
         return response.data;
     } catch (error: any) {
@@ -62,8 +61,7 @@ const logout = async () => {
     const response = await axios.delete(logoutUrl as string);
     console.log('response ',response);
     // Clear tokens and other data from cookies
-    Cookies.remove('access_token', { secure: true, httpOnly: true, sameSite: 'Strict' });
-    Cookies.remove('refresh_token', { secure: true, httpOnly: true, sameSite: 'Strict' });
+    Cookies.set('login_flag', "false");
 };
 
 export default {
