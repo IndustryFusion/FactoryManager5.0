@@ -99,11 +99,11 @@ export class CronService {
           if(assetData.length > 0){
             for(let j = 0; j < assetData.length; j++){
               let asset_category = assetData[j]['http://www.industry-fusion.org/schema#asset_category'];
-              let templateData: TemplateDescriptionDto[] = await this.templatesService.getTemplateByName(asset_category.value);
+              let templateData: TemplateDescriptionDto[] = await this.templatesService.getTemplateByName(asset_category.value);// this remove because factory can not access templates
               for(let key in assetData[j]) {
                 if(key.includes('has')){
                   let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
-                  if(templateData[0].properties[templateKey].type == 'material'){
+                  if(templateData[0].properties[templateKey].type == 'material'){ //use hasRelation key.class 
                     if(Array.isArray(assetData[j][key])){
                       let materialArr = assetData[j][key];
                       let count = 0;
