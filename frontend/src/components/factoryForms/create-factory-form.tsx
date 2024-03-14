@@ -109,11 +109,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     console.log("button state", submitDisabled);
 
 
-    // const testdata = [
-    //     "urn:ngsi-ld:factories:2:104",
-    //     "urn:ngsi-ld:factories:2:103",
-    // ];
-
     const showWaring = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
