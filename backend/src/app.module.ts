@@ -35,6 +35,8 @@ import { CronService } from './endpoints/cron/cron.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { CronController } from './endpoints/cron/cron.controller';
+import { ValueChangeStateController } from './endpoints/value-change-state/value-change-state.controller';
+import { ValueChangeStateService } from './endpoints/value-change-state/value-change-state.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -65,7 +67,8 @@ console.log('FactorySite ',FactorySite)
     ReactFlowController,
     AllocatedAssetController,
     PowerConsumptionController,
-    CronController
+    CronController,
+    ValueChangeStateController
   ],
   providers: [
     AppService,
@@ -83,7 +86,8 @@ console.log('FactorySite ',FactorySite)
     ReactFlowService,
     AllocatedAssetService,
     PowerConsumptionService,
-    CronService
+    CronService,
+    ValueChangeStateService
   ]
 })
 export class AppModule {
