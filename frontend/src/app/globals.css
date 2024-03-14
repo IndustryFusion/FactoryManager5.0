@@ -38,20 +38,23 @@ ul li {
   height: 55px;
   zoom: 80%;
 }
-.alert-dialog{
+
+.alert-dialog {
   padding: 1rem;
   padding-top: 0;
 }
 
-.alerts-container p{
-margin: 0;
-margin-bottom: 7px;
-font-size: 14px;
+.alerts-container p {
+  margin: 0;
+  margin-bottom: 7px;
+  font-size: 14px;
 }
+
 .pi-bell:before {
   content: "\e97c";
   color: #615e5e;
 }
+
 .p-badge {
   background: #007bff;
   color: #ffffff;
@@ -61,15 +64,11 @@ font-size: 14px;
   height: 1.2rem;
   min-width: 0;
   line-height: 16px;
+  align-items: center;
+  display: flex;
+  justify-content: center;
 }
-.p-badge.active{
+
+.p-badge.active {
   background: #d50202;
 }
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Asset } from "@/interfaces/assetTypes";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
@@ -9,13 +9,23 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
+import { useDashboard } from "@/context/dashboardContext";
+import OnboardForm from "./onboard-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const DashboardAssets = () => {
+interface DashboardAssetsProps {
+  setBlockerProp: Dispatch<SetStateAction<boolean>>
+  setPrefixedAssetPropertyProp: any
+}
+
+const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
+  const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const router = useRouter();
+
+  const { entityIdValue, setEntityIdValue, machineStateValue, setMachineStateValue } = useDashboard();
 
   const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
@@ -40,7 +50,15 @@ const DashboardAssets = () => {
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
+
+        const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
+        // console.log(response[0] ,"allassets");
+        console.log(filteredAssets[0], "filtered asets");
+
         setAssetData(response);
+        console.log(response, "allresponse");
+
+        setEntityIdValue(filteredAssets[0]);
       } else {
         console.error("Fetch returned undefined");
       }
@@ -54,30 +72,38 @@ const DashboardAssets = () => {
       router.push("/login");
     } else {
       if (router.isReady) {
-        const {} = router.query;
+        const { } = router.query;
         handleAsset();
       }
-    }  
+    }
   }, [router.isReady])
-
 
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
+    setSelectedRowAsset(selectedAsset)
+    setPrefixedAssetPropertyProp(prefixedKeys);
+    console.log(prefixedKeys, "what's here");
+    console.log(prefixedKeys.length, "the length of prefix");
+
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
+      setEntityIdValue(selectedAsset?.id)
     } else {
       setShowBlocker(true);
     }
+
+    if (prefix) {
+      setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
+    }
   };
 
-
   return (
-    <div style={{zoom:"80%"}}>
-      <div className="dashboard-assets" style={{width:"100%"}}>
-        <div className="card h-auto" style={{width:"100%"}}>
+    <div style={{ zoom: "80%" }}>
+      <div className="dashboard-assets" style={{ width: "100%" }}>
+        <div className="card h-auto " style={{ width: "100%" }}>
           <h5 className="heading-text">Assets</h5>
           <DataTable
             rows={5}
@@ -116,23 +142,12 @@ const DashboardAssets = () => {
         </div>
       </div>
       {showBlocker &&
-        <div className="card flex justify-content-center">
-          <Dialog visible={showBlocker} modal
-            position="top"
-            style={{ width: '40rem' }} onHide={() => setShowBlocker(false)}
-            draggable={false} resizable={false}
-          >
-            <p className="m-0">
-              Please onboard the asset gateway before moving to dashboard.  </p>
-            <p className="m-0 mt-1">After onboarding click 'finish' button</p>
-            <div>
-              <div className="finish-btn">
-                <Button
-                  label="Finish" onClick={() => setShowBlocker(false)} autoFocus />
-              </div>
-            </div>
-          </Dialog>
-        </div>
+        <OnboardForm
+          showBlockerProp={showBlocker}
+          setShowBlockerProp={setShowBlocker}
+          asset={selectedRowAsset}
+          setBlocker={setBlockerProp}
+        />
       }
     </div>
   )
