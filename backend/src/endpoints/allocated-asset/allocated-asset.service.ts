@@ -111,8 +111,8 @@ export class AllocatedAssetService {
           const assetData = await this.assetService.getAssetDataById(id, token);
           const finalData = {
             id,
-            product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+            product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
+            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
           };
           finalArray.push(finalData);
         }
@@ -120,8 +120,8 @@ export class AllocatedAssetService {
         const assetData = await this.assetService.getAssetDataById(assetIds, token);
         const finalData = {
           id: assetIds,
-          product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+          product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
+          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
         };
         finalArray.push(finalData);
       }
