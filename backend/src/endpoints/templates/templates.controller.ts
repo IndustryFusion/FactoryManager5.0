@@ -16,15 +16,6 @@ export class TemplatesController {
     }
   }
 
-  @Get('/template-name')
-  getTemplateByName(@Query('name') name: string): Promise<TemplateDescriptionDto[]> {
-    try {
-      return this.templatesService.getTemplateByName(name);
-    } catch (err) {
-      throw new NotFoundException();
-    }
-  }
-
   @Get(':id')
   getTemplateById(@Param('id') id: string): Promise<TemplateDescriptionDto[]> {
     try {
