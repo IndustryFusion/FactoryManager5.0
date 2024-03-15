@@ -536,7 +536,7 @@ export const fetchAssetById = async (assetId: string) => {
   }
 };
 
-export const fetchAllocatedAssets = async (): Promise<AllocatedAsset[]> => {
+export const fetchAllocatedAssets = async ()=> {
   try {
     const response = await axios.get(`${API_URL}/allocated-asset`, {
       headers: {
@@ -545,14 +545,11 @@ export const fetchAllocatedAssets = async (): Promise<AllocatedAsset[]> => {
       },
       withCredentials: true,
     });
-    console.log(response, "the data alocated");
+    console.log(response, "allocated asset data");
     if (!response.data) {
       throw new Error("Network response was not ok");
     }
-    const data: AllocatedAsset[] = response.data;
-
-    console.log(data, "aloocated asset");
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error fetching allocated assets:", error);
     throw new Error("Failed to fetch allocated assets");

@@ -112,6 +112,7 @@ export class ReactFlowService {
         const edge = {
           id: `reactflow__edge-factory-${factoryId}-${shopFloorNode.id}`,
           source: `factory-${factoryId}`,
+          metadata: `${shopFloorNode.id}`,
           target: `${shopFloorNode.id}`,
         };
         result.edges.push(edge);
@@ -122,7 +123,7 @@ export class ReactFlowService {
         }
        
       }
-      
+    
       const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
       const reactFlowData: ReactFlowDto = {
             factoryId: factoryId,
@@ -132,80 +133,89 @@ export class ReactFlowService {
             }
         };
 
-        if (existingFactoryData) {
-       
-          await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
-          return {
-              success: true,
-              message: "Factory updated successfully with nodes and edges.",
-              factoryId
-          };
-      } else {
-       
-          return await this.create(reactFlowData); 
-      }
+    if (existingFactoryData) {
+    
+      await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
+      return {
+          success: true,
+          message: "Factory updated successfully with nodes and edges.",
+          factoryId
+      };
+  } else {
+
+      return await this.create(reactFlowData); 
+  }   
     } catch (err) {
       throw new HttpException(err.message, 500);
     }
   }
 
-  async processAsset(asset, token, result, parentNodeId = null) {
-    // Fetch asset data
+ async processAsset(asset, token, result, parentNodeId = null) {
     const assetData = await this.assetService.getAssetDataById(asset.id, token);
-    // Generate a 4-digit unique code for the asset node
-    const assetUniqueCode = Math.floor(1000 + Math.random() * 9000);
 
-    // Create and add the asset node
     const assetNode = {
-      id: `asset_${asset.id}_${assetUniqueCode}`,
-      type: "asset",
-      position: { x: 100 + result.nodes.length * 100, y: 220 },
-      data: { label: assetData['http://www.industry-fusion.org/schema#product_name']?.value || "Asset", type: "asset" },
-      style: { backgroundColor: "#caf1d8", border: "none" },
+        id: `asset_${asset.id}_${new Date().getTime()}`,
+        type: "asset",
+        position: { x: 100 + result.nodes.length * 100, y: 220 },
+        data: {
+            label: assetData['http://www.industry-fusion.org/schema#product_name']?.value || "Asset",
+            type: "asset",
+            id: asset.id,
+        },
+        style: { backgroundColor: "#caf1d8", border: "none" },
     };
     result.nodes.push(assetNode);
 
-    // If parentNodeId is provided, create an edge from the parent node to this asset node
     if (parentNodeId) {
-      const edgeToAsset = {
-        id: `reactflow__edge-${parentNodeId}-${assetNode.id}`,
-        source: parentNodeId,
-        target: assetNode.id,
-      };
-      result.edges.push(edgeToAsset);
+        const edgeToAsset = {
+            id: `reactflow__edge-${parentNodeId}-${assetNode.id}`,
+            source: parentNodeId,
+            target: assetNode.id,
+            metadata:assetNode.id,
+        };
+        result.edges.push(edgeToAsset);
     }
 
-    // Process each relationship of the asset
     for (const [key, value] of Object.entries(assetData)) {
-      if (key.startsWith("http://www.industry-fusion.org/schema#has")) {
-        const relationValue = value as any;
-        if (relationValue.object && relationValue.object.startsWith("urn:")) {
-            const relationUniqueCode = Math.floor(1000 + Math.random() * 9000);
-          // Create and add the relation node
-          const relationId = `relation_${key.split("#").pop()}_asset_${relationValue.object}_${relationUniqueCode}`;
-          const relationNode = {
-            id: relationId,
-            type: "relation",
-            position: { x: 100 + result.nodes.length * 100, y: 320 },
-            data: { label: key.split("#").pop(), type: "relation" },
-            style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
-          };
-          result.nodes.push(relationNode);
+        if (key.startsWith("http://www.industry-fusion.org/schema#has")) {
+            let relationValues = Array.isArray(value) ? value : [value];
+            relationValues = relationValues.filter(rv => rv.object && rv.object.startsWith("urn:"));
 
-          // Create and add edge from the asset node to the relation node
-          const edgeToRelation = {
-            id: `reactflow__edge-asset_${relationId}`,
-            source: assetNode.id,
-            target: relationId,
-          };
-          result.edges.push(edgeToRelation);
+            if (relationValues.length > 0) {
+                const relationType = key.split("#").pop();
+                const relationId = `relation_${relationType}_${Math.floor(100 + Math.random() * 900)}`;
 
-          // Recursively process the related asset
-          const relatedAsset = { id: relationValue.object };
-          await this.processAsset(relatedAsset, token, result, relationId);
+                if (!result.nodes.some(node => node.id === relationId)) {
+                    const relationNode = {
+                        id: relationId,
+                        type: "relation",
+                        position: { x: 100 + result.nodes.length * 100, y: 320 },
+                        data: { label: relationType, type: "relation" },
+                        style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
+                    };
+                    result.nodes.push(relationNode);
+                }
+
+                for (const rv of relationValues) {
+                    const relatedAssetId = `asset_${rv.object}_${new Date().getTime()}`;
+                    const edgeId = `reactflow__edge-${assetNode.id}_${relationId}`;
+                    if (!result.edges.some(edge => edge.source === assetNode.id && edge.target === relationId)) {
+                        const edgeToRelation = {
+                            id: edgeId,
+                            source: assetNode.id,
+                            target: relationId,
+                            metadata:  `${relationId}_${relatedAssetId}`
+                        };
+                        result.edges.push(edgeToRelation);
+                    }
+
+                    const relatedAsset = { id: rv.object };
+                    await this.processAsset(relatedAsset, token, result, relationId);
+                }
+            }
         }
-      }
     }
-  }
+}
+
   
 }

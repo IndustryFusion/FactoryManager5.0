@@ -50,11 +50,6 @@ interface ShopFloorAssets {
   [shopFloorId: string]: string[];
 }
 
-interface Edge {
-  id: string;
-  source: any;
-  target: string;
-}
 interface RelationCounts {
   [key: string]: number;
 }
@@ -169,6 +164,7 @@ const FlowEditor: React.FC<
         id: `reactflow__edge-${selectedAsset}-${relationNodeId}`,
         source: selectedAsset,
         target: relationNodeId,
+        metadata:relationNodeId
       };
 
       // Update state with the new node and edge
@@ -212,6 +208,7 @@ const FlowEditor: React.FC<
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}`,
           source: factoryNodeId,
           target: shopFloorNodeId,
+          metadata:shopFloorNodeId
         };
 
         setEdges((eds) => [...eds, newEdge]);
@@ -336,6 +333,7 @@ const FlowEditor: React.FC<
   }, [onRestore]);
 
   const onUpdate = useCallback(async () => {
+    let metadata= ""
     const payLoad = {
       factoryId: factoryId,
 
@@ -347,10 +345,11 @@ const FlowEditor: React.FC<
           data,
           style,
         })),
-        edges: edges.map(({ id, source, target, type, data }) => ({
+        edges: edges.map(({ id, source, target,type, data }) => ({
           id,
           source,
           target,
+          metadata:target,
           type,
           data,
         })),
@@ -549,7 +548,7 @@ const FlowEditor: React.FC<
 
   const onConnect = useCallback(
     (params: any) => {
-      const { source, target } = params;
+      const { source, target} = params;
       const sourceNode: any = nodes.find((node) => node.id === source);
       const targetNode: any = nodes.find((node) => node.id === target);
 
@@ -647,6 +646,7 @@ const FlowEditor: React.FC<
           id: `reactflow_edge-${newRelationNodeId}`,
           source: newRelationNodeId,
           target: childAssetId,
+          metadata:childAssetId,
           animated: true,
         };
 
@@ -736,6 +736,7 @@ const FlowEditor: React.FC<
             ...edge,
             source: edge.source === sourceNode.id ? newId : edge.source,
             target: edge.target === sourceNode.id ? newId : edge.target,
+            metadata:edge.target === sourceNode.id ? newId : edge.target,
           }));
         }
       }
