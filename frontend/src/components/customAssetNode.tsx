@@ -33,6 +33,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
           const options: RelationOption[] = Object.entries(assetDetails)
             .filter(([key, value]) => value.type === "Relationship")
+            //value.class
             .map(([key]) => ({
               label: key,
               value: key,

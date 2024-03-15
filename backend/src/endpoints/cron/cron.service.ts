@@ -20,7 +20,8 @@ export class CronService {
     private readonly templatesService: TemplatesService,
     ) {}
 
-  @Cron('* * * * *')
+  // this method run at every end of the day
+  @Cron('0 0 * * *')
   async handleCron() {
     console.log('time ', new Date());
     const url = 'http://localhost:4002/cron'; // Replace with your actual URL
@@ -98,16 +99,16 @@ export class CronService {
           if(assetData.length > 0){
             for(let j = 0; j < assetData.length; j++){
               let asset_category = assetData[j]['http://www.industry-fusion.org/schema#asset_category'];
-              let templateData: TemplateDescriptionDto[] = await this.templatesService.getTemplateByName(asset_category.value);
+              let templateData: TemplateDescriptionDto[] = await this.templatesService.getTemplateByName(asset_category.value);// this remove because factory can not access templates
               for(let key in assetData[j]) {
                 if(key.includes('has')){
                   let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
-                  if(templateData[0].properties[templateKey].type == 'material'){
-                    if(Array.isArray(assetData[j][key].object)){
-                      let materialArr = assetData[j][key].object;
+                  if(templateData[0].properties[templateKey].type == 'material'){ //use hasRelation key.class 
+                    if(Array.isArray(assetData[j][key])){
+                      let materialArr = assetData[j][key];
                       let count = 0;
                       for(let idx = 0; idx < materialArr.length; idx++){
-                        let target = materialArr[idx];
+                        let target = materialArr[idx].object;
                         for(let k = 0; k < edges.length; k++){
                           console.log('source ',edges[k].source);
                           console.log('check source ',assetData[j].id);

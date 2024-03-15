@@ -868,12 +868,7 @@ const FlowEditor: React.FC<
                   label,
 
                   id: item.id,
-                },
-
-                style: {
-                  backgroundColor: "#caf1d8",
-                  border: "none",
-                },
+                }
               };
 
               setNodes((nds) => [...nds, assetNode]);
