@@ -485,6 +485,7 @@ export function extractHasRelations(assetData: any): { [key: string]: any } {
         const relationshipDetail: any = {
           type: value.type,
           object: value.object,
+          class: value.class ? value.class.value : undefined,
         };
 
         // Remove the prefix from the key
@@ -530,6 +531,7 @@ export const fetchAssetById = async (assetId: string) => {
     const responseData = response.data;
     const mappedData = extractHasRelations(responseData);
     console.log(mappedData, "The asset Node data");
+      console.log(responseData, "1111");
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
