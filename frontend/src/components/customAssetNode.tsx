@@ -6,9 +6,11 @@ import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import EdgeAddContext from "@/context/EdgeAddContext";
+import { validateHeaderValue } from "http";
 interface RelationOption {
   label: string;
-  value: string;
+  value: any;
+  class:string
 }
 
 interface CustomAssetNodeProps {
@@ -33,11 +35,14 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
           const options: RelationOption[] = Object.entries(assetDetails)
             .filter(([key, value]) => value.type === "Relationship")
-            .map(([key]) => ({
+            //value.class
+            .map(([key,value]) => ({
               label: key,
-              value: key,
+              value:key,
+              class:value.class
+              
             }));
-
+          console.log(" options ", options)
           console.log("Formatted options for MultiSelect:", options);
           setRelationOptions(options);
           console.log(
@@ -71,7 +76,10 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
     // Process newly selected relations
     newlySelectedRelations.forEach((relationLabel: any) => {
-      onEdgeAdd(data.id, relationLabel);
+      const relationOption = relationOptions.find(option => option.label === relationLabel);
+      const relationClass = relationOption ? relationOption.class : '';
+
+      onEdgeAdd(data.id, relationLabel ,relationClass);
 
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>

@@ -7,6 +7,28 @@ import { getSessionToken } from '../session/session.service';
 export class AllocatedAssetController {
   constructor(private readonly allocatedAssetService: AllocatedAssetService) {}
 
+  @Post('/global')
+  async createGlobal(@Req() req: Request) {
+    try {
+      console.log('inside create global');
+      const token = await getSessionToken(req);
+      let response = await this.allocatedAssetService.createGlobal(token);
+      if(response['status'] == 200 || response['status'] == 201) {
+        return {
+          success: true,
+          status: response['status'],
+          message: response['statusText']
+        }
+      }
+    } catch(err) {
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      }
+    }
+  }
+
   @Post()
   async create(@Req() req: Request) {
     try {
@@ -38,6 +60,28 @@ export class AllocatedAssetController {
     }
   }
 
+  @Patch('/global')
+  async updateGlobal(@Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      let response = await this.allocatedAssetService.updateGlobal(token);
+      if(response['status'] == 200 || response['status'] == 204) {
+        return {
+          success: true,
+          status: response['status'],
+          message: 'Updated Successfully',
+        }
+      }
+    } catch(err) {
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      };
+    }
+    
+  }
+
   @Patch()
   async update(@Req() req: Request) {
     try {
@@ -61,10 +105,10 @@ export class AllocatedAssetController {
   }
 
   @Delete()
-  async remove(@Req() req: Request) {
+  async remove(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.remove(token);
+      let response = await this.allocatedAssetService.remove(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,

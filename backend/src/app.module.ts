@@ -31,6 +31,14 @@ import { AllocatedAssetController } from './endpoints/allocated-asset/allocated-
 import { AllocatedAssetService } from './endpoints/allocated-asset/allocated-asset.service';
 import { PowerConsumptionController } from './endpoints/power-consumption/power-consumption.controller';
 import { PowerConsumptionService } from './endpoints/power-consumption/power-consumption.service';
+import { CronService } from './endpoints/cron/cron.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { HttpModule } from '@nestjs/axios';
+import { CronController } from './endpoints/cron/cron.controller';
+import { ValueChangeStateController } from './endpoints/value-change-state/value-change-state.controller';
+import { ValueChangeStateService } from './endpoints/value-change-state/value-change-state.service';
+import { OnboardingAssetController } from './endpoints/onboarding-asset/onboarding-asset.controller';
+import { OnboardingAssetService } from './endpoints/onboarding-asset/onboarding-asset.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -42,6 +50,8 @@ console.log('FactorySite ',FactorySite)
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
     ]),
+    ScheduleModule.forRoot(),
+    HttpModule
   ],
   controllers: [
     AppController,
@@ -58,7 +68,10 @@ console.log('FactorySite ',FactorySite)
     FileController,
     ReactFlowController,
     AllocatedAssetController,
-    PowerConsumptionController
+    PowerConsumptionController,
+    CronController,
+    ValueChangeStateController,
+    OnboardingAssetController
   ],
   providers: [
     AppService,
@@ -75,7 +88,10 @@ console.log('FactorySite ',FactorySite)
     FileService,
     ReactFlowService,
     AllocatedAssetService,
-    PowerConsumptionService
+    PowerConsumptionService,
+    CronService,
+    ValueChangeStateService,
+    OnboardingAssetService
   ]
 })
 export class AppModule {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
@@ -11,7 +11,9 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
 import { AllocatedAsset } from "@/interfaces/assetTypes";
-
+import { Menu } from 'primereact/menu';
+import { Button } from 'primereact/button';
+import { Checkbox } from "primereact/checkbox";
 interface AssetListProps {
   factoryId: string;
   product_name: string;
@@ -30,36 +32,52 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
-  const [assetRelations, setAssetRelations] = useState<string[]>([]);
-  const [shopFloorAssets, setShopFloorAssets] = useState<{
-    [key: string]: { type: string; object: string[] };
-  }>({});
   const router = useRouter();
-  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
-
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [allocatedAssets, setAllocatedAssets] = useState<
-    AllocatedAsset[] | AllocatedAsset
-  >([]);
+  const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
+  const [assetCategories, setAssetCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategoryAllocated, setSelectedCategoryAllocated] = useState<string | null>(null);
+  const [searchTermAllocated, setSearchTermAllocated] = useState("");
+  const menu = useRef<any>(null);
+  const [visible, setVisible] = useState(false);
+  const allocatedMenu = useRef<any>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
+ 
 
   useEffect(() => {
     const fetchNonShopFloorAssets = async (factoryId: any) => {
       try {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-        console.log(fetchedAssetIds, "test1");
+        const fetchedAllocatedAssets = await fetchAllocatedAssets(); 
+
+
         const fetchedAssets: any = Object.keys(fetchedAssetIds).map((key) => ({
           id: fetchedAssetIds[key].id,
           product_name: fetchedAssetIds[key].product_name?.value,
           asset_category: fetchedAssetIds[key].asset_category?.value,
         }));
-        setAssets(fetchedAssets);
 
-        console.log(assets, "the unalocated asset");
-        const allocatedAssets = await fetchAllocatedAssets();
-        setAllocatedAssets(allocatedAssets);
+        
+        const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
+          id: fetchedAllocatedAssets[key].id,
+          product_name: fetchedAllocatedAssets[key].product_name?.value,
+          asset_category: fetchedAllocatedAssets[key].asset_category?.value,
+        }));
+
+    
+        console.log("fetchedAssets", fetchedAssets);
+        const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+
+        console.log("Filtered categories", categories);
+        setAssetCategories(categories);
+
+        setAssets(fetchedAssets);
+      
+        setAllocatedAssets(fetchedAllocatedAssets);
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch non-shop-floor assets:", err);
@@ -77,12 +95,101 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       }
     }
   }, [factoryId, router.isReady]);
-  useEffect(() => {
-    const results = assets.filter((asset) =>
-      asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase())
+
+
+  // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
+ useEffect(() => {
+  const results = assets.filter(asset => {
+    const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory ? asset.asset_category === selectedCategory : true;
+    return matchesSearchTerm && matchesCategory;
+  });
+  setFilteredAssets(results);
+}, [searchTerm, selectedCategory, assets]);
+
+ useEffect(() => {
+    const results = assets.filter(asset =>
+      selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category)
     );
     setFilteredAssets(results);
-  }, [searchTerm, assets]);
+  }, [selectedCategories, assets]);
+ const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prev => {
+      const isAlreadySelected = prev.includes(category);
+      if (isAlreadySelected) {
+        return prev.filter(c => c !== category); 
+      } else {
+        return [...prev, category]; 
+      }
+    });
+  };
+
+
+   //unallocated assets Menu
+const menuItems = [
+    {
+      label: ' Asset Categories',
+      items: assetCategories.map(category => ({
+        template: () => (
+          <div className="p-flex p-ai-center">
+            <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)}  />
+            <label htmlFor={category} className="p-checkbox-label ml-2" style={{ cursor: "pointer" }}>
+              {category}
+            </label>
+          </div>
+        ),
+      })),
+    },
+  ];
+  
+ const allocatedMenuItems = [
+    {
+      label: 'All',
+      command: () => setSelectedCategoriesAllocated([]), 
+      template: () => (
+        <div className="p-flex p-ai-center" onClick={() => setSelectedCategoriesAllocated([])}>
+          <div className="p-checkbox p-component">
+            <div className="p-checkbox-box p-component">
+             
+            </div>
+          </div>
+          <label className="p-checkbox-label p-ml-2" style={{ cursor: "pointer" }}>
+            All
+          </label>
+        </div>
+      )
+    },
+    ...assetCategories.map(category => ({
+      label: category,
+      template: () => (
+        <div className="p-flex p-ai-center">
+          <Checkbox
+            inputId={`allocated-${category}`}
+            onChange={() => handleAllocatedCategoryChange(category)}
+            checked={selectedCategoriesAllocated.includes(category)}
+          />
+          <label htmlFor={`allocated-${category}`} className="p-checkbox-label p-ml-2" style={{ cursor: "pointer" }}>
+            {category}
+          </label>
+        </div>
+      ),
+    }))
+  ];
+  const handleAllocatedCategoryChange = (category: string) => {
+    setSelectedCategoriesAllocated(prev => {
+      const isAlreadySelected = prev.includes(category);
+      if (isAlreadySelected) {
+        return prev.filter(c => c !== category); 
+      } else {
+        return [...prev, category]; 
+      }
+    });
+  };
+  const toggleMenu = (event:any) => {
+    menu.current.toggle(event);
+    setVisible(!visible);
+  };
   const handleAssetClick = async (assetId: string) => {
     try {
       const details = await getNonShopFloorAssetDetails(assetId);
@@ -160,12 +267,15 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           Unallocated Assets
         </h3>
         <div className="p-input-icon-left">
-          <i className="pi pi-search" />
+          <i className="pi pi-search ml-2" />
           <InputText
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name..."
+            className="ml-2 w-100"
           />
+            <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup  className="filter-button"  style={{ color: "grey", fontSize: "1.2em" }} />
+            <Menu model={menuItems} popup ref={menu} id="popup_menu"  style={{marginLeft:"-15%"}}/>
         </div>
         <ul>
           {filteredAssets.map((asset, index) => (
@@ -187,17 +297,33 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         >
           Allocated Asset
         </h3>
-        {/* <ul>
-          {Array.isArray(allocatedAssets) ? (
-            allocatedAssets.map((asset, index) => (
-              <li key={index} draggable={true}>
-                {asset.id}
+
+          <div className="p-input-icon-left">
+          <i className="pi pi-search" />
+          <InputText
+            value={searchTermAllocated}
+            onChange={(e) => setSearchTermAllocated(e.target.value)}
+            placeholder="Search by name..."
+          />
+        <Button
+            icon="pi pi-filter-fill"
+            onClick={(e) => allocatedMenu.current.toggle(e)}
+            aria-haspopup
+            className="filter-button"
+           style={{ color: "grey", fontSize: "1.2em" }}
+          />
+
+          <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%"}} />
+        </div>
+       <ul>
+          {allocatedAssets
+            .filter(asset => !selectedCategoryAllocated || asset.asset_category === selectedCategoryAllocated)
+            .map((asset, index) => (
+              <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                {typeof asset === 'string' ? asset : asset.product_name}
               </li>
-            ))
-          ) : (
-            <li draggable={true}>{allocatedAssets.id}</li>
-          )}
-        </ul> */}
+            ))}
+        </ul>
       </Card>
     </React.Fragment>
   );

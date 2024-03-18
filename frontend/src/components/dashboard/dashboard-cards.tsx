@@ -1,20 +1,20 @@
+import { useDashboard } from "@/context/dashboardContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-interface DashboardCardProps {
-    machineStateProp?: string;
-    setMachineStateProp?: Dispatch<SetStateAction<string>>;
-}
 
-const DashboardCards: React.FC<DashboardCardProps> = ({ machineStateProp }) => {
+
+const DashboardCards: React.FC= () => {
+   
     const [timer, setTimer] = useState(0);
+    const {machineStateValue,entityIdValue, setMachineStateValue} = useDashboard();
 
     useEffect(() => {
         let interval: any;
-        if (machineStateProp === "2") {
+        if (machineStateValue === "2") {
             interval = setInterval(() => {
                 setTimer((prevTimer) => prevTimer + 1);
             }, 1000);
-        } else if (machineStateProp === "0") {
+        } else if (machineStateValue === "0") {
             setTimer(0);
         }
 
@@ -22,7 +22,7 @@ const DashboardCards: React.FC<DashboardCardProps> = ({ machineStateProp }) => {
             clearInterval(interval);
         }
 
-    }, [machineStateProp])
+    }, [machineStateValue, entityIdValue])
 
     const formatTime = (timeInSeconds: any) => {
         const hours = Math.floor(timeInSeconds / 3600);
@@ -41,12 +41,12 @@ const DashboardCards: React.FC<DashboardCardProps> = ({ machineStateProp }) => {
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Machine State</span>
-                                <div className="text-900 font-medium text-xl">{machineStateProp == "2" ? "Online" : "Offline"}</div>
+                                <div className="text-900 font-medium text-xl">{machineStateValue == "2" ? "Online" : "Offline"}</div>
 
                             </div>
-                            <div className={`flex align-items-center justify-content-center border-round  ${machineStateProp === "2" ? 'active-state' : 'inactive-state'}`}
+                            <div className={`flex align-items-center justify-content-center border-round  ${machineStateValue === "2" ? 'active-state' : 'inactive-state'}`}
                                 style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className= {` ${machineStateProp === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
+                                <i className= {` ${machineStateValue === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
                             </div>
 
                         </div>

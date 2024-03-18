@@ -102,8 +102,6 @@ export class TemplatesService {
             properties: parsedContent.properties,
           });
         }
-
-        console.log('templateDescriptions ', templateDescriptions);
         return templateDescriptions;
       } else {
         throw new NotFoundException('Path is undefined');

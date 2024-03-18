@@ -1,13 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException } from '@nestjs/common';
 import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReactFlowDto } from './dto/react-flow.dto';
 import { FactorySite } from '../schemas/factory-site.schema';
+import { ShopFloorAssetsService } from '../shop-floor-assets/shop-floor-assets.service';
+import { ShopFloorService } from '../shop-floor/shop-floor.service';
+import { AssetService } from '../asset/asset.service';
+import { error } from 'console';
+
+
 @Injectable()
 export class ReactFlowService {
   constructor(
     @InjectModel(FactorySite.name)
     private factoryModel: Model<FactorySite>,
+    private readonly shopFloorAssetService : ShopFloorAssetsService,  private readonly shopFloorService : ShopFloorService,
+    private readonly assetService : AssetService,
+
   ) {}
 
   async create(data: ReactFlowDto) {
@@ -37,6 +46,15 @@ export class ReactFlowService {
     }
   }
 
+  async findAll() {
+    try {
+      let result = await this.factoryModel.find({});
+      return result;
+    }catch(err) {
+      throw err;
+    }
+  }
+
   async update(factoryId: string, data: ReactFlowDto) {
     try {
       const updatedUser = await this.factoryModel.updateOne({factoryId} , data, {
@@ -56,4 +74,148 @@ export class ReactFlowService {
       throw err;
     }
   }
+
+   
+ async findFactoryAndShopFloors(factoryId: string, token: string): Promise<any> {
+    try {
+      const factoryData = await this.shopFloorService.findOne(factoryId, token);
+      if (!factoryData) {
+        throw new NotFoundException(`Factory with ID ${factoryId} not found`);
+      }
+
+      const result = {
+        nodes: [],
+        edges: [],
+      };
+
+      // Construct the factory node
+      const factoryNode = {
+        id: `factory-${factoryId}`,
+        type: "factory",
+        position: { x: 250, y: 70 },
+        data: { label: "Factory", type: "factory", undeletable: true },
+      };
+      result.nodes.push(factoryNode);
+
+      const shopFloorData = await this.shopFloorService.findAll(factoryId, token);
+      console.log(" shopFloorData 111", shopFloorData)
+      for (const shopFloor of shopFloorData) {
+        const shopFloorNode = {
+          id: `shopFloor_${shopFloor.id}`,
+          type: "shopFloor",
+          position: { x: 150 + result.nodes.length * 250, y: 160 },
+          data: { label: shopFloor["http://www.industry-fusion.org/schema#floor_name"]?.value, type: "shopFloor" },
+          style: { backgroundColor: "#faedc4", border: "none" },
+        };
+        result.nodes.push(shopFloorNode);
+
+        const edge = {
+          id: `reactflow__edge-factory-${factoryId}-${shopFloorNode.id}`,
+          source: `factory-${factoryId}`,
+          metadata: `${shopFloorNode.id}`,
+          target: `${shopFloorNode.id}`,
+        };
+        result.edges.push(edge);
+
+        const assets = await this.shopFloorAssetService.findAll(shopFloor.id, token);
+        for (const asset of assets) {
+          await this.processAsset(asset, token, result, shopFloorNode.id); 
+        }
+       
+      }
+    
+      const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
+      const reactFlowData: ReactFlowDto = {
+            factoryId: factoryId,
+            factoryData: {
+                nodes: result.nodes,
+                edges: result.edges
+            }
+        };
+
+    if (existingFactoryData) {
+    
+      await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
+      return {
+          success: true,
+          message: "Factory updated successfully with nodes and edges.",
+          factoryId
+      };
+  } else {
+
+      return await this.create(reactFlowData); 
+  }   
+    } catch (err) {
+      throw new HttpException(err.message, 500);
+    }
+  }
+
+ async processAsset(asset, token, result, parentNodeId = null) {
+    const assetData = await this.assetService.getAssetDataById(asset.id, token);
+
+    const assetNode = {
+        id: `asset_${asset.id}_${new Date().getTime()}`,
+        type: "asset",
+        position: { x: 100 + result.nodes.length * 100, y: 220 },
+        data: {
+            label: assetData['http://www.industry-fusion.org/schema#product_name']?.value || "Asset",
+            type: "asset",
+            id: asset.id,
+        },
+        style: { backgroundColor: "#caf1d8", border: "none" },
+    };
+    result.nodes.push(assetNode);
+
+    if (parentNodeId) {
+        const edgeToAsset = {
+            id: `reactflow__edge-${parentNodeId}-${assetNode.id}`,
+            source: parentNodeId,
+            target: assetNode.id,
+            metadata:assetNode.id,
+        };
+        result.edges.push(edgeToAsset);
+    }
+
+    for (const [key, value] of Object.entries(assetData)) {
+        if (key.startsWith("http://www.industry-fusion.org/schema#has")) {
+            let relationValues = Array.isArray(value) ? value : [value];
+            relationValues = relationValues.filter(rv => rv.object && rv.object.startsWith("urn:"));
+
+            if (relationValues.length > 0) {
+                const relationType = key.split("#").pop();
+                const relationId = `relation_${relationType}_${Math.floor(100 + Math.random() * 900)}`;
+
+                if (!result.nodes.some(node => node.id === relationId)) {
+                    const relationNode = {
+                        id: relationId,
+                        type: "relation",
+                        position: { x: 100 + result.nodes.length * 100, y: 320 },
+                        data: { label: relationType, type: "relation" },
+                        style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
+                    };
+                    result.nodes.push(relationNode);
+                }
+
+                for (const rv of relationValues) {
+                    const relatedAssetId = `asset_${rv.object}_${new Date().getTime()}`;
+                    const edgeId = `reactflow__edge-${assetNode.id}_${relationId}`;
+                    if (!result.edges.some(edge => edge.source === assetNode.id && edge.target === relationId)) {
+                        const edgeToRelation = {
+                            id: edgeId,
+                            source: assetNode.id,
+                            target: relationId,
+                            metadata:  `${relationId}_${relatedAssetId}`
+                        };
+                        result.edges.push(edgeToRelation);
+                    }
+
+                    const relatedAsset = { id: rv.object };
+                    await this.processAsset(relatedAsset, token, result, relationId);
+                }
+            }
+        }
+    }
+}
+
+  
 }

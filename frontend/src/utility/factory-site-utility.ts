@@ -485,6 +485,7 @@ export function extractHasRelations(assetData: any): { [key: string]: any } {
         const relationshipDetail: any = {
           type: value.type,
           object: value.object,
+          class: value.class ? value.class.value : undefined,
         };
 
         // Remove the prefix from the key
@@ -530,13 +531,14 @@ export const fetchAssetById = async (assetId: string) => {
     const responseData = response.data;
     const mappedData = extractHasRelations(responseData);
     console.log(mappedData, "The asset Node data");
+      console.log(responseData, "1111");
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
   }
 };
 
-export const fetchAllocatedAssets = async (): Promise<AllocatedAsset[]> => {
+export const fetchAllocatedAssets = async ()=> {
   try {
     const response = await axios.get(`${API_URL}/allocated-asset`, {
       headers: {
@@ -545,14 +547,11 @@ export const fetchAllocatedAssets = async (): Promise<AllocatedAsset[]> => {
       },
       withCredentials: true,
     });
-    console.log(response, "the data alocated");
+    console.log(response, "allocated asset data");
     if (!response.data) {
       throw new Error("Network response was not ok");
     }
-    const data: AllocatedAsset[] = response.data;
-
-    console.log(data, "aloocated asset");
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error fetching allocated assets:", error);
     throw new Error("Failed to fetch allocated assets");

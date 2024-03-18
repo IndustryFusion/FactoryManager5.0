@@ -19,6 +19,7 @@ import {
   FaCloud,
 } from "react-icons/fa";
 import "../../styles/combine-chart.css";
+import { useDashboard } from "@/context/dashboardContext";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const graphMapping: any = {
@@ -54,6 +55,7 @@ const CombineSensorChart: React.FC = () => {
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
+  const {entityIdValue, setEntityIdValue} = useDashboard();
 
   const intervalButtons = [
     { label: "1 Min", interval: 1 },
@@ -220,9 +222,15 @@ const CombineSensorChart: React.FC = () => {
       console.error("Error fetching asset data:", error);
     }
   };
+
+console.log(entityIdValue, "in sensor chart");
+
+
   useEffect(() => {
     const fetchDataAndAssign = async () => {
-      let entityId = "urn:ngsi-ld:asset:2:101";
+      let entityId = entityIdValue;
+
+      
       let attributeIds = await fetchAsset(entityId);
       if (attributeIds && attributeIds.length > 0) {
         const chartData: ChartDataState = { labels: [], datasets: [] };
@@ -261,7 +269,7 @@ const CombineSensorChart: React.FC = () => {
         fetchDataAndAssign();
       }
     }  
-  }, [layoutConfig, selectedInterval, router.isReady]);
+  }, [layoutConfig, selectedInterval, router.isReady, entityIdValue]);
 
   return (
     <div style={{zoom:"80%"}}>

@@ -305,8 +305,8 @@ export class ShopFloorService {
         }
         if(node[i].source.includes('asset') && node[i].target.split('_')[4]){
           let key = id.split('_')[1];
-          let relationKey = node[i].target.split('_')[1];
-          let relationData = node[i].target.split('_')[4];
+          let relationKey = node[i].metadata.split('_')[1];
+          let relationData = node[i].metadata.split('_')[4];
           assetObj[key] = assetObj[key] ? assetObj[key] : {};
           if(assetObj[key][relationKey]){
             let relationArr = assetObj[key][relationKey];

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { PowerConsumptionService } from './power-consumption.service';
 import { getSessionToken } from '../session/session.service';
@@ -19,10 +19,10 @@ export class PowerConsumptionController {
   }
 
   @Get('/chart')
-  async findChartData(@Req() req: Request) {
+  async findChartData(@Query('asset-id') assetId: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.powerConsumptionService.findChartData(token);
+      let response = await this.powerConsumptionService.findChartData(assetId, token);
       return response;
     } catch(err) {
       throw new NotFoundException();

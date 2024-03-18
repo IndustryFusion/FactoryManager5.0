@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Query } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
 import { TemplateDto } from './dto/template.dto';
 import { TemplateDescriptionDto } from './dto/templateDescription.dto';
