@@ -1,5 +1,7 @@
 import { useDashboard } from "@/context/dashboardContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import NotificationDialog from "./notification-card-popup";
+import RelationDialog from "./relation-card-popup";
 
 
 
@@ -7,6 +9,9 @@ const DashboardCards: React.FC= () => {
    
     const [timer, setTimer] = useState(0);
     const {machineStateValue,entityIdValue, setMachineStateValue} = useDashboard();
+    const [notification, setNotification] = useState(false);
+    const [relations, setRelations] = useState(false);
+
 
     useEffect(() => {
         let interval: any;
@@ -70,7 +75,7 @@ const DashboardCards: React.FC= () => {
                         <span className="text-500">since last week</span>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card">
+                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" onClick={()=>setRelations(true)}>
                     <div className="card mb-0 ">
                         <div className="flex justify-content-between mb-3">
                             <div>
@@ -88,7 +93,9 @@ const DashboardCards: React.FC= () => {
                         <span className="text-500">newly registered</span>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 0 dashboard-card">
+                <div className="col-12 lg:col-6 xl:col-3 0 dashboard-card"
+                 onClick={()=>setNotification(true)}
+                >
                     <div className="card mb-0">
                         <div className="flex justify-content-between mb-3">
                             <div>
@@ -105,6 +112,18 @@ const DashboardCards: React.FC= () => {
                     </div>
                 </div>
             </div>
+            {notification &&
+            <NotificationDialog
+            notificationProp={notification}
+            setNotificationProp={setNotification}
+            />
+            }
+            {relations &&
+            <RelationDialog 
+            relationsProp={relations}
+           setRelationsProp={setRelations}
+            />
+            }
         </>
     )
 }

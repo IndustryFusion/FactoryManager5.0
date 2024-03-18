@@ -25,7 +25,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const router = useRouter();
 
-  const { entityIdValue, setEntityIdValue, machineStateValue, setMachineStateValue } = useDashboard();
+  const { entityIdValue, setEntityIdValue, machineStateValue,
+     setMachineStateValue ,selectedAssetData, setSelectedAssetData} = useDashboard();
 
   const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
@@ -56,9 +57,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         console.log(filteredAssets[0], "filtered asets");
 
         setAssetData(response);
-        console.log(response, "allresponse");
+        console.log(response.id, "allresponse");
 
-        setEntityIdValue(filteredAssets[0]);
+        // setEntityIdValue(response?.id);
       } else {
         console.error("Fetch returned undefined");
       }
@@ -90,7 +91,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
-      setEntityIdValue(selectedAsset?.id)
+      setEntityIdValue(selectedAsset?.id);
+      setSelectedAssetData(selectedAsset)
+
     } else {
       setShowBlocker(true);
     }
