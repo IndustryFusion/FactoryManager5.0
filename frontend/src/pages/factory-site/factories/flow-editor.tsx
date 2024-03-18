@@ -388,17 +388,16 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
-
+        console.log("response1 " , response1)
    
-         const response2 = await axios.patch(
+        const response2 = await axios.patch(
         `${API_URL}/allocated-asset`,
         {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          withCredentials: true,
-        
+          withCredentials: true
         }
       );
 
