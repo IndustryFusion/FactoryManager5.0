@@ -548,9 +548,6 @@ export const fetchAllocatedAssets = async ()=> {
       withCredentials: true,
     });
     console.log(response, "allocated asset data");
-    if (!response.data) {
-      throw new Error("Network response was not ok");
-    }
     return response.data;
   } catch (error) {
     console.error("Error fetching allocated assets:", error);
