@@ -376,6 +376,7 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("FlowChart already exist");
       }
+
       const response1 = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -387,16 +388,16 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
-
-      const response2 = await axios.patch(
+        console.log("response1 " , response1)
+   
+        const response2 = await axios.patch(
         `${API_URL}/allocated-asset`,
         {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          withCredentials: true,
-        
+          withCredentials: true
         }
       );
 
