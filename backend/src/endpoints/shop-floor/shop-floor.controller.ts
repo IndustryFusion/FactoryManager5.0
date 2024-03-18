@@ -4,12 +4,17 @@ import { Request, Response } from 'express';
 import * as jsonData from './shop-floor-schema.json';
 import { getSessionToken } from '../session/session.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
+import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import axios from 'axios';
 
 @Controller('shop-floor')
 export class ShopFloorController {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
-  constructor(private readonly shopFloorService: ShopFloorService, private readonly factorySiteService: FactorySiteService) {}
+  constructor(
+    private readonly shopFloorService: ShopFloorService, 
+    private readonly factorySiteService: FactorySiteService,
+    private readonly allocatedAssetService: AllocatedAssetService
+    ) {}
 
   @Post()
   async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
@@ -105,10 +110,15 @@ export class ShopFloorController {
       const token = await getSessionToken(req);
       const response = await this.shopFloorService.updateReact(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
-        return {
-          success: true,
-          status: response['status'],
-          message: 'Updated Successfully',
+        let allocatedAssetResponse = await this.allocatedAssetService.update(token);
+        if(allocatedAssetResponse['status'] == 200 || allocatedAssetResponse['status'] == 204) {
+          return {
+            success: true,
+            status: response['status'],
+            message: 'Updated Successfully',
+          }
+        } else {
+          return response;
         }
       } else {
         return response;

@@ -21,6 +21,7 @@ export class AllocatedAssetService {
       let factoryData = await this.factorySiteService.findAll(token);
       for(let i = 0; i < factoryData.length; i++){
         let shopFloorIds = factoryData[i]['http://www.industry-fusion.org/schema#hasShopFloor'];
+        console.log('factory id ',factoryData[i].id);
         console.log('shopFloorIds ', shopFloorIds);
 
         if (shopFloorIds && Array.isArray(shopFloorIds) && shopFloorIds.length > 0) {
@@ -221,7 +222,7 @@ export class AllocatedAssetService {
       if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
         let response =  await this.create(token);
         if(response['status'] == 200 || response['status'] == 201) {
-          let globalResponse = await this.createGlobal(token); 
+          let globalResponse = await this.updateGlobal(token); 
           return {
             status: globalResponse.status,
             data: globalResponse.data,
