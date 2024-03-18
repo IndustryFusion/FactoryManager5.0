@@ -4,7 +4,6 @@ import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AssetService } from '../asset/asset.service';
-import { TemplatesService } from '../templates/templates.service';
 import { HttpService } from '@nestjs/axios';
 import axios, { AxiosResponse } from 'axios';
 import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
@@ -17,7 +16,6 @@ export class CronService {
     private readonly factorySiteService: FactorySiteService,
     private readonly shopFloorService: ShopFloorService,
     private readonly assetService: AssetService,
-    private readonly templatesService: TemplatesService,
     ) {}
 
   // this method run at every end of the day
@@ -98,53 +96,49 @@ export class CronService {
 
           if(assetData.length > 0){
             for(let j = 0; j < assetData.length; j++){
-              let asset_category = assetData[j]['http://www.industry-fusion.org/schema#asset_category'];
-              let templateData: TemplateDescriptionDto[] = await this.templatesService.getTemplateByName(asset_category.value);// this remove because factory can not access templates
               for(let key in assetData[j]) {
                 if(key.includes('has')){
                   let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
-                  if(templateData[0].properties[templateKey].type == 'material'){ //use hasRelation key.class 
-                    if(Array.isArray(assetData[j][key])){
-                      let materialArr = assetData[j][key];
-                      let count = 0;
-                      for(let idx = 0; idx < materialArr.length; idx++){
-                        let target = materialArr[idx].object;
-                        for(let k = 0; k < edges.length; k++){
-                          console.log('source ',edges[k].source);
-                          console.log('check source ',assetData[j].id);
-                          console.log('target ',edges[k].target);
-                          console.log('check target ',target);
-                          if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
-                            count++;
-                          }
-                        }
-                      }
-                      if(materialArr.length !== count){
-                        console.log('materialArr length ',materialArr);
-                        console.log('count check ',count);
-                        let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
-                        return response;
-                      }
-                    } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn')){
-                      let flag = false;
-                      let target = assetData[j][key].object;
-                      console.log('target ',target);
+                  if(Array.isArray(assetData[j][key]) && assetData[j][key][0].class == 'material'){
+                    let materialArr = assetData[j][key];
+                    let count = 0;
+                    for(let idx = 0; idx < materialArr.length; idx++){
+                      let target = materialArr[idx].object;
                       for(let k = 0; k < edges.length; k++){
                         console.log('source ',edges[k].source);
                         console.log('check source ',assetData[j].id);
                         console.log('target ',edges[k].target);
                         console.log('check target ',target);
                         if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
-                          console.log('inside check');
-                          flag = true;
+                          count++;
                         }
                       }
-                      console.log('flag check ',flag);
-                      if(!flag){
-                        let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
-                        console.log('response ',response);
-                        return response;
+                    }
+                    if(materialArr.length !== count){
+                      console.log('materialArr length ',materialArr);
+                      console.log('count check ',count);
+                      let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
+                      return response;
+                    }
+                  } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn') && assetData[j][key].class == 'material'){
+                    let flag = false;
+                    let target = assetData[j][key].object;
+                    console.log('target ',target);
+                    for(let k = 0; k < edges.length; k++){
+                      console.log('source ',edges[k].source);
+                      console.log('check source ',assetData[j].id);
+                      console.log('target ',edges[k].target);
+                      console.log('check target ',target);
+                      if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
+                        console.log('inside check');
+                        flag = true;
                       }
+                    }
+                    console.log('flag check ',flag);
+                    if(!flag){
+                      let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
+                      console.log('response ',response);
+                      return response;
                     }
                   }
                 }

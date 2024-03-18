@@ -37,6 +37,8 @@ import { HttpModule } from '@nestjs/axios';
 import { CronController } from './endpoints/cron/cron.controller';
 import { ValueChangeStateController } from './endpoints/value-change-state/value-change-state.controller';
 import { ValueChangeStateService } from './endpoints/value-change-state/value-change-state.service';
+import { OnboardingAssetController } from './endpoints/onboarding-asset/onboarding-asset.controller';
+import { OnboardingAssetService } from './endpoints/onboarding-asset/onboarding-asset.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -68,7 +70,8 @@ console.log('FactorySite ',FactorySite)
     AllocatedAssetController,
     PowerConsumptionController,
     CronController,
-    ValueChangeStateController
+    ValueChangeStateController,
+    OnboardingAssetController
   ],
   providers: [
     AppService,
@@ -87,7 +90,8 @@ console.log('FactorySite ',FactorySite)
     AllocatedAssetService,
     PowerConsumptionService,
     CronService,
-    ValueChangeStateService
+    ValueChangeStateService,
+    OnboardingAssetService
   ]
 })
 export class AppModule {

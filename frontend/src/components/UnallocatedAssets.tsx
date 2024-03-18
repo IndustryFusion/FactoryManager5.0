@@ -41,23 +41,19 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [allocatedAssets, setAllocatedAssets] = useState<
-    AllocatedAsset[] | AllocatedAsset
-  >([]);
+const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
 
   useEffect(() => {
     const fetchNonShopFloorAssets = async (factoryId: any) => {
       try {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-        console.log(fetchedAssetIds, "test1");
+      
         const fetchedAssets: any = Object.keys(fetchedAssetIds).map((key) => ({
           id: fetchedAssetIds[key].id,
           product_name: fetchedAssetIds[key].product_name?.value,
           asset_category: fetchedAssetIds[key].asset_category?.value,
         }));
         setAssets(fetchedAssets);
-
-        console.log(assets, "the unalocated asset");
         const allocatedAssets = await fetchAllocatedAssets();
         setAllocatedAssets(allocatedAssets);
         setLoading(false);
@@ -187,17 +183,13 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         >
           Allocated Asset
         </h3>
-        {/* <ul>
-          {Array.isArray(allocatedAssets) ? (
-            allocatedAssets.map((asset, index) => (
-              <li key={index} draggable={true}>
-                {asset.id}
-              </li>
-            ))
-          ) : (
-            <li draggable={true}>{allocatedAssets.id}</li>
-          )}
-        </ul> */}
+     <ul>
+      {allocatedAssets.map((asset, index) => (
+        <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset,"asset")}>
+          {asset.product_name}
+        </li>
+      ))}
+    </ul>
       </Card>
     </React.Fragment>
   );
