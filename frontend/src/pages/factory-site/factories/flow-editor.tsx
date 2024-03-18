@@ -376,6 +376,7 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("FlowChart already exist");
       }
+
       const response1 = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -387,19 +388,6 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
-
-      // const response2 = await axios.patch(
-      //   `${API_URL}/allocated-asset/${factoryId}`,
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Accept: "application/json",
-      //     },
-      //     withCredentials: true,
-      //   }
-      // );
-
-      // console.log("response2 " , response2)
       console.log(payLoad.factoryData.edges, "edges update");
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
