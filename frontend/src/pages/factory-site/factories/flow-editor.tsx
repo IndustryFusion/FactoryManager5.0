@@ -107,13 +107,13 @@ const FlowEditor: React.FC<
 
   const [selectedAsset, setSelectedAsset] = useState(null);
   const { latestShopFloor } = useShopFloor();
-  const onEdgeAdd = (assetId: string, relationsInput: any) => {
+  const onEdgeAdd = (assetId: string, relationsInput: any,relationClass:string) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
       return;
     }
-
+  
     // handle both single and multiple relations uniformly
     const relations = Array.isArray(relationsInput)
       ? relationsInput
@@ -148,6 +148,7 @@ const FlowEditor: React.FC<
           border: "none",
           borderRadius: "45%",
         },
+       class:relationClass,
         data: {
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
@@ -386,6 +387,20 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
+
+      const response2 = await axios.patch(
+        `${API_URL}/allocated-asset`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        
+        }
+      );
+
+      console.log("response2 " , response2)
       console.log(payLoad.factoryData.edges, "edges update");
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
@@ -399,6 +414,7 @@ const FlowEditor: React.FC<
   }, [nodes, edges, factoryId]);
 
   const onSave = useCallback(async () => {
+    let metadata= ""
     const payLoad = {
       factoryId: factoryId,
 
@@ -414,6 +430,7 @@ const FlowEditor: React.FC<
           id,
           source,
           target,
+          metadata:target,
           type,
           data,
         })),
@@ -447,7 +464,18 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
+      const response2 = await axios.patch( `${API_URL}/allocated-asset`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        
+        }
+      );
 
+      console.log("allocated asset Data " , response2)
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -546,7 +574,7 @@ const FlowEditor: React.FC<
     }
   }, []);
 
-  const onConnect = useCallback(
+   const onConnect = useCallback(
     (params: any) => {
       const { source, target} = params;
       const sourceNode: any = nodes.find((node) => node.id === source);
@@ -556,15 +584,16 @@ const FlowEditor: React.FC<
       // Check if the source node is a relation and it already has an outgoing connection
       if (sourceNode.data.type === "relation") {
         const alreadyHasChild = edges.some((edge) => edge.source === source);
-
-        if (alreadyHasChild) {
+        const relationClass = sourceNode.class;
+        if (relationClass === "machine" && edges.some(edge => edge.source === source)) {
           toast.current.show({
             severity: "warn",
             summary: "Operation not allowed",
-            detail: "A relation can only have one child node.",
+            detail: "A machine relation can only have one child asset.",
           });
           return;
         }
+       
       }
       if (
         sourceNode.data.type === "shopFloor" &&
