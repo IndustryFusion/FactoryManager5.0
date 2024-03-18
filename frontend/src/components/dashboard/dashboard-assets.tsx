@@ -52,12 +52,12 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       const response = await fetchAsset();
       if (response !== undefined) {
 
-        const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
-        // console.log(response[0] ,"allassets");
-        console.log(filteredAssets[0], "filtered asets");
+        // const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
+        // // console.log(response[0] ,"allassets");
+        // console.log(filteredAssets[0], "filtered asets");
 
         setAssetData(response);
-        console.log(response.id, "allresponse");
+        console.log(response, "allresponse");
 
         // setEntityIdValue(response?.id);
       } else {
@@ -86,8 +86,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
     setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
-    console.log(prefixedKeys, "what's here");
-    console.log(prefixedKeys.length, "the length of prefix");
+    setEntityIdValue(selectedAsset?.id);
+    console.log(selectedAsset, "what's the asset here");
+    setSelectedAssetData(selectedAsset)
+    // console.log(prefixedKeys, "what's here");
+    // console.log(prefixedKeys.length, "the length of prefix");
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
