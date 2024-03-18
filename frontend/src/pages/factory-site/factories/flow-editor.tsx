@@ -388,20 +388,6 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
-        console.log("response1 " , response1)
-   
-        const response2 = await axios.patch(
-        `${API_URL}/allocated-asset`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true
-        }
-      );
-
-      console.log("response2 " , response2)
       console.log(payLoad.factoryData.edges, "edges update");
       if (response1.status == 200 || response1.status == 204) {
         setToastMessage("Scorpio updated successfully");

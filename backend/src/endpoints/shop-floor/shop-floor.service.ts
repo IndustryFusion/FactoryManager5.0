@@ -329,7 +329,7 @@ export class ShopFloorService {
           let response = await this.updateAssets(shopFloorobj, token);
           return response;
         } else {
-          let response = await this.updateAssets(shopFloorobj, token);
+          let response = await this.assetService.updateRelations(assetObj, token);
           return response;
         }
       } else {
