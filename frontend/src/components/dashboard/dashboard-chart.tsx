@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ChartData, ChartOptions } from 'chart.js';
 import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
@@ -6,7 +7,8 @@ import axios from "axios";
 import { Asset } from "@/interfaces/assetTypes";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import { getDatesInRange } from "@/utility/chart-utility";
+import { calculateDifference, convertSecondstoTime, convertToSeconds, convertToSecondsTime, getDatesInRange, groupedByDate, machineData, mapBackendDataToAssetState } from "@/utility/chart-utility";
+
 
 export interface Datasets {
     label?: string;
@@ -37,72 +39,13 @@ const DashboardChart = () => {
     // const [options, setOptions] = useState<ChartOptionsState>({});
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
+    const [documentStyle, setDocumentStyle] = useState(null);
     const router = useRouter();
-
-    const mapBackendDataToAssetState = (backendData: any) => {
-        const modifiedObject: any = {};
-        // Iterate over the properties of the object
-        Object.keys(backendData).forEach((key) => {
-            if (key.includes("http://www.industry-fusion.org/fields#")) {
-                const newKey = key.replace("http://www.industry-fusion.org/fields#", "");
-                modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
-            } else {
-                modifiedObject[key] = backendData[key];
-            }
-        });
-        return modifiedObject;
-    };
 
     const fetchDataAndAssign = async () => {
         let entityId = 'urn:ngsi-ld:asset:2:101';
         let attributeIds: string[] | undefined = await fetchAssets(entityId);
-        const lineOptions: ChartOptions = {
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                // x: {
-                //   ticks: {
-                //     autoSkip: false,
-                //     maxTicksLimit: 20,
-                //     callback: function (label, index, labels) {
 
-                //       // Check if this is a tick we want to show based on the index
-                //       if (index % 3 === 0) {
-                //         // Parse the timestamp into a Date object
-                //         const dateObj = new Date(label);
-                //         // Format the date and time
-                //         const formattedDate = dateObj.toLocaleDateString('en-US'); // Adjust for your locale
-                //         const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                //         // Return the combined date and time string
-                //         return `${formattedDate} ${formattedTime}`;
-                //       } else {
-                //         // For other ticks, return an empty string to hide them
-                //         return '';
-                //       }
-                //     },
-                //   },
-                // }
-
-                y: {
-                    ticks: {
-
-                        callback: function (value, index, values) {
-                            if (value === 2) {
-                                return 'Online';
-                            } else if (index === 0) {
-                                return 'Offline';
-                            } else {
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
         if (attributeIds)
             // console.log(attributeIds[2], "attributeId here")
 
@@ -125,6 +68,7 @@ const DashboardChart = () => {
             lineOptions
         });
     }
+
     const fetchData = async (attributeId: string, entityId: string) => {
         const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
         const labels: string[] = [], datasets: Datasets[] = [
@@ -203,6 +147,7 @@ const DashboardChart = () => {
         }
     };
 
+
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
@@ -216,28 +161,68 @@ const DashboardChart = () => {
 
     }, [router.isReady])
 
-
-    // data mapping to chart based on each value of array to each day here
-    const onlineTimeData = ['12:07:57', '1:08:12', '2:08:27', '12:08:42', '4:08:57', '2:00:00', '13:00:43'];
-    const offlineTimeData = ['4:09:90', '5:09:89', '17:09:78', '5:00:00', '19:09:90', '1:00:00', '9:00:67'];
-
     const today = new Date();
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 6);
-
     // Get an array of dates from today to 7 days ago
     const dateRange = getDatesInRange(sevenDaysAgo, today);
     const descendingDateRange = dateRange.reverse();
 
-    const convertToSeconds = (timeData: any) => {
-        const secondsData = timeData.map((time) => {
-            const [hours, minutes, seconds] = time.split(':').map(Number);
-            return hours * 3600 + minutes * 60 + seconds;
+    const formatChartData = (dataset: any) => {
+        const documentStyle = getComputedStyle(document.documentElement);
+        const groupedByDate = dataset.reduce((acc, item) => {
+            const date = Object.keys(item)[0];
+            const onlineTimes = convertToSeconds(item[date].online);
+            const offlineTimes = convertToSeconds(item[date].offline);
+            const online_1Times = convertToSeconds(item[date].online_1);
+            const offline_1Times = convertToSeconds(item[date].offline_1);
+
+            // Flatten online, offline, online_1, and offline_1 times into a single array
+            const times = [
+                ...onlineTimes.map(time => ({ date, time, type: 'online' })),
+                ...offlineTimes.map(time => ({ date, time, type: 'offline' })),
+                ...online_1Times.map(time => ({ date, time, type: 'online_1' })),
+                ...offline_1Times.map(time => ({ date, time, type: 'offline_1' }))
+            ];
+             times.sort((a, b) => b.time - a.time);
+
+            // console.log("what's the times here", times);
+            acc[date] = times;
+            return acc;
+        }, {});
+
+    
+        console.log(dataset, "what's the dataset here");
+        console.log(groupedByDate, "what's this here in groupedbydate");
+        // console.log("convert to array", Object.entries(groupedByDate));
+
+        const labels = Object.keys(groupedByDate);
+        let uniqueTypes;
+        for(let date in groupedByDate){
+            // console.log(date, "what's the datehere");
+            uniqueTypes =  groupedByDate[date].map(item => item.type);
+            // console.log(uniqueTypes, "what's here in uniqueTypes");
+        }
+      
+        const datasets = uniqueTypes.map(type => {
+            const dataValue = labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
+            console.log(dataValue, "what's this here dataValue");
+            console.log(labels, "what's in the labels");
+            return {
+                label: type.charAt(0).toUpperCase() + type.slice(1),
+                backgroundColor: type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
+                data: labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
+            };
         });
-        return secondsData;
-    }
-    const onlineData = convertToSeconds(onlineTimeData);
-    const offlineData = convertToSeconds(offlineTimeData);
+                console.log(datasets, "what's in this datsets");
+
+        return {
+            labels,
+            datasets,
+        };
+    };
+
+
 
     //bar chart data 
     useEffect(() => {
@@ -247,24 +232,47 @@ const DashboardChart = () => {
             '--text-color-secondary'
         );
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-        const data = {
-            labels: descendingDateRange,
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Online',
-                    backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                    data: onlineData,
-                },
-                {
-                    type: 'bar',
-                    label: 'Offline',
-                    backgroundColor: documentStyle.getPropertyValue('--red-400'),
-                    data: offlineData,
-                },
-            ],
-        };
+
+        const dataset = [
+            {
+                [descendingDateRange[0]]: {
+                    online: ['12:00:00'],
+                    offline: ['5:25:03'],
+                    online_1: ['5:40:00'],
+                    offline_1: ['4:07:67']
+
+                }
+            },
+            {
+                [descendingDateRange[1]]: {
+                    online: ['3:08:27'],
+                    offline: ['10:00:00'],
+                    online_1: ['2:40:00'],
+                    offline_1: ['7:07:67']
+                }
+            }
+        ];
+
+        const uniqueDates = [...new Set(machineData.map(item => item.observedAt.split('T')[0]))].sort((a, b) => b - a);
+
+        // Format the grouped data into the desired structure
+        const newDataset = uniqueDates.map(date => {
+            return {
+                [date]: {
+                    offline: groupedByDate[date]?.offline || [],
+                    online: groupedByDate[date]?.online || [],
+                    // Assuming online_1 and offline_1 are additional values you want to include
+                    online_1: [], // Example: Add your logic to populate these
+                    offline_1: [] // Example: Add your logic to populate these
+                }
+            };
+        });
+
+        const chartDataValue = formatChartData(newDataset);
+        // console.log(chartDataValue, "what's chartDtaValue");
+
         const options = {
+            indexAxis: 'y',
             maintainAspectRatio: false,
             aspectRatio: 0.8,
             plugins: {
@@ -274,6 +282,8 @@ const DashboardChart = () => {
                     callbacks: {
                         label: (context) => {
                             const { dataset, dataIndex } = context;
+                            // console.log(dataset, "what's in this");
+
                             const value = dataset.data[dataIndex];
                             const hours = Math.floor(value / 3600);
                             const minutes = Math.floor((value % 3600) / 60);
@@ -284,14 +294,14 @@ const DashboardChart = () => {
                         },
                     },
                 },
-                legend: {
-                    labels: {
-                        color: textColor,
-                    },
-                },
+                // legend: {
+                //     labels: {
+                //         color: textColor,
+                //     },
+                // },
             },
             scales: {
-                x: {
+                y: {
                     stacked: true,
                     ticks: {
                         color: textColorSecondary,
@@ -300,7 +310,7 @@ const DashboardChart = () => {
                         color: surfaceBorder,
                     },
                 },
-                y: {
+                x: {
                     stacked: true,
                     ticks: {
                         color: textColorSecondary,
@@ -315,17 +325,19 @@ const DashboardChart = () => {
 
                             return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
                         },
-                    },
+                    }
+
                 },
             },
         };
 
-        setChartData(data);
+        setChartData(chartDataValue);
         setChartOptions(options);
     }, []);
 
+
     return (
-        <div className="card h-auto" style={{width:"40%"}}>
+        <div className="card h-auto" style={{ width: "40%" }}>
             <h5 className="heading-text">Machine State Overview</h5>
             <Chart type="bar" data={chartData} options={chartOptions} />
         </div>

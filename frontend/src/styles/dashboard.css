@@ -102,8 +102,8 @@
     }
     .dashboard-card-container {
         gap: 6rem;
-    }
-    }
+    }  
+}
 
 @media (min-width: 1200px) and (max-width: 1550px){
 .chart-content,
