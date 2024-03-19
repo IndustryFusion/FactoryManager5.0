@@ -197,7 +197,7 @@ export class AssetService {
         console.log('deleteResponse ', deleteResponse);
         if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
           const response = await axios.post(this.scorpioUrl, assetData, { headers });
-          console.log('create response ', response);
+          console.log('create response ', response['status']);
           responses.push(response);
         } 
       }
