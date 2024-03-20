@@ -324,7 +324,7 @@ const FlowEditor: React.FC<
      setNodesInitialized(true);
     if (factoryId) {
       try {
-        const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+        const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -333,18 +333,18 @@ const FlowEditor: React.FC<
         });
 
         if (
-          response.data &&
-          response.data.factoryData.nodes &&
-          response.data.factoryData.edges
+          getReactFlowMongo.data &&
+          getReactFlowMongo.data.factoryData.nodes &&
+          getReactFlowMongo.data.factoryData.edges
         ) {
           // First, set the nodes and edges as usual
-          setNodes(response.data.factoryData.nodes);
-          setEdges(response.data.factoryData.edges);
+          setNodes(getReactFlowMongo.data.factoryData.nodes);
+          setEdges(getReactFlowMongo.data.factoryData.edges);
 
           // Then, analyze the relation nodes to update relationCounts
           const updatedRelationCounts: RelationCounts = {};
 
-          response.data.factoryData.nodes.forEach((node: Node) => {
+          getReactFlowMongo.data.factoryData.nodes.forEach((node: Node) => {
             if (node.data.type === "relation") {
               // node IDs follow the format "relation-relationName_count"
               const match = node.id.match(/relation-(.+)_([0-9]+)/);
@@ -526,7 +526,7 @@ const FlowEditor: React.FC<
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
     try {
-      const response1 = await axios.patch(
+      const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         edges,
         {
@@ -538,7 +538,7 @@ const FlowEditor: React.FC<
         }
       );
 
-      const response2 = await axios.delete(
+      const reactFlowScorpioUpdate = await axios.delete(
         `${API_URL}/shop-floor/delete-react/${factoryId}`,
         {
           headers: {
@@ -551,9 +551,9 @@ const FlowEditor: React.FC<
       );
 
       if (
-        response1.status == 200 ||
-        (response1.status == 204 && response2.status == 204) ||
-        response2.status == 200
+        reactFlowUpdateMongo.status == 200 ||
+        (reactFlowUpdateMongo.status == 204 && reactFlowScorpioUpdate.status == 204) ||
+        reactFlowScorpioUpdate.status == 200
       ) {
         setToastMessage(
           "Selected elements and related data deleted successfully."
