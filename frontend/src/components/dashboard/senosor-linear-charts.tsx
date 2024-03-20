@@ -327,19 +327,7 @@ const CombineSensorChart: React.FC = () => {
             </div>
           </div>
 
-          {isLoading ? (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "60vh",
-              }}
-            >
-              <ProgressSpinner />{" "}
-              {/* This assumes you have a ProgressSpinner component */}
-            </div>
-          ) : (
+      
             <div>
               {data.datasets.length > 0 ? (
                 <Chart
@@ -367,7 +355,7 @@ const CombineSensorChart: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
+          
         </div>
       </div>
     </div>

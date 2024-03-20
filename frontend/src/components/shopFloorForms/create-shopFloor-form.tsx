@@ -160,6 +160,8 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
 
       const shopFloorResponse = response.data;
+      console.log();
+      
 
       if (shopFloorResponse.status === 201) {
         showSuccess();

@@ -14,7 +14,7 @@ const DashboardCards: React.FC = () => {
     useEffect(() => {
         const runningSince = () => {
 
-            const assetOnlineTime = convertToSeconds("15:08:53 ");
+            const assetOnlineTime = convertToSeconds("10:08:53 ");
             const currentTimeString = convertToSeconds(new Date().toTimeString().slice(0, 8)); // today  currenttime                      
             const difference = Math.abs(assetOnlineTime - currentTimeString);
             const differenceTimeValue = convertSecondsToTime(difference);
