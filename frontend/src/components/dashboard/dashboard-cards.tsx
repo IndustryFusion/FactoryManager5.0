@@ -1,41 +1,63 @@
+
 import { useDashboard } from "@/context/dashboardContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 
 
-const DashboardCards: React.FC= () => {
-   
-    const [timer, setTimer] = useState(0);
-    const {machineStateValue,entityIdValue, setMachineStateValue} = useDashboard();
+const DashboardCards: React.FC = () => {
+
+    const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
+    const [seconds, setSeconds] = useState(Number(localStorage.getItem("time difference")) || 0)
+    const { machineStateValue, entityIdValue, setMachineStateValue } = useDashboard();
+
 
     useEffect(() => {
-        let interval: any;
+        const runningSince = () => {
+
+            const assetOnlineTime = convertToSeconds("15:08:53 ");
+            const currentTimeString = convertToSeconds(new Date().toTimeString().slice(0, 8)); // today  currenttime                      
+            const difference = Math.abs(assetOnlineTime - currentTimeString);
+            const differenceTimeValue = convertSecondsToTime(difference);
+
+            setTimer(differenceTimeValue)
+            // console.log("time difference",convertSecondsToTime(difference));
+            localStorage.setItem("runningTime", differenceTimeValue);
+            localStorage.setItem("time difference", String(difference))
+            // console.log("get from localStorage",localStorage.getItem("runningTime"));
+
+        }
+
+        const intervalId = setInterval(() => {
+            setSeconds(prevSeconds => prevSeconds + 1)
+        }, 1000)
+
         if (machineStateValue === "2") {
-            interval = setInterval(() => {
-                setTimer((prevTimer) => prevTimer + 1);
-            }, 1000);
-        } else if (machineStateValue === "0") {
-            setTimer(0);
+            runningSince();
+        } else {
+            setTimer("00:00:00")
         }
 
-        return () => {
-            clearInterval(interval);
-        }
+        return () => clearInterval(intervalId);
 
-    }, [machineStateValue, entityIdValue])
+    }, [machineStateValue, entityIdValue, seconds])
 
-    const formatTime = (timeInSeconds: any) => {
-        const hours = Math.floor(timeInSeconds / 3600);
-        const minutes = Math.floor((timeInSeconds % 3600) / 60);
-        const seconds = timeInSeconds % 60;
 
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    };
+
+    const convertToSeconds = (time: string) => {
+        const [hours, minutes, seconds] = time.split(':').map(Number);
+        return hours * 3600 + minutes * 60 + seconds;
+    }
+    const convertSecondsToTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
 
 
     return (
         <>
-            <div className="grid p-4 dashboard-card-container" style={{zoom:"80%"}}>
+            <div className="grid p-4 dashboard-card-container" style={{ zoom: "80%" }}>
                 <div className="col-12 lg:col-6 xl:col-3  dashboard-card">
                     <div className="card mb-0">
                         <div className="flex justify-content-between mb-3">
@@ -46,7 +68,7 @@ const DashboardCards: React.FC= () => {
                             </div>
                             <div className={`flex align-items-center justify-content-center border-round  ${machineStateValue === "2" ? 'active-state' : 'inactive-state'}`}
                                 style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className= {` ${machineStateValue === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
+                                <i className={` ${machineStateValue === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
                             </div>
 
                         </div>
@@ -54,12 +76,13 @@ const DashboardCards: React.FC= () => {
                         <span className="text-500">machines are connected</span>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card">
+                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
                     <div className="card mb-0 d">
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Running Since</span>
-                                <div className="text-900 font-medium text-xl">{formatTime(timer)}</div>
+                                {/* <div className="text-900 font-medium text-xl">{machineStateValue == "2" && runningMachineTimer()}</div> */}
+                                <div className="text-900 font-medium text-xl">{timer}</div>
 
                             </div>
                             <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>

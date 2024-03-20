@@ -53,10 +53,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
         const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
         // console.log(response[0] ,"allassets");
-        console.log(filteredAssets[0], "filtered asets");
+        // console.log(filteredAssets[0], "filtered asets");
 
         setAssetData(response);
-        console.log(response, "allresponse");
+        // console.log(response, "allresponse");
 
         setEntityIdValue(filteredAssets[0]);
       } else {

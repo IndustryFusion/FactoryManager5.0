@@ -1,6 +1,5 @@
 
-
-
+import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState } from "react";
 import { LayoutContext } from './layout/layoutcontext';
 import axios from "axios";
@@ -18,6 +17,7 @@ import { fetchAsset } from "@/utility/asset-utility";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 
+
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
@@ -31,8 +31,7 @@ const Dashboard = () => {
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
 
   const router = useRouter();
-
-
+  const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false });
 
   const fetchNotifications = async () => {
     try {
@@ -62,7 +61,7 @@ const Dashboard = () => {
   }, [router.isReady])
 
   useEffect(() => {
-    let timerId;
+    let timerId:any;
    
     // Start the timer if blocker is true and runTimer is false
     if (blocker && !runTimer) {

@@ -70,17 +70,7 @@ const DashboardChart = () => {
     }
 
     const fetchData = async (attributeId: string, entityId: string) => {
-        const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
-        const labels: string[] = [], datasets: Datasets[] = [
-            {
-                label: labelValue,
-                data: [],
-                fill: true,
-                borderColor: '#4baaf5',
-                backgroundColor: 'rgba(200, 230, 255, 0.5)',
-                tension: 0.4
-            }
-        ];
+     
         try {
             const response = await axios.get(API_URL + `/pgrest`, {
                 params: {

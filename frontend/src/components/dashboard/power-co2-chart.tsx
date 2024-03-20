@@ -27,7 +27,7 @@ const PowerCo2Chart = () => {
     const {entityIdValue, setEntityIdValue} = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
  
-    console.log(entityIdValue, "assetId value");
+    // console.log(entityIdValue, "assetId value");
     
 
     const fetchData = async () => {
@@ -42,7 +42,7 @@ const PowerCo2Chart = () => {
               },
               withCredentials: true,
             });
-            console.log('response ',response);
+            // console.log('response ',response);
             return response.data;
            
         } catch (error) {
@@ -58,7 +58,7 @@ const PowerCo2Chart = () => {
             const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
             const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
             const obj = await fetchData();
-            console.log('obj ',obj);
+            // console.log('obj ',obj);
             const data = {
                 labels: obj.lastSevenDays,
                 datasets: [

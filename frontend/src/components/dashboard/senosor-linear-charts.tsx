@@ -223,7 +223,7 @@ const CombineSensorChart: React.FC = () => {
     }
   };
 
-console.log(entityIdValue, "in sensor chart");
+// console.log(entityIdValue, "in sensor chart");
 
 
   useEffect(() => {
