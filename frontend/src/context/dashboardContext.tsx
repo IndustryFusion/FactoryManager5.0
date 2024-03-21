@@ -1,4 +1,4 @@
-import { fetchAsset } from "@/utility/asset-utility";
+import { fetchAsset } from "@/utility/AssetUtility";
 import React, {
     createContext,
     useContext,

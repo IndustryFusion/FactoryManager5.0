@@ -2,10 +2,10 @@
 
 
 import { useContext, useEffect, useState } from "react";
-import { LayoutContext } from './layout/layoutcontext';
+import { LayoutContext } from './layout/LayoutContext';
 import axios from "axios";
 import DashboardAssets from "@/components/dashboard/dashboard-assets";
-import HorizontalNavbar from "@/components/horizontal-navbar";
+import HorizontalNavbar from "@/components/HorizontalNavbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
@@ -14,7 +14,7 @@ import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
-import { fetchAsset } from "@/utility/asset-utility";
+// import { fetchAsset } from "@/utility/AssetUtility";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 

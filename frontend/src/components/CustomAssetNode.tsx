@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { fetchAssetById } from "@/utility/factory-site-utility";
+import { fetchAssetById } from "@/utility/FactorySiteUtility";
 import { MultiSelect } from "primereact/multiselect";
 import { Handle, Position } from "reactflow";
 import "primereact/resources/themes/saga-blue/theme.css";
@@ -9,13 +9,23 @@ import EdgeAddContext from "@/context/EdgeAddContext";
 import { validateHeaderValue } from "http";
 interface RelationOption {
   label: string;
-  value: any;
+  value: string;
   class:string
 }
 
 interface CustomAssetNodeProps {
-  data: any;
+  data: {
+    id:string,
+    label:string,
+    type:string
+  }
   onEdgeAdd?: (assetId: string, relationName: string) => void;
+}
+
+interface AssetDetail {
+  type: string;
+  class: string;
+
 }
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
@@ -31,7 +41,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     const getAssetDetails = async () => {
       if (data.id) {
         try {
-          const assetDetails: any = await fetchAssetById(data.id);
+          const assetDetails= await fetchAssetById(data.id) as Record<string, AssetDetail>;
 
           const options: RelationOption[] = Object.entries(assetDetails)
             .filter(([key, value]) => value.type === "Relationship")
@@ -57,13 +67,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
     getAssetDetails();
   }, [data.id]);
-  const handleDropdownClick = (event: any) => {
+  const handleDropdownClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
   };
-  const handleRelationsChange = (e: any) => {
+  const handleRelationsChange = (e: { value: string[] }) => {
     const currentSelectedRelations = e.value;
     const newlySelectedRelations = currentSelectedRelations.filter(
-      (relation: any) =>
+      (relation: string) =>
         !processedRelations.includes(relation) ||
         deletedRelations.includes(relation)
     );
@@ -75,7 +85,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     setSelectedRelations(currentSelectedRelations);
 
     // Process newly selected relations
-    newlySelectedRelations.forEach((relationLabel: any) => {
+    newlySelectedRelations.forEach((relationLabel: string) => {
       const relationOption = relationOptions.find(option => option.label === relationLabel);
       const relationClass = relationOption ? relationOption.class : '';
 

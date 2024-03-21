@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useEffect } from "react";
-import { fetchAsset } from "@/utility/fleet-managerUtility";
-import AddRelationAsset from "@/pages/ics/[templateId]/[relationId]";
+import { fetchAsset } from "@/utility/FleetManagerUtility";
+// import AddRelationAsset from "@/pages/ics/[templateId]/[relationId]";
 import { Card } from "primereact/card";
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "../styles/relationContainer.css";
@@ -9,7 +9,7 @@ import { Button } from "primereact/button";
 import "primereact/resources/primereact.min.css";
 import "primeflex/primeflex.css";
 import axios from "axios";
-import SelectedAssetsList from "./selectedAssetRelation";
+import SelectedAssetsList from "./SelectedAssetRelation";
 type Asset = string;
 type ContainerProps = {
   onAssetSelect: (asset: Asset) => void;

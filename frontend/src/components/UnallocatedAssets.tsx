@@ -3,25 +3,40 @@ import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
   fetchAllocatedAssets,
-} from "@/utility/factory-site-utility";
+} from "@/utility/FactorySiteUtility";
 // import { Asset } from "../interfaces/assetTypes";
 import "../styles/AssetList.css";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/assetTypes";
+import { AllocatedAsset } from "@/interfaces/AssetTypes";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
+
+interface AssetProperty {
+  type: "Property";
+  value: string;
+  observedAt?: string;
+}
+
 interface AssetListProps {
   factoryId: string;
   product_name: string;
 }
+
+interface AssetRelationship {
+  type: "Relationship";
+  class?: AssetProperty;
+  object: string;
+}
+
 interface Asset {
   id: string;
   product_name: string;
   asset_category: string;
+  [key: string]: AssetProperty | AssetRelationship | string | undefined;
 }
 
 const UnallocatedAssets: React.FC<AssetListProps> = ({
@@ -31,28 +46,29 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
+  // const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
   const router = useRouter();
   const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
   const [assetCategories, setAssetCategories] = useState<string[]>([]);
   const [searchTermAllocated, setSearchTermAllocated] = useState("");
-  const menu = useRef<any>(null);
+  const menu = useRef<Menu>(null);
   const [visible, setVisible] = useState(false);
-  const allocatedMenu = useRef<any>(null);
+  const allocatedMenu =useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
  
 
   useEffect(() => {
-    const fetchNonShopFloorAssets = async (factoryId: any) => {
+    const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
+        console.log("fetchedAssetIds", fetchedAssetIds)
         const fetchedAllocatedAssets = await fetchAllocatedAssets(); 
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-        const fetchedAssets: any = Object.keys(fetchedAssetIds).map((key) => ({
+        const fetchedAssets:  Asset[]  = Object.keys(fetchedAssetIds).map((key) => ({
           id: fetchedAssetIds[key].id,
           product_name: fetchedAssetIds[key].product_name?.value,
           asset_category: fetchedAssetIds[key].asset_category?.value,
@@ -86,12 +102,12 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { factoryId } = router.query;
-        fetchNonShopFloorAssets(factoryId);
+    } else if (router.isReady) {
+      const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
+      if (typeof id === 'string') {
+        fetchNonShopFloorAssets(id);
       }
-    }
+  }
   }, [factoryId, router.isReady]);
 
 
@@ -183,68 +199,69 @@ const menuItems = [
 
 
   const toggleMenu = (event:React.MouseEvent<HTMLButtonElement>) => {
-    menu.current.toggle(event);
+    menu.current?.toggle(event);
     setVisible(!visible);
   };
 
-  const handleAssetClick = async (assetId: string) => {
-    try {
-      const details = await getNonShopFloorAssetDetails(assetId);
-      setSelectedAssetDetails(details);
-    } catch (error) {
-      console.error("Failed to fetch asset details:", error);
-      setError("Failed to fetch asset details");
-    }
-  };
+  // const handleAssetClick = async (assetId: string) => {
+  //   try {
+  //     const details = await getNonShopFloorAssetDetails(assetId);
+  //     console.log(" details ", details)
+  //     setSelectedAssetDetails(details);
+  //   } catch (error) {
+  //     console.error("Failed to fetch asset details:", error);
+  //     setError("Failed to fetch asset details");
+  //   }
+  // };
 
-  const renderRelations = () => {
-    if (!selectedAssetDetails)
-      return (
-        <p style={{ marginLeft: "5px" }}>
-          No asset selected or no relations found.
-        </p>
-      );
+  // const renderRelations = () => {
+  //   if (!selectedAssetDetails)
+  //     return (
+  //       <p style={{ marginLeft: "5px" }}>
+  //         No asset selected or no relations found.
+  //       </p>
+  //     );
 
-    // Extracting relation names from the selected asset details
-    const relations = Object.keys(selectedAssetDetails)
-      .filter((key) =>
-        key.startsWith("http://www.industry-fusion.org/schema#has")
-      )
-      .map((key) => ({
-        key: key.replace("http://www.industry-fusion.org/schema#", ""),
-        value: selectedAssetDetails[key],
-      }));
+  //   // Extracting relation names from the selected asset details
+  //   const relations = Object.keys(selectedAssetDetails)
+  //     .filter((key) =>
+  //       key.startsWith("http://www.industry-fusion.org/schema#has")
+  //     )
+  //     .map((key) => ({
+  //       key: key.replace("http://www.industry-fusion.org/schema#", ""),
+  //       value: selectedAssetDetails[key],
+  //     }));
 
-    if (relations.length === 0)
-      return <p>No relations found for this asset.</p>;
+  //   if (relations.length === 0)
+  //     return <p>No relations found for this asset.</p>;
 
-    return (
-      <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-        {relations.map((relation) => (
-          <li
-            key={relation.key}
-            draggable="true"
-            onDragStart={(e) => handleDragStart(e, relation.key, "relation")}
-          >
-            {relation.key}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  //   return (
+  //     <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
+  //       {relations.map((relation) => (
+  //         <li
+  //           key={relation.key}
+  //           draggable="true"
+  //           onDragStart={(e) => handleDragStart(e, relation.key, "relation")}
+  //         >
+  //           {relation.key}
+  //         </li>
+  //       ))}
+  //     </ul>
+  //   );
+  // };
 
   function handleDragStart(
     event: React.DragEvent,
-    relation: any,
+    data: AllocatedAsset,
     type: string
   ) {
     const dragData = JSON.stringify({
-      item: relation,
+      item: data,
       type: type,
     });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
-    console.log(`Dragging: ${relation}`);
+    console.log(`Dragging: ${data}`, data);
   }
 
   if (loading) return <div>Loading...</div>;
@@ -282,7 +299,7 @@ const menuItems = [
             <li
               key={index}
               draggable={true}
-              onClick={() => handleAssetClick(asset.id)}
+              // onClick={() => handleAssetClick(asset.id)}
               onDragStart={(e) => handleDragStart(e, asset, "asset")}
             >
               {asset.product_name}
@@ -309,7 +326,7 @@ const menuItems = [
           <div> 
             <Button
               icon="pi pi-filter-fill"
-              onClick={(e) => allocatedMenu.current.toggle(e)}
+              onClick={(e) => allocatedMenu.current?.toggle(e)}
               aria-haspopup
               className="filter-button"
               style={{ color: "grey", fontSize: "1.2em" }}

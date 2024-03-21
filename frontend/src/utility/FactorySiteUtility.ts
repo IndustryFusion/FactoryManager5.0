@@ -1,11 +1,11 @@
 //factory-site utility .ts
 
 import axios from "axios";
-import { Factory } from "@/interfaces/factoryType";
-import { Asset } from "@/interfaces/assetTypes";
+import { Factory } from "@/interfaces/FactoryType";
+import { Asset } from "@/interfaces/AssetTypes";
 import { MdQueryBuilder } from "react-icons/md";
 import html2canvas from "html2canvas";
-import { AllocatedAsset } from "@/interfaces/assetTypes";
+import { AllocatedAsset } from "@/interfaces/AssetTypes";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -14,6 +14,17 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
  * @returns {Promise<string>} The URL of the uploaded file on success.
  * @throws {Error} Throws an error if the upload fails.
  */
+
+
+interface RelationshipDetail {
+  type: string;
+  object: string[];
+  class?: string;
+}
+
+interface ExtractedRelations {
+  [key: string]: RelationshipDetail;
+}
 
 export const handleUpload = async (file: File): Promise<string> => {
   const uploadData = new FormData();
@@ -142,7 +153,7 @@ export const transformDataForBackend = (factoryData: Factory) => {
     [key: string]:
       | {
           type: string;
-          value: any;
+          value: string;
         }
       | string;
   }
@@ -192,24 +203,24 @@ export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
   }
 };
 
-const mapBackendDataTofactory = (backendData: any): any => {
-  return backendData.map((item: any) => {
-    const newItem: any = {};
-    Object.keys(item).forEach((key) => {
-      if (key.includes("http://www.industry-fusion.org/schema#")) {
-        const newKey = key.replace(
-          "http://www.industry-fusion.org/schema#",
-          ""
-        );
-        newItem[newKey] =
-          item[key].type === "Property" ? item[key].value : item[key];
-      } else {
-        newItem[key] = item[key];
-      }
-    });
-    return newItem;
-  });
-};
+// const mapBackendDataTofactory = (backendData: any): any => {
+//   return backendData.map((item: any) => {
+//     const newItem: any = {};
+//     Object.keys(item).forEach((key) => {
+//       if (key.includes("http://www.industry-fusion.org/schema#")) {
+//         const newKey = key.replace(
+//           "http://www.industry-fusion.org/schema#",
+//           ""
+//         );
+//         newItem[newKey] =
+//           item[key].type === "Property" ? item[key].value : item[key];
+//       } else {
+//         newItem[key] = item[key];
+//       }
+//     });
+//     return newItem;
+//   });
+// };
 
 const flattenData = (data: any): any => {
   const newItem: any = {};
@@ -251,7 +262,7 @@ export const getshopFloorById = async (factoryId: string) => {
   });
 
   const mappedData1 = flattenData(response.data);
-  console.log(response.data, "TTTTT");
+  
   return response.data;
 };
 
@@ -473,8 +484,8 @@ export async function getShopFloorAndAssetData(factoryId: string) {
   }
 }
 
-export function extractHasRelations(assetData: any): { [key: string]: any } {
-  const hasRelations: { [key: string]: any } = {};
+export function extractHasRelations(assetData: { [key: string]: any }): ExtractedRelations {
+  const hasRelations: ExtractedRelations = {};
   const prefixToRemove = "http://www.industry-fusion.org/schema#";
 
   assetData = assetData || {};
@@ -500,8 +511,8 @@ export function extractHasRelations(assetData: any): { [key: string]: any } {
 
 export const saveFlowchartData = async (
   factoryId: string,
-  nodes: any,
-  edges: any
+  nodes: [],
+  edges: []
 ) => {
   const payload = {};
   try {

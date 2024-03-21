@@ -2,10 +2,10 @@
 import { ChartData, ChartOptions } from 'chart.js';
 import { Chart } from 'primereact/chart';
 import React, { useContext, useEffect, useState } from 'react';
-import { LayoutContext } from './layout/layoutcontext';
-import type { ChartDataState, ChartOptionsState } from './types/layout';
+import { LayoutContext } from './layout/LayoutContext';
+import type { ChartDataState, ChartOptionsState } from './types/Layout';
 import axios from 'axios';
-import { Asset } from "@/interfaces/assetTypes";
+import { Asset } from "@/interfaces/AssetTypes";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export interface Datasets {

@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { Asset } from "@/interfaces/assetTypes";
-import { fetchAsset } from "@/utility/asset-utility";
+import { Asset } from "@/interfaces/AssetTypes";
+import { fetchAsset } from "@/utility/AssetUtility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
