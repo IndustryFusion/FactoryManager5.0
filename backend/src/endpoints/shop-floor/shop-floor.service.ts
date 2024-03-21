@@ -317,27 +317,27 @@ export class ShopFloorService {
       }
       console.log('shopFloorobj ',shopFloorobj);
       console.log('assetObj ',assetObj);
-      // if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
-      //   let response = await this.updateAssets(shopFloorobj, token);
-      //   if(response.success){
-      //     let assetResponse = await this.assetService.updateRelations(assetObj, token);
-      //     return assetResponse;
-      //   } 
-      // } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
-      //   if(Object.keys(shopFloorobj).length){
-      //     let response = await this.updateAssets(shopFloorobj, token);
-      //     return response;
-      //   } else {
-      //     let response = await this.assetService.updateRelations(assetObj, token);
-      //     return response;
-      //   }
-      // } else {
-      //   return {
-      //     success: false,
-      //     status: 500,
-      //     message: 'react flow nodes are unavailable'
-      //   }
-      // }
+      if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
+        let response = await this.updateAssets(shopFloorobj, token);
+        if(response.success){
+          let assetResponse = await this.assetService.updateRelations(assetObj, token);
+          return assetResponse;
+        } 
+      } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
+        if(Object.keys(shopFloorobj).length){
+          let response = await this.updateAssets(shopFloorobj, token);
+          return response;
+        } else {
+          let response = await this.assetService.updateRelations(assetObj, token);
+          return response;
+        }
+      } else {
+        return {
+          success: false,
+          status: 500,
+          message: 'react flow nodes are unavailable'
+        }
+      }
     } catch(err){
       throw err;
     }
