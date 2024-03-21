@@ -1,14 +1,17 @@
 
 import { useDashboard } from "@/context/dashboardContext";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import NotificationDialog from "./notification-card-popup";
+import RelationDialog from "./relation-card-popup";
 
 
 
 const DashboardCards: React.FC = () => {
 
-    const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
-    const [seconds, setSeconds] = useState(Number(localStorage.getItem("time difference")) || 0)
-    const { machineStateValue, entityIdValue, setMachineStateValue } = useDashboard();
+    const [timer, setTimer] = useState(0);
+    const { machineStateValue, entityIdValue, setMachineStateValue,selectedAssetData } = useDashboard();
+    const [notification, setNotification] = useState(false);
+    const [relations, setRelations] = useState(false);
 
 
     useEffect(() => {
@@ -55,6 +58,20 @@ const DashboardCards: React.FC = () => {
     }
 
 
+    console.log(relations, "what's the boolean value");
+
+    const hasPropertiesArray = [];
+    for (const key in selectedAssetData) {
+        if (key.startsWith("has")) {
+            const propertyName = key.substring(3); // Remove the "has" prefix
+            const propertyValue = selectedAssetData[key];
+            hasPropertiesArray.push({ [propertyName]: propertyValue });
+        }
+    }
+    
+    console.log("has property array",hasPropertiesArray);
+    
+
     return (
         <>
             <div className="grid p-4 dashboard-card-container" style={{ zoom: "80%" }}>
@@ -93,13 +110,13 @@ const DashboardCards: React.FC = () => {
                         <span className="text-500">since last week</span>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card">
-                    <div className="card mb-0 ">
+                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" >
+                    <div className="card mb-0 " onClick={() => setRelations(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">024</div>
+                                    <div className=" m-0 text-900 font-medium text-xl">{hasPropertiesArray.length}</div>
                                     <span className="relation-text font-medium">child objects</span>
                                 </div>
                             </div>
@@ -110,9 +127,15 @@ const DashboardCards: React.FC = () => {
                         <span className="text-green-500 font-medium">520 </span>
                         <span className="text-500">newly registered</span>
                     </div>
+                    {relations &&
+                        <RelationDialog
+                            relationsProp={relations}
+                            setRelationsProp={setRelations}
+                        />
+                    }
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 0 dashboard-card">
-                    <div className="card mb-0">
+                    <div className="card mb-0"   onClick={() => setNotification(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Notifications</span>
@@ -126,8 +149,16 @@ const DashboardCards: React.FC = () => {
                         <span className="text-500">responded</span>
 
                     </div>
+                    {notification &&
+                        <NotificationDialog
+                            notificationProp={notification}
+                            setNotificationProp={setNotification}
+                        />
+                    }
                 </div>
             </div>
+
+
         </>
     )
 }

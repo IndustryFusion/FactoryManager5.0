@@ -25,7 +25,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const router = useRouter();
 
-  const { entityIdValue, setEntityIdValue, machineStateValue, setMachineStateValue } = useDashboard();
+  const { entityIdValue, setEntityIdValue, machineStateValue,
+     setMachineStateValue ,selectedAssetData, setSelectedAssetData} = useDashboard();
 
   const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
@@ -51,14 +52,14 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       const response = await fetchAsset();
       if (response !== undefined) {
 
-        const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
-        // console.log(response[0] ,"allassets");
+        // const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
+        // // console.log(response[0] ,"allassets");
         // console.log(filteredAssets[0], "filtered asets");
 
         setAssetData(response);
         // console.log(response, "allresponse");
 
-        setEntityIdValue(filteredAssets[0]);
+        // setEntityIdValue(response?.id);
       } else {
         console.error("Fetch returned undefined");
       }
@@ -85,12 +86,17 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
     setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
-    console.log(prefixedKeys, "what's here");
-    console.log(prefixedKeys.length, "the length of prefix");
+    setEntityIdValue(selectedAsset?.id);
+    console.log(selectedAsset, "what's the asset here");
+    setSelectedAssetData(selectedAsset)
+    // console.log(prefixedKeys, "what's here");
+    // console.log(prefixedKeys.length, "the length of prefix");
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
-      setEntityIdValue(selectedAsset?.id)
+      setEntityIdValue(selectedAsset?.id);
+      setSelectedAssetData(selectedAsset)
+
     } else {
       setShowBlocker(true);
     }
