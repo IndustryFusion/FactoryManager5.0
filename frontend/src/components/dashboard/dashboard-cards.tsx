@@ -8,16 +8,18 @@ import RelationDialog from "./relation-card-popup";
 
 const DashboardCards: React.FC = () => {
 
-    const [timer, setTimer] = useState(0);
-    const { machineStateValue, entityIdValue, setMachineStateValue,selectedAssetData } = useDashboard();
+    const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
+    const [seconds, setSeconds] = useState(Number(localStorage.getItem("time difference")) || 0)
+    const { machineStateValue, entityIdValue, setMachineStateValue, selectedAssetData  } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
-
+        
+    const hasPropertiesArray = [];
 
     useEffect(() => {
         const runningSince = () => {
 
-            const assetOnlineTime = convertToSeconds("10:08:53 ");
+            const assetOnlineTime = convertToSeconds("15:08:53 ");
             const currentTimeString = convertToSeconds(new Date().toTimeString().slice(0, 8)); // today  currenttime                      
             const difference = Math.abs(assetOnlineTime - currentTimeString);
             const differenceTimeValue = convertSecondsToTime(difference);
@@ -40,6 +42,15 @@ const DashboardCards: React.FC = () => {
             setTimer("00:00:00")
         }
 
+
+    for (const key in selectedAssetData) {
+        if (key.startsWith("has")) {
+            const propertyName = key.substring(3); // Remove the "has" prefix
+            const propertyValue = selectedAssetData[key];
+            hasPropertiesArray.push({ [propertyName]: propertyValue });
+        }
+    }
+
         return () => clearInterval(intervalId);
 
     }, [machineStateValue, entityIdValue, seconds])
@@ -58,18 +69,10 @@ const DashboardCards: React.FC = () => {
     }
 
 
-    console.log(relations, "what's the boolean value");
+    // console.log(relations, "what's the boolean value");
 
-    const hasPropertiesArray = [];
-    for (const key in selectedAssetData) {
-        if (key.startsWith("has")) {
-            const propertyName = key.substring(3); // Remove the "has" prefix
-            const propertyValue = selectedAssetData[key];
-            hasPropertiesArray.push({ [propertyName]: propertyValue });
-        }
-    }
     
-    console.log("has property array",hasPropertiesArray);
+    // console.log("has property array",hasPropertiesArray);
     
 
     return (

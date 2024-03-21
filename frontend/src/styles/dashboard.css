@@ -51,15 +51,18 @@
 .dashboard-card {
     width: 450px;
 }
-.finish-btn{
+
+.finish-btn {
     display: flex;
     justify-content: flex-end;
 }
+
 .p-dialog .p-dialog-header {
     border-bottom: none;
     padding: 0.5rem;
 }
-.blocker{
+
+.blocker {
     position: fixed;
     width: 100%;
     height: 100%;
@@ -68,46 +71,61 @@
     z-index: 9999;
     background-color: rgb(12 11 11 / 74%);
 }
-.blocker-card{
+
+.blocker-card {
     margin: 0 auto;
     width: 35%;
     margin-top: 9rem;
 }
-.loading-spinner{
+
+.loading-spinner {
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
 .dialog-content {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    height: 100%; /* Adjust based on your needs */
-   }
+    height: 100%;
+    /* Adjust based on your needs */
+}
+
 .dialog-content-top {
     justify-content: flex-start;
- }
- .p-dialog .p-dialog-header .p-dialog-title {
+}
+
+.p-dialog .p-dialog-header .p-dialog-title {
     font-weight: 600;
     font-size: 1rem;
-} 
+}
 
-@media screen and (min-width: 1550px){
+.p-datatable .p-datatable-tbody>tr.p-highlight {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+@media screen and (min-width: 1550px) {
+
     .chart-content,
-    .assets-content{
+    .assets-content {
         width: 34.4%
     }
+
     .dashboard-card {
         width: 500px;
     }
+
     .dashboard-card-container {
         gap: 6rem;
-    }  
+    }
 }
 
-@media (min-width: 1200px) and (max-width: 1550px){
-.chart-content,
-.assets-content{
-    width: 43.4%
-}
+@media (min-width: 1200px) and (max-width: 1550px) {
+
+    .chart-content,
+    .assets-content {
+        width: 43.4%
+    }
 }

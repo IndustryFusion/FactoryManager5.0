@@ -108,7 +108,7 @@ const DashboardChart = () => {
 
     }
     const fetchAssets = async (assetId: string) => {
-        console.log(assetId, "getting assetId")
+        // console.log(assetId, "getting assetId")
         try {
             const attributeIds: string[] = [];
             const response = await axios.get(API_URL + `/asset/${assetId}`, {
@@ -182,8 +182,8 @@ const DashboardChart = () => {
         }, {});
 
     
-        console.log(dataset, "what's the dataset here");
-        console.log(groupedByDate, "what's this here in groupedbydate");
+        // console.log(dataset, "what's the dataset here");
+        // console.log(groupedByDate, "what's this here in groupedbydate");
         // console.log("convert to array", Object.entries(groupedByDate));
 
         const labels = Object.keys(groupedByDate);
@@ -196,15 +196,15 @@ const DashboardChart = () => {
       
         const datasets = uniqueTypes.map(type => {
             const dataValue = labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
-            console.log(dataValue, "what's this here dataValue");
-            console.log(labels, "what's in the labels");
+            // console.log(dataValue, "what's this here dataValue");
+            // console.log(labels, "what's in the labels");
             return {
                 label: type.charAt(0).toUpperCase() + type.slice(1),
                 backgroundColor: type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
                 data: labels.flatMap(date => groupedByDate[date].filter(item => item.type === type).map(item => item.time))
             };
         });
-                console.log(datasets, "what's in this datsets");
+                // console.log(datasets, "what's in this datsets");
 
         return {
             labels,

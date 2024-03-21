@@ -57,6 +57,8 @@ const CombineSensorChart: React.FC = () => {
   const router = useRouter();
   const {entityIdValue, setEntityIdValue} = useDashboard();
 
+  console.log("first row entityIdValue", entityIdValue);
+  
   const intervalButtons = [
     { label: "1 Min", interval: 1 },
     { label: "3 Min", interval: 3 },
@@ -253,6 +255,9 @@ const CombineSensorChart: React.FC = () => {
             chartData.datasets.push(newDataset);
           }
         }
+
+        console.log("sensor chartData",chartData);
+        
 
         // console.log("Final Chart Data:", chartData); // Log final chart data
         setChartData(chartData);

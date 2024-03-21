@@ -42,7 +42,7 @@ const PowerCo2Chart = () => {
               },
               withCredentials: true,
             });
-            // console.log('response ',response);
+            console.log('response of powerconsumption chart ',response);
             return response.data;
            
         } catch (error) {

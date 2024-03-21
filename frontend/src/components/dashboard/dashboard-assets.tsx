@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Asset } from "@/interfaces/assetTypes";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
@@ -22,11 +23,13 @@ interface DashboardAssetsProps {
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
-  const [selectedRowAsset, setSelectedRowAsset] = useState({})
+  const [selectedRow, setSelectedRow] = useState({});
+  const [assetFlag, setAssetFlag] = useState(false)
   const router = useRouter();
+  const dataTableRef = useRef(null);
 
   const { entityIdValue, setEntityIdValue, machineStateValue,
-     setMachineStateValue ,selectedAssetData, setSelectedAssetData} = useDashboard();
+    setMachineStateValue, selectedAssetData, setSelectedAssetData } = useDashboard();
 
   const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
@@ -51,23 +54,18 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
-
-        // const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
-        // // console.log(response[0] ,"allassets");
-        // console.log(filteredAssets[0], "filtered asets");
-
         setAssetData(response);
         // console.log(response, "allresponse");
-
-        // setEntityIdValue(response?.id);
+        setAssetFlag(true);
       } else {
         console.error("Fetch returned undefined");
       }
-
     } catch (error) {
       console.error(error)
     }
   }
+
+
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -75,16 +73,26 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       if (router.isReady) {
         const { } = router.query;
         handleAsset();
+        if (dataTableRef.current) {
+          if (assetData?.length > 0 && assetFlag) {
+            // console.log("is coming here");
+            // console.log("first object value", newRowData[0]);
+            setSelectedRow(assetData[0]);
+            setEntityIdValue(assetData[0].id);
+          }
+        }
       }
     }
-  }, [router.isReady])
+  }, [router.isReady, assetFlag])
+
+
 
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
-    setSelectedRowAsset(selectedAsset)
+    setSelectedRow(selectedAsset);
     setPrefixedAssetPropertyProp(prefixedKeys);
     setEntityIdValue(selectedAsset?.id);
     console.log(selectedAsset, "what's the asset here");
@@ -106,12 +114,17 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   };
 
+  console.log("selectedRow value here", selectedRow);
+  // console.log("entityIdValue of selected asset", entityIdValue );
+
+
   return (
     <div style={{ zoom: "80%" }}>
       <div className="dashboard-assets" style={{ width: "100%" }}>
         <div className="card h-auto " style={{ width: "100%" }}>
           <h5 className="heading-text">Assets</h5>
           <DataTable
+            ref={dataTableRef}
             rows={5}
             paginator
             value={assetData}
@@ -119,6 +132,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             scrollable={true}
             scrollHeight="750px"
             onRowClick={(e) => handleClick(e.data as Asset)}
+            selectionMode="single"
+            selection={selectedRow}
+            onSelectionChange={(e) => setSelectedRow(e.value)}
+
           >
             <Column
               header="Product Image"
@@ -151,7 +168,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         <OnboardForm
           showBlockerProp={showBlocker}
           setShowBlockerProp={setShowBlocker}
-          asset={selectedRowAsset}
+          asset={selectedAssetData}
           setBlocker={setBlockerProp}
         />
       }

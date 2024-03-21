@@ -33,6 +33,7 @@ const Dashboard = () => {
   const router = useRouter();
   const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false });
 
+
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(ALERTA_URL + "/alerts", {
@@ -56,44 +57,42 @@ const Dashboard = () => {
       if (router.isReady) {
         const { } = router.query;
         fetchNotifications();
+        let timerId:any;
+   
+        // Start the timer if blocker is true and runTimer is false
+        if (blocker && !runTimer) {
+           setRunTimer(true);
+           setCountDown(60 * 5); // Set countdown to 5 minutes
+        }
+       
+        // Manage the countdown timer
+        if (runTimer) {
+           timerId = setInterval(() => {
+             setCountDown((countDown) => countDown - 1);
+           }, 1000);
+        } else {
+           clearInterval(timerId);
+        }
+       
+        // Handle countdown expiration
+        if (countDown === 0 && runTimer) {
+           console.log("expired");
+           setRunTimer(false);
+           setCountDown(0);
+           setBlocker(false);
+        }
+      //   if (prefixedAssetProperty.length === 0) {
+      //     setBlocker(true);
+      //     setRunTimer(true);
+      //     setCountDown(60 * 5); // Reset countdown to 5 minutes
+      //  }
+       
+        // Cleanup function to clear the interval
+        return () => clearInterval(timerId);
       }   
     }   
-  }, [router.isReady])
+  }, [router.isReady, blocker, runTimer, countDown, prefixedAssetProperty.length])
 
-  useEffect(() => {
-    let timerId:any;
-   
-    // Start the timer if blocker is true and runTimer is false
-    if (blocker && !runTimer) {
-       setRunTimer(true);
-       setCountDown(60 * 5); // Set countdown to 5 minutes
-    }
-   
-    // Manage the countdown timer
-    if (runTimer) {
-       timerId = setInterval(() => {
-         setCountDown((countDown) => countDown - 1);
-       }, 1000);
-    } else {
-       clearInterval(timerId);
-    }
-   
-    // Handle countdown expiration
-    if (countDown === 0 && runTimer) {
-       console.log("expired");
-       setRunTimer(false);
-       setCountDown(0);
-       setBlocker(false);
-    }
-  //   if (prefixedAssetProperty.length === 0) {
-  //     setBlocker(true);
-  //     setRunTimer(true);
-  //     setCountDown(60 * 5); // Reset countdown to 5 minutes
-  //  }
-   
-    // Cleanup function to clear the interval
-    return () => clearInterval(timerId);
-   }, [blocker, runTimer, countDown, prefixedAssetProperty.length]);
 
 console.log(prefixedAssetProperty , "prefix value here");
 
