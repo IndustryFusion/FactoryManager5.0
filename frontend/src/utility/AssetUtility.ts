@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Asset } from "@/interfaces/assetTypes";
+import { Asset } from "@/interfaces/AssetTypes";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 

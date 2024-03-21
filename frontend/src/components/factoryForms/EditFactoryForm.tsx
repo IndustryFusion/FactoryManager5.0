@@ -2,14 +2,14 @@ import React, { useState, useEffect, ChangeEvent, FormEvent, useRef, useMemo } f
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
-import { Factory } from "@/interfaces/factoryType";
-import { handleUpload, updateFactory } from "@/utility/factory-site-utility";
+import { Factory } from "@/interfaces/FactoryType";
+import { handleUpload, updateFactory } from "@/utility/FactorySiteUtility";
 import { Button } from "primereact/button";
-import { transformDataForBackend } from "@/utility/factory-site-utility";
+import { transformDataForBackend } from "@/utility/FactorySiteUtility";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Card } from "primereact/card";
-import "../../styles/factory-form.css";
+import "../../styles/FactoryForm.css";
 import Select from "react-select";
 import {
     faBuilding,
@@ -18,8 +18,8 @@ import {
     faMapMarkedAlt,
     faBoxOpen,
 } from "@fortawesome/free-solid-svg-icons";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
-import Thumbnail from "@/components/thumbnail";
+import { Property, Schema } from "../../pages/factory-site/types/FactoryForm";
+import Thumbnail from "@/components/Thumbnail";
 import { Toast } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'

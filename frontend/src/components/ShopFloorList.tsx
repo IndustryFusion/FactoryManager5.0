@@ -3,16 +3,16 @@ import {
   getShopFloors,
   getshopFloorById,
   deleteShopFloorById,
-} from "@/utility/factory-site-utility";
-import { ShopFloor } from "../pages/factory-site/types/shop-floor";
+} from "@/utility/FactorySiteUtility";
+import { ShopFloor } from "../pages/factory-site/types/ShopFloor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
-import EditShopFloor from "./shopFloorForms/edit-shopFloor-form";
+import EditShopFloor from "./shopFloorForms/EditShopFloorForm";
 
 import { Toast } from "primereact/toast";
-import CreateShopFloor from "./shopFloorForms/create-shopFloor-form";
+import CreateShopFloor from "./shopFloorForms/CreateShopFloorForm";
 import { InputText } from "primereact/inputtext";
 interface ShopfloorListProps {
   factoryId: string;
@@ -22,7 +22,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
 }) => {
-  const [shopFloors, setShopFloors] = useState<any[]>([]);
+  const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,52 +33,81 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [editShopFloor, setEditShopFloor] = useState<string | undefined>("");
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
-  const toast = useRef<any>(null);
-  const [filteredShopFloors, setFilteredShopFloors] = useState<any[]>([]);
+  const toast = useRef<Toast>(null);
+  const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
-  useEffect(() => {
-    // Update filteredShopFloors every time shopFloors or searchValue changes
-    const filteredFloors = shopFloors.filter((floor) =>
-      floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    setFilteredShopFloors(filteredFloors);
-  }, [shopFloors, searchValue]);
+  const [isTyped, setIsTyped] = useState(false);
 
-  useEffect(() => {
-    const fetchShopFloors = async (factoryId: any) => {
+
+useEffect(() => {
+  
+  const filterShopFloors = () => {
+    if (searchValue.trim()) {
+      const filteredFloors = shopFloors.filter((floor) =>
+        floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredShopFloors(filteredFloors);
+    } else {
+    
+      setFilteredShopFloors(shopFloors);
+    }
+  };
+
+  filterShopFloors();
+}, [searchValue, shopFloors]);
+
+const fetchShopFloors = async (factoryId: string) => {
+    
       try {
+        
         const factoryDetails = await getshopFloorById(factoryId);
-
-        console.log(factoryDetails, "The list ");
         setShopFloors(
-          factoryDetails.map((floor: any) => ({
+          factoryDetails.map((floor:ShopFloor) => ({
             id: floor.id,
             floorName:
               floor["http://www.industry-fusion.org/schema#floor_name"].value,
           }))
         );
 
-        setLoading(false);
-      } catch (error: any) {
+     
+      } catch (error) {
+
+       if (error instanceof Error) {
         console.error("Failed to fetch shop floors:", error);
-        setError(error.message || "An error occurred");
-        setLoading(false);
+        setError(error.message);
+      } else {
+        console.error("Failed to fetch shop floors:", error);
+        setError("An error occurred");
       }
+       
+      }
+     
     };
+
+
+  useEffect(() => {
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { factoryId } = router.query;
+    } 
+    else {
+     if (router.isReady) {
+      const factoryId = router.query.factoryId;
+      if (typeof factoryId === 'string') {
         fetchShopFloors(factoryId);
+      } else {
+        console.error("factoryId is not a string or is undefined.");
       }
     }
-  }, [factoryId, router.isReady, isVisible, isEdit]);
+    }
+   
+
+  }, [factoryId, isVisible, isEdit]);
 
   async function handleDelete() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for deletion");
-      toast.current.show({
+      toast.current?.show({
         severity: "warn",
         summary: "Warning",
         detail: "No shop floor selected for deletion",
@@ -87,7 +116,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     }
 
     try {
-      const response = await deleteShopFloorById(
+       await deleteShopFloorById(
         selectedShopFloorId,
         factoryId
       );
@@ -95,7 +124,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
       );
 
-      toast.current.show({
+      toast.current?.show({
         severity: "success",
         summary: "Success",
         detail: "Shop floor deleted successfully",
@@ -103,7 +132,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       onShopFloorDeleted(selectedShopFloorId);
     } catch (error) {
       console.error("Error deleting shop floor:", error);
-      toast.current.show({
+      toast.current?.show({
         severity: "error",
         summary: "Error",
         detail: "Failed to delete shop floor",
@@ -114,7 +143,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   function handleEdit() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for editing");
-      toast.current.show({
+      toast.current?.show({
         severity: "warn",
         summary: "Warning",
         detail: "No shop floor selected for editing",
@@ -126,14 +155,15 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     setIsEdit(true);
   }
 
-  function handleDragStart(event: React.DragEvent, item: any, type: string) {
+  function handleDragStart(event: React.DragEvent, item: {}, type: string) {
+
+    console.log(item, "item")
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
   }
 
-  console.log("the shop floor data", shopFloors);
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (

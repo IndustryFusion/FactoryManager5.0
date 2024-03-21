@@ -291,7 +291,8 @@ export class ShopFloorService {
               if (key.includes('has')){
                 updateData[key] = {
                   type: 'Relationship',
-                  object: ''
+                  object: '',
+                  class: assetData[key].class
                 }
               }
             }
@@ -381,7 +382,8 @@ export class ShopFloorService {
           if (key.includes('has')) {
             assetData[key] = {
               type: 'Relationship',
-              object: ""
+              object: "",
+              class: assetData[key].class
             }
           }
         }
