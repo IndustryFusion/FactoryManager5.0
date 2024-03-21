@@ -304,42 +304,40 @@ export class ShopFloorService {
             }
           }
         }
-        if(node[i].source.includes('asset') && node[i].target.split('_')[4]){
+        if(node[i].source.includes('asset') && !node[i].source.includes('relation')){
           let key = id.split('_')[1];
-          let relationKey = node[i].metadata.split('_')[1];
-          let relationData = node[i].metadata.split('_')[4];
           assetObj[key] = assetObj[key] ? assetObj[key] : {};
-          if(assetObj[key][relationKey]){
-            let relationArr = assetObj[key][relationKey];
-            assetObj[key][relationKey] = [...relationArr, relationData]
-          } else {
-            assetObj[key][relationKey] = [ relationData ];
+          assetObj[key][node[i].target.split('_')[1]] = assetObj[key][node[i].target.split('_')[1]] ? assetObj[key][node[i].target.split('_')[1]] : [];
+          for(let j = i+1; j < node.length; j++) {
+            if(node[j].source === node[i].target){
+              assetObj[key][node[i].target.split('_')[1]].push(node[j].target.split('_')[1]);
+            }
           }
         }
       }
       console.log('shopFloorobj ',shopFloorobj);
       console.log('assetObj ',assetObj);
-      if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
-        let response = await this.updateAssets(shopFloorobj, token);
-        if(response.success){
-          let assetResponse = await this.assetService.updateRelations(assetObj, token);
-          return assetResponse;
-        } 
-      } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
-        if(Object.keys(shopFloorobj).length){
-          let response = await this.updateAssets(shopFloorobj, token);
-          return response;
-        } else {
-          let response = await this.assetService.updateRelations(assetObj, token);
-          return response;
-        }
-      } else {
-        return {
-          success: false,
-          status: 500,
-          message: 'react flow nodes are unavailable'
-        }
-      }
+      // if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
+      //   let response = await this.updateAssets(shopFloorobj, token);
+      //   if(response.success){
+      //     let assetResponse = await this.assetService.updateRelations(assetObj, token);
+      //     return assetResponse;
+      //   } 
+      // } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
+      //   if(Object.keys(shopFloorobj).length){
+      //     let response = await this.updateAssets(shopFloorobj, token);
+      //     return response;
+      //   } else {
+      //     let response = await this.assetService.updateRelations(assetObj, token);
+      //     return response;
+      //   }
+      // } else {
+      //   return {
+      //     success: false,
+      //     status: 500,
+      //     message: 'react flow nodes are unavailable'
+      //   }
+      // }
     } catch(err){
       throw err;
     }
