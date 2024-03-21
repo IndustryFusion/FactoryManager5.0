@@ -91,6 +91,9 @@
     font-weight: 600;
     font-size: 1rem;
 } 
+textarea{
+    resize: none;
+}
 
 @media screen and (min-width: 1550px){
     .chart-content,
