@@ -10,9 +10,17 @@ export class ValueChangeStateService {
         Authorization: 'Bearer ' + token
       };
       const queryString = Object.keys(queryParams)
-            .map(key => key + '=' + queryParams[key])
+            .map(key => {
+                if(key.includes('_')){
+                  let actualKey = key.split('_')[0];
+                  let filter = key.split('_')[1];
+                  return actualKey + '=' + `${filter}.${queryParams[key]}` 
+                } else {
+                  return key + '=' + queryParams[key] 
+                }
+              })
             .join('&').replace('#','%23');
-
+      console.log('queryString ',queryString);
       const url = 'https://development.industry-fusion.com/pgrest/value_change_state_entries'+ '?' + queryString;
       console.log('url ',url);
       const response = await axios.get(url, {headers});

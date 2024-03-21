@@ -14,9 +14,9 @@ import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
-// import { fetchAsset } from "@/utility/AssetUtility";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
+import { Toast, ToastMessage } from "primereact/toast";
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -29,9 +29,8 @@ const Dashboard = () => {
   const [countDown, setCountDown] = useState(0);
   const [runTimer, setRunTimer] = useState(false);
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
-
   const router = useRouter();
-
+  const toast = useRef<any>(null);
 
 
   const fetchNotifications = async () => {
@@ -49,7 +48,10 @@ const Dashboard = () => {
     }
   }
   
- 
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
+  };
+
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -57,17 +59,14 @@ const Dashboard = () => {
       if (router.isReady) {
         const { } = router.query;
         fetchNotifications();
-      }   
-    }   
-  }, [router.isReady])
-
-  useEffect(() => {
-    let timerId;
+        let timerId:any;
    
     // Start the timer if blocker is true and runTimer is false
     if (blocker && !runTimer) {
        setRunTimer(true);
-       setCountDown(60 * 5); // Set countdown to 5 minutes
+       setCountDown(60 * 5); 
+       showToast('success', "Success", "Added To GitHub Successfully")
+       // Set countdown to 5 minutes
     }
    
     // Manage the countdown timer
@@ -94,17 +93,18 @@ const Dashboard = () => {
    
     // Cleanup function to clear the interval
     return () => clearInterval(timerId);
-   }, [blocker, runTimer, countDown, prefixedAssetProperty.length]);
+      }   
+    }   
+  }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length, layoutConfig ])
 
-console.log(prefixedAssetProperty , "prefix value here");
-
-
+   console.log(prefixedAssetProperty , "prefix value here");
 
   return (
     <>
     <DashboardProvider>
       {blocker && 
       <div className="blocker">
+        <Toast ref={toast} />
         <div className="card blocker-card">
           <p>Restart the Machine to finish onboarding</p>
           <div className="loading-spinner">
@@ -148,7 +148,7 @@ console.log(prefixedAssetProperty , "prefix value here");
           <DashboardChart/>
           </div>     
       </div>
-      </DashboardProvider>
+    </DashboardProvider>
     </>
   )
 }
