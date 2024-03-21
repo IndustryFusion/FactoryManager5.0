@@ -1,18 +1,17 @@
 
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import axios from "axios";
 import { Dialog } from "primereact/dialog";
-import { useForm } from "react-hook-form";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { InputNumber } from "primereact/inputnumber";
 import { Password } from "primereact/password";
-import { useDashboard } from "@/context/dashboardContext";
-import { ScrollPanel } from "primereact/scrollpanel";
 import { Checkbox } from "primereact/checkbox";
-import "../../styles/dashboard.css"
-import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
+import "../../styles/dashboard.css"
+
+
 
 interface OnboardFormProps {
     showBlockerProp: boolean;
@@ -24,13 +23,16 @@ interface OnboardFormProps {
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlockerProp, asset, setBlocker }) => {
+
+    const podName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "no pod_name" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
+    const assetProtocol = asset?.asset_communication_protocol === undefined ? "no protocol" : asset?.asset_communication_protocol;
     const [onboardForm, setOnboardForm] = useState(
         {
             ip_address: "",
             main_topic: "",
-            protocol: asset?.asset_communication_protocol,
+            protocol: assetProtocol,
             app_config: "",
-            pod_name: `${asset?.product_name}-${asset?.asset_communication_protocol}`,
+            pod_name: podName,
             pdt_mqtt_hostname: "",
             pdt_mqtt_port: 0,
             secure_config: false,
@@ -48,8 +50,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
     const toast = useRef<any>(null);
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
-      };
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    };
 
     const handleInputChange = (value: any, key: any) => {
         if (key === "pdt_mqtt_port") {
@@ -62,63 +64,62 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
     const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
         setOnboardForm({ ...onboardForm, [key]: e.target.value })
     }
-
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         console.log(onboardForm, "all values");
-        const payload= JSON.stringify(onboardForm);
+        const payload = JSON.stringify(onboardForm);
 
-        try{
-        const response = await axios.post(API_URL + "/onboarding-asset", payload, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            withCredentials: true, 
-        })
-        console.log("Response from server: onboarding", response.data);
-           const {success, status, message} = response.data;
-           if(status === 201 && success === true){
-            showToast(success, "success", message)
-           }
-
-        }catch (error: any) {
-            console.log(error, "what's the error");
-            // showError("Please fill all required fields");
-            if (error.response.status === 404) {
-                // showError("Error saving factory");
+        try {
+            const response = await axios.post(API_URL + "/onboarding-asset", payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log("Response from server: onboarding", response.data);
+            const { success, status, message } = response.data;
+            if (status === 201 && success === true) {
+                setShowBlockerProp(false);
+                setBlocker(true);
             }
-        } 
 
+        } catch (error: any) {
+            console.log("onboardform error", error);
+            if (error.response.status === 404) {
+                showToast('error', "Error", "Error saving onboard form")
+            }
+            else if (error.response.status === 500) {
+                showToast('error', "Error", "Internal Server Error")
+            }
+        }
         console.log(payload, "all values in JSON format");
-        setShowBlockerProp(false);
-        setBlocker(true);
+
     }
 
-    const headerElement =(
+    const headerElement = (
         <p className="m-0"> Please onboard the asset gateway before moving to dashboard. After onboarding click on 'submit' button </p>
     )
-    const footerContent=(
+    const footerContent = (
         <div>
-        <div className="finish-btn">
-            <Button
-               onClick={handleSubmit}
-                label="Submit" autoFocus />
+            <div className="finish-btn">
+                <Button
+                    onClick={handleSubmit}
+                    label="Submit" autoFocus />
+            </div>
         </div>
-    </div>
     )
-    
+
     return (
         <>
-       <div className="card flex justify-content-center">
-       <Toast ref={toast} />
-            <Dialog visible={showBlockerProp} modal
-                   header={headerElement}
-                   footer={footerContent}
+            <div className="card flex justify-content-center">
+                <Toast ref={toast} />
+                <Dialog visible={showBlockerProp} modal
+                    header={headerElement}
+                    footer={footerContent}
                     style={{ width: '40rem' }} onHide={() => setShowBlockerProp(false)}
                     draggable={false} resizable={false}
                 >
-           
                     <form >
                         <div className="p-fluid p-formgrid p-grid px-3">
                             <div className="field">
@@ -157,7 +158,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                                     rows={10}
                                     cols={30}
                                     onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-                                    
+
                                 />
                             </div>
                             <div className="field">
@@ -191,19 +192,13 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                             </div>
                             <div className="field my-4">
                                 <div className="flex gap-2">
-                                <Checkbox 
-                                checked={onboardForm.secure_config}
-                                onChange={(e) => handleInputChange(e.target.checked, "secure_config")}
-                                /> 
-                                <label htmlFor="secure_config">Secure Config</label>
+                                    <label htmlFor="secure_config">Secure Config</label>
+                                    <Checkbox
+                                        checked={onboardForm.secure_config}
+                                        onChange={(e) => handleInputChange(e.target.checked, "secure_config")}
+                                    />
+                                    <span >{onboardForm.secure_config ? "true" : "false"}</span>
                                 </div>
-                                
-                                {/* <InputText
-                                    id="secure_config"
-                                    value={onboardForm.secure_config}
-                                    placeholder="true"
-                                    onChange={(e) => handleInputChange(e.target.value, "secure_config")}
-                                /> */}
                             </div>
                             <div className="field">
                                 <label htmlFor="device_id">Device Id</label>
@@ -272,9 +267,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
                             </div>
 
                         </div>
-                    </form>             
-            </Dialog>
-        </div >
+                    </form>
+                </Dialog>
+            </div>
         </>
     )
 }
