@@ -297,23 +297,28 @@ const menuItems = [
         >
           Allocated Asset
         </h3>
-
-          <div className="p-input-icon-left">
+           <div className="flex">
+            <div className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
             value={searchTermAllocated}
             onChange={(e) => setSearchTermAllocated(e.target.value)}
             placeholder="Search by name..."
           />
-        <Button
-            icon="pi pi-filter-fill"
-            onClick={(e) => allocatedMenu.current.toggle(e)}
-            aria-haspopup
-            className="filter-button"
-           style={{ color: "grey", fontSize: "1.2em" }}
-          />
+           </div>
+          <div> 
+            <Button
+              icon="pi pi-filter-fill"
+              onClick={(e) => allocatedMenu.current.toggle(e)}
+              aria-haspopup
+              className="filter-button"
+              style={{ color: "grey", fontSize: "1.2em" }}
+            />
 
-          <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"5%"}} />
+            <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"1"}} />
+          
+          </div>
+       
         </div>
        <ul>
           {filteredAllocatedAssets.map((asset, index) => (
