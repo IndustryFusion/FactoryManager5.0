@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { getAlerts } from "./alertService";
+import { getAlerts } from "./AlertService";
 import axios from "axios";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
-import AlertDetails from "./alertDetails";
+import AlertDetails from "./AlertDetails";
 
 interface Alerts {
   text: string;

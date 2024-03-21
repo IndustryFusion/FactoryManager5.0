@@ -1,8 +1,10 @@
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { ChartData, ChartOptions } from 'chart.js';
+import type { ChartOptionsState } from '../../pages/factory-site/types/Layout';
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/assetTypes";
+import { Asset } from "@/interfaces/AssetTypes";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chart-utility";
