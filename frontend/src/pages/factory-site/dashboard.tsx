@@ -1,11 +1,11 @@
 
 
 
-import { useContext, useEffect, useRef, useState } from "react";
-import { LayoutContext } from './layout/layoutcontext';
+import { useContext, useEffect, useState,useRef } from "react";
+import { LayoutContext } from './layout/LayoutContext';
 import axios from "axios";
 import DashboardAssets from "@/components/dashboard/dashboard-assets";
-import HorizontalNavbar from "@/components/horizontal-navbar";
+import HorizontalNavbar from "@/components/HorizontalNavbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
