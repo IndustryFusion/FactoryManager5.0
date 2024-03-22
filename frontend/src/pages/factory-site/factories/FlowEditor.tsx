@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback,MouseEvent  } from "react";
 import { useRouter } from "next/router";
 import { useHotkeys } from "react-hotkeys-hook"; // Import the hook for handling keyboard shortcuts
 import ReactFlow, {
@@ -11,6 +11,8 @@ import ReactFlow, {
   useEdgesState,
   OnSelectionChangeParams,
   Node,
+  ReactFlowInstance,
+  Connection,NodeMouseHandler 
 } from "reactflow";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -21,53 +23,57 @@ import { Toast } from "primereact/toast";
 import {
   fetchAndDetermineSaveState,
   exportElementToJPEG,
-  getShopFloorAndAssetData,
-  extractHasRelations,
   fetchAssetById,
-} from "@/utility/factory-site-utility";
-
+} from "@/utility/FactorySiteUtility";
+import { Factory } from "@/interfaces/FactoryType";
 import EdgeAddContext from "@/context/EdgeAddContext";
-import { RelationsModal } from "@/components/reactFlowRelationModal";
-import CustomAssetNode from "@/components/customAssetNode";
-import { useShopFloor } from "@/context/shopFloorContext";
+import { RelationsModal } from "@/components/ReactFlowRelationModal";
+import CustomAssetNode from "@/components/CustomAssetNode";
+import { useShopFloor } from "@/context/ShopFloorContext";
+import ShopFloorList from "@/components/ShopFloorList";
 interface FlowEditorProps {
-  factory: any;
+  factory: Factory;
   factoryId: string;
 }
 
-interface EdgeParams {
-  source: string;
-  target: string;
-}
-
-interface AssetRelations {
-  [parentId: string]: {
-    [relationType: string]: string[];
-  };
-}
-
-interface ShopFloorAssets {
-  [shopFloorId: string]: string[];
-}
 
 interface RelationCounts {
   [key: string]: number;
 }
 
-interface FactoryRelationships {
-  hasShopFloor: {
-    object: string[];
-  };
+interface ExtendedNodeData {
+  label: string;
+  id: string;
 }
 
+interface ExtendedNode extends Node<ExtendedNodeData> {
+  width: number;
+  height: number;
+  selected: boolean;
+  dragging: boolean;
+  positionAbsolute: {
+    x: number;
+    y: number;
+  };
+  data:{
+    type:string,
+    label:string,
+    id:string,
+    parentId?:string
+  },
+  class:string
+  asset_category?:string
+
+}
 interface FactoryNodeData {
-  label: any;
-  type: any;
+  label?: string;
+  type: string;
   undeletable?: boolean;
 }
 const nodeTypes = {
   asset: CustomAssetNode,
 };
+
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
@@ -75,39 +81,37 @@ const FlowEditor: React.FC<
 > = ({ factory, factoryId, deletedShopFloors }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedElements, setSelectedElements] = useState<any | null>(null);
-  const [factoryRelationships, setFactoryRelationships] = useState<any>({});
+  const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
+  const [factoryRelationships, setFactoryRelationships] = useState<object>({});
   const onSelectionChange = useCallback(
     (params: OnSelectionChangeParams | null) => {
       setSelectedElements(params);
     },
     []
-  );
+  ); 
   const [nodeUpdateTracker, setNodeUpdateTracker] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toast = useRef<any>(null);
-  const [droppedShopFloors, setDroppedShopFloors] = useState<any[]>([]);
+  const toast = useRef<Toast>(null);
+  const [droppedShopFloors, setDroppedShopFloors] = useState<object[]>([]);
   const [assetRelations, setAssetRelations] = useState({});
   const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance  | null>(null);
   const [shopFloorAssets, setShopFloorAssets] = useState({});
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const elementRef = useRef(null);
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-
+  const [loadedFlowEditor , serLoadedFlowEditor] = useState(false)  ;
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
   );
-
-  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
-  const [selectedNodeData, setSelectedNodeData] = useState(null);
-
-  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const { latestShopFloor } = useShopFloor();
-  const onEdgeAdd = (assetId: string, relationsInput: any,relationClass:string) => {
+
+ // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
+  const onEdgeAdd = (assetId: string, relationsInput: string,relationClass:string) => {
+    console.log(relationClass, "class", assetId, "assetId")
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
@@ -137,7 +141,7 @@ const FlowEditor: React.FC<
       let baseXOffset = 200 + existingRelationsCount * 200;
 
       // Create the ID using the updated count
-      const relationNodeId = `relation_${relationName}_${String(
+      const relationNodeId = `relation_${relationName}_asset_${assetId}_${String(
         newCount
       ).padStart(3, "0")}`;
 
@@ -161,11 +165,11 @@ const FlowEditor: React.FC<
       };
 
       //  new edge connecting the asset node to the new relation node
-      const newEdge: any = {
+      const newEdge = {
         id: `reactflow__edge-${selectedAsset}-${relationNodeId}`,
-        source: selectedAsset,
-        target: relationNodeId,
-        metadata:relationNodeId
+        source: selectedAsset ?? '',
+        target: relationNodeId ?? '',
+       
       };
 
       // Update state with the new node and edge
@@ -175,6 +179,8 @@ const FlowEditor: React.FC<
   };
 
   useEffect(() => {
+ 
+    //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory-${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
@@ -209,16 +215,15 @@ const FlowEditor: React.FC<
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}`,
           source: factoryNodeId,
           target: shopFloorNodeId,
-          metadata:shopFloorNodeId
+     
         };
 
         setEdges((eds) => [...eds, newEdge]);
       }
     }
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges]);
 
-  useEffect(() => {
-    deletedShopFloors.forEach((deletedShopFloorId) => {
+    if(deletedShopFloors){
+       deletedShopFloors.forEach((deletedShopFloorId) => {
       const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
       setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
       setEdges((edges) =>
@@ -228,9 +233,23 @@ const FlowEditor: React.FC<
         )
       );
     });
-  }, [deletedShopFloors, setNodes, setEdges, nodes]);
-  useEffect(() => {
-    if (factory && reactFlowInstance) {
+    }
+    if (nodesInitialized) {
+
+      const fetchDataAndDetermineSaveState = async () => {
+        await fetchAndDetermineSaveState(
+          factoryId,
+          nodes,
+          setIsSaveDisabled,
+          API_URL
+        );
+      };
+
+      fetchDataAndDetermineSaveState().catch(console.error);
+      setNodesInitialized(false);
+      
+    }
+     if (factory && reactFlowInstance && !loadedFlowEditor ) {
       const factoryNodeId = `factory-${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
         id: factoryNodeId,
@@ -244,43 +263,19 @@ const FlowEditor: React.FC<
       };
 
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
-      setNodeUpdateTracker((prev) => prev + 1);
-      setFactoryRelationships((currentRelationships: any) => ({
-        ...currentRelationships,
-        [factoryNodeId]: {
-          hasShopFloor: {
-            object: currentRelationships[factoryNodeId]?.hasShopFloor?.object
-              ? [
-                  ...currentRelationships[factoryNodeId].hasShopFloor.object,
-                  factoryNodeId,
-                ]
-              : [factoryNodeId],
-          },
-        },
-      }));
       setNodesInitialized(true);
+      onRestore();
+      serLoadedFlowEditor(true)
     }
-  }, [factory, reactFlowInstance, setNodes]);
+   
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL] );
 
-  useEffect(() => {
-    if (nodesInitialized) {
-      const fetchDataAndDetermineSaveState = async () => {
-        await fetchAndDetermineSaveState(
-          factoryId,
-          nodes,
-          setIsSaveDisabled,
-          API_URL
-        );
-      };
-
-      fetchDataAndDetermineSaveState().catch(console.error);
-    }
-  }, [nodesInitialized, factoryId, API_URL]);
 
   const onRestore = useCallback(async () => {
+   
     if (factoryId) {
       try {
-        const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+        const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -289,18 +284,18 @@ const FlowEditor: React.FC<
         });
 
         if (
-          response.data &&
-          response.data.factoryData.nodes &&
-          response.data.factoryData.edges
+          getReactFlowMongo.data &&
+          getReactFlowMongo.data.factoryData.nodes &&
+          getReactFlowMongo.data.factoryData.edges
         ) {
           // First, set the nodes and edges as usual
-          setNodes(response.data.factoryData.nodes);
-          setEdges(response.data.factoryData.edges);
+          setNodes(getReactFlowMongo.data.factoryData.nodes);
+          setEdges(getReactFlowMongo.data.factoryData.edges);
 
           // Then, analyze the relation nodes to update relationCounts
-          const updatedRelationCounts: any = {};
+          const updatedRelationCounts: RelationCounts = {};
 
-          response.data.factoryData.nodes.forEach((node: Node) => {
+          getReactFlowMongo.data.factoryData.nodes.forEach((node: Node) => {
             if (node.data.type === "relation") {
               // node IDs follow the format "relation-relationName_count"
               const match = node.id.match(/relation-(.+)_([0-9]+)/);
@@ -329,12 +324,8 @@ const FlowEditor: React.FC<
     }
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
-  useEffect(() => {
-    onRestore();
-  }, [onRestore]);
-
   const onUpdate = useCallback(async () => {
-    let metadata= ""
+   
     const payLoad = {
       factoryId: factoryId,
 
@@ -350,7 +341,7 @@ const FlowEditor: React.FC<
           id,
           source,
           target,
-          metadata:target,
+       
           type,
           data,
         })),
@@ -358,7 +349,7 @@ const FlowEditor: React.FC<
     };
 
     try {
-      const response = await axios.patch(
+      const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
         {
@@ -371,29 +362,29 @@ const FlowEditor: React.FC<
         }
       );
 
-      if (response.status == 200 || response.status == 204) {
+      if (reactFlowUpdateMongo.status == 200 || reactFlowUpdateMongo.status == 204) {
         setToastMessage("Flowchart Updated successfully");
       } else {
         setToastMessage("FlowChart already exist");
       }
 
-      const response1 = await axios.patch(
-        `${API_URL}/shop-floor/update-react`,
-        payLoad.factoryData.edges,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      // const reactFlowScorpioUpdate = await axios.patch(
+      //   `${API_URL}/shop-floor/update-react`,
+      //   payLoad.factoryData.edges,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Accept: "application/json",
+      //     },
+      //     withCredentials: true,
+      //   }
+      // );
       console.log(payLoad.factoryData.edges, "edges update");
-      if (response1.status == 200 || response1.status == 204) {
-        setToastMessage("Scorpio updated successfully");
-      } else {
-        setToastMessage("Scorpio already has these data");
-      }
+      // if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
+      //   setToastMessage("Scorpio updated successfully");
+      // } else {
+      //   setToastMessage("Scorpio already has these data");
+      // }
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -401,7 +392,7 @@ const FlowEditor: React.FC<
   }, [nodes, edges, factoryId]);
 
   const onSave = useCallback(async () => {
-    let metadata= ""
+  
     const payLoad = {
       factoryId: factoryId,
 
@@ -417,7 +408,7 @@ const FlowEditor: React.FC<
           id,
           source,
           target,
-          metadata:target,
+       
           type,
           data,
         })),
@@ -425,21 +416,21 @@ const FlowEditor: React.FC<
     };
 
     try {
-      const response = await axios.post(`${API_URL}/react-flow`, payLoad, {
+      const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         withCredentials: true,
       });
-      console.log(response, "Onsave first");
-      if (response.status === 201) {
+      console.log(reactFlowUpdateMongo, "Onsave first");
+      if (reactFlowUpdateMongo.status === 201) {
         setToastMessage("Flowchart saved successfully");
       } else {
         setToastMessage("Flowchart already exist");
       }
 
-      const response1 = await axios.patch(
+      const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react/`,
         payLoad.factoryData.edges,
         {
@@ -451,19 +442,8 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
-      const response2 = await axios.patch( `${API_URL}/allocated-asset`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        
-        }
-      );
-
-      console.log("allocated asset Data " , response2)
-      if (response1.status == 200 || response1.status == 204) {
+  
+      if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
@@ -493,7 +473,7 @@ const FlowEditor: React.FC<
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
     try {
-      const response1 = await axios.patch(
+      const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         edges,
         {
@@ -505,7 +485,7 @@ const FlowEditor: React.FC<
         }
       );
 
-      const response2 = await axios.delete(
+      const reactFlowScorpioUpdate = await axios.delete(
         `${API_URL}/shop-floor/delete-react/${factoryId}`,
         {
           headers: {
@@ -518,9 +498,9 @@ const FlowEditor: React.FC<
       );
 
       if (
-        response1.status == 200 ||
-        (response1.status == 204 && response2.status == 204) ||
-        response2.status == 200
+        reactFlowUpdateMongo.status == 200 ||
+        (reactFlowUpdateMongo.status == 204 && reactFlowScorpioUpdate.status == 204) ||
+        reactFlowScorpioUpdate.status == 200
       ) {
         setToastMessage(
           "Selected elements and related data deleted successfully."
@@ -544,16 +524,15 @@ const FlowEditor: React.FC<
     }
   };
 
-  const onElementClick = useCallback((event: any, element: any) => {
+  const onElementClick: NodeMouseHandler  = useCallback((event, element
+) => {
     if (element.type === "asset") {
       // Fetch asset details and set relations
       fetchAssetById(element.data.id)
-        .then((relations: any) => {
-          setCurrentNodeRelations(relations);
-          setSelectedAsset(element.id); // Set the selected asset
-          setSelectedNodeData(element.data);
-          setShowModal(true); // Show the modal
-          setModalPosition({ x: event.clientX, y: event.clientY }); // Set modal position
+        .then(() => {
+       
+          setSelectedAsset(element.id); 
+       
         })
         .catch((error) =>
           console.error("Error fetching asset details:", error)
@@ -562,18 +541,25 @@ const FlowEditor: React.FC<
   }, []);
 
    const onConnect = useCallback(
-    (params: any) => {
+     (params : Connection ) => {
+     
       const { source, target} = params;
-      const sourceNode: any = nodes.find((node) => node.id === source);
-      const targetNode: any = nodes.find((node) => node.id === target);
+
+      console.log("params ", params)
+      const sourceNode = nodes.find((node):node is ExtendedNode => node.id === source);
+
+  
+      const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
 
       if (!sourceNode || !targetNode) return;
       // Check if the source node is a relation and it already has an outgoing connection
-      if (sourceNode.data.type === "relation") {
+      if (sourceNode.data.type === "relation" ) {
         const alreadyHasChild = edges.some((edge) => edge.source === source);
         const relationClass = sourceNode.class;
-        if (relationClass === "machine" && edges.some(edge => edge.source === source)) {
-          toast.current.show({
+
+
+        if (relationClass === "machine" && alreadyHasChild) {
+          toast.current?.show({
             severity: "warn",
             summary: "Operation not allowed",
             detail: "A machine relation can only have one child asset.",
@@ -586,12 +572,7 @@ const FlowEditor: React.FC<
         sourceNode.data.type === "shopFloor" &&
         targetNode.data.type === "asset"
       ) {
-        setShopFloorAssets((prevAssets) => {
-          const updatedAssets: any = { ...prevAssets };
-          const assets = updatedAssets[sourceNode.id] || [];
-          updatedAssets[sourceNode.id] = [...assets, targetNode.id];
-          return updatedAssets;
-        });
+       
         setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
       } else if (
         sourceNode.data.type === "asset" &&
@@ -605,7 +586,7 @@ const FlowEditor: React.FC<
           )
         );
 
-        setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
+        setEdges((prevEdges) => addEdge(params , prevEdges)); // Add edge
       } else if (
         sourceNode.data.type === "relation" &&
         targetNode.data.type === "asset"
@@ -613,12 +594,11 @@ const FlowEditor: React.FC<
         const parentId = sourceNode.data.parentId;
         const childAssetId = targetNode.id;
 
-        const newRelationNodeId = `${sourceNode.id}_${childAssetId}`;
+        const newRelationNodeId = `${sourceNode.id}`;
         // access the asset_category and split it.
-        const assetCategoryPart =
-          targetNode.asset_category?.split(" ")[1] || "";
-        const assetCategory = assetCategoryPart.toLowerCase();
-        console.log("asset category", assetCategory);
+      const assetCategoryPart = targetNode.asset_category?.split(" ")[1] || "";
+      const assetCategory = assetCategoryPart.toLowerCase();
+      console.log("asset category", assetCategoryPart);
 
         // relation label is like "hasTracker_001", extract "Tracker" and normalize
         const relationType = sourceNode.data.label
@@ -627,8 +607,8 @@ const FlowEditor: React.FC<
           .toLowerCase();
         console.log(relationType, "relation type");
         // Check if the asset category === the relation type
-        if (assetCategory && assetCategory !== relationType) {
-          toast.current.show({
+        if (assetCategory  !== relationType) {
+          toast.current?.show({
             severity: "warn",
             summary: "Connection not allowed",
             detail: `Assets of category '${
@@ -650,7 +630,7 @@ const FlowEditor: React.FC<
         // Update the edges with the new source node ID for any edge connected to the updated relation node
         const updatedEdges = edges.map((edge) => {
           if (edge.source === sourceNode.id) {
-            return { ...edge, source: newRelationNodeId };
+            return { ...edge, source: newRelationNodeId  };
           } else if (edge.target === sourceNode.id) {
             return { ...edge, target: newRelationNodeId };
           }
@@ -662,7 +642,7 @@ const FlowEditor: React.FC<
           id: `reactflow_edge-${newRelationNodeId}`,
           source: newRelationNodeId,
           target: childAssetId,
-          metadata:childAssetId,
+         
           animated: true,
         };
 
@@ -679,7 +659,7 @@ const FlowEditor: React.FC<
       } else {
         if (toast) {
           console.log(sourceNode, targetNode, "The nodes data");
-          toast.current.show({
+          toast.current?.show({
             severity: "error",
             summary: "Connection not allowed",
             detail: "Invalid connection type.",
@@ -690,26 +670,7 @@ const FlowEditor: React.FC<
     [nodes, setNodes, setAssetRelations, setShopFloorAssets, setEdges, toast]
   );
 
-  const determineClosestShopFloor = (dropPosition: any) => {
-    let closestShopFloorId = null;
-    let minimumDistance = Infinity;
-
-    nodes.forEach((node) => {
-      if (node.data.type === "shopFloor") {
-        const distance = Math.sqrt(
-          Math.pow(dropPosition.x - node.position.x, 2) +
-            Math.pow(dropPosition.y - node.position.y, 2)
-        );
-
-        if (distance < minimumDistance) {
-          closestShopFloorId = node.id;
-          minimumDistance = distance;
-        }
-      }
-    });
-
-    return closestShopFloorId;
-  };
+ 
   const handleBackspacePress = useCallback(() => {
     if (!selectedElements) {
       return;
@@ -722,7 +683,7 @@ const FlowEditor: React.FC<
     );
 
     if (containsNonDeletableNodes) {
-      toast.current.show({
+      toast.current?.show({
         severity: "warn",
         summary: "Deletion Not Allowed",
         detail: "You cannot delete factory or shopFloor nodes from here.",
@@ -736,28 +697,6 @@ const FlowEditor: React.FC<
     );
     let updatedNodes = [...nodes];
     let updatedEdges = [...edges];
-
-    // Updating relation nodes and edges if their child is being deleted
-    edges.forEach((edge) => {
-      if (nodeIdsToDelete.has(edge.target)) {
-        const sourceNode = nodes.find((node) => node.id === edge.source);
-        if (sourceNode && sourceNode.data.type === "relation") {
-          //  if the node ID indicates it's connected to a specific child
-          const newId = sourceNode.id.split("_asset_")[0]; // relation node ID format is "relation_<relationName>_<uniqueId>_asset_<assetId>"
-          // Update node ID and edges
-          updatedNodes = updatedNodes.map((node) =>
-            node.id === sourceNode.id ? { ...node, id: newId } : node
-          );
-          updatedEdges = updatedEdges.map((edge) => ({
-            ...edge,
-            source: edge.source === sourceNode.id ? newId : edge.source,
-            target: edge.target === sourceNode.id ? newId : edge.target,
-            metadata:edge.target === sourceNode.id ? newId : edge.target,
-          }));
-        }
-      }
-    });
-
     // Filter out the nodes and edges  to be deleted
     updatedNodes = updatedNodes.filter((node) => !nodeIdsToDelete.has(node.id));
     updatedEdges = updatedEdges.filter(
@@ -782,14 +721,14 @@ const FlowEditor: React.FC<
   useHotkeys(
     "backspace",
     (event) => {
-      event.preventDefault(); // Prevent the default backspace behavior (e.g., navigating back)
+      event.preventDefault(); // Prevent the default backspace behavior
       handleBackspacePress();
     },
     [handleBackspacePress]
   );
 
-  const onNodeDoubleClick = useCallback(
-    (event: any, node: any) => {
+  const onNodeDoubleClick:NodeMouseHandler = useCallback(
+    (event, node) => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
         router.push("/factory-site/dashboard");
@@ -807,15 +746,14 @@ const FlowEditor: React.FC<
       const data = event.dataTransfer.getData("application/json");
 
       try {
-        const { item, type, asset_category } = JSON.parse(data);
+        const { item, type } = JSON.parse(data);
 
         console.log(
           "Parsed item:",
           item,
-          "Type:",
-          type,
-          "Asset Catagory: ",
-          asset_category
+
+          "Type: ",
+          type
         );
         const position = reactFlowInstance.project({
           x: event.clientX - reactFlowBounds.left,
@@ -847,31 +785,11 @@ const FlowEditor: React.FC<
 
             setNodes((nds) => [...nds, shopFloorNode]);
 
-            setDroppedShopFloors((prev) => [...prev, item.id]);
-
-            setFactoryRelationships((prev: any) => {
-              const updated: any = { ...prev };
-              const factoryNodeId = `${factory.id}`;
-
-              if (!updated[factoryNodeId]) {
-                updated[factoryNodeId] = { hasShopFloor: { object: [] } };
-              }
-
-              if (
-                !updated[factoryNodeId].hasShopFloor.object.includes(item.id) &&
-                item.id !== factoryNodeId
-              ) {
-                updated[factoryNodeId].hasShopFloor.object.push(item.id);
-              }
-
-              return updated;
-            });
-
             break;
 
           case "asset":
             const factoryNodeId = `${factory.id}`;
-            setSelectedNodeData(item);
+            // setSelectedNodeData(item);
 
             if (factoryNodeId) {
               const assetNode = {
@@ -889,28 +807,8 @@ const FlowEditor: React.FC<
 
               setNodes((nds) => [...nds, assetNode]);
 
-              setShopFloorAssets((prev: any) => ({
-                ...prev,
-                [factoryNodeId]: [...(prev[factoryNodeId] || []), item.id],
-              }));
             }
 
-            break;
-
-          case "relation":
-            const newNode = {
-              id: `relation_${item}_${new Date().getTime()}`,
-              type: item,
-              position,
-              data: { label: item, type: "relation" },
-              style: {
-                backgroundColor: "#ead6fd",
-                border: "none",
-                borderRadius: "45%",
-              },
-            };
-            setNodes((nds) => [...nds, newNode]);
-            console.log(newNode);
             break;
 
           default:
@@ -925,38 +823,25 @@ const FlowEditor: React.FC<
       reactFlowInstance,
       setNodes,
       setShopFloorAssets,
-      determineClosestShopFloor,
       setDroppedShopFloors,
-      setFactoryRelationships,
+    
     ]
   );
-  useEffect(() => {
-    if (toastMessage) {
-      toast.current.show({
-        severity: toastMessage.includes("Error")
-          ? "error"
-          : toastMessage.includes("Warning")
-          ? "warn"
-          : "success",
-        summary: toastMessage,
-      });
-      setToastMessage(null);
-    }
-  }, [toastMessage]);
+
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const onInit = useCallback((instance: any) => {
+  const onInit = useCallback((instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
   }, []);
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+
   const handleUpdate = useCallback(async () => {
     onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
+
+
 
   const handleSave = useCallback(async () => {
     onSave();
@@ -1023,7 +908,7 @@ const FlowEditor: React.FC<
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onInit={setReactFlowInstance}
+            onInit={onInit}
             onNodeDoubleClick={onNodeDoubleClick}
             onSelectionChange={onSelectionChange}
             fitView

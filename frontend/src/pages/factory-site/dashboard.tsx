@@ -1,10 +1,11 @@
 
-import dynamic from 'next/dynamic';
-import { useContext, useEffect, useState } from "react";
-import { LayoutContext } from './layout/layoutcontext';
+
+
+import { useContext, useEffect, useState,useRef } from "react";
+import { LayoutContext } from './layout/LayoutContext';
 import axios from "axios";
 import DashboardAssets from "@/components/dashboard/dashboard-assets";
-import HorizontalNavbar from "@/components/horizontal-navbar";
+import HorizontalNavbar from "@/components/HorizontalNavbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
@@ -13,9 +14,9 @@ import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
-import { fetchAsset } from "@/utility/asset-utility";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
+import { Toast, ToastMessage } from "primereact/toast";
 
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -29,9 +30,8 @@ const Dashboard = () => {
   const [countDown, setCountDown] = useState(0);
   const [runTimer, setRunTimer] = useState(false);
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
-
   const router = useRouter();
-  const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false });
+  const toast = useRef<any>(null);
 
 
   const fetchNotifications = async () => {
@@ -49,7 +49,10 @@ const Dashboard = () => {
     }
   }
   
- 
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
+  };
+
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -59,50 +62,50 @@ const Dashboard = () => {
         fetchNotifications();
         let timerId:any;
    
-        // Start the timer if blocker is true and runTimer is false
-        if (blocker && !runTimer) {
-           setRunTimer(true);
-           setCountDown(60 * 5); // Set countdown to 5 minutes
-        }
-       
-        // Manage the countdown timer
-        if (runTimer) {
-           timerId = setInterval(() => {
-             setCountDown((countDown) => countDown - 1);
-           }, 1000);
-        } else {
-           clearInterval(timerId);
-        }
-       
-        // Handle countdown expiration
-        if (countDown === 0 && runTimer) {
-           console.log("expired");
-           setRunTimer(false);
-           setCountDown(0);
-           setBlocker(false);
-        }
-      //   if (prefixedAssetProperty.length === 0) {
-      //     setBlocker(true);
-      //     setRunTimer(true);
-      //     setCountDown(60 * 5); // Reset countdown to 5 minutes
-      //  }
-       
-        // Cleanup function to clear the interval
-        return () => clearInterval(timerId);
+    // Start the timer if blocker is true and runTimer is false
+    if (blocker && !runTimer) {
+       setRunTimer(true);
+       setCountDown(60 * 5); 
+       showToast('success', "Success", "Added To GitHub Successfully")
+       // Set countdown to 5 minutes
+    }
+   
+    // Manage the countdown timer
+    if (runTimer) {
+       timerId = setInterval(() => {
+         setCountDown((countDown) => countDown - 1);
+       }, 1000);
+    } else {
+       clearInterval(timerId);
+    }
+   
+    // Handle countdown expiration
+    if (countDown === 0 && runTimer) {
+       console.log("expired");
+       setRunTimer(false);
+       setCountDown(0);
+       setBlocker(false);
+    }
+  //   if (prefixedAssetProperty.length === 0) {
+  //     setBlocker(true);
+  //     setRunTimer(true);
+  //     setCountDown(60 * 5); // Reset countdown to 5 minutes
+  //  }
+   
+    // Cleanup function to clear the interval
+    return () => clearInterval(timerId);
       }   
     }   
-  }, [router.isReady, blocker, runTimer, countDown, prefixedAssetProperty.length])
+  }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length, layoutConfig ])
 
-
-console.log(prefixedAssetProperty , "prefix value here");
-
-
+   console.log(prefixedAssetProperty , "prefix value here");
 
   return (
     <>
     <DashboardProvider>
       {blocker && 
       <div className="blocker">
+        <Toast ref={toast} />
         <div className="card blocker-card">
           <p>Restart the Machine to finish onboarding</p>
           <div className="loading-spinner">
@@ -146,7 +149,7 @@ console.log(prefixedAssetProperty , "prefix value here");
           <DashboardChart/>
           </div>     
       </div>
-      </DashboardProvider>
+    </DashboardProvider>
     </>
   )
 }

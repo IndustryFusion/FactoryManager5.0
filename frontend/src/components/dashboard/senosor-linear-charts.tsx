@@ -2,12 +2,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { ChartData, ChartOptions } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { LayoutContext } from "../../pages/factory-site/layout/layoutcontext";
-import { Asset } from "@/interfaces/assetTypes";
+import { LayoutContext } from "../../pages/factory-site/layout/LayoutContext";
+import { Asset } from "@/interfaces/AssetTypes";
 import { Button } from "primereact/button";
 import { Image } from "primereact/image";
 import { Dropdown } from "primereact/dropdown";
-import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
+import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/CombineLinearChart";
 import { ProgressSpinner } from "primereact/progressspinner";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
@@ -18,7 +18,7 @@ import {
   FaTemperatureHigh,
   FaCloud,
 } from "react-icons/fa";
-import "../../styles/combine-chart.css";
+import "../../styles/CombineChart.css";
 import { useDashboard } from "@/context/dashboardContext";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 

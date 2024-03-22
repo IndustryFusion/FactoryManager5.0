@@ -101,29 +101,25 @@
     font-size: 1rem;
 }
 
-.p-datatable .p-datatable-tbody>tr.p-highlight {
-    background: #ecfeff;
-    color: #0e7490;
+textarea {
+    resize: none;
 }
 
-@media screen and (min-width: 1550px) {
-
-    .chart-content,
-    .assets-content {
-        width: 34.4%
-    }
-
-    .dashboard-card {
-        width: 500px;
-    }
-
-    .dashboard-card-container {
-        gap: 6rem;
-    }
+.chart-content,
+.assets-content {
+    width: 34.4%
 }
+
+.dashboard-card {
+    width: 500px;
+}
+
+.dashboard-card-container {
+    gap: 6rem;
+}
+
 
 @media (min-width: 1200px) and (max-width: 1550px) {
-
     .chart-content,
     .assets-content {
         width: 43.4%

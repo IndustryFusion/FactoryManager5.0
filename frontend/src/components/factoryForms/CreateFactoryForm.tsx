@@ -8,7 +8,7 @@ import { Card } from "primereact/card";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import countryList from 'react-select-country-list'
-import "@/styles/factory-form.css"
+import "@/styles/FactoryForm.css"
 import {
     faSave,
     faBuilding,
@@ -17,12 +17,12 @@ import {
     faMapMarkedAlt,
     faBoxOpen,
 } from "@fortawesome/free-solid-svg-icons";
-import Thumbnail from "@/components/thumbnail";
+import Thumbnail from "@/components/Thumbnail";
 import { useRouter } from "next/router";
 import { Toast } from "primereact/toast"
-import { Factory, FactoryFormProps } from "../../interfaces/factoryType";
-import { handleUpload } from "@/utility/factory-site-utility";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Factory, FactoryFormProps } from "../../interfaces/FactoryType";
+import { handleUpload } from "@/utility/FactorySiteUtility";
+import { Property, Schema } from "../../pages/factory-site/types/FactoryForm";
 import { Dialog } from "primereact/dialog";
 ;
 
