@@ -58,8 +58,8 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const allocatedMenu =useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
- 
-let allocatedAssetsArray = null;
+   
+  let allocatedAssetsArray = null;
 
 
   useEffect(() => {
@@ -67,9 +67,9 @@ let allocatedAssetsArray = null;
       try {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
         console.log("fetchedAssetIds", fetchedAssetIds)
-        const fetchedAllocatedAssets = await fetchAllocatedAssets(); 
+        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId); 
         console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
-       if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
+        if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
           allocatedAssetsArray = fetchedAllocatedAssets;
         }
         // setAllocatedAssets(allocatedAssetsArray);
@@ -119,7 +119,7 @@ let allocatedAssetsArray = null;
   }, [factoryId, router.isReady]);
 
 
-  const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
+  // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
  useEffect(() => {
 
   const results = assets.filter(asset => {
@@ -134,7 +134,9 @@ let allocatedAssetsArray = null;
 }, [searchTerm, selectedCategories, assets]);
 
 
-
+// for allocated asset list : if we dont find any 200 response from backend , it will give the allocatedAssets.filter is not a function error
+// reason : when in alloctaed asset  urn:ngsi-ld:allocated-assets-store  in  scorpio we have other values then urn inside object array then we dont get 200 response from
+// allocated-asset backend endpoint
 const filteredAllocatedAssets = useMemo(() => {
   return allocatedAssets.filter(asset => 
     (selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category)) &&
@@ -211,53 +213,6 @@ const menuItems = [
     menu.current?.toggle(event);
     setVisible(!visible);
   };
-
-  // const handleAssetClick = async (assetId: string) => {
-  //   try {
-  //     const details = await getNonShopFloorAssetDetails(assetId);
-  //     console.log(" details ", details)
-  //     setSelectedAssetDetails(details);
-  //   } catch (error) {
-  //     console.error("Failed to fetch asset details:", error);
-  //     setError("Failed to fetch asset details");
-  //   }
-  // };
-
-  // const renderRelations = () => {
-  //   if (!selectedAssetDetails)
-  //     return (
-  //       <p style={{ marginLeft: "5px" }}>
-  //         No asset selected or no relations found.
-  //       </p>
-  //     );
-
-  //   // Extracting relation names from the selected asset details
-  //   const relations = Object.keys(selectedAssetDetails)
-  //     .filter((key) =>
-  //       key.startsWith("http://www.industry-fusion.org/schema#has")
-  //     )
-  //     .map((key) => ({
-  //       key: key.replace("http://www.industry-fusion.org/schema#", ""),
-  //       value: selectedAssetDetails[key],
-  //     }));
-
-  //   if (relations.length === 0)
-  //     return <p>No relations found for this asset.</p>;
-
-  //   return (
-  //     <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-  //       {relations.map((relation) => (
-  //         <li
-  //           key={relation.key}
-  //           draggable="true"
-  //           onDragStart={(e) => handleDragStart(e, relation.key, "relation")}
-  //         >
-  //           {relation.key}
-  //         </li>
-  //       ))}
-  //     </ul>
-  //   );
-  // };
 
   function handleDragStart(
     event: React.DragEvent,

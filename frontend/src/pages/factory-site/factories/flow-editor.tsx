@@ -252,7 +252,7 @@ const FlowEditor: React.FC<
       
     }
      if (factory && reactFlowInstance && !loadedFlowEditor ) {
-      const factoryNodeId = `factory-${factory.id}`;
+      const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
         id: factoryNodeId,
         type: "factory",
@@ -454,11 +454,30 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
-  
+      
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
+      }
+    
+       const reactAllocatedAssetScorpio = await axios.post(
+        `${API_URL}/allocated-asset/${factoryId}`,
+     
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        
+        }
+      );
+        
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
       }
         setNodesInitialized(true);
     } catch (error) {
