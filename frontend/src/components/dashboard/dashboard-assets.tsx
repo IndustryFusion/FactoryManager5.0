@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
 import { Asset } from "@/interfaces/assetTypes";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
@@ -11,6 +11,8 @@ import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
 import { useDashboard } from "@/context/dashboardContext";
 import OnboardForm from "./onboard-form";
+import EditOnboardForm from "./edit-onboard-form";
+import { Toast, ToastMessage } from "primereact/toast";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -20,22 +22,29 @@ interface DashboardAssetsProps {
 }
 
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
+
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
+  const [editOnboardAsset, setEditOnboardAsset] = useState({
+    showEditOnboard: false,
+    onboardAssetId: "",
+    successToast:false
+  })
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const router = useRouter();
+  const { entityIdValue, setEntityIdValue,
+    machineStateValue, setMachineStateValue,
+    selectedAssetData, setSelectedAssetData } = useDashboard();
+  const toast = useRef<any>(null);
 
-  const { entityIdValue, setEntityIdValue, machineStateValue,
-     setMachineStateValue ,selectedAssetData, setSelectedAssetData} = useDashboard();
-
-  const productNameBodyTemplate = (rowData: any) => {
+  const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
   };
-  const assetTypeBodyTemplate = (rowData: any) => {
+  const assetTypeBodyTemplate = (rowData: Asset): React.ReactNode => {
     const assetType = rowData?.type?.split('/')[5];
     return <>{assetType}</>;
   };
-  const productIconTemplate = (rowData: any) => {
+  const productIconTemplate = (rowData: Asset): React.ReactNode => {
     return rowData?.product_icon ? (
       <img
         src={rowData?.product_icon}
@@ -46,20 +55,29 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       <span>No Image</span>
     );
   };
+  const viewBodyTemplate = (rowData: Asset): React.ReactNode => {
+    return (
+      <>
+        <Button
+          onClick={(e) => {
+            setEditOnboardAsset(() => ({
+              ...editOnboardAsset,
+              showEditOnboard: true,
+              onboardAssetId: rowData?.id
+            }))
+          }}
+          icon="pi pi-search" text />
+      </>
+    )
+  }
+
 
   const handleAsset = async () => {
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
-
-        // const filteredAssets = response.filter(({ id }) => id === 'urn:ngsi-ld:asset:2:101' || id === 'urn:ngsi-ld:asset:2:089')
-        // // console.log(response[0] ,"allassets");
-        // console.log(filteredAssets[0], "filtered asets");
-
         setAssetData(response);
         console.log(response, "allresponse");
-
-        // setEntityIdValue(response?.id);
       } else {
         console.error("Fetch returned undefined");
       }
@@ -68,17 +86,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       console.error(error)
     }
   }
-  useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { } = router.query;
-        handleAsset();
-      }
-    }
-  }, [router.isReady])
-
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
@@ -105,57 +112,82 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
     }
   };
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+  };
+
+  useEffect(() => {
+    if (Cookies.get("login_flag") === "false") {
+      router.push("/login");
+    } else {
+      if (router.isReady) {
+        const { } = router.query;
+        handleAsset();
+        if(editOnboardAsset.successToast){
+          showToast("success", "success","onboard updated successfully")
+        }
+      }
+    }
+  }, [router.isReady, editOnboardAsset.successToast])
+
 
   return (
-    <div style={{ zoom: "80%" }}>
-      <div className="dashboard-assets" style={{ width: "100%" }}>
-        <div className="card h-auto " style={{ width: "100%" }}>
-          <h5 className="heading-text">Assets</h5>
-          <DataTable
-            rows={5}
-            paginator
-            value={assetData}
-            className="dashboard-assets"
-            scrollable={true}
-            scrollHeight="750px"
-            onRowClick={(e) => handleClick(e.data as Asset)}
-          >
-            <Column
-              header="Product Image"
-              field="product_icon"
-              body={productIconTemplate}
-            />
-            <Column
-              header="Product Name"
-              field="product_name"
-              body={productNameBodyTemplate}
-            />
-            <Column
-              header="AssetType"
-              field="asset_type"
-              body={assetTypeBodyTemplate}
-            />
-            <Column
-              header="View"
-              style={{ width: '15%' }}
-              body={() => (
-                <>
-                  <Button icon="pi pi-search" text />
-                </>
-              )}
-            />
-          </DataTable>
+    <>
+      <Toast ref={toast} />
+      <div style={{ zoom: "80%" }}>
+        <div className="dashboard-assets" style={{ width: "100%" }}>
+          <div className="card h-auto " style={{ width: "100%" }}>
+            <h5 className="heading-text">Assets</h5>
+            <DataTable
+              rows={5}
+              paginator
+              value={assetData}
+              className="dashboard-assets"
+              scrollable={true}
+              scrollHeight="750px"
+              onRowClick={(e) => handleClick(e.data as Asset)}
+            >
+              <Column
+                header="Product Image"
+                field="product_icon"
+                body={productIconTemplate}
+              />
+              <Column
+                header="Product Name"
+                field="product_name"
+                body={productNameBodyTemplate}
+              />
+              <Column
+                header="AssetType"
+                field="asset_type"
+                body={assetTypeBodyTemplate}
+              />
+              <Column
+                header="View"
+                style={{ width: '15%' }}
+                body={viewBodyTemplate}
+
+              />
+            </DataTable>
+          </div>
         </div>
+        {showBlocker &&
+          <OnboardForm
+            showBlockerProp={showBlocker}
+            setShowBlockerProp={setShowBlocker}
+            asset={selectedRowAsset}
+            setBlocker={setBlockerProp}
+          />
+        }
+        {editOnboardAsset.showEditOnboard &&
+          <EditOnboardForm
+            editOnboardAssetProp={editOnboardAsset}
+            setEditOnboardAssetProp={setEditOnboardAsset}
+          />
+        }
       </div>
-      {showBlocker &&
-        <OnboardForm
-          showBlockerProp={showBlocker}
-          setShowBlockerProp={setShowBlocker}
-          asset={selectedRowAsset}
-          setBlocker={setBlockerProp}
-        />
-      }
-    </div>
+    </>
+
   )
 }
 
