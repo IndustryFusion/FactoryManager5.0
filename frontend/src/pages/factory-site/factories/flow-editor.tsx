@@ -102,7 +102,7 @@ const FlowEditor: React.FC<
   const elementRef = useRef(null);
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
-  const [loadedFlowEditor , serLoadedFlowEditor] = useState(false)  ;
+  const [loadedFlowEditor , setLoadedFlowEditor] = useState(false)  ;
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
   );
@@ -184,7 +184,7 @@ const FlowEditor: React.FC<
 
     //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
-      const factoryNodeId = `factory-${factoryId}`;
+      const factoryNodeId = `factory_${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
       const shopFloorNodeId = `shopFloor_${latestShopFloor.id}`;
 
@@ -267,7 +267,7 @@ const FlowEditor: React.FC<
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
       setNodesInitialized(true);
       onRestore();
-      serLoadedFlowEditor(true)
+      setLoadedFlowEditor(true)
     }
 
      if (toastMessage) {
