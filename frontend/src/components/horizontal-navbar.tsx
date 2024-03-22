@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CSSProperties } from "react";
 import { useRouter } from "next/router";
 import Cookies from 'js-cookie';
-import Alerts from "./alert/Alerts";
+import Alerts from "./alert/alerts";
 
 
 const HorizontalNavbar: React.FC = () => {

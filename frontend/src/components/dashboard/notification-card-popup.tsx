@@ -1,7 +1,7 @@
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { getAlerts } from "../alert/AlertService";
+import { getAlerts } from "../alert/alert-service";
 
 interface NotificationPopupProps {
   notificationProp: boolean;

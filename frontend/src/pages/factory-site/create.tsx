@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import FactoryForm from "../../components/factoryForms/CreateFactoryForm";
+import FactoryForm from "../../components/factoryForms/create-factory-form";
 
 const factoryEdit = () => {
     // const router = useRouter();

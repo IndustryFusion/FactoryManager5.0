@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from "react";
-import { fetchAssetById } from "@/utility/FactorySiteUtility";
+import { fetchAssetById } from "@/utility/factory-site-utility";
 import { MultiSelect } from "primereact/multiselect";
 import { Handle, Position } from "reactflow";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
-import EdgeAddContext from "@/context/EdgeAddContext";
+import EdgeAddContext from "@/context/edge-add-context";
 import { validateHeaderValue } from "http";
 interface RelationOption {
   label: string;

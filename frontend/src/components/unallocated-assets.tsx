@@ -3,14 +3,14 @@ import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
   fetchAllocatedAssets,
-} from "@/utility/FactorySiteUtility";
+} from "@/utility/factory-site-utility";
 // import { Asset } from "../interfaces/assetTypes";
-import "../styles/AssetList.css";
+import "../styles/asset-list.css";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/AssetTypes";
+import { AllocatedAsset } from "@/interfaces/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
@@ -59,6 +59,8 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
  
+let allocatedAssetsArray = null;
+
 
   useEffect(() => {
     const fetchNonShopFloorAssets = async (factoryId: string) => {
@@ -66,6 +68,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
         console.log("fetchedAssetIds", fetchedAssetIds)
         const fetchedAllocatedAssets = await fetchAllocatedAssets(); 
+        console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+       if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
+          allocatedAssetsArray = fetchedAllocatedAssets;
+        }
+        // setAllocatedAssets(allocatedAssetsArray);
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
         const fetchedAssets:  Asset[]  = Object.keys(fetchedAssetIds).map((key) => ({
@@ -96,6 +103,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
         setError("Failed to fetch assets");
         setLoading(false);
+         allocatedAssetsArray = null; 
         
       }
     };
@@ -111,7 +119,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   }, [factoryId, router.isReady]);
 
 
-  // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
+  const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
  useEffect(() => {
 
   const results = assets.filter(asset => {
@@ -126,13 +134,14 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 }, [searchTerm, selectedCategories, assets]);
 
 
-//allocated asset checkbox 
+
 const filteredAllocatedAssets = useMemo(() => {
-  return allocatedAssets.filter(asset =>
+  return allocatedAssets.filter(asset => 
     (selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category)) &&
-    asset.product_name.toLowerCase().includes(searchTermAllocated.toLowerCase())
+    asset.product_name?.toLowerCase().includes(searchTermAllocated.toLowerCase())
   );
-}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]); 
+}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
+
 
  const handleCategoryChange = (category: string) => {
   setSelectedCategories(prevCategories => {
