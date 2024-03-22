@@ -1,21 +1,21 @@
 import { MdLocationOn } from "react-icons/md";
-import { Factory } from "@/interfaces/FactoryType";
+import { Factory } from "@/interfaces/factory-type";
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 import { DataView, DataViewLayoutOptions } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import "../../styles/FactoryOverview.css";
+import "../../styles/factory-overview.css";
 import { ConfirmDialog } from "primereact/confirmdialog";
 import { confirmDialog } from "primereact/confirmdialog";
 import { useRouter } from "next/router";
-import HorizontalNavbar from "../../components/HorizontalNavbar";
-import Footer from "../../components/Footer";
-import { deleteFactory } from "@/utility/FactorySiteUtility";
+import HorizontalNavbar from "../../components/horizontal-navbar";
+import Footer from "../../components/footer";
+import { deleteFactory } from "@/utility/factory-site-utility";
 import { Dialog } from "primereact/dialog";
-import CreateFactory from "@/components/factoryForms/CreateFactoryForm";
-import EditFactory from "@/components/factoryForms/EditFactoryForm";
+import CreateFactory from "@/components/factoryForms/create-factory-form";
+import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
 import { Toast } from "primereact/toast";
 

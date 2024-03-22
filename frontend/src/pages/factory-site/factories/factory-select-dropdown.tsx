@@ -1,6 +1,6 @@
 import React from "react";
 import { Dropdown } from "primereact/dropdown";
-import { Factory } from "@/interfaces/FactoryType";
+import { Factory } from "@/interfaces/factory-type";
 import "../../../styles/factory-selector-dropdown.css";
 interface FactorySelectorProps {
   actionType: "edit" | "delete";

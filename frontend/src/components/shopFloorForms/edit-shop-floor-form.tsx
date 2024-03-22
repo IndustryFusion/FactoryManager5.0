@@ -1,16 +1,16 @@
 import axios from "axios"
 import { useEffect, useState, ChangeEvent, useRef } from "react";
-import { Property, Schema } from "../../pages/factory-site/types/FactoryForm";
+import { Property, Schema } from "../../pages/factory-site/types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
-import { ShopFloor } from "../../pages/factory-site/types/ShopFloorForm";
-import { handleUpload } from "@/utility/FactorySiteUtility";
+import { ShopFloor } from "../../pages/factory-site/types/shop-floor-form";
+import { handleUpload } from "@/utility/factory-site-utility";
 import { Toast } from "primereact/toast";
-import "../../styles/FactoryForm.css"
-import Thumbnail from "@/components/Thumbnail";
+import "../../styles/factory-form.css"
+import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Dialog } from "primereact/dialog";
 

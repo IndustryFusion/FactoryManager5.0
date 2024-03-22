@@ -1,4 +1,4 @@
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction } from "react";
 
