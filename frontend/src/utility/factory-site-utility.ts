@@ -564,9 +564,9 @@ export const fetchAssetById = async (assetId: string) => {
   }
 };
 
-export const fetchAllocatedAssets = async ()=> {
+export const fetchAllocatedAssets = async (factoryId:string)=> {
   try {
-    const response = await axios.get(`${API_URL}/allocated-asset`, {
+    const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
