@@ -20,6 +20,7 @@ import {
 } from "react-icons/fa";
 import "../../styles/CombineChart.css";
 import { useDashboard } from "@/context/dashboardContext";
+import { BlockUI } from "primereact/blockui";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const graphMapping: any = {
@@ -53,11 +54,11 @@ const CombineSensorChart: React.FC = () => {
   const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
   const [productName, setProductName] = useState<string>("");
   const [dataCache, setDataCache] = useState<DataCache>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const {entityIdValue, setEntityIdValue} = useDashboard();
 
-  console.log("first row entityIdValue", entityIdValue);
+  // console.log("first row entityIdValue", entityIdValue);
   
   const intervalButtons = [
     { label: "1 Min", interval: 1 },
@@ -121,7 +122,7 @@ const CombineSensorChart: React.FC = () => {
     index: number,
     selectedInterval: number
   ) => {
-    setIsLoading(true); // Start loading
+   // Start loading
     const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
     if (dataCache[cacheKey]) {
       return dataCache[cacheKey]; // Use cached data
@@ -143,7 +144,7 @@ const CombineSensorChart: React.FC = () => {
         withCredentials: true,
       });
       let factoryData: pgData[] = response.data;
-      setIsLoading(false); // Stop loading once data is processed
+      setLoading(false) 
       const skip = selectedInterval * 4; // Since data is recorded every 15 seconds, 4 data points per minute
 
       // Filter the data points based on the skip value
@@ -256,7 +257,7 @@ const CombineSensorChart: React.FC = () => {
           }
         }
 
-        console.log("sensor chartData",chartData);
+        // console.log("sensor chartData",chartData);
         
 
         // console.log("Final Chart Data:", chartData); // Log final chart data
@@ -278,6 +279,7 @@ const CombineSensorChart: React.FC = () => {
 
   return (
     <div style={{zoom:"80%"}}>
+       {/* <BlockUI blocked={loading}> */}
       <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
       <div className="grid p-fluid">
         <div className="col-12">
@@ -363,6 +365,7 @@ const CombineSensorChart: React.FC = () => {
           
         </div>
       </div>
+      {/* </BlockUI> */}
     </div>
   );
 };

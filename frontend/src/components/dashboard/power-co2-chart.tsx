@@ -1,12 +1,10 @@
-'use client';
-import dynamic from 'next/dynamic';
+
 import { Chart } from 'primereact/chart';
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useDashboard } from '@/context/dashboardContext';
+import { BlockUI } from 'primereact/blockui';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-
 export interface Datasets {
     label: string;
     data: number[];
@@ -15,7 +13,6 @@ export interface Datasets {
     borderColor: string;
     tension: number;
 }
-
 export interface pgData {
     observedAt: string;
     attributeId: string;
@@ -24,27 +21,27 @@ export interface pgData {
 
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const {entityIdValue, setEntityIdValue} = useDashboard();
+    const { entityIdValue, setEntityIdValue } = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
- 
-    // console.log(entityIdValue, "assetId value");
-    
+    const [loading, setLoading] = useState<boolean>(true);
+    const [checkChart, setCheckChart] = useState<boolean>(false)
 
     const fetchData = async () => {
         try {
             const response = await axios.get(API_URL + '/power-consumption/chart', {
-                params:{
-                    'asset-id': entityIdValue,   
+                params: {
+                    'asset-id': entityIdValue,
                 },
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              withCredentials: true,
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
             });
-            console.log('response of powerconsumption chart ',response);
+            console.log('response of powerconsumption chart ', response);
+            setLoading(false);
+            setCheckChart(true);
             return response.data;
-           
         } catch (error) {
             console.error("Error fetching asset data:", error);
             throw error;
@@ -80,7 +77,7 @@ const PowerCo2Chart = () => {
                         data: obj.powerConsumption,
                         borderColor: 'white',
                         borderWidth: 2
-                    }  
+                    }
                 ]
             };
             const options = {
@@ -134,14 +131,16 @@ const PowerCo2Chart = () => {
             setChartOptions(options);
         }
         fetchDataAndAssign();
-    }, []);
-    
+    }, [checkChart, entityIdValue]);
+
     return (
-        <div className="card h-auto" style={{width:"100%"}}>
-            <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>Power Consumption Vs Co2 Emission</h3>
+        <div className="card h-auto" style={{ width: "100%" }}>
+            {/* <BlockUI blocked={loading}> */}
+            <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
             <Chart type="line" data={chartData} options={chartOptions} />
+            {/* </BlockUI> */}
         </div>
-    ) 
+    )
 };
 
-export default PowerCo2Chart ;
+export default PowerCo2Chart;
