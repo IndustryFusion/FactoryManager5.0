@@ -2,55 +2,79 @@ import { useDashboard } from "@/context/dashboard-context";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
-
+import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
 
 
 const DashboardCards: React.FC = () => {
 
-    const [timer, setTimer] = useState(0);
-    const { machineStateValue, entityIdValue, setMachineStateValue,selectedAssetData } = useDashboard();
+    const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
+    const { machineStateValue,
+        entityIdValue,
+        setMachineStateValue,
+        selectedAssetData,
+        machineStateData } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
-
-
-    useEffect(() => {
-        let interval: any;
-        if (machineStateValue === "2") {
-            interval = setInterval(() => {
-                setTimer((prevTimer) => prevTimer + 1);
-            }, 1000);
-        } else if (machineStateValue === "0") {
-            setTimer(0);
-        }
-
-        return () => {
-            clearInterval(interval);
-        }
-
-    }, [machineStateValue, entityIdValue])
-
-    const formatTime = (timeInSeconds: any) => {
-        const hours = Math.floor(timeInSeconds / 3600);
-        const minutes = Math.floor((timeInSeconds % 3600) / 60);
-        const seconds = timeInSeconds % 60;
-
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    };
-
-
-    console.log(relations, "what's the boolean value");
-
+    const [difference, setDifference] = useState("00:00:00");
+    const [onlineAverage, setOnlineAverage] = useState(0)
     const hasPropertiesArray = [];
-    for (const key in selectedAssetData) {
-        if (key.startsWith("has")) {
-            const propertyName = key.substring(3); // Remove the "has" prefix
-            const propertyValue = selectedAssetData[key];
-            hasPropertiesArray.push({ [propertyName]: propertyValue });
+
+  
+    useEffect(() => {
+        const runningSince = () => {
+            // Reverse the keys of the object
+            for (const date in machineStateData) {
+                if (machineStateData[date].length > 0) {
+                    machineStateData[date].reverse();
+                }
+            }
+            const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
+
+            // Iterate over the reversed keys
+            for (const key in reversedData) {
+                const dataArray = reversedData[key];
+                if (dataArray.length > 0) {
+                    // Find the first element with prev_value === "2"
+                    const allOnlineValues = [];
+                    for(let i=0; i<= dataArray.length -1; i++ ){
+                        if(dataArray[i].prev_value === "2"){
+                            allOnlineValues.push(dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/)[0]);                           
+                        }
+                    }
+                    console.log("allOnlineValues", allOnlineValues);
+                    setOnlineAverage(findOnlineAverage(allOnlineValues))
+
+
+                    const foundElement = dataArray.find(item => item.prev_value === "2");
+                    if (foundElement) {
+                        const time = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/)[0];
+                        // console.log("time", time);
+                        setTimer(time);
+                        setDifference(findDifference(time));
+                        break; // Exit the loop once the condition is met
+                    }
+                }
+            }
         }
-    }
-    
-    console.log("has property array",hasPropertiesArray);
-    
+
+        if (machineStateValue === "2") {
+            runningSince();
+        } else {
+            setDifference("00:00:00")
+        }
+
+        for (const key in selectedAssetData) {
+            if (key.startsWith("has")) {
+                const propertyName = key.substring(3); // Remove the "has" prefix
+                const propertyValue = selectedAssetData[key];
+                hasPropertiesArray.push({ [propertyName]: propertyValue });
+            }
+        }
+
+    }, [machineStateValue, entityIdValue, machineStateData])
+
+
+
 
     return (
         <>
@@ -73,19 +97,20 @@ const DashboardCards: React.FC = () => {
                         <span className="text-500">machines are connected</span>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card">
+                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
                     <div className="card mb-0 d">
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Running Since</span>
-                                <div className="text-900 font-medium text-xl">{formatTime(timer)}</div>
+                                {/* <div className="text-900 font-medium text-xl">{machineStateValue == "2" && runningMachineTimer()}</div> */}
+                                <div className="text-900 font-medium text-xl">{difference}</div>
 
                             </div>
                             <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className="pi pi-map-marker text-orange-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">%52+ </span>
+                        <span className="text-green-500 font-medium">%{onlineAverage} </span>
                         <span className="text-500">since last week</span>
                     </div>
                 </div>
@@ -114,7 +139,7 @@ const DashboardCards: React.FC = () => {
                     }
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 0 dashboard-card">
-                    <div className="card mb-0"   onClick={() => setNotification(true)}>
+                    <div className="card mb-0" onClick={() => setNotification(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Notifications</span>
@@ -136,8 +161,6 @@ const DashboardCards: React.FC = () => {
                     }
                 </div>
             </div>
-
-
         </>
     )
 }

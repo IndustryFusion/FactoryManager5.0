@@ -7,9 +7,9 @@ import axios from "axios";
 import { Asset } from "@/interfaces/asset-types";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import { convertToSecondsTime } from "@/utility/chart-utility";
-
+import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
+import { useDashboard } from "@/context/dashboard-context";
 
 export interface Datasets {
     label?: string;
@@ -34,13 +34,13 @@ const DashboardChart = () => {
     const [factoryData, setFactoryData] = useState({});
     const [checkFactory, setCheckFactory] = useState(false);
     const router = useRouter();
+    const { entityIdValue, setMachineStateData } = useDashboard();
 
     const fetchDataAndAssign = async () => {
-        let entityId = 'urn:ngsi-ld:asset:2:312';
-        let attributeIds: string[] | undefined = await fetchAssets(entityId);
+        let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
 
         if (attributeIds && attributeIds.length > 0) {
-            await fetchData(attributeIds[2], 'eq.' + entityId);
+            await fetchData(attributeIds[2], 'eq.' + entityIdValue);
         } else {
             console.log('No attribute set available');
         }
@@ -48,7 +48,7 @@ const DashboardChart = () => {
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            const finalData = {}; 
+            const finalData = {};
             const day = moment().subtract(6, 'days').startOf('day');
             let startTime = day.format().split('+')[0] + '-00:00';
             let endTime = moment().format().split('+')[0] + '-00:00';
@@ -70,14 +70,15 @@ const DashboardChart = () => {
                 const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
                 finalData[day] = [];
                 response.data.forEach(data => {
-                    if(data.observedAt.includes(day))
-                    {
+                    if (data.observedAt.includes(day)) {
                         finalData[day].push(data);
                     }
                 })
             }
             console.log('factoryData ', finalData);
+           
             setFactoryData(finalData);
+            setMachineStateData(finalData)
             setCheckFactory(true);
         } catch (error) {
             console.error("Error fetching asset data:", error);
@@ -86,7 +87,7 @@ const DashboardChart = () => {
     }
 
     const fetchAssets = async (assetId: string) => {
-        console.log(assetId, "getting assetId")
+        // console.log(assetId, "getting assetId")
         try {
             const attributeIds: string[] = [];
             const response = await axios.get(API_URL + `/asset/${assetId}`, {
@@ -97,7 +98,7 @@ const DashboardChart = () => {
                 withCredentials: true,
             });
             const assetData: Asset = response.data;
-            console.log(assetData, "what's the data");
+            // console.log(assetData, "what's the data");
 
             Object.keys(assetData).map((key) => {
                 if (key.includes("fields")) {
@@ -113,21 +114,21 @@ const DashboardChart = () => {
 
     const formatChartData = (dataset: any) => {
         const documentStyle = getComputedStyle(document.documentElement);
-        console.log(dataset, "what's the dataset here");
-        
+        // console.log(dataset, "what's the dataset here");
+
         const labels = Object.keys(dataset);
         const finalData = [];
-        for(let key in dataset){
+        for (let key in dataset) {
             let eachDateArr = dataset[key];
-            for(let i = 0; i < eachDateArr.length; i++){
+            for (let i = 0; i < eachDateArr.length; i++) {
                 let check = false;
-                for(let idx = 0; idx < finalData.length; idx++){
-                    if(finalData[idx].label == eachDateArr[i].type){
+                for (let idx = 0; idx < finalData.length; idx++) {
+                    if (finalData[idx].label == eachDateArr[i].type) {
                         finalData[idx].data.push(eachDateArr[i].time);
                         check = true;
                     }
                 }
-                if(!check){
+                if (!check) {
                     finalData.push({
                         label: eachDateArr[i].type,
                         backgroundColor: eachDateArr[i].type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
@@ -136,8 +137,8 @@ const DashboardChart = () => {
                 }
             }
         }
-        console.log('dataSet ',finalData);
-        console.log('labels ',labels);
+        // console.log('dataSet ', finalData);
+        // console.log('labels ', labels);
         return {
             labels,
             datasets: finalData,
@@ -147,30 +148,30 @@ const DashboardChart = () => {
     const groupData = (data: any) => {
         let groupedByDate = {};
         const keys = Object.keys(data);
-        for(let i = 0; i < keys.length; i++){
+        for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             groupedByDate[key] = [];
-            if(data[key].length > 0){
+            if (data[key].length > 0) {
                 let startTime = data[key][0].observedAt.split('T')[1].split('.')[0];
                 groupedByDate[key].push({
                     time: convertToSecondsTime(startTime),
-                    type: data[key][0].prev_value == '0'? 'offline': 'online',
+                    type: data[key][0].prev_value == '0' ? 'offline' : 'online',
                     date: key
                 })
-                if(data[key].length > 1){
-                    for(let idx = 1; idx < data[key].length; idx++){
-                        let startTime = data[key][idx-1].observedAt.split('T')[1].split('.')[0];
+                if (data[key].length > 1) {
+                    for (let idx = 1; idx < data[key].length; idx++) {
+                        let startTime = data[key][idx - 1].observedAt.split('T')[1].split('.')[0];
                         let endTime = data[key][idx].observedAt.split('T')[1].split('.')[0];
                         const difference = Math.abs(convertToSecondsTime(endTime) - convertToSecondsTime(startTime));
-                        let type = data[key][idx-1].value == '0'? 'offline': 'online';
+                        let type = data[key][idx - 1].value == '0' ? 'offline' : 'online';
                         let check = false;
                         groupedByDate[key].forEach(obj => {
-                            if(obj.type == type){
+                            if (obj.type == type) {
                                 obj.time = obj.time + difference;
                                 check = true;
                             }
                         })
-                        if(!check){
+                        if (!check) {
                             groupedByDate[key].push({
                                 time: difference,
                                 type,
@@ -180,57 +181,57 @@ const DashboardChart = () => {
                     }
 
                     let startTime = data[key][data[key].length - 1].observedAt.split('T')[1].split('.')[0];
-                    const dateToCheck = moment(key); 
+                    const dateToCheck = moment(key);
                     const currentDate = moment().startOf('day');
                     const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
                     let endTime = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                    console.log('endTime ',endTime)
+                    // console.log('endTime ', endTime)
                     const difference = Math.abs(convertToSecondsTime(endTime) - convertToSecondsTime(startTime));
-                    console.log('end difference ',difference);
-                    let type = data[key][data[key].length - 1].value == '0'? 'offline': 'online'
+                    // console.log('end difference ', difference);
+                    let type = data[key][data[key].length - 1].value == '0' ? 'offline' : 'online'
                     let check = false;
                     groupedByDate[key].forEach(obj => {
-                        if(obj.type == type){
+                        if (obj.type == type) {
                             obj.time = obj.time + difference;
                             check = true;
                         }
                     })
-                    if(!check){
-                        console.log('check fail ',difference);
+                    if (!check) {
+                        // console.log('check fail ', difference);
                         groupedByDate[key].push({
                             time: difference,
                             type,
                             date: key
                         })
                     }
-                }else{
-                    const dateToCheck = moment(key); 
+                } else {
+                    const dateToCheck = moment(key);
                     const currentDate = moment().startOf('day');
                     const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
                     let endTime = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
                     const difference = Math.abs(convertToSecondsTime(endTime) - convertToSecondsTime(startTime));
                     groupedByDate[key].push({
                         time: difference,
-                        type: data[key][0].value == '0'? 'offline': 'online',
+                        type: data[key][0].value == '0' ? 'offline' : 'online',
                         date: key
                     })
                 }
-            } else{
+            } else {
                 let check = false;
-                for(let j = i+1; j < keys.length; j++){
+                for (let j = i + 1; j < keys.length; j++) {
                     let key2 = keys[j];
-                    const dateToCheck = moment(key); 
+                    const dateToCheck = moment(key);
                     const currentDate = moment().startOf('day');
                     const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
                     let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                    if(data[key2].length > 0){
+                    if (data[key2].length > 0) {
                         groupedByDate[key].push({
                             time: convertToSecondsTime(time),
-                            type: data[key2][0].prev_value == '0'? 'offline': 'online',
+                            type: data[key2][0].prev_value == '0' ? 'offline' : 'online',
                             date: key
-                        },{
+                        }, {
                             time: 0,
-                            type: data[key2][0].prev_value == '0'? 'online': 'offline',
+                            type: data[key2][0].prev_value == '0' ? 'online' : 'offline',
                             date: key
                         });
                         check = true;
@@ -238,22 +239,22 @@ const DashboardChart = () => {
                     }
                 }
 
-                if(!check){
-                    for(let j = i-1; j >= 0; j--){
+                if (!check) {
+                    for (let j = i - 1; j >= 0; j--) {
                         let key2 = keys[j];
-                        console.log('key2 ',key2);
-                        const dateToCheck = moment(key); 
+                        // console.log('key2 ', key2);
+                        const dateToCheck = moment(key);
                         const currentDate = moment().startOf('day');
                         const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
                         let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                        if(data[key2].length > 0){
+                        if (data[key2].length > 0) {
                             groupedByDate[key].push({
                                 time: convertToSecondsTime(time),
-                                type: data[key2][data[key2].length - 1].value == '0'? 'offline': 'online',
+                                type: data[key2][data[key2].length - 1].value == '0' ? 'offline' : 'online',
                                 date: key
-                            },{
+                            }, {
                                 time: 0,
-                                type: data[key2][data[key2].length - 1].value == '0'? 'online': 'offline',
+                                type: data[key2][data[key2].length - 1].value == '0' ? 'online' : 'offline',
                                 date: key
                             });
                             check = true;
@@ -279,11 +280,11 @@ const DashboardChart = () => {
                     '--text-color-secondary'
                 );
                 const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-                if(Object.keys(factoryData).length > 0){
+                if (Object.keys(factoryData).length > 0) {
                     const groupedData = groupData(factoryData);
-                    console.log('groupedData ',groupedData);
+                    // console.log('groupedData ', groupedData);
                     const chartDataValue = formatChartData(groupedData);
-                    console.log('chartDataValue ',chartDataValue);
+                    // console.log('chartDataValue ', chartDataValue);
 
                     const options = {
                         indexAxis: 'y',
@@ -295,16 +296,16 @@ const DashboardChart = () => {
                                 intersect: false,
                                 callbacks: {
                                     label: (context: any) => {
-                                        const { dataset, dataIndex } = context;    
+                                        const { dataset, dataIndex } = context;
                                         const value = dataset.data[dataIndex];
-                                        if(value > 0){
+                                        if (value > 0) {
                                             const hours = Math.floor(value / 3600);
                                             const minutes = Math.floor((value % 3600) / 60);
                                             const seconds = value % 60;
                                             return `${hours.toString().padStart(2, '0')}:${minutes
                                                 .toString()
                                                 .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                                        }else {
+                                        } else {
                                             return '';
                                         }
                                     },
@@ -338,21 +339,21 @@ const DashboardChart = () => {
                                         const hours = Math.floor(value / 3600);
                                         const minutes = Math.floor((value % 3600) / 60);
                                         const seconds = value % 60;
-    
+
                                         return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
                                     },
                                 }
-    
+
                             },
                         },
                     };
-    
+
                     setChartData(chartDataValue);
                     setChartOptions(options);
                 }
             }
         }
-    }, [router.isReady, checkFactory])
+    }, [router.isReady, checkFactory, entityIdValue])
 
     return (
         <div className="card h-auto" style={{ width: "40%" }}>

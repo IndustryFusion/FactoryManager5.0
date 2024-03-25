@@ -29,3 +29,9 @@ export const getSessionToken = async (req: Request): Promise<string> => {
       });
     });
   }
+
+export const getCronToken = async (req: Request) => {
+  let sessionStore = req['sessionStore'].sessions;
+  const firstValue = JSON.parse(Object.values(sessionStore)[0] as string);
+  return firstValue.accessToken;
+}
