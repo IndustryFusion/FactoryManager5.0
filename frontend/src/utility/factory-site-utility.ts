@@ -1,11 +1,11 @@
 //factory-site utility .ts
 
 import axios from "axios";
-import { Factory } from "@/interfaces/FactoryType";
-import { Asset } from "@/interfaces/AssetTypes";
+import { Factory } from "@/interfaces/factory-type";
+import { Asset } from "@/interfaces/asset-types";
 import { MdQueryBuilder } from "react-icons/md";
 import html2canvas from "html2canvas";
-import { AllocatedAsset } from "@/interfaces/AssetTypes";
+import { AllocatedAsset } from "@/interfaces/asset-types";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -22,8 +22,12 @@ interface RelationshipDetail {
   class?: string;
 }
 
-interface ExtractedRelations {
-  [key: string]: RelationshipDetail;
+export interface ExtractedRelations {
+  [key: string]: {
+    type: string;
+    class?: string;
+    objects: string[]; // Use an array to accommodate multiple objects
+  };
 }
 
 export const handleUpload = async (file: File): Promise<string> => {
@@ -488,27 +492,38 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
   const hasRelations: ExtractedRelations = {};
   const prefixToRemove = "http://www.industry-fusion.org/schema#";
 
-  assetData = assetData || {};
-
   Object.entries(assetData).forEach(([key, value]) => {
-    if (key.startsWith(prefixToRemove)) {
-      if (value && typeof value === "object" && value.type === "Relationship") {
-        const relationshipDetail: any = {
-          type: value.type,
-          object: value.object,
-          class: value.class ? value.class.value : undefined,
-        };
+    // Check if the key starts with the required prefix and the value is either an object or an array
+    if (key.startsWith(prefixToRemove) && (typeof value === "object" || Array.isArray(value))) {
+      // Initialize an array to hold all objects related to this relationship
+      let objects = [];
 
+      // Check if value is an array, if so, iterate through it
+      if (Array.isArray(value)) {
+        value.forEach((val) => {
+          if (val.type === "Relationship") {
+            objects.push(val.object);
+          }
+        });
+      } else if (value.type === "Relationship") { // Single object case
+        objects.push(value.object);
+      }
+
+      if (objects.length > 0) {
         // Remove the prefix from the key
         const cleanedKey = key.replace(prefixToRemove, "");
-        hasRelations[cleanedKey] = relationshipDetail;
+        // Create or update the relationship in the hasRelations object
+        hasRelations[cleanedKey] = {
+          type: value.type || 'Relationship',
+          class: value.class ? value.class.value : undefined,
+          objects: objects
+        };
       }
     }
   });
 
   return hasRelations;
 }
-
 export const saveFlowchartData = async (
   factoryId: string,
   nodes: [],
@@ -549,9 +564,9 @@ export const fetchAssetById = async (assetId: string) => {
   }
 };
 
-export const fetchAllocatedAssets = async ()=> {
+export const fetchAllocatedAssets = async (factoryId:string)=> {
   try {
-    const response = await axios.get(`${API_URL}/allocated-asset`, {
+    const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

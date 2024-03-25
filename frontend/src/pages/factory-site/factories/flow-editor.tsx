@@ -24,13 +24,13 @@ import {
   fetchAndDetermineSaveState,
   exportElementToJPEG,
   fetchAssetById,
-} from "@/utility/FactorySiteUtility";
-import { Factory } from "@/interfaces/FactoryType";
-import EdgeAddContext from "@/context/EdgeAddContext";
-import { RelationsModal } from "@/components/ReactFlowRelationModal";
-import CustomAssetNode from "@/components/CustomAssetNode";
-import { useShopFloor } from "@/context/ShopFloorContext";
-import ShopFloorList from "@/components/ShopFloorList";
+} from "@/utility/factory-site-utility";
+import { Factory } from "@/interfaces/factory-type";
+import EdgeAddContext from "@/context/edge-add-context";
+import { RelationsModal } from "@/components/reactflow-relation-modal";
+import CustomAssetNode from "@/components/custom-asset-node";
+import { useShopFloor } from "@/context/shopfloor-context";
+import ShopFloorList from "@/components/shopfloor-list";
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -102,7 +102,7 @@ const FlowEditor: React.FC<
   const elementRef = useRef(null);
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
-  const [loadedFlowEditor , serLoadedFlowEditor] = useState(false)  ;
+  const [loadedFlowEditor , setLoadedFlowEditor] = useState(false)  ;
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
   );
@@ -178,11 +178,13 @@ const FlowEditor: React.FC<
     });
   };
 
+
+
   useEffect(() => {
- 
+
     //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
-      const factoryNodeId = `factory-${factoryId}`;
+      const factoryNodeId = `factory_${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
       const shopFloorNodeId = `shopFloor_${latestShopFloor.id}`;
 
@@ -250,7 +252,7 @@ const FlowEditor: React.FC<
       
     }
      if (factory && reactFlowInstance && !loadedFlowEditor ) {
-      const factoryNodeId = `factory-${factory.id}`;
+      const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
         id: factoryNodeId,
         type: "factory",
@@ -265,10 +267,20 @@ const FlowEditor: React.FC<
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
       setNodesInitialized(true);
       onRestore();
-      serLoadedFlowEditor(true)
+      setLoadedFlowEditor(true)
     }
+
+     if (toastMessage) {
+    toast.current?.show({
+      severity: 'success', 
+      summary: toastMessage,
+      life: 3000, 
+    });
+
+    setToastMessage(null);
+  }
    
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL] );
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
   const onRestore = useCallback(async () => {
@@ -368,23 +380,23 @@ const FlowEditor: React.FC<
         setToastMessage("FlowChart already exist");
       }
 
-      // const reactFlowScorpioUpdate = await axios.patch(
-      //   `${API_URL}/shop-floor/update-react`,
-      //   payLoad.factoryData.edges,
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Accept: "application/json",
-      //     },
-      //     withCredentials: true,
-      //   }
-      // );
+      const reactFlowScorpioUpdate = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       console.log(payLoad.factoryData.edges, "edges update");
-      // if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
-      //   setToastMessage("Scorpio updated successfully");
-      // } else {
-      //   setToastMessage("Scorpio already has these data");
-      // }
+      if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
+        setToastMessage("Scorpio updated successfully");
+      } else {
+        setToastMessage("Scorpio already has these data");
+      }
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -423,8 +435,8 @@ const FlowEditor: React.FC<
         },
         withCredentials: true,
       });
-      console.log(reactFlowUpdateMongo, "Onsave first");
-      if (reactFlowUpdateMongo.status === 201) {
+ 
+      if (reactFlowUpdateMongo.status == 201 ) {
         setToastMessage("Flowchart saved successfully");
       } else {
         setToastMessage("Flowchart already exist");
@@ -442,12 +454,32 @@ const FlowEditor: React.FC<
           params: { id: factoryId },
         }
       );
-  
-      if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
+      
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
+    
+       const reactAllocatedAssetScorpio = await axios.post(
+        `${API_URL}/allocated-asset/${factoryId}`,
+     
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        
+        }
+      );
+        
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
+        setNodesInitialized(true);
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");

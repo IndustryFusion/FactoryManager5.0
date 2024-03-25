@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { Chart } from 'primereact/chart';
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { useDashboard } from '@/context/dashboardContext';
+import { useDashboard } from '@/context/dashboard-context';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 

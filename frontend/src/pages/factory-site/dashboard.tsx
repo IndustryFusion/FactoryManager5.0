@@ -2,10 +2,10 @@
 
 
 import { useContext, useEffect, useState,useRef } from "react";
-import { LayoutContext } from './layout/LayoutContext';
+import { LayoutContext } from './layout/layout-context';
 import axios from "axios";
 import DashboardAssets from "@/components/dashboard/dashboard-assets";
-import HorizontalNavbar from "@/components/HorizontalNavbar";
+import HorizontalNavbar from "@/components/horizontal-navbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
@@ -13,7 +13,7 @@ import CombineSensorChart from "@/components/dashboard/senosor-linear-charts";
 import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
-import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
+import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
