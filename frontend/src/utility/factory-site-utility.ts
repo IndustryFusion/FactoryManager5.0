@@ -580,3 +580,30 @@ export const fetchAllocatedAssets = async (factoryId:string)=> {
     throw new Error("Failed to fetch allocated assets");
   }
 };
+
+
+
+type ConsoleMethod = (message?: any, ...optionalParams: any[]) => void;
+
+const filterPatterns: RegExp[] = [/^\[React Flow\]: Node type/]; // Add more patterns here as needed
+
+ const shouldFilterMessage = (message: string, patterns: RegExp[]): boolean => 
+  patterns.some(pattern => pattern.test(message));
+
+export const customLogger: {
+  warn: ConsoleMethod;
+  error: ConsoleMethod;
+  log: ConsoleMethod;
+} = {
+  warn: (message?: any, ...optionalParams: any[]): void => {
+    if (typeof message === 'string' && shouldFilterMessage(message, filterPatterns)) return;
+    console.warn(message, ...optionalParams);
+  },
+  error: (message?: any, ...optionalParams: any[]): void => {
+    if (typeof message === 'string' && shouldFilterMessage(message, filterPatterns)) return;
+    console.error(message, ...optionalParams);
+  },
+  log: console.log,
+};
+
+
