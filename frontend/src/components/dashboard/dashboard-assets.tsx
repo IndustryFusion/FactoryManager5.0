@@ -1,6 +1,5 @@
-import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Asset } from "@/interfaces/asset-types";
-
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -12,8 +11,6 @@ import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
 import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
-import EditOnboardForm from "./edit-onboard-form";
-import { Toast, ToastMessage } from "primereact/toast";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -23,29 +20,24 @@ interface DashboardAssetsProps {
 }
 
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
-
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
-  const [editOnboardAsset, setEditOnboardAsset] = useState({
-    showEditOnboard: false,
-    onboardAssetId: "",
-    successToast:false
-  })
-  const [selectedRowAsset, setSelectedRowAsset] = useState({})
+  const [selectedRow, setSelectedRow] = useState({});
+  const [assetFlag, setAssetFlag] = useState(false)
   const router = useRouter();
-  const { entityIdValue, setEntityIdValue,
-    machineStateValue, setMachineStateValue,
-    selectedAssetData, setSelectedAssetData } = useDashboard();
-  const toast = useRef<any>(null);
+  const dataTableRef = useRef(null);
 
-  const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
+  const { entityIdValue, setEntityIdValue, machineStateValue,
+    setMachineStateValue, selectedAssetData, setSelectedAssetData } = useDashboard();
+
+  const productNameBodyTemplate = (rowData: any) => {
     return <>{rowData?.product_name}</>;
   };
-  const assetTypeBodyTemplate = (rowData: Asset): React.ReactNode => {
+  const assetTypeBodyTemplate = (rowData: any) => {
     const assetType = rowData?.type?.split('/')[5];
     return <>{assetType}</>;
   };
-  const productIconTemplate = (rowData: Asset): React.ReactNode => {
+  const productIconTemplate = (rowData: any) => {
     return rowData?.product_icon ? (
       <img
         src={rowData?.product_icon}
@@ -56,43 +48,50 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       <span>No Image</span>
     );
   };
-  const viewBodyTemplate = (rowData: Asset): React.ReactNode => {
-    return (
-      <>
-        <Button
-          onClick={(e) => {
-            setEditOnboardAsset(() => ({
-              ...editOnboardAsset,
-              showEditOnboard: true,
-              onboardAssetId: rowData?.id
-            }))
-          }}
-          icon="pi pi-search" text />
-      </>
-    )
-  }
-
 
   const handleAsset = async () => {
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
         setAssetData(response);
-        console.log(response, "allresponse");
+        // console.log(response, "allresponse");
+        setAssetFlag(true);
       } else {
         console.error("Fetch returned undefined");
       }
-
     } catch (error) {
       console.error(error)
     }
   }
+
+
+  useEffect(() => {
+    if (Cookies.get("login_flag") === "false") {
+      router.push("/login");
+    } else {
+      if (router.isReady) {
+        const { } = router.query;
+        handleAsset();
+        if (dataTableRef.current) {
+          if (assetData?.length > 0 && assetFlag) {
+            // console.log("is coming here");
+            // console.log("first object value", newRowData[0]);
+            setSelectedRow(assetData[0]);
+            setEntityIdValue(assetData[0].id);
+          }
+        }
+      }
+    }
+  }, [router.isReady, assetFlag])
+
+
+
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
-    setSelectedRowAsset(selectedAsset)
+    setSelectedRow(selectedAsset);
     setPrefixedAssetPropertyProp(prefixedKeys);
     setEntityIdValue(selectedAsset?.id);
     console.log(selectedAsset, "what's the asset here");
@@ -113,82 +112,66 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
     }
   };
-  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
-  };
 
-  useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { } = router.query;
-        handleAsset();
-        if(editOnboardAsset.successToast){
-          showToast("success", "success","onboard updated successfully")
-        }
-      }
-    }
-  }, [router.isReady, editOnboardAsset.successToast])
+  console.log("selectedRow value here", selectedRow);
+  // console.log("entityIdValue of selected asset", entityIdValue );
 
 
   return (
-    <>
-      <Toast ref={toast} />
-      <div style={{ zoom: "80%" }}>
-        <div className="dashboard-assets" style={{ width: "100%" }}>
-          <div className="card h-auto " style={{ width: "100%" }}>
-            <h5 className="heading-text">Assets</h5>
-            <DataTable
-              rows={5}
-              paginator
-              value={assetData}
-              className="dashboard-assets"
-              scrollable={true}
-              scrollHeight="750px"
-              onRowClick={(e) => handleClick(e.data as Asset)}
-            >
-              <Column
-                header="Product Image"
-                field="product_icon"
-                body={productIconTemplate}
-              />
-              <Column
-                header="Product Name"
-                field="product_name"
-                body={productNameBodyTemplate}
-              />
-              <Column
-                header="AssetType"
-                field="asset_type"
-                body={assetTypeBodyTemplate}
-              />
-              <Column
-                header="View"
-                style={{ width: '15%' }}
-                body={viewBodyTemplate}
+    <div style={{ zoom: "80%" }}>
+      <div className="dashboard-assets" style={{ width: "100%" }}>
+        <div className="card h-auto " style={{ width: "100%" }}>
+          <h5 className="heading-text">Assets</h5>
+          <DataTable
+            ref={dataTableRef}
+            rows={5}
+            paginator
+            value={assetData}
+            className="dashboard-assets"
+            scrollable={true}
+            scrollHeight="750px"
+            onRowClick={(e) => handleClick(e.data as Asset)}
+            selectionMode="single"
+            selection={selectedRow}
+            onSelectionChange={(e) => setSelectedRow(e.value)}
 
-              />
-            </DataTable>
-          </div>
+          >
+            <Column
+              header="Product Image"
+              field="product_icon"
+              body={productIconTemplate}
+            />
+            <Column
+              header="Product Name"
+              field="product_name"
+              body={productNameBodyTemplate}
+            />
+            <Column
+              header="AssetType"
+              field="asset_type"
+              body={assetTypeBodyTemplate}
+            />
+            <Column
+              header="View"
+              style={{ width: '15%' }}
+              body={() => (
+                <>
+                  <Button icon="pi pi-search" text />
+                </>
+              )}
+            />
+          </DataTable>
         </div>
-        {showBlocker &&
-          <OnboardForm
-            showBlockerProp={showBlocker}
-            setShowBlockerProp={setShowBlocker}
-            asset={selectedRowAsset}
-            setBlocker={setBlockerProp}
-          />
-        }
-        {editOnboardAsset.showEditOnboard &&
-          <EditOnboardForm
-            editOnboardAssetProp={editOnboardAsset}
-            setEditOnboardAssetProp={setEditOnboardAsset}
-          />
-        }
       </div>
-    </>
-
+      {showBlocker &&
+        <OnboardForm
+          showBlockerProp={showBlocker}
+          setShowBlockerProp={setShowBlocker}
+          asset={selectedAssetData}
+          setBlocker={setBlockerProp}
+        />
+      }
+    </div>
   )
 }
 
