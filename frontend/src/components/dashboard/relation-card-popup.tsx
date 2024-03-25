@@ -31,8 +31,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 <h4 className="m-0 mb-3">Child</h4>
                 {hasPropertiesArray.map((property, index) => {
                     const key = Object.keys(property)[0];
-                    const value = property[key];
-               
+                    const value = property[key];            
                     return (
                         <div key={index} className="mb-2">
                             <span>{key} - </span>

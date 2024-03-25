@@ -16,9 +16,11 @@ const DashboardCards: React.FC = () => {
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
     const [difference, setDifference] = useState("00:00:00");
-    const [onlineAverage, setOnlineAverage] = useState(0)
-    const hasPropertiesArray = [];
+    const [onlineAverage, setOnlineAverage] = useState(0);
+    const [hasRelations, setHasRelations] = useState<any>([]);
 
+
+    console.log(selectedAssetData, "selectedAssetData")
 
     useEffect(() => {
         const runningSince = () => {
@@ -69,17 +71,30 @@ const DashboardCards: React.FC = () => {
         } else {
             setDifference("00:00:00")
         }
+        const hasPropertiesArray = [];
 
-        for (const key in selectedAssetData) {
-            if (key.startsWith("has")) {
-                const propertyName = key.substring(3); // Remove the "has" prefix
-                const propertyValue = selectedAssetData[key];
-                hasPropertiesArray.push({ [propertyName]: propertyValue });
+        if (Object.keys(selectedAssetData).length > 0) {
+            console.log("is come inside");
+
+            for (const key in selectedAssetData) {
+                console.log("is  coming here");
+
+                if (key.startsWith("has")) {
+                    console.log("is checking this");
+
+                    const propertyName = key.substring(3); // Remove the "has" prefix
+                    const propertyValue = selectedAssetData[key];
+                    console.log("has valiess", propertyName, propertyValue);
+
+                    hasPropertiesArray.push({ [propertyName]: propertyValue });
+                }
             }
         }
+        setHasRelations(hasPropertiesArray)
 
-    }, [machineStateValue, entityIdValue, machineStateData])
+    }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData])
 
+    console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
 
 
 
@@ -127,7 +142,7 @@ const DashboardCards: React.FC = () => {
                             <div>
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">{hasPropertiesArray.length}</div>
+                                    <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length}</div>
                                     <span className="relation-text font-medium">child objects</span>
                                 </div>
                             </div>

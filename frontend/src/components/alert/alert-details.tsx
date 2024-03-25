@@ -9,14 +9,10 @@ interface AlertDetailsProps {
   count: number;
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  assetData: Asset;
+  assetData: any;
 }
 
-interface Asset {
-  id: string;
-  product_name: string;
-  asset_category: string;
-}
+
 
 interface Alerts {
   lastReceiveTime: string;
@@ -103,59 +99,64 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
       >
         {
           count > 0 ? (
-            alerts.map((alert, index) => (
-              <>
-                <div key={index} className="alerts-container">
-                  <div className="flex align-center">
-                    <p className="font-medium">Last Receive Time: </p>
-                    <p className="ml-2 ">  {alert?.lastReceiveTime}</p>
+            alerts.map((alert, index) => {
+              const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource))
+              // console.log("findAsset", findAsset)
+              return (
+                <>
+                  <div key={index} className="alerts-container">
+                    <div className="flex align-center">
+                      <p className="font-medium">Last Receive Time: </p>
+                      <p className="ml-2 ">  {alert?.lastReceiveTime}</p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Previous Severity: </p>
+                      <p className="ml-2 "> {alert?.previousSeverity}</p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Resource: </p>
+                      <p className="ml-2 ">{alert?.resource} </p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Severity: </p>
+                      <p className="ml-2 "> {alert?.severity}</p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Status: </p>
+                      <p className="ml-2 "> {alert?.status}</p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Text: </p>
+                      <p className="ml-2 ">{alert?.text}</p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Repeat: </p>
+                      <p className="ml-2 ">{alert?.repeat ? "true" : "false"} </p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Origin: </p>
+                      <p className="ml-2 "> {alert?.origin}</p>
+                    </div>
                   </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Previous Severity: </p>
-                    <p className="ml-2 "> {alert?.previousSeverity}</p>
+                  <div className="alerts-container">
+                    <div className="flex align-center">
+                      <p className="font-medium">URN ID: </p>
+                      <p className="ml-2 ">{findAsset?.id} </p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Product name: </p>
+                      <p className="ml-2 ">{findAsset?.product_name} </p>
+                    </div>
+                    <div className="flex align-center">
+                      <p className="font-medium">Asset Category:  </p>
+                      <p className="ml-2 "> {findAsset?.asset_category}</p>
+                    </div>
                   </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Resource: </p>
-                    <p className="ml-2 ">{alert?.resource} </p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Severity: </p>
-                    <p className="ml-2 "> {alert?.severity}</p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Status: </p>
-                    <p className="ml-2 "> {alert?.status}</p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Text: </p>
-                    <p className="ml-2 ">{alert?.text}</p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Repeat: </p>
-                    <p className="ml-2 ">{alert?.repeat ? "true" : "false"} </p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Origin: </p>
-                    <p className="ml-2 "> {alert?.origin}</p>
-                  </div>
-                </div>
-                <div className="alerts-container">
-                  <div className="flex align-center">
-                    <p className="font-medium">URN ID: </p>
-                    <p className="ml-2 ">{assetData?.id} </p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Product name: </p>
-                    <p className="ml-2 ">{assetData?.product_name} </p>
-                  </div>
-                  <div className="flex align-center">
-                    <p className="font-medium">Asset Category:  </p>
-                    <p className="ml-2 "> {assetData?.asset_category}</p>
-                  </div>
-                </div>
-                <Divider />
-              </>
-            ))
+                  <Divider />
+                </>
+              )
+            }
+            )
           ) : (
             <div className="notification notification--empty flex flex-row gap-3 items-center">
               <Avatar icon="pi pi-inbox" shape="circle"></Avatar>
