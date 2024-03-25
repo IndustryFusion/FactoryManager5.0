@@ -93,10 +93,10 @@ export class AllocatedAssetController {
   }
 
   @Patch()
-  async update(@Query('id') id: string, @Body() data, @Req() req: Request) {
+  async update(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.update(id, token);
+      let response = await this.allocatedAssetService.update(factoryId, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
