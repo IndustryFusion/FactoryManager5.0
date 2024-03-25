@@ -1,6 +1,6 @@
 
 
-
+import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState,useRef } from "react";
 import { LayoutContext } from './layout/layout-context';
 import axios from "axios";
@@ -17,6 +17,7 @@ import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
+
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -42,11 +43,14 @@ const Dashboard = () => {
         },
         withCredentials: true,
       })
-      console.log(response, "what i'm getting in alerts");
+      // console.log(response, "what i'm getting in alerts");
     } catch (error) {
       console.error("Error:", error);
     }
   }
+  const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), {
+    ssr: false,
+   });
   
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
@@ -97,7 +101,7 @@ const Dashboard = () => {
     }   
   }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length, layoutConfig ])
 
-   console.log(prefixedAssetProperty , "prefix value here");
+  //  console.log(prefixedAssetProperty , "prefix value here");
 
   return (
     <>
