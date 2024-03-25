@@ -33,7 +33,15 @@ export class OnboardingAssetService {
         }
       }
     }catch(err){
-      throw err;
+      if (err.response && err.response.status === 422) {
+        return {
+          "success": false,
+          "status": 422,
+          "message": "File already exist"
+        }
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -61,10 +69,10 @@ export class OnboardingAssetService {
         return parsedContent;
       }
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
-    }
+              throw new NotFoundException(
+          `Failed to fetch repository data: ${err.message}`,
+        );
+          }
   }
 
   async update(id: string, data: any) {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AllocatedAssetService } from './allocated-asset.service';
 import { getSessionToken } from '../session/session.service';
@@ -29,11 +29,11 @@ export class AllocatedAssetController {
     }
   }
 
-  @Post(':id')
-  async create(@Param('id') id: string, @Req() req: Request) {
+  @Post()
+  async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.create(id, token);
+      let response = await this.allocatedAssetService.create(factoryId, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
@@ -48,7 +48,7 @@ export class AllocatedAssetController {
         message: err.response.data 
       }
     }
-  }
+  } 
 
   @Get()
   async findAll(@Req() req: Request) {
@@ -92,11 +92,11 @@ export class AllocatedAssetController {
     
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Req() req: Request) {
+  @Patch()
+  async update(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.update(id, token);
+      let response = await this.allocatedAssetService.update(factoryId, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,

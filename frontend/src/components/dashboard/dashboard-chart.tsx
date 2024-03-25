@@ -44,9 +44,9 @@ const DashboardChart = () => {
 
     const fetchDataAndAssign = async () => {
         let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
-
-        if (attributeIds && attributeIds.length > 0) {
-            await fetchData(attributeIds[2], 'eq.' + entityIdValue);
+        
+        if (attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#machine-state")) {
+            await fetchData("eq.http://www.industry-fusion.org/fields#machine-state", 'eq.' + entityIdValue);
         } else {
             console.log('No attribute set available');
         }
@@ -72,7 +72,7 @@ const DashboardChart = () => {
                 },
                 withCredentials: true,
             });
-
+            
             for (let i = 6; i >= 0; i--) {
                 const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
                 finalData[day] = [];
