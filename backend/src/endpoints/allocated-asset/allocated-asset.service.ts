@@ -155,7 +155,12 @@ export class AllocatedAssetService {
       }
       return finalArray;
     } catch(err) {
-      return err;
+      if (err.response && err.response.status === 404) {
+        console.log('No data found from fetchUrl');
+        return [];
+      } else {
+        return err;
+      }
     }
   }
 
