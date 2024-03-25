@@ -110,7 +110,8 @@ export class ShopFloorController {
       const token = await getSessionToken(req);
       const response = await this.shopFloorService.updateReact(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
-        let allocatedAssetResponse = await this.allocatedAssetService.update(token);
+        let factoryId = data[0].source.split('_').pop();
+        let allocatedAssetResponse = await this.allocatedAssetService.update(factoryId, token);
         if(allocatedAssetResponse['status'] == 200 || allocatedAssetResponse['status'] == 204) {
           return {
             success: true,

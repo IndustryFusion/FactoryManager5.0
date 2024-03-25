@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import { Asset } from "@/interfaces/AssetTypes";
-import { fetchAsset } from "@/utility/AssetUtility";
+import { Asset } from "@/interfaces/asset-types";
+import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;

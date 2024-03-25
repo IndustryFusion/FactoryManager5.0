@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
-import FlowEditor from "../factories/FlowEditor";
-import ShopFloorList from "../../../components/ShopFloorList";
-import UnallocatedAssets from "../../../components/UnallocatedAssets";
-import { ShopFloor } from "../types/ShopFloor";
-import { exportElementToJPEG } from "@/utility/FactorySiteUtility";
-import { Asset } from "../../../interfaces/AssetTypes";
-import HorizontalNavbar from "../../../components/HorizontalNavbar";
-import Footer from "../../../components/Footer";
+import FlowEditor from "../factories/flow-editor";
+import ShopFloorList from "../../../components/shopfloor-list";
+import UnallocatedAssets from "../../../components/unallocated-assets";
+import { ShopFloor } from "../types/shop-floor";
+import { exportElementToJPEG } from "@/utility/factory-site-utility";
+import { Asset } from "../../../interfaces/asset-types";
+import HorizontalNavbar from "../../../components/horizontal-navbar";
+import Footer from "../../../components/footer";
 import Cookies from "js-cookie";
-import { ShopFloorProvider } from "@/context/ShopFloorContext";
+import { ShopFloorProvider } from "@/context/shopfloor-context";
 
 import {
   getshopFloorById,
   getNonShopFloorAsset,
   getShopFloors,
-} from "@/utility/FactorySiteUtility";
+} from "@/utility/factory-site-utility";
 import { any } from "prop-types";
-import CreateShopFloor from "@/components/shopFloorForms/CreateShopFloorForm";
+import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);

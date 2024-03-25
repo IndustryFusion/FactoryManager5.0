@@ -2,10 +2,10 @@
 
 import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState,useRef } from "react";
-import { LayoutContext } from './layout/LayoutContext';
+import { LayoutContext } from './layout/layout-context';
 import axios from "axios";
 import DashboardAssets from "@/components/dashboard/dashboard-assets";
-import HorizontalNavbar from "@/components/HorizontalNavbar";
+import HorizontalNavbar from "@/components/horizontal-navbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
@@ -13,7 +13,7 @@ import CombineSensorChart from "@/components/dashboard/senosor-linear-charts";
 import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
-import { DashboardProvider, useDashboard } from "@/context/dashboardContext";
+import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
@@ -134,7 +134,7 @@ const Dashboard = () => {
       <div className="dashboard-container" style={{ zoom: "95%" }}>
         <HorizontalNavbar />
         <DashboardCards  />
-        <div className="flex flex-column md:flex-row" style={{height:"80%", width:"100%" }}>
+        <div className="flex flex-column md:flex-row my-3 gap-2" style={{height:"80%", width:"100%" }}>
           <div className="flex border-round m-2" style={{width:"77%"}}>
             <div className="card h-auto" style={{width:"100%"}} >
               <CombineSensorChart />
@@ -145,7 +145,7 @@ const Dashboard = () => {
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
         </div>
-        <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
+        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5" style={{height:"100%", width:"100%"}}>
           <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>

@@ -3,7 +3,7 @@ import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Toast } from "primereact/toast";
-import authService from "@/auth/AuthService";
+import authService from "@/auth/auth-service";
 import Cookies from 'js-cookie';
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "primeflex/primeflex.css";
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
           detail: "Welcome!",
         });
         setIsLoggedIn(true);
-        router.push('/factory-site/FactoryOverview');
+        router.push('/factory-site/factory-overview');
       } catch (err) {
         toast.current?.show({
           severity: "error",

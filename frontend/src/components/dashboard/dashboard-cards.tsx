@@ -1,5 +1,4 @@
-
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";

@@ -1,13 +1,15 @@
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { ChartData, ChartOptions } from 'chart.js';
+import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/AssetTypes";
+import { Asset } from "@/interfaces/asset-types";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 
 export interface Datasets {
     label?: string;
