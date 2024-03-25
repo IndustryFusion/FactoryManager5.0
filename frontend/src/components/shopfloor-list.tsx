@@ -3,16 +3,16 @@ import {
   getShopFloors,
   getshopFloorById,
   deleteShopFloorById,
-} from "@/utility/FactorySiteUtility";
-import { ShopFloor } from "../pages/factory-site/types/ShopFloor";
+} from "@/utility/factory-site-utility";
+import { ShopFloor } from "../pages/factory-site/types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
-import EditShopFloor from "./shopFloorForms/EditShopFloorForm";
+import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
 
 import { Toast } from "primereact/toast";
-import CreateShopFloor from "./shopFloorForms/CreateShopFloorForm";
+import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 interface ShopfloorListProps {
   factoryId: string;

@@ -2,12 +2,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { ChartData, ChartOptions } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { LayoutContext } from "./layout/LayoutContext";
-import { Asset } from "@/interfaces/AssetTypes";
+import { LayoutContext } from "./layout/layout-context";
+import { Asset } from "@/interfaces/asset-types";
 import { Button } from "primereact/button";
 import { Image } from "primereact/image";
 import { Dropdown } from "primereact/dropdown";
-import { Datasets, pgData, DataCache } from "./types/CombineLinearChart";
+import { Datasets, pgData, DataCache } from "./types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
 import {
   FaIndustry,

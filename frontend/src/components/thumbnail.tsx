@@ -3,7 +3,7 @@ import { FileUpload } from "primereact/fileupload";
 import { ProgressBar } from "primereact/progressbar";
 import { Tag } from "primereact/tag";
 import { Tooltip } from "primereact/tooltip";
-import "@/styles/FactoryForm.css"
+import "@/styles/factory-form.css"
 import { useEffect, useState } from "react";
 
 interface HeaderTemplateOptions {

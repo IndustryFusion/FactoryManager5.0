@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
-import { Asset } from "@/interfaces/assetTypes";
+import { Asset } from "@/interfaces/asset-types";
+
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -9,7 +10,7 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
-import { useDashboard } from "@/context/dashboardContext";
+import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
 import EditOnboardForm from "./edit-onboard-form";
 import { Toast, ToastMessage } from "primereact/toast";
