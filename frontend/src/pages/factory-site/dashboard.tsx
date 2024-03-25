@@ -130,7 +130,7 @@ const Dashboard = () => {
       <div className="dashboard-container" style={{ zoom: "95%" }}>
         <HorizontalNavbar />
         <DashboardCards  />
-        <div className="flex flex-column md:flex-row" style={{height:"80%", width:"100%" }}>
+        <div className="flex flex-column md:flex-row my-3 gap-2" style={{height:"80%", width:"100%" }}>
           <div className="flex border-round m-2" style={{width:"77%"}}>
             <div className="card h-auto" style={{width:"100%"}} >
               <CombineSensorChart />
@@ -141,7 +141,7 @@ const Dashboard = () => {
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
         </div>
-        <div className="flex flex-column md:flex-row" style={{height:"100%", width:"100%"}}>
+        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5" style={{height:"100%", width:"100%"}}>
           <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>
