@@ -19,7 +19,7 @@ const DashboardCards: React.FC = () => {
     const [onlineAverage, setOnlineAverage] = useState(0)
     const hasPropertiesArray = [];
 
-  
+
     useEffect(() => {
         const runningSince = () => {
             // Reverse the keys of the object
@@ -32,26 +32,33 @@ const DashboardCards: React.FC = () => {
 
             // Iterate over the reversed keys
             for (const key in reversedData) {
-                const dataArray = reversedData[key];
+                const dataArray: any = reversedData[key];
                 if (dataArray.length > 0) {
                     // Find the first element with prev_value === "2"
                     const allOnlineValues = [];
-                    for(let i=0; i<= dataArray.length -1; i++ ){
-                        if(dataArray[i].prev_value === "2"){
-                            allOnlineValues.push(dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/)[0]);                           
+                    for (let i = 0; i <= dataArray.length - 1; i++) {
+                        if (dataArray[i].prev_value === "2") {
+                            const matchResult = dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/);
+                            if (matchResult) {
+                                allOnlineValues.push(matchResult[0]);
+                            }
                         }
                     }
                     console.log("allOnlineValues", allOnlineValues);
                     setOnlineAverage(findOnlineAverage(allOnlineValues))
 
 
-                    const foundElement = dataArray.find(item => item.prev_value === "2");
+                    const foundElement = dataArray.find((item: any) => item.prev_value === "2");
                     if (foundElement) {
-                        const time = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/)[0];
-                        // console.log("time", time);
-                        setTimer(time);
-                        setDifference(findDifference(time));
-                        break; // Exit the loop once the condition is met
+                        const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
+                        if (matchResult) {
+                            const time = matchResult[0];
+                            // console.log("time", time);
+                            setTimer(time);
+                            setDifference(findDifference(time));
+                            break; // Exit the loop once the condition is met
+                        }
+
                     }
                 }
             }

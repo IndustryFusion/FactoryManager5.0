@@ -26,6 +26,12 @@ export interface pgData {
     value: string;
 }
 
+interface GroupedData {
+    time: number;
+    type: string;
+    date: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const DashboardChart = () => {
@@ -48,7 +54,8 @@ const DashboardChart = () => {
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            const finalData = {};
+            type DataType = any;
+            const finalData: { [key: string]: DataType[] } = {};
             const day = moment().subtract(6, 'days').startOf('day');
             let startTime = day.format().split('+')[0] + '-00:00';
             let endTime = moment().format().split('+')[0] + '-00:00';
@@ -69,14 +76,14 @@ const DashboardChart = () => {
             for (let i = 6; i >= 0; i--) {
                 const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
                 finalData[day] = [];
-                response.data.forEach(data => {
+                response.data.forEach((data: any) => {
                     if (data.observedAt.includes(day)) {
                         finalData[day].push(data);
                     }
                 })
             }
             console.log('factoryData ', finalData);
-           
+
             setFactoryData(finalData);
             setMachineStateData(finalData)
             setCheckFactory(true);
@@ -146,7 +153,7 @@ const DashboardChart = () => {
     };
 
     const groupData = (data: any) => {
-        let groupedByDate = {};
+        let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
