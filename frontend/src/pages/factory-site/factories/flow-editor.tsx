@@ -397,6 +397,23 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Scorpio already has these data");
       }
+
+      const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -441,9 +458,25 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Flowchart already exist");
       }
-
+ const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
       const reactFlowScorpioUpdate = await axios.patch(
-        `${API_URL}/shop-floor/update-react/`,
+        `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
           headers: {
@@ -461,24 +494,7 @@ const FlowEditor: React.FC<
         setToastMessage("Data Already Exist in Scorpio");
       }
     
-       const reactAllocatedAssetScorpio = await axios.post(
-        `${API_URL}/allocated-asset/${factoryId}`,
-     
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        
-        }
-      );
-        
-      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-        setToastMessage("Allocated Asset Scorpio Updated");
-      } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
-      }
+      
         setNodesInitialized(true);
     } catch (error) {
       console.error("Error saving flowchart:", error);

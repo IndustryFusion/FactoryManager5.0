@@ -117,7 +117,7 @@ export class AllocatedAssetService {
     }
   }
 
-  async findOne(factoryId: string, token: string) {
+ async findOne(factoryId: string, token: string) {
     try{
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -130,7 +130,7 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-      
+     
       let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
       let finalArray = [];
       if (Array.isArray(assetIds) && assetIds.length > 0) {
@@ -155,7 +155,12 @@ export class AllocatedAssetService {
       }
       return finalArray;
     } catch(err) {
-      return err;
+      if (err.response && err.response.status === 404) {
+        console.log('No data found from fetchUrl');
+        return [];
+      } else {
+        return err;
+      }
     }
   }
 
