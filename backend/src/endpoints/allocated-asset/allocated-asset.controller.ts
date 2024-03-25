@@ -29,11 +29,11 @@ export class AllocatedAssetController {
     }
   }
 
-  @Post()
-  async create(@Req() req: Request) {
+  @Post(':id')
+  async create(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.create(token);
+      let response = await this.allocatedAssetService.create(id, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
@@ -55,6 +55,16 @@ export class AllocatedAssetController {
     try {
       const token = await getSessionToken(req);
       return this.allocatedAssetService.findAll(token);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      return await this.allocatedAssetService.findOne(id, token);
     } catch (err) {
       throw new NotFoundException();
     }
@@ -82,11 +92,11 @@ export class AllocatedAssetController {
     
   }
 
-  @Patch()
-  async update(@Req() req: Request) {
+  @Patch(':id')
+  async update(@Param('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      let response = await this.allocatedAssetService.update(token);
+      let response = await this.allocatedAssetService.update(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
