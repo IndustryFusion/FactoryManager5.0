@@ -1,8 +1,9 @@
 
 import { Chart } from 'primereact/chart';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useDashboard } from '@/context/dashboard-context';
+import { Toast, ToastMessage } from 'primereact/toast';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 export interface Datasets {
     label: string;
@@ -24,6 +25,11 @@ const PowerCo2Chart = () => {
     const [chartOptions, setChartOptions] = useState({});
     const [loading, setLoading] = useState<boolean>(true);
     const [checkChart, setCheckChart] = useState<boolean>(false)
+    const toast = useRef<any>(null);
+
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
+      };
 
     const fetchData = async () => {
         try {
@@ -41,11 +47,17 @@ const PowerCo2Chart = () => {
             setLoading(false);
             setCheckChart(true);
             return response.data;
-        } catch (error) {
-            console.error("Error fetching asset data:", error);
-            throw error;
-        }
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+                showToast('error', 'Error', 'fetching power-co2-chart data');
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }     
     }
+}
+    
 
     useEffect(() => {
         const fetchDataAndAssign = async () => {
@@ -56,7 +68,7 @@ const PowerCo2Chart = () => {
             const obj = await fetchData();
             // console.log('obj ',obj);
             const data = {
-                labels: obj.lastSevenDays,
+                labels: obj?.lastSevenDays,
                 datasets: [
                     {
                         type: 'line',
@@ -66,14 +78,14 @@ const PowerCo2Chart = () => {
                         borderWidth: 2,
                         fill: false,
                         tension: 0.4,
-                        data: obj.emission
+                        data: obj?.emission
                     },
                     {
                         type: 'bar',
                         label: 'Power Comsumption',
                         backgroundColor: documentStyle.getPropertyValue('--green-400'),
                         yAxisID: 'y1',
-                        data: obj.powerConsumption,
+                        data: obj?.powerConsumption,
                         borderColor: 'white',
                         borderWidth: 2
                     }
@@ -132,14 +144,18 @@ const PowerCo2Chart = () => {
         fetchDataAndAssign();
     }, [checkChart, entityIdValue]);
 
+   
+
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
+           <Toast ref={toast} /> 
             {/* <BlockUI blocked={loading}> */}
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
             <Chart type="line" data={chartData} options={chartOptions} />
             {/* </BlockUI> */}
         </div>
     )
+    
 };
 
 export default PowerCo2Chart;

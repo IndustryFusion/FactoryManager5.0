@@ -13,6 +13,7 @@ import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
 import EditOnboardForm from "./edit-onboard-form";
 import { Toast, ToastMessage } from "primereact/toast";
+import { InputText } from "primereact/inputtext";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -24,18 +25,25 @@ interface DashboardAssetsProps {
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
 
   const [assetData, setAssetData] = useState<Asset[]>([]);
+  const [allAssets, setAllAssets] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
   const [editOnboardAsset, setEditOnboardAsset] = useState({
     showEditOnboard: false,
     onboardAssetId: "",
-    successToast:false
+    successToast: false
   })
+  const [onboardAsset, setOnboardAsset] = useState(false)
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
+  const [selectedRow, setSelectedRow] = useState({});
+  const [assetFlag, setAssetFlag] = useState(false);
+  const [searchedAsset, setSearchedAsset] = useState("")
+  const dataTableRef = useRef(null);
   const router = useRouter();
   const { entityIdValue, setEntityIdValue,
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData } = useDashboard();
   const toast = useRef<any>(null);
+
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -77,15 +85,16 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       const response = await fetchAsset();
       if (response !== undefined) {
         setAssetData(response);
+        setAllAssets(response);
         console.log(response, "allresponse");
       } else {
         console.error("Fetch returned undefined");
       }
-
     } catch (error) {
       console.error(error)
     }
   }
+
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
@@ -116,6 +125,25 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
 
+  const searchAsset = (e: any) => {
+    const searchedText = e.target.value;
+    setSearchedAsset(e.target.value);
+
+    if (searchedText.length === 0) {
+      setAssetData(allAssets)
+    } else {
+      console.log("assetData", assetData);
+
+      const filteredAssets = searchedText.length > 0 ? [...assetData].filter(ele =>
+        ele?.product_name?.toLowerCase().includes(searchedAsset.toLowerCase())
+      ) : allAssets;
+      console.log(filteredAssets, "filteredAssets");
+      setAssetData(filteredAssets)
+    }
+  }
+
+
+
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -123,12 +151,31 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       if (router.isReady) {
         const { } = router.query;
         handleAsset();
-        if(editOnboardAsset.successToast){
-          showToast("success", "success","onboard updated successfully")
+        if (dataTableRef.current) {
+          if (assetData?.length > 0 && assetFlag) {
+            // console.log("is coming here");
+            // console.log("first object value", newRowData[0]);
+            setSelectedRow(assetData[0]);
+            setEntityIdValue(assetData[0].id);
+          }
         }
+        if (editOnboardAsset.successToast) {
+          showToast("success", "success", "onboard updated successfully")
+        }
+
       }
     }
   }, [router.isReady, editOnboardAsset.successToast])
+
+
+  useEffect(() => {
+    if (onboardAsset && showBlocker === false) {
+      console.log("is coming here for onboard Asset");
+      showToast("warn", "warning", "file already exists")
+    }
+  }, [onboardAsset, showBlocker])
+
+  console.log(onboardAsset, "onboard Asset value here");
 
 
   return (
@@ -138,7 +185,19 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         <div className="dashboard-assets" style={{ width: "100%" }}>
           <div className="card h-auto " style={{ width: "100%" }}>
             <h5 className="heading-text">Assets</h5>
+            <div className="mb-5">
+              <span className="p-input-icon-left">
+                <i className="pi pi-search" />
+                <InputText
+                  type="search"
+                  value={searchedAsset}
+                  onChange={searchAsset}
+                  placeholder="Search by product name"
+                  className="mb-10" style={{ borderRadius: "10px", width: "460px" }} />
+              </span>
+            </div>
             <DataTable
+              ref={dataTableRef}
               rows={5}
               paginator
               value={assetData}
@@ -146,6 +205,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               scrollable={true}
               scrollHeight="750px"
               onRowClick={(e) => handleClick(e.data as Asset)}
+              selectionMode="single"
+              selection={selectedRow}
+              onSelectionChange={(e) => setSelectedRow(e.value)}
             >
               <Column
                 header="Product Image"
@@ -177,6 +239,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             setShowBlockerProp={setShowBlocker}
             asset={selectedRowAsset}
             setBlocker={setBlockerProp}
+            setOnboardAssetProp={setOnboardAsset}
           />
         }
         {editOnboardAsset.showEditOnboard &&
@@ -187,7 +250,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         }
       </div>
     </>
-
   )
 }
 

@@ -14,14 +14,10 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
-  const [alertsCount, setAlertsCount] = useState<number>(18);
+  const [alertsCount, setAlertsCount] = useState<number>(0);
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
-  const [assetData, setAssetData] = useState({
-    id: "",
-    product_name: "",
-    asset_category: ""
-  })
+  const [assetData, setAssetData] = useState<any>([])
 
   const mapBackendDataToAssetState = (backendData: any) => {
     console.log(backendData, "is any data");
@@ -48,23 +44,37 @@ const Alerts = () => {
         },
         withCredentials: true,
       })
-      setAssetData(mapBackendDataToAssetState(response.data))
+      
+    return mapBackendDataToAssetState(response.data);
+ 
+      
+    
     } catch (error) {
       console.error("Error fetching asset data", error)
     }
   }
 
+  console.log("assetData", assetData);
+  
+
   useEffect(() => {
     const fetchAllAlerts = async () => {
       try {
         const response = await getAlerts();
-        console.log(response, "alerts");
+        console.log(response, "alert");
         setAlerts(response.alerts)
         setAlertsCount(response.total);
+        const assetsData  =[];
         for (const alert of response.alerts) {
-          fetchAssetData(alert.resource);
+          // assetsData.push( fetchAssetData(alert.resource));
+          const response = await fetchAssetData(alert.resource);
+          assetsData.push(response )
+        // console.log("response",response);
+        
         }
-        console.log(response.alerts, "alerts response");
+        setAssetData(assetsData);
+        // console.log("what's the values in aaray assetsData",assetData);
+        // console.log(response.alerts, "alerts response");
 
       } catch (error) {
         console.error(error)
@@ -112,11 +122,7 @@ const Alerts = () => {
           alerts={alerts}
           visible={visible}
           setVisible={setVisible}
-          assetData={{
-            id: assetData?.id,
-            product_name: assetData?.product_name,
-            asset_category: assetData?.asset_category
-          }}
+          assetData={assetData}
         />
       }
     </>
