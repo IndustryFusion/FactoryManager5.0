@@ -1,5 +1,5 @@
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { ChartData, ChartOptions } from 'chart.js';
 import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
 import { Chart } from "primereact/chart";
@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
 import { useDashboard } from "@/context/dashboard-context";
+import { Toast, ToastMessage } from "primereact/toast";
 
 export interface Datasets {
     label?: string;
@@ -26,6 +27,12 @@ export interface pgData {
     value: string;
 }
 
+interface GroupedData {
+    time: number;
+    type: string;
+    date: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const DashboardChart = () => {
@@ -36,6 +43,11 @@ const DashboardChart = () => {
     const [checkFactory, setCheckFactory] = useState(false);
     const router = useRouter();
     const { entityIdValue, setMachineStateData } = useDashboard();
+    const toast = useRef<any>(null);
+
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
+      };
 
     const fetchDataAndAssign = async () => {
         let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
@@ -49,7 +61,8 @@ const DashboardChart = () => {
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            const finalData = {};
+            type DataType = any;
+            const finalData: { [key: string]: DataType[] } = {};
             const day = moment().subtract(6, 'days').startOf('day');
             let startTime = day.format().split('+')[0] + '-00:00';
             let endTime = moment().format().split('+')[0] + '-00:00';
@@ -87,21 +100,26 @@ const DashboardChart = () => {
             for (let i = 6; i >= 0; i--) {
                 const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
                 finalData[day] = [];
-                response.data.forEach(data => {
+                response.data.forEach((data: any) => {
                     if (data.observedAt.includes(day)) {
                         finalData[day].push(data);
                     }
                 })
             }
             console.log('factoryData ', finalData);
-           
+
             setFactoryData(finalData);
             setMachineStateData(finalData)
             setCheckFactory(true);
-        } catch (error) {
-            console.error("Error fetching asset data:", error);
-            throw error;
-        }
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+                showToast('error', 'Error', 'fetching machine-state data');
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }     
+    }
     }
 
     const fetchAssets = async (assetId: string) => {
@@ -164,7 +182,7 @@ const DashboardChart = () => {
     };
 
     const groupData = (data: any) => {
-        let groupedByDate = {};
+        let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
@@ -393,6 +411,7 @@ const DashboardChart = () => {
 
     return (
         <div className="card h-auto" style={{ width: "40%" }}>
+            <Toast ref={toast} /> 
             <h5 className="heading-text">Machine State Overview</h5>
             <Chart type="bar" data={chartData} options={chartOptions} />
         </div>

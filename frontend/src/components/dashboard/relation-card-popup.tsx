@@ -32,18 +32,28 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 {hasPropertiesArray.map((property, index) => {
                     const key = Object.keys(property)[0];
                     const value = property[key];
-               
+                    console.log(key, value, "all values here");
+
                     return (
-                        <div key={index} className="mb-2">
+                        <div key={index} className="mb-2 flex">
                             <span>{key} - </span>
-                            <span>{value.object === "json-ld-1.1" ? "" : value.object}</span>
-                            {typeof value.object === "object" && 
-                            <ul>
-                                {value.object.map((item,index)=> 
-                                <li key={index}>{item}</li>
-                                )}
-                            </ul>
+                            <span className="ml-2">{value.object === "json-ld-1.1" ? "" : value.object}</span>
+
+                            {typeof value === "object" &&
+                                value.length > 0 &&
+                                <ul
+                                className="m-0 p-0"
+                                style={{listStyle:"circle"}}
+                                >
+                                    {value.map((item, index) =>
+                                        <li
+                                        className="ml-4"
+                                        key={index}>{item.object === "json-ld-1.1" ? "data" : item.object}</li>
+                                    )}
+                                </ul>
                             }
+
+
                         </div>
                     )
                 })}

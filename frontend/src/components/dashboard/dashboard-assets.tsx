@@ -30,6 +30,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     onboardAssetId: "",
     successToast:false
   })
+  const [onboardAsset, setOnboardAsset] = useState(false)
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const [selectedRow, setSelectedRow] = useState({});
   const [assetFlag, setAssetFlag] = useState(false);
@@ -138,10 +139,21 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         if(editOnboardAsset.successToast){
           showToast("success", "success","onboard updated successfully")
         }
+      
       }
     }
-  }, [router.isReady, editOnboardAsset.successToast])
+  }, [router.isReady, editOnboardAsset.successToast ])
 
+
+  useEffect(()=>{
+    if(onboardAsset && showBlocker === false){
+      console.log("is coming here for onboard Asset");      
+      showToast("warn", "warning","file already exists")
+    }
+  }, [onboardAsset, showBlocker])
+
+  console.log(onboardAsset ,"onboard Asset value here");
+  
 
   return (
     <>
@@ -193,6 +205,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             setShowBlockerProp={setShowBlocker}
             asset={selectedRowAsset}
             setBlocker={setBlockerProp}
+            setOnboardAssetProp={setOnboardAsset}
           />
         }
         {editOnboardAsset.showEditOnboard &&

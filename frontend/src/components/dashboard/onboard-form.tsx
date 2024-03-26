@@ -17,11 +17,16 @@ interface OnboardFormProps {
     setShowBlockerProp: Dispatch<SetStateAction<boolean>>;
     asset: any;
     setBlocker: Dispatch<SetStateAction<boolean>>
+    setOnboardAssetProp: Dispatch<SetStateAction<boolean>>
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlockerProp, asset, setBlocker }) => {
+const OnboardForm: React.FC<OnboardFormProps> = ({
+    showBlockerProp, setShowBlockerProp,
+    asset, setBlocker,
+    setOnboardAssetProp
+}) => {
 
     const podName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
     const assetProtocol = asset?.asset_communication_protocol === undefined ? "" : asset?.asset_communication_protocol;
@@ -70,9 +75,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
             ...onboardForm,
             app_config: "|" + onboardForm.app_config
         };
-    
-        const payload = JSON.stringify(modifiedOnboardForm );
-           
+
+        const payload = JSON.stringify(modifiedOnboardForm);
+
         try {
             const response = await axios.post(API_URL + "/onboarding-asset", payload, {
                 headers: {
@@ -86,6 +91,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
             if (status === 201 && success === true) {
                 setShowBlockerProp(false);
                 setBlocker(true);
+            } else if (success === false && status === 422) {
+                setOnboardAssetProp(true);
+                setShowBlockerProp(false);
+
             }
 
         } catch (error: any) {
@@ -120,7 +129,11 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
             <Dialog visible={showBlockerProp} modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '40rem' }} onHide={() => setShowBlockerProp(false)}
+                style={{ width: '40rem' }} onHide={() => {
+                    setShowBlockerProp(false)
+                    setOnboardAssetProp(false)
+                }
+                }
                 draggable={false} resizable={false}
             >
                 <div className="card ">
