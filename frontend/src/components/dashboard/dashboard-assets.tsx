@@ -31,11 +31,15 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     successToast:false
   })
   const [selectedRowAsset, setSelectedRowAsset] = useState({})
+  const [selectedRow, setSelectedRow] = useState({});
+  const [assetFlag, setAssetFlag] = useState(false);
+  const dataTableRef = useRef(null);
   const router = useRouter();
   const { entityIdValue, setEntityIdValue,
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData } = useDashboard();
   const toast = useRef<any>(null);
+ 
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -123,6 +127,14 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       if (router.isReady) {
         const { } = router.query;
         handleAsset();
+        if (dataTableRef.current) {
+          if (assetData?.length > 0 && assetFlag) {
+            // console.log("is coming here");
+            // console.log("first object value", newRowData[0]);
+            setSelectedRow(assetData[0]);
+            setEntityIdValue(assetData[0].id);
+          }
+        }
         if(editOnboardAsset.successToast){
           showToast("success", "success","onboard updated successfully")
         }
@@ -139,6 +151,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
           <div className="card h-auto " style={{ width: "100%" }}>
             <h5 className="heading-text">Assets</h5>
             <DataTable
+            ref={dataTableRef}
               rows={5}
               paginator
               value={assetData}
@@ -146,6 +159,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               scrollable={true}
               scrollHeight="750px"
               onRowClick={(e) => handleClick(e.data as Asset)}
+              selectionMode="single"
+            selection={selectedRow}
+            onSelectionChange={(e) => setSelectedRow(e.value)}
             >
               <Column
                 header="Product Image"
