@@ -31,6 +31,8 @@ import { RelationsModal } from "@/components/reactflow-relation-modal";
 import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import ShopFloorList from "@/components/shopfloor-list";
+import { Dialog } from "primereact/dialog";
+
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -109,7 +111,13 @@ const FlowEditor: React.FC<
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const { latestShopFloor } = useShopFloor();
 
-  
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const [nextUrl, setNextUrl] = useState("");
+
+ 
+ 
+ 
+
  // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string,relationClass:string) => {
     console.log(relationClass, "class", assetId, "assetId")
@@ -179,16 +187,19 @@ const FlowEditor: React.FC<
     });
   };
 
+
+ 
+
   useEffect(() => {
     
       const originalWarn = console.warn;
-  console.warn = (...args) => {
-    const [message] = args;
-    if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
-      originalWarn.apply(console, args);
-    }
-  };
- 
+      console.warn = (...args) => {
+        const [message] = args;
+        if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
+          originalWarn.apply(console, args);
+        }
+      };
+    
     //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory_${factoryId}`;
@@ -293,6 +304,30 @@ const FlowEditor: React.FC<
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
+  useEffect(() => {
+  
+  const handleRouteChange = (url:string) => {
+    
+    if (nodes.length > 0 && !isDialogVisible) {
+    
+      setIsDialogVisible(true);
+    
+      return false;
+    }
+
+    return true;
+  };
+
+
+  router.beforePopState(({ url }) => handleRouteChange(url));
+
+
+  return () => {
+    router.beforePopState(() => true);
+  };
+}, [nodes, isDialogVisible, router]);
+
+
   const onRestore = useCallback(async () => {
    
     if (factoryId) {
@@ -389,7 +424,22 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("FlowChart already exist");
       }
-
+     const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204  || reactAllocatedAssetScorpio.status == 201) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -408,22 +458,7 @@ const FlowEditor: React.FC<
         setToastMessage("Scorpio already has these data");
       }
 
-      const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
-       payLoad.factoryData.edges,{
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204  || reactAllocatedAssetScorpio.status == 201) {
-        setToastMessage("Allocated Asset Scorpio Updated");
-      } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
-      }
+   
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
@@ -468,7 +503,25 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Flowchart already exist");
       }
-
+       
+       const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
+      
          const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -487,26 +540,9 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-     const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-       payLoad.factoryData.edges,{
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-       
-      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-        setToastMessage("Allocated Asset Scorpio Updated");
-      } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
-      }
-   
     
-      
+   
+     
         setNodesInitialized(true);
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -775,10 +811,24 @@ const FlowEditor: React.FC<
     toast,
   ]);
 
+
+const performNavigation = () => {
+  setIsDialogVisible(false); 
+
+  console.log("nexturl", nextUrl)
+  if (nextUrl) {
+      setTimeout(async () => {
+        await saveChanges(); 
+        router.reload(); 
+    }, 3000); 
+    router.push(nextUrl);
+  }
+};
+
   useHotkeys(
     "backspace",
     (event) => {
-      event.preventDefault(); // Prevent the default backspace behavior
+      event.preventDefault(); 
       handleBackspacePress();
     },
     [handleBackspacePress]
@@ -788,10 +838,19 @@ const FlowEditor: React.FC<
     (event, node) => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
-        router.push("/factory-site/dashboard");
+    
+      if (isSaveDisabled) {
+        
+        setNextUrl("/factory-site/dashboard"); 
+        setIsDialogVisible(true);
+     
+      } else {
+      
+        performNavigation();
       }
+    }
     },
-    [router]
+    [isSaveDisabled, performNavigation,router]
   );
 
   const onDrop = useCallback(
@@ -911,7 +970,57 @@ const FlowEditor: React.FC<
     nodes,
   ]);
 
+
+
+ const saveChanges = async () => {
+    if (isSaveDisabled) {
+      console.log(
+        "update called"
+      )
+      await onUpdate(); 
+      setTimeout(async () => {
+        await saveChanges(); 
+        router.reload(); 
+    }, 3000); 
+    } else {
+        console.log(
+        "onSave  called"
+      )
+      await onSave(); 
+      setTimeout(async () => {
+        await saveChanges(); 
+        router.reload(); 
+    }, 3000); 
+    }
+    setIsDialogVisible(false); 
+  
+   performNavigation();
+  };
+
+  
+const handleConfirm = async () => {
+    setIsDialogVisible(false);
+    await saveChanges();
+    performNavigation(); 
+};
+
+
+  const handleCancel = () => {
+    setIsDialogVisible(false);
+    
+  };
+
+ const dialogFooter = (
+    <div>
+      <Button label="No" icon="pi pi-times" onClick={handleCancel} className="p-button-text" />
+      <Button label="Yes" icon="pi pi-check" onClick={handleConfirm} autoFocus />
+    </div>
+  );
   return (
+    <>
+     <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
+        Do you want to save changes before leaving?
+      </Dialog>
     <ReactFlowProvider>
       <EdgeAddContext.Provider value={{ onEdgeAdd }}>
         {" "}
@@ -980,7 +1089,8 @@ const FlowEditor: React.FC<
           </ReactFlow>
         </div>
       </EdgeAddContext.Provider>
-    </ReactFlowProvider>
+    </ReactFlowProvider></>
+    
   );
 };
 

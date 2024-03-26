@@ -58,7 +58,7 @@ const Alerts = () => {
     const fetchAllAlerts = async () => {
       try {
         const response = await getAlerts();
-        console.log(response, "akert");
+        console.log(response, "alerts");
         setAlerts(response.alerts)
         setAlertsCount(response.total);
         for (const alert of response.alerts) {
