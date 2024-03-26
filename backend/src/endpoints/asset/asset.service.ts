@@ -119,6 +119,35 @@ export class AssetService {
     }
   }
 
+  async getParentIds(assetId: string, assetCategory: string, token: string){
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      assetCategory = assetCategory.split(" ").pop(); 
+      assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1); 
+      let relationKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
+      let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`;
+      console.log('url ',url);
+      const response = await axios.get(url, {headers});
+      let assetData = [];
+      if(response.data.length > 0) {
+        response.data.forEach(data => {
+          assetData.push({
+              id: data['id'],
+              product_name: data['http://www.industry-fusion.org/schema#product_name'],
+              asset_category: data['http://www.industry-fusion.org/schema#asset_category']
+          });
+        });
+      }
+      return assetData;
+    }catch(err){
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+
   async setAssetData( data: any, token: string ) {
     try {
       const headers = {
