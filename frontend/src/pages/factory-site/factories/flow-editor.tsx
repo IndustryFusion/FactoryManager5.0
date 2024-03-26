@@ -23,7 +23,7 @@ import { Toast } from "primereact/toast";
 import {
   fetchAndDetermineSaveState,
   exportElementToJPEG,
-  fetchAssetById,
+  fetchAssetById,customLogger 
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -59,9 +59,9 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     type:string,
     label:string,
     id:string,
-    parentId?:string
+    class?:string
+    
   },
-  class:string
   asset_category?:string
 
 }
@@ -109,6 +109,7 @@ const FlowEditor: React.FC<
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const { latestShopFloor } = useShopFloor();
 
+  
  // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string,relationClass:string) => {
     console.log(relationClass, "class", assetId, "assetId")
@@ -141,7 +142,7 @@ const FlowEditor: React.FC<
       let baseXOffset = 200 + existingRelationsCount * 200;
 
       // Create the ID using the updated count
-      const relationNodeId = `relation_${relationName}_asset_${assetId}_${String(
+      const relationNodeId = `relation_${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
 
@@ -152,11 +153,11 @@ const FlowEditor: React.FC<
           border: "none",
           borderRadius: "45%",
         },
-       class:relationClass,
+     
         data: {
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
-          parentId: selectedAsset,
+          class:relationClass,
         },
         position: {
           x: assetNode.position.x + baseXOffset, // adjusted x offset
@@ -166,7 +167,7 @@ const FlowEditor: React.FC<
 
       //  new edge connecting the asset node to the new relation node
       const newEdge = {
-        id: `reactflow__edge-${selectedAsset}-${relationNodeId}`,
+        id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${new Date().getTime()}`,
         source: selectedAsset ?? '',
         target: relationNodeId ?? '',
        
@@ -178,10 +179,16 @@ const FlowEditor: React.FC<
     });
   };
 
-
-
   useEffect(() => {
-
+    
+      const originalWarn = console.warn;
+  console.warn = (...args) => {
+    const [message] = args;
+    if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
+      originalWarn.apply(console, args);
+    }
+  };
+ 
     //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory_${factoryId}`;
@@ -214,7 +221,7 @@ const FlowEditor: React.FC<
         setNodes((nds) => [...nds, newNode]);
 
         const newEdge = {
-          id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}`,
+          id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}_${new Date().getTime()}`,
           source: factoryNodeId,
           target: shopFloorNodeId,
      
@@ -279,6 +286,9 @@ const FlowEditor: React.FC<
 
     setToastMessage(null);
   }
+  return () => {
+    console.warn = originalWarn;
+  };
    
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
@@ -397,9 +407,26 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Scorpio already has these data");
       }
+
+      const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204  || reactAllocatedAssetScorpio.status == 201) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
     } catch (error) {
       console.error("Error saving flowchart:", error);
-      setToastMessage("Error saving flowchart");
+      setToastMessage("");
     }
   }, [nodes, edges, factoryId]);
 
@@ -442,8 +469,8 @@ const FlowEditor: React.FC<
         setToastMessage("Flowchart already exist");
       }
 
-      const reactFlowScorpioUpdate = await axios.patch(
-        `${API_URL}/shop-floor/update-react/`,
+         const reactFlowScorpioUpdate = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
           headers: {
@@ -460,25 +487,26 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-    
-       const reactAllocatedAssetScorpio = await axios.post(
-        `${API_URL}/allocated-asset/${factoryId}`,
-     
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        
-        }
-      );
-        
+     const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+       payLoad.factoryData.edges,{
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+       
       if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
         setToastMessage("Allocated Asset Scorpio Not Updated");
       }
+   
+    
+      
         setNodesInitialized(true);
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -585,20 +613,17 @@ const FlowEditor: React.FC<
 
       if (!sourceNode || !targetNode) return;
       // Check if the source node is a relation and it already has an outgoing connection
-      if (sourceNode.data.type === "relation" ) {
-        const alreadyHasChild = edges.some((edge) => edge.source === source);
-        const relationClass = sourceNode.class;
+     if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
+      const alreadyHasChild = edges.some((edge) => edge.source === source);
 
-
-        if (relationClass === "machine" && alreadyHasChild) {
+        if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
             summary: "Operation not allowed",
-            detail: "A machine relation can only have one child asset.",
+            detail: "A material relation can only connect to one asset.",
           });
           return;
         }
-       
       }
       if (
         sourceNode.data.type === "shopFloor" &&
@@ -613,7 +638,7 @@ const FlowEditor: React.FC<
         setNodes((nds) =>
           nds.map((node) =>
             node.id === target
-              ? { ...node, data: { ...node.data, parentId: source } }
+              ? { ...node, data: { ...node.data } }
               : node
           )
         );
@@ -623,8 +648,8 @@ const FlowEditor: React.FC<
         sourceNode.data.type === "relation" &&
         targetNode.data.type === "asset"
       ) {
-        const parentId = sourceNode.data.parentId;
-        const childAssetId = targetNode.id;
+       
+       
 
         const newRelationNodeId = `${sourceNode.id}`;
         // access the asset_category and split it.
@@ -671,9 +696,9 @@ const FlowEditor: React.FC<
 
         // Add a new edge for the current connection
         const newEdge = {
-          id: `reactflow_edge-${newRelationNodeId}`,
+          id: `reactflow_edge-${newRelationNodeId}_${new Date().getTime()}`,
           source: newRelationNodeId,
-          target: childAssetId,
+          target: targetNode.id,
          
           animated: true,
         };
