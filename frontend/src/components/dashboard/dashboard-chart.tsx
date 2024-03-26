@@ -39,6 +39,7 @@ const DashboardChart = () => {
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
     const [factoryData, setFactoryData] = useState({});
+    const [lastData, setLastData] = useState({});
     const [checkFactory, setCheckFactory] = useState(false);
     const router = useRouter();
     const { entityIdValue, setMachineStateData } = useDashboard();
@@ -65,7 +66,7 @@ const DashboardChart = () => {
             const day = moment().subtract(6, 'days').startOf('day');
             let startTime = day.format().split('+')[0] + '-00:00';
             let endTime = moment().format().split('+')[0] + '-00:00';
-            const response = await axios.get(API_URL + `/value-change-state`, {
+            let response = await axios.get(API_URL + `/value-change-state`, {
                 params: {
                     attributeId: attributeId,
                     entityId: entityId,
@@ -78,7 +79,24 @@ const DashboardChart = () => {
                 },
                 withCredentials: true,
             });
-            
+            console.log('response ',response);
+            if(!(response.data.length > 0)){
+                response = await axios.get(API_URL + `/value-change-state`, {
+                    params: {
+                        attributeId: attributeId,
+                        entityId: entityId,
+                        order: "observedAt.desc",
+                        limit: '1'
+                    },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                });
+                console.log('response from else',response);
+                setLastData(response.data);
+            }
             for (let i = 6; i >= 0; i--) {
                 const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
                 finalData[day] = [];
@@ -278,6 +296,24 @@ const DashboardChart = () => {
                             check = true;
                             break;
                         }
+                    }
+                }
+
+                if(!check) {
+                    const dateToCheck = moment(key);
+                    const currentDate = moment().startOf('day');
+                    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
+                    let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
+                    if (Object.keys(lastData).length) {
+                        groupedByDate[key].push({
+                            time: convertToSecondsTime(time),
+                            type: lastData['value'] == '0' ? 'offline' : 'online',
+                            date: key
+                        }, {
+                            time: 0,
+                            type: lastData['value'] == '0' ? 'online' : 'offline',
+                            date: key
+                        });
                     }
                 }
             }
