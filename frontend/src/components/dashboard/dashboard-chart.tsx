@@ -1,5 +1,5 @@
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { ChartData, ChartOptions } from 'chart.js';
 import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
 import { Chart } from "primereact/chart";
@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
 import { useDashboard } from "@/context/dashboard-context";
+import { Toast, ToastMessage } from "primereact/toast";
 
 export interface Datasets {
     label?: string;
@@ -41,6 +42,11 @@ const DashboardChart = () => {
     const [checkFactory, setCheckFactory] = useState(false);
     const router = useRouter();
     const { entityIdValue, setMachineStateData } = useDashboard();
+    const toast = useRef<any>(null);
+
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
+      };
 
     const fetchDataAndAssign = async () => {
         let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
@@ -87,10 +93,15 @@ const DashboardChart = () => {
             setFactoryData(finalData);
             setMachineStateData(finalData)
             setCheckFactory(true);
-        } catch (error) {
-            console.error("Error fetching asset data:", error);
-            throw error;
-        }
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+                showToast('error', 'Error', 'fetching machine-state data');
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }     
+    }
     }
 
     const fetchAssets = async (assetId: string) => {
@@ -364,6 +375,7 @@ const DashboardChart = () => {
 
     return (
         <div className="card h-auto" style={{ width: "40%" }}>
+            <Toast ref={toast} /> 
             <h5 className="heading-text">Machine State Overview</h5>
             <Chart type="bar" data={chartData} options={chartOptions} />
         </div>

@@ -41,14 +41,14 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
     fetchAllAlerts();
   }, [])
 
-
   const notificationData = alerts.filter(({ resource }) => resource === entityIdValue);
-  // console.log("notification",  notification );
-
 
   return (
     <>
-      <Dialog header="Notifications" visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
+      <Dialog
+        header={notificationData.length > 0 ? "Notifications" : "No Notifications"}
+
+        visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
         <div className="alerts-container">
 
           {notificationData.length > 0 ?
@@ -90,9 +90,11 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
             ))
             :
             <>
-              {/* <p>No Fields</p> */}
-              <div className="flex justify-content-center align-items-center">
-                <img src="/no_notifications.jpg" alt="no notifications icon" />
+              <div className="flex flex-column justify-content-center align-items-center">
+                <p>When you have notification , you'll see them here</p>
+                <img src="/no-notification2.png" alt="no notifications icon"
+                  width="15%" height="15%"
+                />
               </div>
             </>
           }

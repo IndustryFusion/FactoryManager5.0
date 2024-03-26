@@ -38,8 +38,12 @@ const DashboardCards: React.FC = () => {
             const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
             console.log("reversedData", reversedData);
 
+            function hasKeysWithNoValues(obj:any) {
+                return Object.keys(obj).some(key => !obj[key]);
+               }
+
             // Iterate over the reversed keys
-            if (JSON.stringify(reversedData) !== "{}") {
+            if (hasKeysWithNoValues(reversedData)) {
                 for (const key in reversedData) {
                     const dataArray: any = reversedData[key];
                     if (dataArray.length > 0) {
@@ -65,7 +69,6 @@ const DashboardCards: React.FC = () => {
                             if (matchResult) {
                                 const time = matchResult[0];
                                 // console.log("time", time);
-
                                 setDifference(findDifference(time));
                                 break; // Exit the loop once the condition is met
                             }
@@ -151,8 +154,9 @@ const DashboardCards: React.FC = () => {
                             </div>
 
                         </div>
-                        <span className="text-green-500 font-medium">24 </span>
-                        <span className="text-500">machines are connected</span>
+                        <span className="text-green-500 font-medium">520 </span>
+                        <span className="text-500">newly registered</span>
+                        
                     </div>
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
@@ -178,7 +182,7 @@ const DashboardCards: React.FC = () => {
                             <div>
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length}</div>
+                                    <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length.toString().padStart(3, '0')}</div>
                                     <span className="relation-text font-medium">child objects</span>
                                 </div>
                             </div>
@@ -186,8 +190,8 @@ const DashboardCards: React.FC = () => {
                                 <i className="pi pi-inbox text-cyan-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">520 </span>
-                        <span className="text-500">newly registered</span>
+                        <span className="text-green-500 font-medium">24 </span>
+                        <span className="text-500">machines are connected</span>
                     </div>
                     {relations &&
                         <RelationDialog
