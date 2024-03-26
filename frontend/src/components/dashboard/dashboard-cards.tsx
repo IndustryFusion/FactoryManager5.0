@@ -7,7 +7,7 @@ import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
 
 const DashboardCards: React.FC = () => {
 
-    const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
+    // const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const { machineStateValue,
         entityIdValue,
         setMachineStateValue,
@@ -15,56 +15,90 @@ const DashboardCards: React.FC = () => {
         machineStateData } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
-    const [difference, setDifference] = useState("00:00:00");
+    const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const [onlineAverage, setOnlineAverage] = useState(0);
     const [hasRelations, setHasRelations] = useState<any>([]);
 
 
-    console.log(selectedAssetData, "selectedAssetData")
-
+    console.log(selectedAssetData, "selectedAssetData");
+    console.log("machineStateData", machineStateData);
+    
     useEffect(() => {
+        let intervalId: any;
         const runningSince = () => {
             // Reverse the keys of the object
+            console.log("is coming here");
+            
+
             for (const date in machineStateData) {
                 if (machineStateData[date].length > 0) {
                     machineStateData[date].reverse();
                 }
             }
             const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
+            console.log("reversedData", reversedData);
 
             // Iterate over the reversed keys
-            for (const key in reversedData) {
-                const dataArray: any = reversedData[key];
-                if (dataArray.length > 0) {
-                    // Find the first element with prev_value === "2"
-                    const allOnlineValues = [];
-                    for (let i = 0; i <= dataArray.length - 1; i++) {
-                        if (dataArray[i].prev_value === "2") {
-                            const matchResult = dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/);
+            if (JSON.stringify(reversedData) !== "{}") {
+                for (const key in reversedData) {
+                    const dataArray: any = reversedData[key];
+                    if (dataArray.length > 0) {
+                        // Find the first element with prev_value === "2"
+                        const allOnlineValues = [];
+                        for (let i = 0; i <= dataArray.length - 1; i++) {
+                            if (dataArray[i].prev_value === "2") {
+                                const matchResult = dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/);
+                                if (matchResult) {
+                                    allOnlineValues.push(matchResult[0]);
+                                }
+                            }
+                        }
+                        console.log("allOnlineValues", allOnlineValues);
+                        setOnlineAverage(findOnlineAverage(allOnlineValues))
+
+
+                        const foundElement = dataArray.find((item: any) => item.prev_value === "2");
+                        console.log("foundElement", foundElement);
+
+                        if (foundElement) {
+                            const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
                             if (matchResult) {
-                                allOnlineValues.push(matchResult[0]);
+                                const time = matchResult[0];
+                                // console.log("time", time);
+
+                                setDifference(findDifference(time));
+                                break; // Exit the loop once the condition is met
                             }
                         }
                     }
-                    console.log("allOnlineValues", allOnlineValues);
-                    setOnlineAverage(findOnlineAverage(allOnlineValues))
-
-
-                    const foundElement = dataArray.find((item: any) => item.prev_value === "2");
-                    if (foundElement) {
-                        const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
-                        if (matchResult) {
-                            const time = matchResult[0];
-                            // console.log("time", time);
-                            setTimer(time);
-                            setDifference(findDifference(time));
-                            break; // Exit the loop once the condition is met
-                        }
-
-                    }
                 }
             }
+            else {
+                console.log("no values here");
+                intervalId = setInterval(() => {
+                    setDifference(prevTimer => {
+                        // Parse the current time
+                        const [hours, minutes, seconds] = prevTimer.split(':').map(Number);
+                        // Increment the time
+                        let newSeconds = seconds + 1;
+                        let newMinutes = minutes;
+                        let newHours = hours;
+                        if (newSeconds >= 60) {
+                            newSeconds = 0;
+                            newMinutes += 1;
+                        }
+                        if (newMinutes >= 60) {
+                            newMinutes = 0;
+                            newHours += 1;
+                        }
+                        // Format the updated time
+                        return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+                    });
+                }, 1000)
+            }
+
         }
+
 
         if (machineStateValue === "2") {
             runningSince();
@@ -90,7 +124,9 @@ const DashboardCards: React.FC = () => {
                 }
             }
         }
-        setHasRelations(hasPropertiesArray)
+        setHasRelations(hasPropertiesArray);
+
+        return () => clearInterval(intervalId)
 
     }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData])
 

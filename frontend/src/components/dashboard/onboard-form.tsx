@@ -86,6 +86,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({ showBlockerProp, setShowBlock
             if (status === 201 && success === true) {
                 setShowBlockerProp(false);
                 setBlocker(true);
+            }else if(success ===false && status === 422){
+                setShowBlockerProp(false);
             }
 
         } catch (error: any) {

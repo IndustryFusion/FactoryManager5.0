@@ -92,7 +92,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
             <>
               {/* <p>No Fields</p> */}
               <div className="flex justify-content-center align-items-center">
-                <img src="/no_notifications.jpg" alt="" />
+                <img src="/no_notifications.jpg" alt="no notifications icon" />
               </div>
             </>
           }
