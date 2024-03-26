@@ -36,7 +36,7 @@ const login = async (username: string, password: string): Promise<LoginResponse>
             Cookies.set('login_flag', "true", { expires: 86400 });
         }
         return response.data;
-    } catch (error: any) {
+    } catch (error) {
         if (axios.isAxiosError(error)) {
             if (error.response) {
                 console.error(error.response.data);
@@ -48,7 +48,7 @@ const login = async (username: string, password: string): Promise<LoginResponse>
                 console.error('Error', error.message);
             }
         } else {
-            console.error('Error', error.message);
+            console.error('Error', error);
         }
         throw error;
     }
