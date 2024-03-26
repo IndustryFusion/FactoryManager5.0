@@ -32,6 +32,16 @@ export class AssetController {
     }
   }
 
+  @Get('/parent-ids')
+  async getParentIds(@Query('asset-id') assetId: string, @Query('asset-category') assetCategory: string, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      return await this.assetService.getParentIds(assetId, assetCategory, token);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+
   @Get(':id')
   async getAssetDataById(@Param('id') id: string, @Req() req: Request) {
     try {
