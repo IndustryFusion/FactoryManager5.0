@@ -42,9 +42,9 @@ const DashboardChart = () => {
     const [lastData, setLastData] = useState({});
     const [checkFactory, setCheckFactory] = useState(false);
     const router = useRouter();
-    const { entityIdValue, setMachineStateData } = useDashboard();
+    const { entityIdValue, setMachineStateData , autorefresh} = useDashboard();
     const toast = useRef<any>(null);
-
+    const intervalId:any = useRef(null);
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
       };
@@ -114,7 +114,7 @@ const DashboardChart = () => {
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error', 'fetching machine-state data');
+                showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
@@ -325,8 +325,15 @@ const DashboardChart = () => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else {
-            if (router.isReady) {
-                fetchDataAndAssign();
+            if (router.isReady) {              
+                if(autorefresh === true){           
+                    console.log("is machine-chart autoreferssh");    
+                    intervalId.current = setInterval(() => {
+                        fetchDataAndAssign();
+                    }, 10000);
+                }else{
+                    fetchDataAndAssign();
+                }
 
                 const documentStyle = getComputedStyle(document.documentElement);
                 const textColor = documentStyle.getPropertyValue('--text-color');
@@ -407,10 +414,15 @@ const DashboardChart = () => {
                 }
             }
         }
-    }, [router.isReady, checkFactory, entityIdValue])
+        return () => {
+            if (intervalId.current) {
+                clearInterval(intervalId.current);
+            }
+        };
+    }, [router.isReady, checkFactory, entityIdValue, autorefresh])
 
     return (
-        <div className="card h-auto" style={{ width: "40%" }}>
+        <div className="card h-auto" style={{ width: "37%" }}>
             <Toast ref={toast} /> 
             <h5 className="heading-text">Machine State Overview</h5>
             <Chart type="bar" data={chartData} options={chartOptions} />

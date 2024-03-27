@@ -26,10 +26,11 @@ const PowerCo2Chart = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [checkChart, setCheckChart] = useState<boolean>(false)
     const toast = useRef<any>(null);
-
+    const { autorefresh } = useDashboard();
+    const intervalId: any = useRef(null);
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
-      };
+    };
 
     const fetchData = async () => {
         try {
@@ -50,14 +51,17 @@ const PowerCo2Chart = () => {
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error', 'fetching power-co2-chart data');
+                showToast('error', 'Error', `Power-co2-data ${error.response?.data.message}`);
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
-            }     
+            }
+        }
     }
-}
-    
+
+
+    console.log("autorefresh in powerchart", autorefresh);
+
 
     useEffect(() => {
         const fetchDataAndAssign = async () => {
@@ -141,21 +145,36 @@ const PowerCo2Chart = () => {
             setChartData(data);
             setChartOptions(options);
         }
-        fetchDataAndAssign();
-    }, [checkChart, entityIdValue]);
 
-   
+        if (autorefresh === true) {
+            console.log("is coming here to autoreferssh");
+            intervalId.current = setInterval(() => {
+                fetchDataAndAssign();
+            }, 10000);
+        } else {
+            fetchDataAndAssign();
+        }
+
+        return () => {
+            if (intervalId.current) {
+                clearInterval(intervalId.current);
+            }
+        };
+
+    }, [checkChart, entityIdValue, autorefresh]);
+
+
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
-           <Toast ref={toast} /> 
+            <Toast ref={toast} />
             {/* <BlockUI blocked={loading}> */}
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
             <Chart type="line" data={chartData} options={chartOptions} />
             {/* </BlockUI> */}
         </div>
     )
-    
+
 };
 
 export default PowerCo2Chart;
