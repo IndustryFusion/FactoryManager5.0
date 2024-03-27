@@ -62,6 +62,7 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     label:string,
     id:string,
     class?:string
+    parentId?:string
     
   },
   asset_category?:string
@@ -166,6 +167,7 @@ const FlowEditor: React.FC<
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
           class:relationClass,
+          parentId: selectedAsset,
         },
         position: {
           x: assetNode.position.x + baseXOffset, // adjusted x offset
@@ -839,7 +841,7 @@ const performNavigation = () => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
     
-      if (isSaveDisabled) {
+      if (isSaveDisabled || !isSaveDisabled ) {
         
         setNextUrl("/factory-site/dashboard"); 
         setIsDialogVisible(true);
