@@ -55,6 +55,7 @@ const CombineSensorChart: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const intervalId: any = useRef(null);
+  const [noChartData, setNoChartData] = useState(false)
   const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
 
   // console.log("first row entityIdValue", entityIdValue);
@@ -226,11 +227,17 @@ const CombineSensorChart: React.FC = () => {
   const fetchDataAndAssign = async () => {
     try {
       let entityId = entityIdValue;
+      console.log("selected asset entityId ", entityId);
+
       let attributeIds = await fetchAsset(entityId);
+
       console.log("what'sattributeIds", attributeIds);
 
       if (attributeIds && attributeIds.length > 0) {
+        setNoChartData(false)
         const chartData: ChartDataState = { labels: [], datasets: [] };
+        console.log("chartData:sensor ", chartData);
+
 
         for (let i = 0; i < attributeIds.length; i++) {
           const { newDataset, labels } = await fetchData(
@@ -255,6 +262,7 @@ const CombineSensorChart: React.FC = () => {
         // console.log("Final Chart Data:", chartData); // Log final chart data
         setChartData(chartData);
       } else {
+        setNoChartData(true)
         // console.log("No attribute set available");
       }
     } catch (error: any) {
@@ -275,12 +283,14 @@ const CombineSensorChart: React.FC = () => {
     } else {
       if (router.isReady) {
         const { } = router.query;
-        if (autorefresh === true) {
+        if (autorefresh) {
           console.log("is sensor-chart autoreferssh");
           intervalId.current = setInterval(() => {
             fetchDataAndAssign();
           }, 10000);
         } else {
+          console.log("is calling when eneityId changes");
+
           fetchDataAndAssign();
         }
       }
@@ -351,7 +361,7 @@ const CombineSensorChart: React.FC = () => {
 
 
           <div>
-            {data.datasets.length > 0 ? (
+            {data.datasets.length > 0 && !noChartData ? (
               <Chart
                 type="line"
                 data={{
@@ -364,18 +374,19 @@ const CombineSensorChart: React.FC = () => {
                   maintainAspectRatio: false,
                 }}
               />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
-              >
-                <span>No data available</span>
-              </div>
-            )}
+            ) :
+              (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "60vh",
+                  }}
+                >
+                  <span>No data available</span>
+                </div>
+              )}
           </div>
 
         </div>

@@ -3,6 +3,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
 import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
+import { getAlerts } from "../alert/alert-service";
 
 
 const DashboardCards: React.FC = () => {
@@ -12,7 +13,11 @@ const DashboardCards: React.FC = () => {
         entityIdValue,
         setMachineStateValue,
         selectedAssetData,
-        machineStateData } = useDashboard();
+        machineStateData,
+        notificationData,
+        setNotificationData ,
+        allOnlineTime
+    } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
     const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
@@ -20,8 +25,27 @@ const DashboardCards: React.FC = () => {
     const [hasRelations, setHasRelations] = useState<any>([]);
 
 
-    console.log(selectedAssetData, "selectedAssetData");
-    console.log("machineStateData", machineStateData);
+    // console.log(selectedAssetData, "selectedAssetData");
+    // console.log("machineStateData", machineStateData);
+
+    // console.log("allOnlineTime from machine-chart", allOnlineTime);
+    
+
+    const getNotifications =()=>{
+        const fetchAllAlerts = async () => {
+            try {
+              const response = await getAlerts();
+              // console.log(response, "akert");
+              console.log(response.alerts, "alerts response");
+              const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
+      
+              setNotificationData(filteredNotifications)
+            } catch (error) {
+              console.error(error)
+            }
+          }
+          fetchAllAlerts();
+    }
     
     useEffect(() => {
         let intervalId: any;
@@ -46,6 +70,7 @@ const DashboardCards: React.FC = () => {
             if (hasKeysWithNoValues(reversedData)) {
                 for (const key in reversedData) {
                     const dataArray: any = reversedData[key];
+                    
                     if (dataArray.length > 0) {
                         // Find the first element with prev_value === "2"
                         const allOnlineValues = [];
@@ -98,6 +123,7 @@ const DashboardCards: React.FC = () => {
                         return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
                     });
                 }, 1000)
+                setOnlineAverage(findOnlineAverage(allOnlineTime)) 
             }
 
         }
@@ -128,12 +154,13 @@ const DashboardCards: React.FC = () => {
             }
         }
         setHasRelations(hasPropertiesArray);
+        getNotifications();
 
         return () => clearInterval(intervalId)
 
-    }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData])
+    }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData, allOnlineTime])
 
-    console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
+    // console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
 
 
 
@@ -205,13 +232,13 @@ const DashboardCards: React.FC = () => {
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Notifications</span>
-                                <div className="text-900 font-medium text-xl">152 Unread</div>
+                                <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className="pi pi-comment text-purple-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">85 </span>
+                        <span className="text-green-500 font-medium">00 </span>
                         <span className="text-500">responded</span>
 
                     </div>

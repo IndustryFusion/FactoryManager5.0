@@ -40,8 +40,8 @@ export const findDifference = (timeValue: any) => {
 }
 
 export const findOnlineAverage = (onlineTime: any) => {
-  const sumOfTime = onlineTime.reduce((acc: number, curr: string) => {
-    return acc = acc + convertToSecondsTime(curr)
+  const sumOfTime = onlineTime.reduce((acc: number, curr: number) => {
+    return acc = acc + curr
   }, 0);
   const averageOnline = sumOfTime / (86400 * 7);
   const avgOnlinePercent = Math.round(averageOnline * 100);

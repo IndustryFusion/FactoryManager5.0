@@ -24,7 +24,8 @@ const PowerCo2Chart = () => {
     const { entityIdValue, setEntityIdValue } = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
     const [loading, setLoading] = useState<boolean>(true);
-    const [checkChart, setCheckChart] = useState<boolean>(false)
+    const [checkChart, setCheckChart] = useState<boolean>(false);
+    const [noChartData, setNoChartData] = useState(false);
     const toast = useRef<any>(null);
     const { autorefresh } = useDashboard();
     const intervalId: any = useRef(null);
@@ -70,80 +71,89 @@ const PowerCo2Chart = () => {
             const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
             const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
             const obj = await fetchData();
+            console.log("what's the power response", obj);
+            
+            if(JSON.stringify(obj ) === "{}"){
+           setNoChartData(true);
+            }else{
+                const data = {
+                    labels: obj?.lastSevenDays,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'CO2 Emission',
+                            borderColor: documentStyle.getPropertyValue('--blue-500'),
+                            yAxisID: 'y',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            data: obj?.emission
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Power Comsumption',
+                            backgroundColor: documentStyle.getPropertyValue('--green-400'),
+                            yAxisID: 'y1',
+                            data: obj?.powerConsumption,
+                            borderColor: 'white',
+                            borderWidth: 2
+                        }
+                    ]
+                };
+                const options = {
+                    maintainAspectRatio: false,
+                    aspectRatio: 0.6,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColorSecondary
+                            },
+                            grid: {
+                                color: surfaceBorder
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: {
+                                color: textColorSecondary,
+                                stepSize: 10000
+                            },
+                            grid: {
+                                color: surfaceBorder
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: {
+                                color: textColorSecondary,
+                                stepSize: 50
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                                color: surfaceBorder
+                            }
+                        }
+                    }
+                };
+                setNoChartData(false);
+                setChartData(data);
+                setChartOptions(options);
+            }
             // console.log('obj ',obj);
-            const data = {
-                labels: obj?.lastSevenDays,
-                datasets: [
-                    {
-                        type: 'line',
-                        label: 'CO2 Emission',
-                        borderColor: documentStyle.getPropertyValue('--blue-500'),
-                        yAxisID: 'y',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        data: obj?.emission
-                    },
-                    {
-                        type: 'bar',
-                        label: 'Power Comsumption',
-                        backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                        yAxisID: 'y1',
-                        data: obj?.powerConsumption,
-                        borderColor: 'white',
-                        borderWidth: 2
-                    }
-                ]
-            };
-            const options = {
-                maintainAspectRatio: false,
-                aspectRatio: 0.6,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColorSecondary
-                        },
-                        grid: {
-                            color: surfaceBorder
-                        }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 10000
-                        },
-                        grid: {
-                            color: surfaceBorder
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 50
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                            color: surfaceBorder
-                        }
-                    }
-                }
-            };
+            
 
-            setChartData(data);
-            setChartOptions(options);
+           
         }
 
         if (autorefresh === true) {
@@ -170,7 +180,18 @@ const PowerCo2Chart = () => {
             <Toast ref={toast} />
             {/* <BlockUI blocked={loading}> */}
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
-            <Chart type="line" data={chartData} options={chartOptions} />
+            {
+                JSON.stringify(chartData) === "{}" || noChartData ?
+                    <div className="flex flex-column justify-content-center align-items-center">
+                        <p> No data available</p>
+                        <img src="/noDataFound.png" alt="" width="45%" height="45%" />
+                    </div>
+
+                    :
+                    <Chart type="line" data={chartData} options={chartOptions} />
+            }
+           
+         
             {/* </BlockUI> */}
         </div>
     )

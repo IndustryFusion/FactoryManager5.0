@@ -5,9 +5,6 @@ import "../../styles/dashboard.css"
 const AutoRefresh = ()=>{
   const {autorefresh, setAutorefresh} = useDashboard();
 
-  console.log("autorefresh", autorefresh);
-  
-
     return(
         <>
          <div className="autorefresh-btn mr-5 flex justify-content-end">
