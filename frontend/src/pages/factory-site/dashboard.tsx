@@ -17,6 +17,7 @@ import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
+import AutoRefresh from '@/components/dashboard/auto-refresh';
 
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -133,6 +134,7 @@ const Dashboard = () => {
       }
       <div className="dashboard-container" style={{ zoom: "95%" }}>
         <HorizontalNavbar />
+       <AutoRefresh />
         <DashboardCards  />
         <div className="flex flex-column md:flex-row my-3 gap-2" style={{height:"80%", width:"100%" }}>
           <div className="flex border-round m-2" style={{width:"77%"}}>
@@ -146,7 +148,7 @@ const Dashboard = () => {
           />
         </div>
         <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5" style={{height:"100%", width:"100%"}}>
-          <div className="flex border-round m-2" style={{width:"65%", margin: 0}}>
+          <div className="flex border-round mx-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>
           <DashboardChart/>

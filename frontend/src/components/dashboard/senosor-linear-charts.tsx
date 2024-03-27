@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ChartData, ChartOptions } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
@@ -51,14 +51,14 @@ const CombineSensorChart: React.FC = () => {
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
   const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
-  const [productName, setProductName] = useState<string>("");
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const {entityIdValue, setEntityIdValue} = useDashboard();
+  const intervalId: any = useRef(null);
+  const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
 
   // console.log("first row entityIdValue", entityIdValue);
-  
+
   const intervalButtons = [
     { label: "1 Min", interval: 1 },
     { label: "3 Min", interval: 3 },
@@ -121,7 +121,7 @@ const CombineSensorChart: React.FC = () => {
     index: number,
     selectedInterval: number
   ) => {
-   // Start loading
+    // Start loading
     const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
     if (dataCache[cacheKey]) {
       return dataCache[cacheKey]; // Use cached data
@@ -143,7 +143,7 @@ const CombineSensorChart: React.FC = () => {
         withCredentials: true,
       });
       let factoryData: pgData[] = response.data;
-      setLoading(false) 
+      setLoading(false)
       const skip = selectedInterval * 4; // Since data is recorded every 15 seconds, 4 data points per minute
 
       // Filter the data points based on the skip value
@@ -211,10 +211,7 @@ const CombineSensorChart: React.FC = () => {
       });
 
       const assetData: Asset = response.data;
-      const productName =
-        assetData["http://www.industry-fusion.org/schema#product_name"]
-          ?.value || "Unknown Product";
-      setProductName(productName); // Set the product name in the state
+
       const attributeIds: string[] = Object.keys(assetData)
         .filter((key) => key.includes("fields"))
         .map((key) => "eq." + key);
@@ -225,15 +222,13 @@ const CombineSensorChart: React.FC = () => {
     }
   };
 
-// console.log(entityIdValue, "in sensor chart");
-
-
-  useEffect(() => {
-    const fetchDataAndAssign = async () => {
+  // console.log(entityIdValue, "in sensor chart");
+  const fetchDataAndAssign = async () => {
+    try {
       let entityId = entityIdValue;
-
-      
       let attributeIds = await fetchAsset(entityId);
+      console.log("what'sattributeIds", attributeIds);
+
       if (attributeIds && attributeIds.length > 0) {
         const chartData: ChartDataState = { labels: [], datasets: [] };
 
@@ -257,29 +252,50 @@ const CombineSensorChart: React.FC = () => {
         }
 
         // console.log("sensor chartData",chartData);
-        
-
         // console.log("Final Chart Data:", chartData); // Log final chart data
         setChartData(chartData);
       } else {
         // console.log("No attribute set available");
       }
-    };
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error response:", error.response?.data.message);
+        // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+      } else {
+        console.error("Error:", error);
+        // showToast('error', 'Error', error);
+      }
+    }
+  }
+
+  useEffect(() => {
 
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
       if (router.isReady) {
-        const {} = router.query;
-        fetchDataAndAssign();
+        const { } = router.query;
+        if (autorefresh === true) {
+          console.log("is sensor-chart autoreferssh");
+          intervalId.current = setInterval(() => {
+            fetchDataAndAssign();
+          }, 10000);
+        } else {
+          fetchDataAndAssign();
+        }
       }
-    }  
-  }, [layoutConfig, selectedInterval, router.isReady, entityIdValue]);
+    }
+
+
+  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);
 
   return (
-    <div style={{zoom:"80%"}}>
-       {/* <BlockUI blocked={loading}> */}
-      <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
+    <div style={{ zoom: "80%" }}>
+      {/* <BlockUI blocked={loading}> */}
+      <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
+        {selectedAssetData?.product_name === undefined ?
+          "Unknown Product" : selectedAssetData?.product_name
+        }</h3>
       <div className="grid p-fluid">
         <div className="col-12">
           <div className="buttons-container">
@@ -333,35 +349,35 @@ const CombineSensorChart: React.FC = () => {
             </div>
           </div>
 
-      
-            <div>
-              {data.datasets.length > 0 ? (
-                <Chart
-                  type="line"
-                  data={{
-                    labels: data.labels,
-                    datasets: [data.datasets[selectedDatasetIndex]],
-                  }}
-                  style={{ height: "60vh" }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "60vh",
-                  }}
-                >
-                  <span>No data available</span>
-                </div>
-              )}
-            </div>
-          
+
+          <div>
+            {data.datasets.length > 0 ? (
+              <Chart
+                type="line"
+                data={{
+                  labels: data.labels,
+                  datasets: [data.datasets[selectedDatasetIndex]],
+                }}
+                style={{ height: "60vh" }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "60vh",
+                }}
+              >
+                <span>No data available</span>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
       {/* </BlockUI> */}
