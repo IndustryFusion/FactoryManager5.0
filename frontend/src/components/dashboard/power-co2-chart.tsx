@@ -4,6 +4,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Dropdown } from "primereact/dropdown";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 export interface Datasets {
     label: string;
@@ -23,20 +25,30 @@ const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
     const { entityIdValue, setEntityIdValue } = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
-    const [loading, setLoading] = useState<boolean>(true);
     const [checkChart, setCheckChart] = useState<boolean>(false)
+    const [selectedInterval, setSelectedInterval] = useState<string>("days");
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const { autorefresh } = useDashboard();
     const intervalId: any = useRef(null);
+
+    const intervalButtons = [
+        { label: "days", interval: "days" },
+        { label: "weeks", interval: "weeks" },
+        { label: "months", interval: "months" }
+    ];
+    
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
 
     const fetchData = async () => {
         try {
+            setIsLoading(true);
             const response = await axios.get(API_URL + '/power-consumption/chart', {
                 params: {
                     'asset-id': entityIdValue,
+                    'type': selectedInterval
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -45,7 +57,7 @@ const PowerCo2Chart = () => {
                 withCredentials: true,
             });
             console.log('response of powerconsumption chart ', response);
-            setLoading(false);
+            setIsLoading(false);
             setCheckChart(true);
             return response.data;
         } catch (error: any) {
@@ -59,10 +71,6 @@ const PowerCo2Chart = () => {
         }
     }
 
-
-    console.log("autorefresh in powerchart", autorefresh);
-
-
     useEffect(() => {
         const fetchDataAndAssign = async () => {
             const documentStyle = getComputedStyle(document.documentElement);
@@ -72,26 +80,27 @@ const PowerCo2Chart = () => {
             const obj = await fetchData();
             // console.log('obj ',obj);
             const data = {
-                labels: obj?.lastSevenDays,
+                labels: obj?.labels,
                 datasets: [
                     {
-                        type: 'line',
-                        label: 'CO2 Emission',
-                        borderColor: documentStyle.getPropertyValue('--blue-500'),
+                        type: 'bar',
+                        label: 'Power Consumption (KW)',
+                        backgroundColor: documentStyle.getPropertyValue('--green-400'),
                         yAxisID: 'y',
                         borderWidth: 2,
                         fill: false,
                         tension: 0.4,
-                        data: obj?.emission
+                        data: obj?.powerConsumption,
                     },
                     {
                         type: 'bar',
-                        label: 'Power Comsumption',
-                        backgroundColor: documentStyle.getPropertyValue('--green-400'),
+                        label: 'CO2 Emission (KG)',
+                        backgroundColor: documentStyle.getPropertyValue('--blue-500'),
                         yAxisID: 'y1',
-                        data: obj?.powerConsumption,
-                        borderColor: 'white',
-                        borderWidth: 2
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        data: obj?.emission
                     }
                 ]
             };
@@ -117,10 +126,10 @@ const PowerCo2Chart = () => {
                     y: {
                         type: 'linear',
                         display: true,
-                        position: 'right',
+                        position: 'left',
                         ticks: {
                             color: textColorSecondary,
-                            stepSize: 10000
+                            stepSize: 25
                         },
                         grid: {
                             color: surfaceBorder
@@ -129,10 +138,10 @@ const PowerCo2Chart = () => {
                     y1: {
                         type: 'linear',
                         display: true,
-                        position: 'left',
+                        position: 'right',
                         ticks: {
                             color: textColorSecondary,
-                            stepSize: 50
+                            stepSize: 10
                         },
                         grid: {
                             drawOnChartArea: false,
@@ -161,17 +170,46 @@ const PowerCo2Chart = () => {
             }
         };
 
-    }, [checkChart, entityIdValue, autorefresh]);
+    }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
 
 
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
             <Toast ref={toast} />
-            {/* <BlockUI blocked={loading}> */}
-            <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
-            <Chart type="line" data={chartData} options={chartOptions} />
-            {/* </BlockUI> */}
+            <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
+            <div className="interval-filter-container">
+              <p>Filter Interval</p>
+              <div
+                className="dropdown-container custom-button"
+                style={{ padding: "0" }}
+              >
+                <Dropdown
+                  value={selectedInterval}
+                  options={intervalButtons.map(({ label, interval }) => ({
+                    label, 
+                    value: interval,
+                  }))}
+                  onChange={(e) => setSelectedInterval(e.value)} 
+                  placeholder="Select an Interval"
+                  style={{ width: "100%", border: "none" }} 
+                />
+              </div>
+            </div>
+            {isLoading ? (
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "60vh",
+                    }}
+                    >
+                <ProgressSpinner />
+                </div>
+          ) : (
+            <Chart type="bar" data={chartData} options={chartOptions} />
+            )}
         </div>
     )
 
