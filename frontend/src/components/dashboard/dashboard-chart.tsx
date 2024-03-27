@@ -326,12 +326,11 @@ const DashboardChart = () => {
             router.push("/login");
         } else {
             if (router.isReady) {              
-                if(autorefresh === true){
-           
+                if(autorefresh === true){           
                     console.log("is machine-chart autoreferssh");    
                     intervalId.current = setInterval(() => {
                         fetchDataAndAssign();
-                    }, 5000);
+                    }, 10000);
                 }else{
                     fetchDataAndAssign();
                 }

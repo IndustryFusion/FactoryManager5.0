@@ -93,6 +93,10 @@
     height: 100%;
     /* Adjust based on your needs */
 }
+.autorefresh-text{
+    margin-top: 3px;
+    font-size: 15px;
+}
 
 .dialog-content-top {
     justify-content: flex-start;

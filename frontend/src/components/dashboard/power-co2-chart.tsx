@@ -147,11 +147,10 @@ const PowerCo2Chart = () => {
         }
 
         if (autorefresh === true) {
-
             console.log("is coming here to autoreferssh");
             intervalId.current = setInterval(() => {
                 fetchDataAndAssign();
-            }, 5000);
+            }, 10000);
         } else {
             fetchDataAndAssign();
         }

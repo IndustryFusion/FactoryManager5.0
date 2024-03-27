@@ -279,7 +279,7 @@ const CombineSensorChart: React.FC = () => {
           console.log("is sensor-chart autoreferssh");
           intervalId.current = setInterval(() => {
             fetchDataAndAssign();
-          }, 5000);
+          }, 10000);
         } else {
           fetchDataAndAssign();
         }
