@@ -70,6 +70,7 @@ const CombineSensorChart: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const intervalId: any = useRef(null);
+  const [noChartData, setNoChartData] = useState(false)
   const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState();
@@ -274,11 +275,16 @@ const CombineSensorChart: React.FC = () => {
     try {
       
       let entityId = entityIdValue;
+      console.log("selected asset entityId ", entityId);
+
       let attributeIds = await fetchAsset(entityId);
     
 
       if (attributeIds && attributeIds.length > 0) {
+        setNoChartData(false)
         const chartData: ChartDataState = { labels: [], datasets: [] };
+        console.log("chartData:sensor ", chartData);
+
 
         for (let i = 0; i < attributeIds.length; i++) {
           const { newDataset, labels } = await fetchData(
@@ -310,16 +316,18 @@ const CombineSensorChart: React.FC = () => {
         setChartData(chartData);
         console.log("apple ", chartData)
       } else {
-        console.log("No attribute set available");
-         setChartData({
-          labels: [],
-          datasets: [],
-        });
+        setNoChartData(true)
+        // console.log("No attribute set available");
       }
-    }catch(error){
-      console.error("Failed to fetch and assign data:", error);
-    }
-    
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error response:", error.response?.data.message);
+        // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+      } else {
+        console.error("Error:", error);
+        // showToast('error', 'Error', error);
+      }
+    }  
   }
    
 
@@ -331,13 +339,15 @@ const CombineSensorChart: React.FC = () => {
     } else {
       if (router.isReady) {
         const { } = router.query;
-        if (autorefresh === true) {
+        if (autorefresh) {
           console.log("is sensor-chart autoreferssh");
           intervalId.current = setInterval(() => {
             fetchDataAndAssign();
           }, 10000);
           
         } else {
+          console.log("is calling when eneityId changes");
+
           fetchDataAndAssign();
         }
       }
@@ -464,7 +474,7 @@ const CombineSensorChart: React.FC = () => {
 
 
           <div>
-        { !loading && data.datasets.length > 0 ? (
+            {data.datasets.length > 0 && !noChartData ? (
               <Chart
                key={entityIdValue} 
                 type="line"
@@ -478,18 +488,19 @@ const CombineSensorChart: React.FC = () => {
                   maintainAspectRatio: false,
                 }}
               />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
-              >
-                <span>No data available</span>
-              </div>
-            )}
+            ) :
+              (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "60vh",
+                  }}
+                >
+                  <span>No data available</span>
+                </div>
+              )}
           </div>
 
         </div>

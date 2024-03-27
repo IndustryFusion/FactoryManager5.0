@@ -21,27 +21,10 @@ interface Notification {
 }
 
 const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp, setNotificationProp }) => {
-  const { entityIdValue } = useDashboard();
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { entityIdValue, notificationData} = useDashboard();
+
   console.log(entityIdValue, "assetId , notifications");
 
-  useEffect(() => {
-    const fetchAllAlerts = async () => {
-      try {
-        const response = await getAlerts();
-        // console.log(response, "akert");
-        setAlerts(response.alerts);
-        console.log(response.alerts, "alerts response");
-
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    fetchAllAlerts();
-  }, [])
-
-  const notificationData = alerts.filter(({ resource }) => resource === entityIdValue);
 
   return (
     <>
@@ -86,6 +69,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                   <p className="font-medium">Origin: </p>
                   <p className="ml-2 "> {notification?.origin}</p>
                 </div>
+                <hr/>
               </div>
             ))
             :
