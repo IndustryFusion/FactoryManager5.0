@@ -17,6 +17,9 @@ import {
   FaTint,
   FaTemperatureHigh,
   FaCloud,
+  FaBolt,
+  FaHourglassHalf 
+
 } from "react-icons/fa";
 import "../../styles/combine-chart.css";
 import { useDashboard } from "@/context/dashboard-context";
@@ -27,6 +30,15 @@ const graphMapping: any = {
   humidity: "/graph-combine-chart2.svg",
   noise: "/graph-combine-chart3.svg",
   temperature: "/graph-combine-chart4.svg",
+ "power-consumption": "/graph-combine-chart4.svg",
+  "operating-hours": "/graph-combine-chart4.svg",
+};
+
+
+type AttributeOption = {
+  selectedDatasetIndex:number,
+  label: string;
+  value: string;
 };
 
 // Define the state type for chart data
@@ -35,11 +47,14 @@ interface ChartDataState extends ChartData<"line", number[], string> {
 }
 const iconMapping: any = {
   dustiness: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
+   dustiness1: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
   humidity: <FaTint style={{ color: "#00BFFF", marginRight: "8px" }} />,
   noise: <FaWind style={{ color: "#696969", marginRight: "8px" }} />,
   temperature: (
     <FaTemperatureHigh style={{ color: "#FF4500", marginRight: "8px" }} />
   ),
+  "power-consumption": <FaBolt style={{ color: "#ffd700", marginRight: "8px" }} />, 
+  "operating-hours": <FaHourglassHalf style={{ color: "#6a5acd", marginRight: "8px" }} />,
 };
 
 const CombineSensorChart: React.FC = () => {
@@ -56,7 +71,8 @@ const CombineSensorChart: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const {entityIdValue, setEntityIdValue} = useDashboard();
-
+  const [attributes, setAttributes] = useState<AttributeOption[]>([]);
+  const [selectedAttribute, setSelectedAttribute] = useState();
   // console.log("first row entityIdValue", entityIdValue);
   
   const intervalButtons = [
@@ -122,10 +138,10 @@ const CombineSensorChart: React.FC = () => {
     selectedInterval: number
   ) => {
    // Start loading
-    const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
-    if (dataCache[cacheKey]) {
-      return dataCache[cacheKey]; // Use cached data
-    }
+    // const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
+    // if (dataCache[cacheKey]) {
+    //   return dataCache[cacheKey]; // Use cached data
+    // }
     const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
     const limit = calculateLimit(selectedInterval); // Calculate dynamic limit
     try {
@@ -143,6 +159,8 @@ const CombineSensorChart: React.FC = () => {
         withCredentials: true,
       });
       let factoryData: pgData[] = response.data;
+
+     
       setLoading(false) 
       const skip = selectedInterval * 4; // Since data is recorded every 15 seconds, 4 data points per minute
 
@@ -173,10 +191,10 @@ const CombineSensorChart: React.FC = () => {
         tension: 0.4,
       };
       const fetchedData = { newDataset, labels };
-      setDataCache((prevCache) => ({
-        ...prevCache,
-        [cacheKey]: fetchedData,
-      }));
+      // setDataCache((prevCache) => ({
+      //   ...prevCache,
+      //   [cacheKey]: fetchedData,
+      // }));
       return fetchedData;
     } catch (error) {
       console.error("Error fetching asset data:", error);
@@ -215,17 +233,37 @@ const CombineSensorChart: React.FC = () => {
         assetData["http://www.industry-fusion.org/schema#product_name"]
           ?.value || "Unknown Product";
       setProductName(productName); // Set the product name in the state
-      const attributeIds: string[] = Object.keys(assetData)
-        .filter((key) => key.includes("fields"))
-        .map((key) => "eq." + key);
 
-      return attributeIds;
+
+
+      // const attributeIds: string[] = Object.keys(assetData)
+      //   .filter((key) => key.includes("fields"))
+      // .map(key => {
+      //   const parts = key.split("#");
+      //   return parts[1] || key; // Return the part after "#" if exists
+      // });
+       
+      // return attributeIds;
+
+     const attributeLabels: AttributeOption[] = Object.keys(assetData)
+      .filter(key => key.includes("fields" ))
+      .map(key => {
+        let index = 0;
+        const label = key.split("#")[1] || key;
+        return { label, value: label, selectedDatasetIndex:index+1 };
+      })
+      .filter(attribute => attribute.value !== "machine-state"); 
+
+    setAttributes(attributeLabels);
+
+    // Return attributeIds for compatibility with existing code
+    return Object.keys(assetData)
+      .filter(key => key.includes("fields"  ))
+      .map(key => "eq." + key);
     } catch (error) {
       console.error("Error fetching asset data:", error);
     }
   };
-
-// console.log(entityIdValue, "in sensor chart");
 
 
   useEffect(() => {
@@ -247,22 +285,24 @@ const CombineSensorChart: React.FC = () => {
 
           // Exclude the dataset with the label "machine-state"
           if (newDataset.label !== "machine-state") {
-            // console.log(`Dataset ${i}:`, newDataset); // Log each dataset
+         
+              chartData.labels = labels; 
 
-            if (i === 0) {
-              chartData.labels = labels; // Use the correct property name
-            }
+              console.log("called")
+      
             chartData.datasets.push(newDataset);
           }
         }
 
-        // console.log("sensor chartData",chartData);
-        
 
-        // console.log("Final Chart Data:", chartData); // Log final chart data
         setChartData(chartData);
+        console.log("apple ", chartData)
       } else {
-        // console.log("No attribute set available");
+        console.log("No attribute set available");
+         setChartData({
+          labels: [],
+          datasets: [],
+        });
       }
     };
 
@@ -279,11 +319,62 @@ const CombineSensorChart: React.FC = () => {
   return (
     <div style={{zoom:"80%"}}>
        {/* <BlockUI blocked={loading}> */}
+       
       <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
       <div className="grid p-fluid">
         <div className="col-12">
-          <div className="buttons-container">
-            {data.datasets.map((dataset, index) => (
+            <div className="control-container">
+              <div className="attribute-dropdown-container">
+                <p className="font-bold">Select Attributes</p>
+                <Dropdown
+                  value={selectedAttribute}
+                  options={attributes}
+                  onChange={(e) => {
+                    const selectedIndex = data.datasets.findIndex(dataset => dataset.label === e.value);
+                    if (selectedIndex !== -1) {
+                      setSelectedDatasetIndex(selectedIndex);
+                    }
+                    setSelectedAttribute(e.value);
+                  }}
+                  placeholder="Please Select"
+                  filter
+                  showClear
+                  filterBy="label,value"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="custom-button-container">
+                  <div className="custom-button">
+                    <img src="/dashboard-field-icon.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
+                    <span className="button-text">{selectedAttribute || 'Select an Attribute'}</span>
+                  </div>
+                </div>
+
+            {/* {selectedAttribute && (
+              <div className="custom-button-container">
+                <div className="custom-button">
+                  {/* {iconMapping[selectedAttribute?.toLowerCase()] || <FaIndustry style={{ marginRight: "8px" }} />} */}
+                  {/* <img src="/dashboard-field-icon.png" style={{width:"7%"}}></img>
+                  <span className="button-text">{selectedAttribute}</span>
+                </div>
+              </div> */}
+            {/* )} */} 
+            <div className="interval-dropdown-container">
+              <p className="font-bold">Interval</p>
+              <Dropdown
+                value={selectedInterval}
+                options={intervalButtons.map(({ label, interval }) => ({
+                  label,
+                  value: interval,
+                }))}
+                onChange={(e) => setSelectedInterval(e.value)}
+                placeholder="Select an Interval"
+                // style={{ width: "100%", border: "none" }}
+                className="w-full sm:w-14rem" 
+              />
+            </div>
+          </div>
+             {/* {data.datasets.map((dataset, index) => (
               <div
                 key={index}
                 className="custom-button"
@@ -295,8 +386,8 @@ const CombineSensorChart: React.FC = () => {
                 }
               >
                 <div className="content">
-                  {/* Icon next to the label */}
-                  <div style={{ display: "flex", alignItems: "center" }}>
+                
+                   <div style={{ display: "flex", alignItems: "center" }}>
                     {iconMapping[dataset.label.toLowerCase()] || (
                       <FaIndustry style={{ marginRight: "8px" }} />
                     )}
@@ -312,8 +403,9 @@ const CombineSensorChart: React.FC = () => {
                   />
                 </div>
               </div>
-            ))}
-            <div className="interval-filter-container">
+            ))}  */}
+            
+            {/* <div className="interval-filter-container">
               <p>Filter Interval</p>
               <div
                 className="dropdown-container custom-button"
@@ -322,8 +414,8 @@ const CombineSensorChart: React.FC = () => {
                 <Dropdown
                   value={selectedInterval}
                   options={intervalButtons.map(({ label, interval }) => ({
-                    label, // Text shown in the dropdown
-                    value: interval, // Corresponding value
+                    label, 
+                    value: interval, 
                   }))}
                   onChange={(e) => setSelectedInterval(e.value)} // Update selectedInterval state on change
                   placeholder="Select an Interval"
@@ -331,7 +423,8 @@ const CombineSensorChart: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
+           */}
+    
 
       
             <div>
@@ -365,6 +458,7 @@ const CombineSensorChart: React.FC = () => {
         </div>
       </div>
       {/* </BlockUI> */}
+   
     </div>
   );
 };
