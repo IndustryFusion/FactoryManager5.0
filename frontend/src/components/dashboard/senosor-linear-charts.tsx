@@ -325,7 +325,7 @@ const CombineSensorChart: React.FC = () => {
 
   useEffect(() => {
  
-
+    setChartData({ labels: [], datasets: [] });
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
@@ -464,8 +464,9 @@ const CombineSensorChart: React.FC = () => {
 
 
           <div>
-            {data.datasets.length > 0 ? (
+        { !loading && data.datasets.length > 0 ? (
               <Chart
+               key={entityIdValue} 
                 type="line"
                 data={{
                   labels: data.labels,
