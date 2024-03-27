@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ChartData, ChartOptions } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
@@ -66,15 +66,17 @@ const CombineSensorChart: React.FC = () => {
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
   const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
-  const [productName, setProductName] = useState<string>("");
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const {entityIdValue, setEntityIdValue} = useDashboard();
+  const intervalId: any = useRef(null);
+  const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState();
+  const [productName, setProductName] = useState<string>("");
+
   // console.log("first row entityIdValue", entityIdValue);
-  
+
   const intervalButtons = [
     { label: "1 Min", interval: 1 },
     { label: "3 Min", interval: 3 },
@@ -138,10 +140,10 @@ const CombineSensorChart: React.FC = () => {
     selectedInterval: number
   ) => {
    // Start loading
-    // const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
-    // if (dataCache[cacheKey]) {
-    //   return dataCache[cacheKey]; // Use cached data
-    // }
+    const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
+    if (dataCache[cacheKey]) {
+      return dataCache[cacheKey]; // Use cached data
+    }
     const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
     const limit = calculateLimit(selectedInterval); // Calculate dynamic limit
     try {
@@ -191,10 +193,10 @@ const CombineSensorChart: React.FC = () => {
         tension: 0.4,
       };
       const fetchedData = { newDataset, labels };
-      // setDataCache((prevCache) => ({
-      //   ...prevCache,
-      //   [cacheKey]: fetchedData,
-      // }));
+      setDataCache((prevCache) => ({
+        ...prevCache,
+        [cacheKey]: fetchedData,
+      }));
       return fetchedData;
     } catch (error) {
       console.error("Error fetching asset data:", error);
@@ -265,13 +267,16 @@ const CombineSensorChart: React.FC = () => {
     }
   };
 
+// console.log(entityIdValue, "in sensor chart");
 
-  useEffect(() => {
+
     const fetchDataAndAssign = async () => {
-      let entityId = entityIdValue;
-
+    try {
       
+      let entityId = entityIdValue;
       let attributeIds = await fetchAsset(entityId);
+    
+
       if (attributeIds && attributeIds.length > 0) {
         const chartData: ChartDataState = { labels: [], datasets: [] };
 
@@ -285,10 +290,17 @@ const CombineSensorChart: React.FC = () => {
 
           // Exclude the dataset with the label "machine-state"
           if (newDataset.label !== "machine-state") {
-         
-              chartData.labels = labels; 
 
-              console.log("called")
+            
+            const updatedLabels = generateLabels(
+            new Date(), // Use current time
+            selectedInterval,
+            labels.length // Use the same length as the existing labels
+          );
+
+            chartData.labels = updatedLabels;
+
+             
       
             chartData.datasets.push(newDataset);
           }
@@ -304,23 +316,47 @@ const CombineSensorChart: React.FC = () => {
           datasets: [],
         });
       }
-    };
+    }catch(error){
+      console.error("Failed to fetch and assign data:", error);
+    }
+    
+  }
+   
 
+  useEffect(() => {
+ 
+    setChartData({ labels: [], datasets: [] });
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
       if (router.isReady) {
-        const {} = router.query;
-        fetchDataAndAssign();
+        const { } = router.query;
+        if (autorefresh === true) {
+          console.log("is sensor-chart autoreferssh");
+          intervalId.current = setInterval(() => {
+            fetchDataAndAssign();
+          }, 10000);
+          
+        } else {
+          fetchDataAndAssign();
+        }
       }
-    }  
-  }, [layoutConfig, selectedInterval, router.isReady, entityIdValue]);
+    }
+    return () => {
+          if (intervalId.current) {
+            clearInterval(intervalId.current);
+          }
+        };
+
+  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);
 
   return (
-    <div style={{zoom:"80%"}}>
-       {/* <BlockUI blocked={loading}> */}
-       
-      <h3 style={{ marginLeft: "30px", fontSize:"20px" }}>{productName}</h3>
+    <div style={{ zoom: "80%" }}>
+      {/* <BlockUI blocked={loading}> */}
+      <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
+        {selectedAssetData?.product_name === undefined ?
+          "Unknown Product" : selectedAssetData?.product_name
+        }</h3>
       <div className="grid p-fluid">
         <div className="col-12">
             <div className="control-container">
@@ -426,35 +462,36 @@ const CombineSensorChart: React.FC = () => {
            */}
     
 
-      
-            <div>
-              {data.datasets.length > 0 ? (
-                <Chart
-                  type="line"
-                  data={{
-                    labels: data.labels,
-                    datasets: [data.datasets[selectedDatasetIndex]],
-                  }}
-                  style={{ height: "60vh" }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "60vh",
-                  }}
-                >
-                  <span>No data available</span>
-                </div>
-              )}
-            </div>
-          
+
+          <div>
+        { !loading && data.datasets.length > 0 ? (
+              <Chart
+               key={entityIdValue} 
+                type="line"
+                data={{
+                  labels: data.labels,
+                  datasets: [data.datasets[selectedDatasetIndex]],
+                }}
+                style={{ height: "60vh" }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "60vh",
+                }}
+              >
+                <span>No data available</span>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
       {/* </BlockUI> */}
