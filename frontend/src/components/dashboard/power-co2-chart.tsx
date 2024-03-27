@@ -4,6 +4,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Dropdown } from "primereact/dropdown";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 export interface Datasets {
     label: string;
@@ -21,23 +23,34 @@ export interface pgData {
 
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const { entityIdValue, setEntityIdValue } = useDashboard();
+    const { entityIdValue, setEntityIdValue, autorefresh } = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
     const [loading, setLoading] = useState<boolean>(true);
     const [checkChart, setCheckChart] = useState<boolean>(false);
     const [noChartData, setNoChartData] = useState(false);
+    const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const toast = useRef<any>(null);
-    const { autorefresh } = useDashboard();
     const intervalId: any = useRef(null);
+
+    const intervalButtons = [
+        { label: "days", interval: "days" },
+        { label: "weeks", interval: "weeks" },
+        { label: "months", interval: "months" }
+    ];
+    
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
 
+    console.log("entityIdValue in powerChart", entityIdValue);
+    
     const fetchData = async () => {
         try {
+           
             const response = await axios.get(API_URL + '/power-consumption/chart', {
                 params: {
                     'asset-id': entityIdValue,
+                    'type': selectedInterval
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -46,7 +59,7 @@ const PowerCo2Chart = () => {
                 withCredentials: true,
             });
             console.log('response of powerconsumption chart ', response);
-            setLoading(false);
+          
             setCheckChart(true);
             return response.data;
         } catch (error: any) {
@@ -59,10 +72,6 @@ const PowerCo2Chart = () => {
             }
         }
     }
-
-
-    console.log("autorefresh in powerchart", autorefresh);
-
 
     useEffect(() => {
         const fetchDataAndAssign = async () => {
@@ -149,11 +158,7 @@ const PowerCo2Chart = () => {
                 setNoChartData(false);
                 setChartData(data);
                 setChartOptions(options);
-            }
-            // console.log('obj ',obj);
-            
-
-           
+            }   
         }
 
         if (autorefresh === true) {
@@ -171,7 +176,7 @@ const PowerCo2Chart = () => {
             }
         };
 
-    }, [checkChart, entityIdValue, autorefresh]);
+    }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
 
 
 

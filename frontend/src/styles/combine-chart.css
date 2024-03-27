@@ -25,7 +25,7 @@
 .custom-button {
   cursor: pointer;
   padding: 10px;
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   border-radius: 4px;
   transition: all 0.3s;
   width: auto; /* Remove fixed width */
@@ -36,9 +36,9 @@
   border: none;
 }
 
-.custom-button:hover {
+/* .custom-button:hover {
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
-}
+} */
 
 /* Adjust icon styles */
 .button-icon {
@@ -77,4 +77,47 @@
   font-size: 16px; /* Adjust the font size as needed */
   font-weight: bold; /* Make label text bold */
   text-align: center; /* Center-align the text */
+}
+
+
+
+
+
+/* test css*/
+
+.control-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.custom-button-container {
+  flex: 1; /* Allows the children to grow and take equal space */
+  padding: 0 10px; /* Adds some spacing between the elements */
+}
+
+.interval-dropdown-container{
+  position: block;
+}
+.attribute-dropdown-container {
+position: "block";
+}
+.custom-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Your existing button styling */
+}
+
+/* Add responsiveness if necessary */
+@media (max-width: 768px) {
+  .control-container {
+    flex-direction: column;
+  }
+  
+  .attribute-dropdown-container, .custom-button-container, .interval-dropdown-container {
+    width: 100%; /* Full width on small screens */
+    padding: 5px 0; /* Adjust padding for small screens */
+  }
 }
