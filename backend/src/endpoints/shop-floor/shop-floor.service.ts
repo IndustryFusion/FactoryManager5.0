@@ -296,11 +296,15 @@ export class ShopFloorService {
                 }
               }
             }
-            let response = await this.assetService.updateAssetById(node[i].target.split('_')[1], updateData, token);
-            if(response['status'] == 200 || response['status'] == 204){
-              continue;
+            if(Object.keys(updateData).length > 0){
+              let response = await this.assetService.updateAssetById(node[i].target.split('_')[1], updateData, token);
+              if(response['status'] == 200 || response['status'] == 204){
+                continue;
+              } else {
+                return response;
+              }
             } else {
-              return response;
+              continue;
             }
           }
         }
@@ -308,7 +312,7 @@ export class ShopFloorService {
           let key = id.split('_')[1];
           assetObj[key] = assetObj[key] ? assetObj[key] : {};
           assetObj[key][node[i].target.split('_')[1]] = assetObj[key][node[i].target.split('_')[1]] ? assetObj[key][node[i].target.split('_')[1]] : [];
-          for(let j = i+1; j < node.length; j++) {
+          for(let j = 0; j < node.length; j++) {
             if(node[j].source === node[i].target){
               assetObj[key][node[i].target.split('_')[1]].push(node[j].target.split('_')[1]);
             }
