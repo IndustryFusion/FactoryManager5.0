@@ -47,6 +47,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [machineStateData, setMachineStateData] = useState({});
   const [notificationData, setNotificationData] = useState([]);
   const [allOnlineTime, setAllOnlineTime]= useState([]);
+  const [relationsCount, setRelationsCount] = useState(0);
 
   return (
     <DashboardContext.Provider
@@ -60,7 +61,8 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
         machineStateData, setMachineStateData,
         autorefresh, setAutorefresh,
         notificationData, setNotificationData,
-        allOnlineTime, setAllOnlineTime
+        allOnlineTime, setAllOnlineTime,
+        relationsCount, setRelationsCount
       }}
     >
       {children}

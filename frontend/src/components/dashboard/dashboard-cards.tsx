@@ -16,7 +16,8 @@ const DashboardCards: React.FC = () => {
         machineStateData,
         notificationData,
         setNotificationData ,
-        allOnlineTime
+        allOnlineTime,
+        relationsCount
     } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
@@ -128,7 +129,6 @@ const DashboardCards: React.FC = () => {
 
         }
 
-
         if (machineStateValue === "2") {
             runningSince();
         } else {
@@ -158,7 +158,7 @@ const DashboardCards: React.FC = () => {
 
         return () => clearInterval(intervalId)
 
-    }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData, allOnlineTime])
+    }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
 
     // console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
 
@@ -217,7 +217,7 @@ const DashboardCards: React.FC = () => {
                                 <i className="pi pi-inbox text-cyan-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">24 </span>
+                        <span className="text-green-500 font-medium">{ relationsCount} </span>
                         <span className="text-500">machines are connected</span>
                     </div>
                     {relations &&
