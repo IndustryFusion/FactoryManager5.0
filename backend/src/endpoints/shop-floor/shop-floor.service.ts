@@ -348,68 +348,49 @@ export class ShopFloorService {
     
   }
 
-  async deleteScript(factoryId: string, token: string) {
+  async deleteScript(node: any, token: string) {
     try {
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        Accept: 'application/ld+json',
-      };
-      const responses = [], assetResponses = [];
-      let assetList = [];
-      let shopFloorData = await this.findAll(factoryId, token);
-      for(let i = 0; i < shopFloorData.length; i++){
-        let data = shopFloorData[i];
-        let assetIds = data["http://www.industry-fusion.org/schema#hasAsset"];
-        if(Array.isArray(assetIds) && assetIds.length > 0){
-          assetList = [...assetList, ...assetIds];
-        } else if(assetIds.object.includes('urn')){
-          assetList.push(assetIds);
-        }
-
-        data["http://www.industry-fusion.org/schema#hasAsset"] = {
-          type: 'Relationship',
-          object: ""
-        };
-        const deleteResponse = await this.remove(data["id"], token);
-        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-          const response = await axios.post(this.scorpioUrl, data, { headers });
-          responses.push(response);
-        } 
-      }
-
-      for(let i = 0; i < assetList.length; i++){
-        let assetData = await this.assetService.getAssetDataById(assetList[i].object, token);
-        for (const key in assetData) {
-          if (key.includes('has')) {
-            assetData[key] = {
+      for(let i = 0; i < node.length; i++){
+        let id = node[i].id;
+        if(id.includes('shopFloor')){
+          let updateData = {
+            'http://www.industry-fusion.org/schema#hasAsset': {
               type: 'Relationship',
-              object: "",
-              class: assetData[key].class
+              object: ''
             }
           }
+          let response = await this.update(id.split('_').pop(), updateData, token);
+          if(response['status'] == 200 || response['status'] == 204){
+            continue;
+          } else {
+            return response;
+          }
         }
-        const deleteResponse = await this.assetService.deleteAssetById(assetData["id"], token);
-        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-          const response = await axios.post(this.scorpioUrl, assetData, { headers });
-          assetResponses.push(response);
-        }  
+        if(id.includes('asset')){
+          let updateData = {};
+          let assetData = await this.assetService.getAssetDataById(id.split('_')[1], token);
+          for (const key in assetData){
+            if (key.includes('has')){
+              updateData[key] = {
+                type: 'Relationship',
+                object: '',
+                class: assetData[key].class
+              }
+            }
+          }
+          if(Object.keys(updateData).length > 0){
+            let response = await this.assetService.updateAssetById(id.split('_')[1], updateData, token);
+            if(response['status'] == 200 || response['status'] == 204){
+              continue;
+            } else {
+              return response;
+            }
+          } else {
+            continue;
+          }
+        }
       }
-
-      if (responses.length === shopFloorData.length && assetResponses.length === assetList.length) {
-        return {
-          success: true,
-          status: 204,
-          message: 'All deletion were successful',
-        };
-      } else {
-        return {
-          success: false,
-          status: 500,
-          message: 'Some updates failed',
-        };
-      }
-    } catch(err) {
+    } catch(err){
       throw err;
     }
   }

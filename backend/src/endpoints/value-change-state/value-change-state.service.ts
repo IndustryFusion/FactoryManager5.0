@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
+import * as moment from 'moment';
 
 @Injectable()
 export class ValueChangeStateService {
@@ -31,6 +32,81 @@ export class ValueChangeStateService {
         throw new NotFoundException('asset not found');
       }
     } catch(err) {
+      throw new NotFoundException(
+        `Failed to fetch repository data: ${err.message}`,
+      );
+    }
+  }
+
+  async findAll(assetId: string, type: string, token: string){
+    try {
+      const headers = {
+        Authorization: 'Bearer ' + token
+      };
+      console.log('type ',type);
+      const finalData = {};
+      if(type == 'days'){
+        for (let i = 6; i >= 0; i--) {
+          const day = moment().subtract(i, 'days').startOf('day');
+          let startTime = day.format().split('+')[0] + '-00:00';
+          let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
+          console.log('startTime ',startTime);
+          console.log('endTime ',endTime);
+          let key = day.format('MMMM Do');
+          finalData[key] = [];
+          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
+          const response = await axios.get(url, {headers});
+          if(response.data.length > 0){
+            finalData[key].push(response.data);
+          }
+        }
+      } else if(type == 'weeks'){
+        for (let i = 5; i >= 0; i--) {
+          // Calculate the start and end of the each week
+          let startOfWeek = moment().clone().subtract(i, 'weeks').startOf('week');
+          let endOfWeek = moment().clone().subtract(i, 'weeks').endOf('week');
+      
+          // Format the start and end dates
+          const formattedStartOfWeek = startOfWeek.format().split('+')[0] + '-00:00';
+          const formattedEndOfWeek = endOfWeek.format().split('+')[0] + '-00:00';
+      
+          console.log(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
+          console.log('Start:', formattedStartOfWeek);
+          console.log('End:', formattedEndOfWeek);
+          console.log();
+          let key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
+          finalData[key] = [];
+          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
+          const response = await axios.get(url, {headers});
+          if(response.data.length > 0){
+            finalData[key].push(response.data);
+          }
+        }
+      } else{
+        for (let i = 5; i >= 0; i--) {
+          // Calculate the start and end of the current month
+          const startOfMonth = moment().clone().subtract(i, 'months').startOf('month');
+          const endOfMonth = moment().clone().subtract(i, 'months').endOf('month');
+      
+          // Format the start and end dates
+          const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
+          const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
+      
+          console.log(`Month ${i + 1}:`);
+          console.log('Start:', formattedStartOfMonth);
+          console.log('End:', formattedEndOfMonth);
+          console.log();
+          const key = moment(startOfMonth).format('MMMM');
+          finalData[key] = [];
+          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
+          const response = await axios.get(url, {headers});
+          if(response.data.length > 0){
+            finalData[key].push(response.data);
+          }
+        }
+      }
+      return finalData;
+    }catch(err) {
       throw new NotFoundException(
         `Failed to fetch repository data: ${err.message}`,
       );

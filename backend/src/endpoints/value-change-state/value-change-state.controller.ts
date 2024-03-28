@@ -16,4 +16,14 @@ export class ValueChangeStateController {
       throw new NotFoundException();
     }
   }
+
+  @Get('/chart')
+  async findAll(@Query('asset-id') assetId: string, @Query('type') type: string, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      return await this.valueChangeStateService.findAll(assetId, type, token);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
 }
