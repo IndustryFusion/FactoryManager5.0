@@ -32,6 +32,7 @@ import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import ShopFloorList from "@/components/shopfloor-list";
 import { Dialog } from "primereact/dialog";
+import { BlockUI } from "primereact/blockui";
 
 interface FlowEditorProps {
   factory: Factory;
@@ -118,7 +119,7 @@ const FlowEditor: React.FC<
   const [isRestored, setIsRestored] = useState(false);
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
-
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
  
  
@@ -353,6 +354,7 @@ const onEdgesChange = useCallback((changes:any) => {
    
     if (factoryId) {
       try {
+        setIsOperationInProgress(true);
         const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
           headers: {
             "Content-Type": "application/json",
@@ -404,6 +406,10 @@ const onEdgesChange = useCallback((changes:any) => {
       } catch (error) {
         console.error("Error fetching flowchart data:", error);
       }
+
+      finally{
+         setIsOperationInProgress(false);
+      }
     }
 
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
@@ -433,6 +439,8 @@ const onEdgesChange = useCallback((changes:any) => {
     };
 
     try {
+
+        setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
@@ -484,11 +492,15 @@ const onEdgesChange = useCallback((changes:any) => {
       } else {
         setToastMessage("Scorpio already has these data");
       }
-onRestore();
+      onRestore();
    
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
+    }
+    finally{
+      setIsOperationInProgress(false);
+
     }
   }, [nodes, edges, factoryId]);
 
@@ -517,6 +529,8 @@ onRestore();
     };
 
     try {
+
+      setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
         headers: {
           "Content-Type": "application/json",
@@ -576,6 +590,9 @@ onRestore();
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
     }
+    finally {
+    setIsOperationInProgress(false); 
+  }
   }, [nodes, edges, factoryId]);
   //
   const handleDelete = async () => {
@@ -638,8 +655,8 @@ onRestore();
       setToastMessage("Error deleting elements.");
     } finally {
       // Regardless of the result, try to refresh the state to reflect the current backend state
-
       setIsSaveDisabled(false);
+      setIsOperationInProgress(false);
     }
   };
 
@@ -1057,9 +1074,11 @@ const handleConfirm = async () => {
      <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
         Do you want to save changes before leaving?
       </Dialog>
+      
     <ReactFlowProvider>
       <EdgeAddContext.Provider value={{ onEdgeAdd }}>
-        {" "}
+    
+        <BlockUI blocked={isOperationInProgress} fullScreen/>
         <div style={{}}>
           <Button
             label="Save"
@@ -1097,12 +1116,14 @@ const handleConfirm = async () => {
 
           <Toast ref={toast} />
         </div>
+       
         <div
           ref={reactFlowWrapper}
           style={{ height: "95%", width: "100%" }}
           onDrop={onDrop}
           onDragOver={onDragOver}
         >
+         
           <ReactFlow
             nodesDraggable={true}
             nodes={nodes}
@@ -1123,9 +1144,13 @@ const handleConfirm = async () => {
             <Controls />
             <Background />
           </ReactFlow>
+          {/* <BlockUI/> */}
         </div>
+     
       </EdgeAddContext.Provider>
+
     </ReactFlowProvider></>
+  
     
   );
 };
