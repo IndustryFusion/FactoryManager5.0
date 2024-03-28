@@ -363,10 +363,10 @@ const CombineSensorChart: React.FC = () => {
   return (
     <div style={{ zoom: "80%" }}>
       {/* <BlockUI blocked={loading}> */}
-      <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
+      {/* <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
         {selectedAssetData?.product_name === undefined ?
           "Unknown Product" : selectedAssetData?.product_name
-        }</h3>
+        }</h3> */}
       <div className="grid p-fluid">
         <div className="col-12">
             <div className="control-container">
