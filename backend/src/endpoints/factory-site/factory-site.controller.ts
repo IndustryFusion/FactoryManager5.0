@@ -45,7 +45,6 @@ export class FactorySiteController {
   async findAll(@Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      console.log('Token',token)
       return await this.factorySiteService.findAll(token);
     } catch (err) {
       throw new NotFoundException("Failed in factory-site/get"+err);

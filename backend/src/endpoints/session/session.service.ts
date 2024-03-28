@@ -4,7 +4,6 @@ import { Request } from 'express';
 
 export const getSessionToken = async (req: Request): Promise<string> => {
     return new Promise((resolve, reject) => {
-      console.log(req.headers['cookie']);
       let cookie = '';
       req.headers['cookie'].split('; ').forEach(pair => {
           const [key, value] = pair.split('=');
@@ -23,7 +22,6 @@ export const getSessionToken = async (req: Request): Promise<string> => {
         if (err) {
           reject(new NotFoundException('Session not found'));
         }
-        console.log('seesion',sessionData)
         const token = sessionData['accessToken'];
         resolve(token);
       });
