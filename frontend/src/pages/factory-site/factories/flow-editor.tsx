@@ -613,6 +613,7 @@ const onEdgesChange = useCallback((changes:any) => {
     setEdges(preservedEdges);
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
+
     try {
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
@@ -627,14 +628,16 @@ const onEdgesChange = useCallback((changes:any) => {
       );
 
       const reactFlowScorpioUpdate = await axios.delete(
-        `${API_URL}/shop-floor/delete-react/${factoryId}`,
+        `${API_URL}/shop-floor/delete-react`,
+     
         {
+          data: nodes, 
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
+          params: { "factory-id": factoryId },
         }
       );
 
