@@ -340,7 +340,7 @@ const CombineSensorChart: React.FC = () => {
   useEffect(() => {
  
     setChartData({ labels: [], datasets: [] });
-    setSelectedAttribute("");
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
