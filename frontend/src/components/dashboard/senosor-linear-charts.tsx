@@ -86,9 +86,9 @@ const CombineSensorChart: React.FC = () => {
     { label: "1 Hour", interval: 60 },
     { label: "2 Hours", interval: 120 },
     { label: "3 Hours", interval: 180 },
-    // { label: "1 Day", interval: 1440 },
-    // { label: "1 Week", interval: 10080 },
-    // { label: "1 Month", interval: 43200 },
+    { label: "1 Day", interval: 1440 },
+    { label: "1 Week", interval: 10080 },
+    { label: "1 Month", interval: 43200 },
   ];
   const colors = [
     {
