@@ -11,6 +11,7 @@ import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
 import { useDashboard } from "@/context/dashboard-context";
 import { Toast, ToastMessage } from "primereact/toast";
+import { Dropdown } from "primereact/dropdown";
 
 export interface Datasets {
     label?: string;
@@ -44,8 +45,20 @@ const DashboardChart = () => {
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
     const { entityIdValue, setMachineStateData, autorefresh,  setAllOnlineTime } = useDashboard();
+    const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
+   
+    const intervalButtons = [
+        { label: "days", interval: "days" },
+        { label: "weeks", interval: "weeks" },
+        { label: "months", interval: "months" }
+    ];
+
+
+    console.log("selectedInterval in machineChart", selectedInterval);
+    
+
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
@@ -61,19 +74,15 @@ const DashboardChart = () => {
         }
     }
 
+
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
             type DataType = any;
             const finalData: { [key: string]: DataType[] } = {};
-            const day = moment().subtract(6, 'days').startOf('day');
-            let startTime = day.format().split('+')[0] + '-00:00';
-            let endTime = moment().format().split('+')[0] + '-00:00';
             let response = await axios.get(API_URL + `/value-change-state`, {
-                params: {
-                    attributeId: attributeId,
-                    entityId: entityId,
-                    observedAt_gte: startTime,
-                    observedAt_lte: endTime
+                params: {                 
+                    'asset-id': entityId,                   
+                    'type': selectedInterval
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -438,6 +447,24 @@ const DashboardChart = () => {
         <div className="card h-auto" style={{ width: "37%" }}>
             <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
+            <div className="interval-filter-container">
+                <p>Filter Interval</p>
+                <div
+                    className="dropdown-container custom-button"
+                    style={{ padding: "0" }}
+                >
+                    <Dropdown
+                        value={selectedInterval}
+                        options={intervalButtons.map(({ label, interval }) => ({
+                            label,
+                            value: interval,
+                        }))}
+                        onChange={(e) => setSelectedInterval(e.value)}
+                        placeholder="Select an Interval"
+                        style={{ width: "100%", border: "none" }}
+                    />
+                </div>
+            </div>
             {
                 JSON.stringify(chartData) === "{}" || noChartData ?
                     <div className="flex flex-column justify-content-center align-items-center">

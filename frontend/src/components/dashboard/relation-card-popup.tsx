@@ -13,13 +13,8 @@ interface RelationPopupProps {
 
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
     const [parentRelations, setParentRelations] = useState([]);
-    const { selectedAssetData, entityIdValue,
-        relationsCount, setRelationsCount
-    } = useDashboard();
-    const [countUpdated, setCountUpdated] = useState(false);
+    const { selectedAssetData, entityIdValue} = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState([]);
-
-
 
     const getHasProperties = () => {
         const propertiesArray = [];
@@ -28,7 +23,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 const propertyName = key.substring(3); // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
                 propertiesArray.push({ [propertyName]: propertyValue });
-
             }
         }
         setHasPropertiesArray(propertiesArray)
@@ -57,11 +51,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     useEffect(() => {
         relationParent();
         getHasProperties();
-
-        return setRelationsCount(0)
     }, [selectedAssetData])
-
-
 
     return (
         <>
@@ -73,10 +63,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             const key = Object.keys(property)[0];
                             const value = property[key];
                             console.log(key, value, "all values here");
-                            if (value.object !== "json-ld-1.1" && !countUpdated) {
-                                setRelationsCount((prev: any) => prev + 1);
-                                setCountUpdated(true);
-                            }
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
                                     <h4 className="child-key-text m-0 mb-1">{key}  </h4>
@@ -88,10 +74,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                                             style={{ listStyle: "circle" }}
                                         >
                                             {value.map((item, index) => {
-                                                if (item.object !== "json-ld-1.1" && !countUpdated) {
-                                                    setRelationsCount((prev: any) => prev + 1);
-                                                    setCountUpdated(true);
-                                                }
                                                 return (
                                                     <li
                                                         className="ml-4 child-key-value"
@@ -109,12 +91,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         <h4 className="m-0 mb-3">Parent</h4>
                         {parentRelations.map((item, index) => {
                             const { product_name, id, asset_category } = item;
-                            if (id !== "" && !countUpdated) {
-                                console.log("is coming tocheckhere");
 
-                                setRelationsCount((prev: any) => prev + 1);
-                                setCountUpdated(true);
-                            }
                             return (
                                 <>
                                     <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
