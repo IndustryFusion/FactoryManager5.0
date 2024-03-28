@@ -17,7 +17,8 @@ const DashboardCards: React.FC = () => {
         notificationData,
         setNotificationData ,
         allOnlineTime,
-        relationsCount
+        relationsCount,
+        setRelationsCount
     } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
@@ -25,12 +26,6 @@ const DashboardCards: React.FC = () => {
     const [onlineAverage, setOnlineAverage] = useState(0);
     const [hasRelations, setHasRelations] = useState<any>([]);
 
-
-    // console.log(selectedAssetData, "selectedAssetData");
-    // console.log("machineStateData", machineStateData);
-
-    // console.log("allOnlineTime from machine-chart", allOnlineTime);
-    
 
     const getNotifications =()=>{
         const fetchAllAlerts = async () => {
@@ -162,8 +157,6 @@ const DashboardCards: React.FC = () => {
 
     // console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
 
-
-
     return (
         <>
             <div className="grid p-4 dashboard-card-container" style={{ zoom: "80%" }}>
@@ -217,7 +210,7 @@ const DashboardCards: React.FC = () => {
                                 <i className="pi pi-inbox text-cyan-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">{ relationsCount} </span>
+                        <span className="text-green-500 font-medium">{ relationsCount.toString().padStart(2, '0')} </span>
                         <span className="text-500">machines are connected</span>
                     </div>
                     {relations &&

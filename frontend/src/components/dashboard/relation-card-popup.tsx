@@ -20,9 +20,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     const [hasPropertiesArray, setHasPropertiesArray] = useState([]);
 
 
-    console.log(selectedAssetData, "what's the selected Asset here in relation card");
-
-
 
     const getHasProperties = () => {
         const propertiesArray = [];
@@ -64,8 +61,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         return setRelationsCount(0)
     }, [selectedAssetData])
 
-    console.log("has property array", hasPropertiesArray);
-    console.log("all parent & child count ", relationsCount);
 
 
     return (
@@ -83,9 +78,9 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                                 setCountUpdated(true);
                             }
                             return (
-                                <div key={index} className="mb-2 flex">
-                                    <span>{key} - </span>
-                                    <span className="ml-2">{value.object === "json-ld-1.1" ? "" : value.object}</span>
+                                <div key={index} className="mb-2 flex flex-column ">
+                                    <h4 className="child-key-text m-0 mb-1">{key}  </h4>
+                                    <p className="ml-2 child-key-value m-0">{value.object === "json-ld-1.1" ? "" : value.object}</p>
                                     {typeof value === "object" &&
                                         value.length > 0 &&
                                         <ul
@@ -99,11 +94,10 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                                                 }
                                                 return (
                                                     <li
-                                                        className="ml-4"
+                                                        className="ml-4 child-key-value"
                                                         key={index}>{item.object === "json-ld-1.1" ? "" : item.object}</li>
                                                 )
                                             }
-
                                             )}
                                         </ul>
                                     }
@@ -123,10 +117,10 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             }
                             return (
                                 <>
-                                    <h4>{product_name?.value}</h4>
-                                    <ul>
-                                        <li>{id}</li>
-                                        <li>{asset_category?.value}</li>
+                                    <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
+                                    <ul className="mb-4 m-0">
+                                        <li className="child-key-value">{id}</li>
+                                        <li className="child-key-value">{asset_category?.value}</li>
                                     </ul>
                                 </>
                             )
