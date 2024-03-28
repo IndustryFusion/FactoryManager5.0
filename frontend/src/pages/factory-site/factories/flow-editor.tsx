@@ -82,8 +82,8 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
 > = ({ factory, factoryId, deletedShopFloors }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
+  const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
   const [factoryRelationships, setFactoryRelationships] = useState<object>({});
   const onSelectionChange = useCallback(
@@ -114,6 +114,9 @@ const FlowEditor: React.FC<
 
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [nextUrl, setNextUrl] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isRestored, setIsRestored] = useState(false);
+
 
  
  
@@ -306,28 +309,47 @@ const FlowEditor: React.FC<
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
-  useEffect(() => {
-  
-  const handleRouteChange = (url:string) => {
-    
-    if (nodes.length > 0 && !isDialogVisible) {
-    
+useEffect(() => {
+  const handleRouteChange = (url) => {
+    if (hasChanges && !isDialogVisible) {
+      setNextUrl(url); // Store the intended navigation URL
       setIsDialogVisible(true);
-    
-      return false;
+      return false; // Block navigation
     }
-
-    return true;
+    return true; // Allow navigation
   };
 
-
-  router.beforePopState(({ url }) => handleRouteChange(url));
-
+  router.beforePopState(handleRouteChange);
 
   return () => {
-    router.beforePopState(() => true);
+    router.beforePopState(() => true); // Restore default behavior
   };
-}, [nodes, isDialogVisible, router]);
+}, [hasChanges, isDialogVisible, router]);
+
+
+
+
+  
+
+
+  const onNodesChange = useCallback(
+    (changes: any) => {
+      onNodesChangeProvide(changes);
+      console.log("isRestored", isRestored)
+      console.log("changes", changes)
+      if (isRestored) setHasChanges(true); 
+    },
+    [onNodesChangeProvide, isRestored]
+  );
+
+  const onEdgesChange = useCallback(
+    (changes: any) => {
+      onEdgesChangeProvide(changes);
+      if (isRestored) setHasChanges(true); 
+    },
+    [onEdgesChangeProvide, isRestored]
+  );
+
 
 
   const onRestore = useCallback(async () => {
@@ -381,6 +403,7 @@ const FlowEditor: React.FC<
         console.error("Error fetching flowchart data:", error);
       }
     }
+    setIsRestored(true); 
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   const onUpdate = useCallback(async () => {
@@ -1003,12 +1026,25 @@ const performNavigation = () => {
 const handleConfirm = async () => {
     setIsDialogVisible(false);
     await saveChanges();
+    setHasChanges(false); 
+
     performNavigation(); 
 };
 
 
   const handleCancel = () => {
     setIsDialogVisible(false);
+    if(nextUrl){
+          router.push(nextUrl) ;
+    }
+
+    else{
+      router.reload()
+    }
+  
+   
+    setHasChanges(false); 
+
     
   };
 
