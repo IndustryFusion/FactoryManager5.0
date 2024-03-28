@@ -32,6 +32,7 @@ import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import ShopFloorList from "@/components/shopfloor-list";
 import { Dialog } from "primereact/dialog";
+import { BlockUI } from "primereact/blockui";
 
 interface FlowEditorProps {
   factory: Factory;
@@ -82,8 +83,8 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
 > = ({ factory, factoryId, deletedShopFloors }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
+  const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
   const [factoryRelationships, setFactoryRelationships] = useState<object>({});
   const onSelectionChange = useCallback(
@@ -114,6 +115,11 @@ const FlowEditor: React.FC<
 
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [nextUrl, setNextUrl] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isRestored, setIsRestored] = useState(false);
+  const [originalNodes, setOriginalNodes] = useState([]);
+  const [originalEdges, setOriginalEdges] = useState([]);
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
  
  
@@ -306,34 +312,49 @@ const FlowEditor: React.FC<
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
-  useEffect(() => {
-  
-  const handleRouteChange = (url:string) => {
-    
-    if (nodes.length > 0 && !isDialogVisible) {
-    
-      setIsDialogVisible(true);
-    
-      return false;
-    }
+useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (hasChanges && !isDialogVisible) {
+        setNextUrl(url); 
+        setIsDialogVisible(true);
+        return false;
+      }
+      return true; 
+    };
 
-    return true;
-  };
+    router.beforePopState(({ url }) => handleRouteChange(url));
 
-
-  router.beforePopState(({ url }) => handleRouteChange(url));
+    return () => router.beforePopState(() => true);
+  }, [hasChanges, isDialogVisible, router]);
 
 
-  return () => {
-    router.beforePopState(() => true);
-  };
-}, [nodes, isDialogVisible, router]);
+const checkForNewAdditions = useCallback(() => {
+  const newNodesAdded = nodes.length > originalNodes.length  || nodes.length < originalNodes.length;
+  const newEdgesAdded = edges.length > originalEdges.length  ||  edges.length < originalEdges.length;
 
+  return newNodesAdded || newEdgesAdded;
+}, [nodes, edges, originalNodes, originalEdges]);
+
+
+const onNodesChange = useCallback((changes:any) => {
+  onNodesChangeProvide(changes);
+  if (isRestored && checkForNewAdditions()) {
+    setHasChanges(true);
+  }
+}, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
+
+const onEdgesChange = useCallback((changes:any) => {
+  onEdgesChangeProvide(changes);
+  if (isRestored && checkForNewAdditions()) {
+    setHasChanges(true);
+  }
+}, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
 
   const onRestore = useCallback(async () => {
    
     if (factoryId) {
       try {
+        setIsOperationInProgress(true);
         const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
           headers: {
             "Content-Type": "application/json",
@@ -350,7 +371,12 @@ const FlowEditor: React.FC<
           // First, set the nodes and edges as usual
           setNodes(getReactFlowMongo.data.factoryData.nodes);
           setEdges(getReactFlowMongo.data.factoryData.edges);
-
+          
+          // Set original nodes and edges right after restoration
+          setOriginalNodes(getReactFlowMongo.data.factoryData.nodes);
+          setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+          
+          setIsRestored(true); 
           // Then, analyze the relation nodes to update relationCounts
           const updatedRelationCounts: RelationCounts = {};
 
@@ -380,7 +406,12 @@ const FlowEditor: React.FC<
       } catch (error) {
         console.error("Error fetching flowchart data:", error);
       }
+
+      finally{
+         setIsOperationInProgress(false);
+      }
     }
+
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   const onUpdate = useCallback(async () => {
@@ -408,6 +439,8 @@ const FlowEditor: React.FC<
     };
 
     try {
+
+        setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
@@ -459,11 +492,15 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Scorpio already has these data");
       }
-
+      onRestore();
    
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
+    }
+    finally{
+      setIsOperationInProgress(false);
+
     }
   }, [nodes, edges, factoryId]);
 
@@ -492,6 +529,8 @@ const FlowEditor: React.FC<
     };
 
     try {
+
+      setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
         headers: {
           "Content-Type": "application/json",
@@ -537,7 +576,7 @@ const FlowEditor: React.FC<
         }
       );
       
-      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204) {
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 ||  reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
@@ -546,10 +585,14 @@ const FlowEditor: React.FC<
    
      
         setNodesInitialized(true);
+        onRestore();
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
     }
+    finally {
+    setIsOperationInProgress(false); 
+  }
   }, [nodes, edges, factoryId]);
   //
   const handleDelete = async () => {
@@ -570,6 +613,7 @@ const FlowEditor: React.FC<
     setEdges(preservedEdges);
     console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
 
+
     try {
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
@@ -584,21 +628,23 @@ const FlowEditor: React.FC<
       );
 
       const reactFlowScorpioUpdate = await axios.delete(
-        `${API_URL}/shop-floor/delete-react/${factoryId}`,
+        `${API_URL}/shop-floor/delete-react`,
+     
         {
+          data: nodes, 
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
+          params: { "factory-id": factoryId },
         }
       );
 
       if (
         reactFlowUpdateMongo.status == 200 ||
         (reactFlowUpdateMongo.status == 204 && reactFlowScorpioUpdate.status == 204) ||
-        reactFlowScorpioUpdate.status == 200
+        reactFlowScorpioUpdate.status == 201
       ) {
         setToastMessage(
           "Selected elements and related data deleted successfully."
@@ -606,13 +652,14 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Partial deletion: Please check the data.");
       }
+      onRestore();
     } catch (error) {
       console.error("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
     } finally {
       // Regardless of the result, try to refresh the state to reflect the current backend state
-
       setIsSaveDisabled(false);
+      setIsOperationInProgress(false);
     }
   };
 
@@ -823,6 +870,7 @@ const performNavigation = () => {
         await saveChanges(); 
         router.reload(); 
     }, 3000); 
+    
     router.push(nextUrl);
   }
 };
@@ -841,14 +889,14 @@ const performNavigation = () => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
     
-      if (isSaveDisabled || !isSaveDisabled ) {
+      if (checkForNewAdditions() ) {
         
         setNextUrl("/factory-site/dashboard"); 
         setIsDialogVisible(true);
      
       } else {
       
-        performNavigation();
+        router.push("/factory-site/dashboard");
       }
     }
     },
@@ -980,37 +1028,43 @@ const performNavigation = () => {
         "update called"
       )
       await onUpdate(); 
-      setTimeout(async () => {
-        await saveChanges(); 
-        router.reload(); 
-    }, 3000); 
+      
     } else {
         console.log(
         "onSave  called"
       )
       await onSave(); 
-      setTimeout(async () => {
-        await saveChanges(); 
-        router.reload(); 
-    }, 3000); 
+    
     }
     setIsDialogVisible(false); 
   
-   performNavigation();
+ 
   };
 
   
 const handleConfirm = async () => {
     setIsDialogVisible(false);
     await saveChanges();
-    performNavigation(); 
+    setHasChanges(false);
+
+    setTimeout(() => {
+        performNavigation();
+    }, 3000); 
 };
+
 
 
   const handleCancel = () => {
     setIsDialogVisible(false);
-    
-  };
+    setTimeout(() => {
+        if (nextUrl) {
+            router.push(nextUrl);
+        } else {
+            router.reload();
+        }
+        setHasChanges(false);
+    }, 3000); 
+};
 
  const dialogFooter = (
     <div>
@@ -1023,9 +1077,11 @@ const handleConfirm = async () => {
      <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
         Do you want to save changes before leaving?
       </Dialog>
+      
     <ReactFlowProvider>
       <EdgeAddContext.Provider value={{ onEdgeAdd }}>
-        {" "}
+    
+        <BlockUI blocked={isOperationInProgress} fullScreen/>
         <div style={{}}>
           <Button
             label="Save"
@@ -1063,12 +1119,14 @@ const handleConfirm = async () => {
 
           <Toast ref={toast} />
         </div>
+       
         <div
           ref={reactFlowWrapper}
           style={{ height: "95%", width: "100%" }}
           onDrop={onDrop}
           onDragOver={onDragOver}
         >
+         
           <ReactFlow
             nodesDraggable={true}
             nodes={nodes}
@@ -1089,9 +1147,13 @@ const handleConfirm = async () => {
             <Controls />
             <Background />
           </ReactFlow>
+          {/* <BlockUI/> */}
         </div>
+     
       </EdgeAddContext.Provider>
+
     </ReactFlowProvider></>
+  
     
   );
 };

@@ -151,11 +151,11 @@ export class ShopFloorController {
     }
   }
 
-  @Delete('/delete-react/:id')
-  async deleteReact(@Param('id') id: string, @Req() req: Request) {
+  @Delete('/delete-react')
+  async deleteReact(@Body() data, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
-      const response = await this.shopFloorService.deleteScript(id, token);
+      const response = await this.shopFloorService.deleteScript(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
