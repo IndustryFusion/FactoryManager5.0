@@ -12,7 +12,6 @@ export class NonShopFloorAssetsService {
   async findAll(id: string, token: string) {
     try {
       let assetIds = await this.assetService.getAssetIds(token);
-      console.log('assetIds ', assetIds);
       let allocatedAssets = await this.allocatedAssetService.getAllocatedAssets(token);
       if (allocatedAssets.length > 0) {
         const filteredArray = [];
