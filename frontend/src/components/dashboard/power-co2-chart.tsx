@@ -4,6 +4,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
+import { ProgressSpinner } from "primereact/progressspinner";
+import { Dropdown } from "primereact/dropdown";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 export interface Datasets {
     label: string;
@@ -21,21 +23,34 @@ export interface pgData {
 
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const { entityIdValue, setEntityIdValue } = useDashboard();
+    const { entityIdValue, setEntityIdValue, autorefresh } = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
     const [loading, setLoading] = useState<boolean>(true);
-    const [checkChart, setCheckChart] = useState<boolean>(false)
+    const [checkChart, setCheckChart] = useState<boolean>(false);
+    const [noChartData, setNoChartData] = useState(false);
+    const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const toast = useRef<any>(null);
+    const intervalId: any = useRef(null);
 
+    const intervalButtons = [
+        { label: "days", interval: "days" },
+        { label: "weeks", interval: "weeks" },
+        { label: "months", interval: "months" }
+    ];
+    
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
-      };
+    };
 
+    console.log("entityIdValue in powerChart", entityIdValue);
+    
     const fetchData = async () => {
         try {
+           
             const response = await axios.get(API_URL + '/power-consumption/chart', {
                 params: {
                     'asset-id': entityIdValue,
+                    'type': selectedInterval
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -44,20 +59,19 @@ const PowerCo2Chart = () => {
                 withCredentials: true,
             });
             console.log('response of powerconsumption chart ', response);
-            setLoading(false);
+          
             setCheckChart(true);
             return response.data;
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error', 'fetching power-co2-chart data');
+                showToast('error', 'Error', `Power-co2-data ${error.response?.data.message}`);
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
-            }     
+            }
+        }
     }
-}
-    
 
     useEffect(() => {
         const fetchDataAndAssign = async () => {
@@ -66,96 +80,127 @@ const PowerCo2Chart = () => {
             const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
             const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
             const obj = await fetchData();
-            // console.log('obj ',obj);
-            const data = {
-                labels: obj?.lastSevenDays,
-                datasets: [
-                    {
-                        type: 'line',
-                        label: 'CO2 Emission',
-                        borderColor: documentStyle.getPropertyValue('--blue-500'),
-                        yAxisID: 'y',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        data: obj?.emission
-                    },
-                    {
-                        type: 'bar',
-                        label: 'Power Comsumption',
-                        backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                        yAxisID: 'y1',
-                        data: obj?.powerConsumption,
-                        borderColor: 'white',
-                        borderWidth: 2
-                    }
-                ]
-            };
-            const options = {
-                maintainAspectRatio: false,
-                aspectRatio: 0.6,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColorSecondary
+            console.log("what's the power response", obj);
+            
+            if(JSON.stringify(obj ) === "{}"){
+           setNoChartData(true);
+            }else{
+                const data = {
+                    labels: obj?.lastSevenDays,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'CO2 Emission',
+                            borderColor: documentStyle.getPropertyValue('--blue-500'),
+                            yAxisID: 'y',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            data: obj?.emission
                         },
-                        grid: {
-                            color: surfaceBorder
+                        {
+                            type: 'bar',
+                            label: 'Power Comsumption',
+                            backgroundColor: documentStyle.getPropertyValue('--green-400'),
+                            yAxisID: 'y1',
+                            data: obj?.powerConsumption,
+                            borderColor: 'white',
+                            borderWidth: 2
+                        }
+                    ]
+                };
+                const options = {
+                    maintainAspectRatio: false,
+                    aspectRatio: 0.6,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
                         }
                     },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 10000
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColorSecondary
+                            },
+                            grid: {
+                                color: surfaceBorder
+                            }
                         },
-                        grid: {
-                            color: surfaceBorder
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 50
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: {
+                                color: textColorSecondary,
+                                stepSize: 10000
+                            },
+                            grid: {
+                                color: surfaceBorder
+                            }
                         },
-                        grid: {
-                            drawOnChartArea: false,
-                            color: surfaceBorder
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: {
+                                color: textColorSecondary,
+                                stepSize: 50
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                                color: surfaceBorder
+                            }
                         }
                     }
-                }
-            };
-
-            setChartData(data);
-            setChartOptions(options);
+                };
+                setNoChartData(false);
+                setChartData(data);
+                setChartOptions(options);
+            }   
         }
-        fetchDataAndAssign();
-    }, [checkChart, entityIdValue]);
 
-   
+        if (autorefresh === true) {
+            console.log("is coming here to autoreferssh");
+            intervalId.current = setInterval(() => {
+                fetchDataAndAssign();
+            }, 10000);
+        } else {
+            fetchDataAndAssign();
+        }
+
+        return () => {
+            if (intervalId.current) {
+                clearInterval(intervalId.current);
+            }
+        };
+
+    }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
+
+
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
-           <Toast ref={toast} /> 
+            <Toast ref={toast} />
             {/* <BlockUI blocked={loading}> */}
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption Vs Co2 Emission</h3>
-            <Chart type="line" data={chartData} options={chartOptions} />
+            {
+                JSON.stringify(chartData) === "{}" || noChartData ?
+                    <div className="flex flex-column justify-content-center align-items-center">
+                        <p> No data available</p>
+                        <img src="/noDataFound.png" alt="" width="45%" height="45%" />
+                    </div>
+
+                    :
+                    <Chart type="line" data={chartData} options={chartOptions} />
+            }
+           
+         
             {/* </BlockUI> */}
         </div>
     )
-    
+
 };
 
 export default PowerCo2Chart;

@@ -26,6 +26,8 @@ interface DashboardContextValue {
   setMachineStateValue: React.Dispatch<React.SetStateAction<string>>;
   blocker: boolean;
   setBlocker: React.Dispatch<React.SetStateAction<boolean>>;
+  autorefresh:boolean;
+  setAutorefresh:React.Dispatch<React.SetStateAction<boolean>>;
   selectedAssetData: { [key: string]: any; }; // Adjust the type to include an index signature
   setSelectedAssetData: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>; // Adjust the type to include an index signature
   machineStateData: MachineStateData;
@@ -40,8 +42,12 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [entityIdValue, setEntityIdValue] = useState("");
   const [machineStateValue, setMachineStateValue] = useState("0");
   const [blocker, setBlocker] = useState(false);
+  const [autorefresh, setAutorefresh] = useState(false);
   const [selectedAssetData, setSelectedAssetData] = useState<{ [key: string]: any; }>({});
   const [machineStateData, setMachineStateData] = useState({});
+  const [notificationData, setNotificationData] = useState([]);
+  const [allOnlineTime, setAllOnlineTime]= useState([]);
+  const [relationsCount, setRelationsCount] = useState(0);
 
   return (
     <DashboardContext.Provider
@@ -52,7 +58,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
         setMachineStateValue,
         blocker, setBlocker,
         selectedAssetData, setSelectedAssetData,
-        machineStateData, setMachineStateData
+        machineStateData, setMachineStateData,
+        autorefresh, setAutorefresh,
+        notificationData, setNotificationData,
+        allOnlineTime, setAllOnlineTime,
+        relationsCount, setRelationsCount
       }}
     >
       {children}

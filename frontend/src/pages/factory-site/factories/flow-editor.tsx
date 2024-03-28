@@ -62,6 +62,7 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     label:string,
     id:string,
     class?:string
+    parentId?:string
     
   },
   asset_category?:string
@@ -81,8 +82,8 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
 > = ({ factory, factoryId, deletedShopFloors }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
+  const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
   const [factoryRelationships, setFactoryRelationships] = useState<object>({});
   const onSelectionChange = useCallback(
@@ -113,6 +114,11 @@ const FlowEditor: React.FC<
 
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [nextUrl, setNextUrl] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isRestored, setIsRestored] = useState(false);
+  const [originalNodes, setOriginalNodes] = useState([]);
+  const [originalEdges, setOriginalEdges] = useState([]);
+
 
  
  
@@ -166,6 +172,7 @@ const FlowEditor: React.FC<
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
           class:relationClass,
+          parentId: selectedAsset,
         },
         position: {
           x: assetNode.position.x + baseXOffset, // adjusted x offset
@@ -304,29 +311,43 @@ const FlowEditor: React.FC<
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
-  useEffect(() => {
-  
-  const handleRouteChange = (url:string) => {
-    
-    if (nodes.length > 0 && !isDialogVisible) {
-    
-      setIsDialogVisible(true);
-    
-      return false;
-    }
+useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (hasChanges && !isDialogVisible) {
+        setNextUrl(url); 
+        setIsDialogVisible(true);
+        return false;
+      }
+      return true; 
+    };
 
-    return true;
-  };
+    router.beforePopState(({ url }) => handleRouteChange(url));
 
-
-  router.beforePopState(({ url }) => handleRouteChange(url));
+    return () => router.beforePopState(() => true);
+  }, [hasChanges, isDialogVisible, router]);
 
 
-  return () => {
-    router.beforePopState(() => true);
-  };
-}, [nodes, isDialogVisible, router]);
+const checkForNewAdditions = useCallback(() => {
+  const newNodesAdded = nodes.length > originalNodes.length  || nodes.length < originalNodes.length;
+  const newEdgesAdded = edges.length > originalEdges.length  ||  edges.length < originalEdges.length;
 
+  return newNodesAdded || newEdgesAdded;
+}, [nodes, edges, originalNodes, originalEdges]);
+
+
+const onNodesChange = useCallback((changes:any) => {
+  onNodesChangeProvide(changes);
+  if (isRestored && checkForNewAdditions()) {
+    setHasChanges(true);
+  }
+}, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
+
+const onEdgesChange = useCallback((changes:any) => {
+  onEdgesChangeProvide(changes);
+  if (isRestored && checkForNewAdditions()) {
+    setHasChanges(true);
+  }
+}, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
 
   const onRestore = useCallback(async () => {
    
@@ -348,7 +369,12 @@ const FlowEditor: React.FC<
           // First, set the nodes and edges as usual
           setNodes(getReactFlowMongo.data.factoryData.nodes);
           setEdges(getReactFlowMongo.data.factoryData.edges);
-
+          
+          // Set original nodes and edges right after restoration
+          setOriginalNodes(getReactFlowMongo.data.factoryData.nodes);
+          setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+          
+          setIsRestored(true); 
           // Then, analyze the relation nodes to update relationCounts
           const updatedRelationCounts: RelationCounts = {};
 
@@ -379,6 +405,7 @@ const FlowEditor: React.FC<
         console.error("Error fetching flowchart data:", error);
       }
     }
+
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   const onUpdate = useCallback(async () => {
@@ -457,7 +484,7 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Scorpio already has these data");
       }
-
+onRestore();
    
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -535,7 +562,7 @@ const FlowEditor: React.FC<
         }
       );
       
-      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204) {
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 ||  reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
@@ -544,6 +571,7 @@ const FlowEditor: React.FC<
    
      
         setNodesInitialized(true);
+        onRestore();
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -596,7 +624,7 @@ const FlowEditor: React.FC<
       if (
         reactFlowUpdateMongo.status == 200 ||
         (reactFlowUpdateMongo.status == 204 && reactFlowScorpioUpdate.status == 204) ||
-        reactFlowScorpioUpdate.status == 200
+        reactFlowScorpioUpdate.status == 201
       ) {
         setToastMessage(
           "Selected elements and related data deleted successfully."
@@ -604,6 +632,7 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Partial deletion: Please check the data.");
       }
+      onRestore();
     } catch (error) {
       console.error("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
@@ -821,6 +850,7 @@ const performNavigation = () => {
         await saveChanges(); 
         router.reload(); 
     }, 3000); 
+    
     router.push(nextUrl);
   }
 };
@@ -839,14 +869,14 @@ const performNavigation = () => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
     
-      if (isSaveDisabled) {
+      if (checkForNewAdditions() ) {
         
         setNextUrl("/factory-site/dashboard"); 
         setIsDialogVisible(true);
      
       } else {
       
-        performNavigation();
+        router.push("/factory-site/dashboard");
       }
     }
     },
@@ -978,37 +1008,43 @@ const performNavigation = () => {
         "update called"
       )
       await onUpdate(); 
-      setTimeout(async () => {
-        await saveChanges(); 
-        router.reload(); 
-    }, 3000); 
+      
     } else {
         console.log(
         "onSave  called"
       )
       await onSave(); 
-      setTimeout(async () => {
-        await saveChanges(); 
-        router.reload(); 
-    }, 3000); 
+    
     }
     setIsDialogVisible(false); 
   
-   performNavigation();
+ 
   };
 
   
 const handleConfirm = async () => {
     setIsDialogVisible(false);
     await saveChanges();
-    performNavigation(); 
+    setHasChanges(false);
+
+    setTimeout(() => {
+        performNavigation();
+    }, 3000); 
 };
+
 
 
   const handleCancel = () => {
     setIsDialogVisible(false);
-    
-  };
+    setTimeout(() => {
+        if (nextUrl) {
+            router.push(nextUrl);
+        } else {
+            router.reload();
+        }
+        setHasChanges(false);
+    }, 3000); 
+};
 
  const dialogFooter = (
     <div>
