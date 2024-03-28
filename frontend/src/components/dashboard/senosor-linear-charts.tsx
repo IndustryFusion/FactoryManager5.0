@@ -73,7 +73,7 @@ const CombineSensorChart: React.FC = () => {
   const [noChartData, setNoChartData] = useState(false)
   const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
-  const [selectedAttribute, setSelectedAttribute] = useState();
+  const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
 
   // console.log("first row entityIdValue", entityIdValue);
@@ -258,6 +258,12 @@ const CombineSensorChart: React.FC = () => {
       .filter(attribute => attribute.value !== "machine-state"); 
 
     setAttributes(attributeLabels);
+    if (attributeLabels.length > 0) {
+        setSelectedAttribute(attributeLabels[0].value);
+        
+        setSelectedDatasetIndex(0);
+      }
+
 
     // Return attributeIds for compatibility with existing code
     return Object.keys(assetData)
@@ -334,6 +340,7 @@ const CombineSensorChart: React.FC = () => {
   useEffect(() => {
  
     setChartData({ labels: [], datasets: [] });
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
@@ -379,6 +386,7 @@ const CombineSensorChart: React.FC = () => {
                     const selectedIndex = data.datasets.findIndex(dataset => dataset.label === e.value);
                     if (selectedIndex !== -1) {
                       setSelectedDatasetIndex(selectedIndex);
+                      
                     }
                     setSelectedAttribute(e.value);
                   }}
