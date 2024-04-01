@@ -44,6 +44,7 @@ const PowerCo2Chart = () => {
 
     const fetchData = async () => {
         try {
+            console.log('entity id here ',entityIdValue);
             setIsLoading(true);
             const response = await axios.get(API_URL + '/power-consumption/chart', {
                 params: {

@@ -41,20 +41,22 @@ const DashboardChart = () => {
     const [factoryData, setFactoryData] = useState({});
     const [lastData, setLastData] = useState({});
     const [checkFactory, setCheckFactory] = useState(false);
+    const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
-    const { entityIdValue, setMachineStateData , autorefresh} = useDashboard();
+    const { entityIdValue, setMachineStateData, autorefresh,  setAllOnlineTime } = useDashboard();
     const toast = useRef<any>(null);
-    const intervalId:any = useRef(null);
+    const intervalId: any = useRef(null);
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
-      };
+    };
 
     const fetchDataAndAssign = async () => {
         let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
-        
+
         if (attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#machine-state")) {
             await fetchData("eq.http://www.industry-fusion.org/fields#machine-state", 'eq.' + entityIdValue);
         } else {
+            setNoChartData(true);
             console.log('No attribute set available');
         }
     }
@@ -79,8 +81,9 @@ const DashboardChart = () => {
                 },
                 withCredentials: true,
             });
-            console.log('response ',response);
-            if(!(response.data.length > 0)){
+
+            console.log('response ', response);
+            if (!(response.data.length > 0)) {
                 response = await axios.get(API_URL + `/value-change-state`, {
                     params: {
                         attributeId: attributeId,
@@ -94,7 +97,8 @@ const DashboardChart = () => {
                     },
                     withCredentials: true,
                 });
-                console.log('response from else',response);
+                console.log('response from else', response);
+
                 setLastData(response.data);
             }
             for (let i = 6; i >= 0; i--) {
@@ -107,19 +111,19 @@ const DashboardChart = () => {
                 })
             }
             console.log('factoryData ', finalData);
-
+            setNoChartData(false);
             setFactoryData(finalData);
             setMachineStateData(finalData)
             setCheckFactory(true);
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+                // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
-            }     
-    }
+            }
+        }
     }
 
     const fetchAssets = async (assetId: string) => {
@@ -173,7 +177,7 @@ const DashboardChart = () => {
                 }
             }
         }
-        // console.log('dataSet ', finalData);
+        console.log('dataSet all datavalues in macine chart ', finalData);
         // console.log('labels ', labels);
         return {
             labels,
@@ -299,7 +303,7 @@ const DashboardChart = () => {
                     }
                 }
 
-                if(!check) {
+                if (!check) {
                     const dateToCheck = moment(key);
                     const currentDate = moment().startOf('day');
                     const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
@@ -325,13 +329,13 @@ const DashboardChart = () => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else {
-            if (router.isReady) {              
-                if(autorefresh === true){           
-                    console.log("is machine-chart autoreferssh");    
+            if (router.isReady) {
+                if (autorefresh === true) {
+                    console.log("is machine-chart autoreferssh");
                     intervalId.current = setInterval(() => {
                         fetchDataAndAssign();
                     }, 10000);
-                }else{
+                } else {
                     fetchDataAndAssign();
                 }
 
@@ -345,7 +349,13 @@ const DashboardChart = () => {
                     const groupedData = groupData(factoryData);
                     // console.log('groupedData ', groupedData);
                     const chartDataValue = formatChartData(groupedData);
-                    // console.log('chartDataValue ', chartDataValue);
+                    console.log('chartDataValue ', chartDataValue);
+                    const {datasets} = chartDataValue;
+                    for(let i in datasets){
+                        if(datasets[i].label === "online")
+                        setAllOnlineTime(datasets[i]?.data);
+                    }
+                   
 
                     const options = {
                         indexAxis: 'y',
@@ -421,11 +431,24 @@ const DashboardChart = () => {
         };
     }, [router.isReady, checkFactory, entityIdValue, autorefresh])
 
+
+    console.log("chartData in machine", chartData);
+
     return (
         <div className="card h-auto" style={{ width: "37%" }}>
-            <Toast ref={toast} /> 
+            <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
-            <Chart type="bar" data={chartData} options={chartOptions} />
+            {
+                JSON.stringify(chartData) === "{}" || noChartData ?
+                    <div className="flex flex-column justify-content-center align-items-center">
+                        <p> No data available</p>
+                        <img src="/noDataFound.png" alt="" width="45%" height="45%" />
+                    </div>
+
+                    :
+                    <Chart type="bar" data={chartData} options={chartOptions} />
+            }
+
         </div>
     )
 }

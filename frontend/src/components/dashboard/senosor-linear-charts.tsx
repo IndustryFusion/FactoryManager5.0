@@ -71,9 +71,10 @@ const CombineSensorChart: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const intervalId: any = useRef(null);
+  const [noChartData, setNoChartData] = useState(false)
   const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
-  const [selectedAttribute, setSelectedAttribute] = useState();
+  const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
   const [socketConnected, setSocketConnected] = useState(false);
 
@@ -87,9 +88,9 @@ const CombineSensorChart: React.FC = () => {
     { label: "1 Hour", interval: 60 },
     { label: "2 Hours", interval: 120 },
     { label: "3 Hours", interval: 180 },
-    // { label: "1 Day", interval: 1440 },
-    // { label: "1 Week", interval: 10080 },
-    // { label: "1 Month", interval: 43200 },
+    { label: "1 Day", interval: 1440 },
+    { label: "1 Week", interval: 10080 },
+    { label: "1 Month", interval: 43200 },
   ];
   const colors = [
     {
@@ -259,6 +260,12 @@ const CombineSensorChart: React.FC = () => {
       .filter(attribute => attribute.value !== "machine-state"); 
 
     setAttributes(attributeLabels);
+    if (attributeLabels.length > 0) {
+        setSelectedAttribute(attributeLabels[0].value);
+        
+        setSelectedDatasetIndex(0);
+      }
+
 
     // Return attributeIds for compatibility with existing code
     return Object.keys(assetData)
@@ -276,11 +283,16 @@ const CombineSensorChart: React.FC = () => {
     try {
       
       let entityId = entityIdValue;
+      console.log("selected asset entityId ", entityId);
+
       let attributeIds = await fetchAsset(entityId);
     
 
       if (attributeIds && attributeIds.length > 0) {
+        setNoChartData(false)
         const chartData: ChartDataState = { labels: [], datasets: [] };
+        console.log("chartData:sensor ", chartData);
+
 
         for (let i = 0; i < attributeIds.length; i++) {
           const { newDataset, labels } = await fetchData(
@@ -312,54 +324,76 @@ const CombineSensorChart: React.FC = () => {
         setChartData(chartData);
         console.log("apple ", chartData)
       } else {
-        console.log("No attribute set available");
-         setChartData({
-          labels: [],
-          datasets: [],
-        });
+        setNoChartData(true)
+        // console.log("No attribute set available");
       }
-    }catch(error){
-      console.error("Failed to fetch and assign data:", error);
-    }
-    
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error response:", error.response?.data.message);
+        // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+      } else {
+        console.error("Error:", error);
+        // showToast('error', 'Error', error);
+      }
+    }  
   }
    
-useEffect(() => {
-    // Connect to WebSocket server
-    const socket = socketIOClient(`${API_URL}/pgrest`); 
+// useEffect(() => {
+//     // Connect to WebSocket server
+//     const socket = socketIOClient(`${API_URL}/pgrest`); 
 
-    socket.on("connect", () => {
-      console.log("WebSocket connected!");
-      setSocketConnected(true);
-    });
-
-    
-    socket.on("dataUpdate", (updatedData) => {
-      console.log("Data update received via WebSocket", updatedData);
-    
-    });
+//     socket.on("connect", () => {
+//       console.log("WebSocket connected!");
+//       setSocketConnected(true);
+//     });
 
     
-    return () => {
-      socket.disconnect();
-    };
-  }, []); 
+//     socket.on("dataUpdate", (updatedData) => {
+//       console.log("Data update received via WebSocket", updatedData);
+    
+//     });
+
+    
+//   }
+// )}
+   
+// useEffect(() => {
+//   const socket = socketIOClient(`${API_URL}/pgrest`);
+
+//   socket.on("connect", () => {
+//     console.log("WebSocket connected!");
+//     setSocketConnected(true);
+//   });
+
+//   socket.on("dataUpdate", (updatedData) => {
+//     console.log("Data update received via WebSocket", updatedData);
+//     // Handle the updated data here
+//   });
+
+//   return () => {
+//     socket.disconnect();
+//   };
+// }, []); // <- The dependency list is here, and it's correct as it's meant for the setup and teardown of the websocket connection
+
 
   useEffect(() => {
  
     setChartData({ labels: [], datasets: [] });
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
       if (router.isReady) {
         const { } = router.query;
-        if (autorefresh === true) {
+        if (autorefresh) {
           console.log("is sensor-chart autoreferssh");
           intervalId.current = setInterval(() => {
             fetchDataAndAssign();
           }, 10000);
           
         } else {
+          console.log("is calling when eneityId changes");
+
           fetchDataAndAssign();
         }
       }
@@ -384,7 +418,7 @@ useEffect(() => {
       <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
         {selectedAssetData?.product_name === undefined ?
           "Unknown Product" : selectedAssetData?.product_name
-        }</h3>
+        }</h3> 
       <div className="grid p-fluid">
         <div className="col-12">
             <div className="control-container">
@@ -397,6 +431,7 @@ useEffect(() => {
                     const selectedIndex = data.datasets.findIndex(dataset => dataset.label === e.value);
                     if (selectedIndex !== -1) {
                       setSelectedDatasetIndex(selectedIndex);
+                      
                     }
                     setSelectedAttribute(e.value);
                   }}
@@ -492,7 +527,7 @@ useEffect(() => {
 
 
           <div>
-        { !loading && data.datasets.length > 0 ? (
+            {data.datasets.length > 0 && !noChartData ? (
               <Chart
                key={entityIdValue} 
                 type="line"
@@ -506,18 +541,19 @@ useEffect(() => {
                   maintainAspectRatio: false,
                 }}
               />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
-              >
-                <span>No data available</span>
-              </div>
-            )}
+            ) :
+              (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "60vh",
+                  }}
+                >
+                  <span>No data available</span>
+                </div>
+              )}
           </div>
 
         </div>
