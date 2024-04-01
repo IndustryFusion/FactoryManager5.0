@@ -1,9 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
+import { PgRestGateway } from './pgrest.gatway';
 
 @Injectable()
 export class PgRestService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
+  constructor(private pgRestGateway: PgRestGateway) {}
+   async emitUpdate() {
+    const data = { };
+    this.pgRestGateway.sendUpdate(data);
+  }
 
   create() {
     return 'This action adds a new factoryManager';
@@ -20,7 +26,7 @@ export class PgRestService {
             .join('&').replace('#','%23');
 
       const url = this.timescaleUrl + '?' + queryString;
-
+      
       const response = await axios.get(url, {headers});
       if(response.data) {
         return response.data;

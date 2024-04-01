@@ -9,6 +9,7 @@ import { Image } from "primereact/image";
 import { Dropdown } from "primereact/dropdown";
 import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
+import socketIOClient from "socket.io-client";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import {
@@ -74,6 +75,7 @@ const CombineSensorChart: React.FC = () => {
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState();
   const [productName, setProductName] = useState<string>("");
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // console.log("first row entityIdValue", entityIdValue);
 
@@ -322,6 +324,26 @@ const CombineSensorChart: React.FC = () => {
     
   }
    
+useEffect(() => {
+    // Connect to WebSocket server
+    const socket = socketIOClient(`${API_URL}/pgrest`); 
+
+    socket.on("connect", () => {
+      console.log("WebSocket connected!");
+      setSocketConnected(true);
+    });
+
+    
+    socket.on("dataUpdate", (updatedData) => {
+      console.log("Data update received via WebSocket", updatedData);
+    
+    });
+
+    
+    return () => {
+      socket.disconnect();
+    };
+  }, []); 
 
   useEffect(() => {
  
@@ -353,6 +375,12 @@ const CombineSensorChart: React.FC = () => {
   return (
     <div style={{ zoom: "80%" }}>
       {/* <BlockUI blocked={loading}> */}
+        {socketConnected ? (
+        <div>WebSocket Connected</div>
+      ) : (
+        <div>WebSocket Disconnected</div>
+      )}
+
       <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
         {selectedAssetData?.product_name === undefined ?
           "Unknown Product" : selectedAssetData?.product_name

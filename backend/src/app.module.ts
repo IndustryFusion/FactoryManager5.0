@@ -10,6 +10,7 @@ import { AlertsService } from './endpoints/alerts/alerts.service';
 import { AlertsController } from './endpoints/alerts/alerts.controller';
 import { PgRestController } from './endpoints/pgrest/pgrest.controller';
 import { PgRestService } from './endpoints/pgrest/pgrest.service';
+import { PgRestGatewayModule } from './endpoints/pgrest/pgrest.module';
 import { TemplatesService } from './endpoints/templates/templates.service';
 import { TemplatesController } from './endpoints/templates/templates.controller';
 import { AssetController } from './endpoints/asset/asset.controller';
@@ -51,7 +52,9 @@ console.log('FactorySite ',FactorySite)
       { name: FactorySite.name, schema: FactorySiteSchema },
     ]),
     ScheduleModule.forRoot(),
-    HttpModule
+    HttpModule,
+    PgRestGatewayModule
+    
   ],
   controllers: [
     AppController,
@@ -91,7 +94,8 @@ console.log('FactorySite ',FactorySite)
     PowerConsumptionService,
     CronService,
     ValueChangeStateService,
-    OnboardingAssetService
+    OnboardingAssetService,
+    PgRestService
   ]
 })
 export class AppModule {
