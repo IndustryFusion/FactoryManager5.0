@@ -20,7 +20,7 @@ const Alerts = () => {
   const [assetData, setAssetData] = useState<any>([])
 
   const mapBackendDataToAssetState = (backendData: any) => {
-    console.log(backendData, "is any data");
+    // console.log(backendData, "is any data");
 
     const modifiedObject: any = {};
     // Iterate over the properties of the object
@@ -46,23 +46,18 @@ const Alerts = () => {
       })
       
     return mapBackendDataToAssetState(response.data);
- 
-      
-    
     } catch (error) {
       console.error("Error fetching asset data", error)
     }
   }
 
-  console.log("assetData", assetData);
-  
 
+  
   useEffect(() => {
     const fetchAllAlerts = async () => {
       try {
         const response = await getAlerts();
-        console.log(response, "alert");
-        setAlerts(response.alerts)
+         setAlerts(response.alerts)
         setAlertsCount(response.total);
         const assetsData  =[];
         for (const alert of response.alerts) {
@@ -73,11 +68,8 @@ const Alerts = () => {
         
         }
         setAssetData(assetsData);
-        // console.log("what's the values in aaray assetsData",assetData);
-        // console.log(response.alerts, "alerts response");
-
       } catch (error) {
-        console.error(error)
+        // console.error(error)
       }
     }
     fetchAllAlerts();

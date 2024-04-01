@@ -13,7 +13,7 @@ interface RelationPopupProps {
 
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
     const [parentRelations, setParentRelations] = useState([]);
-    const { selectedAssetData, entityIdValue} = useDashboard();
+    const { selectedAssetData, entityIdValue } = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState([]);
 
     const getHasProperties = () => {
@@ -57,7 +57,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         <>
             <Dialog header="Relations" visible={relationsProp} style={{ width: '50vw' }} onHide={() => setRelationsProp(false)}>
                 <div className="flex gap-3">
-                    <div style={{ flex: "50%" }}>
+                    <div style={{ flex: "40%" }}>
                         <h4 className="m-0 mb-3">Child</h4>
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
@@ -65,29 +65,37 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             console.log(key, value, "all values here");
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
-                                    <h4 className="child-key-text m-0 mb-1">{key}  </h4>
-                                    <p className="ml-2 child-key-value m-0">{value.object === "json-ld-1.1" ? "" : value.object}</p>
-                                    {typeof value === "object" &&
-                                        value.length > 0 &&
-                                        <ul
-                                            className="m-0 p-0"
-                                            style={{ listStyle: "circle" }}
-                                        >
-                                            {value.map((item, index) => {
-                                                return (
-                                                    <li
-                                                        className="ml-4 child-key-value"
-                                                        key={index}>{item.object === "json-ld-1.1" ? "" : item.object}</li>
-                                                )
-                                            }
-                                            )}
-                                        </ul>
-                                    }
+                                    <div>
+                                        <h4 className="child-key-text m-0 mb-1">{key}  </h4>
+                                        <p className="ml-2 child-key-value m-0">{value.object === "json-ld-1.1" ? "" : value.object}</p>
+                                        {typeof value === "object" &&
+                                            value.length > 0 &&
+                                            <ul
+                                                className="m-0 p-0"
+                                                style={{ listStyle: "circle" }}
+                                            >
+                                                {value.map((item, index) => {
+                                                    return (
+                                                        <>
+                                                            <li
+                                                                className="ml-4 child-key-value"
+                                                                key={index}>{item.object === "json-ld-1.1" ? "" : item.object}</li>
+                                                        </>
+                                                    )
+                                                }
+                                                )}
+                                            </ul>
+                                        }
+                                    </div>
                                 </div>
                             )
                         })}
                     </div>
-                    <div style={{ flex: "50%" }}>
+                    <div style={{flex:"20%"}}>
+                        <img src="/parent_child1.png" alt="" />
+                        {/* <img src="/parent_child2.png" alt="" width="100px" /> */}
+                    </div>
+                    <div style={{ flex: "40%" }}>
                         <h4 className="m-0 mb-3">Parent</h4>
                         {parentRelations.map((item, index) => {
                             const { product_name, id, asset_category } = item;
