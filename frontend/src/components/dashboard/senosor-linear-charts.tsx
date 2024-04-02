@@ -356,7 +356,9 @@ const CombineSensorChart: React.FC = () => {
             <div className="custom-button-container">
               <div className="custom-button">
                 <img src="/data-transfer.png" style={{ width: "4%", marginRight: "21px" }} alt="Field Icon" />
-                <span className="button-text">{selectedAttribute || 'Select an Attribute'}</span>
+                <span className="button-text"
+                style={{textTransform:"capitalize", letterSpacing:"0.3px"}}
+                >{selectedAttribute || 'Select an Attribute'}</span>
               </div>
             </div>
             <div className="interval-dropdown-container">
