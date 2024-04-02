@@ -2,6 +2,7 @@ import { useDashboard } from "@/context/dashboard-context";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import "../../styles/relation-container.css"
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -48,6 +49,10 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         }
     }
 
+    const Header = (
+        <h3 className="pl-4">Relations</h3>
+    )
+
     useEffect(() => {
         relationParent();
         getHasProperties();
@@ -55,18 +60,23 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
 
     return (
         <>
-            <Dialog header="Relations" visible={relationsProp} style={{ width: '50vw' }} onHide={() => setRelationsProp(false)}>
-                <div className="flex gap-3">
+            <Dialog header={Header} 
+        
+            visible={relationsProp} style={{ width: '50vw' }} onHide={() => setRelationsProp(false)}>
+                <div className="flex gap-3 relation-dialog">
                     <div style={{ flex: "40%" }}>
-                        <h4 className="m-0 mb-3">Child</h4>
+                        <h4 className="m-0 mb-3 child-heading">Child</h4>
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
                             const value = property[key];
                             console.log(key, value, "all values here");
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
-                                    <div>
-                                        <h4 className="child-key-text m-0 mb-1">{key}  </h4>
+                                    <div className="mb-2 relation-container">
+                                    <div className="flex gap-2">
+                                       <div className="child-bullet-point"></div>
+                                        <h4 className="child-key-text m-0 mb-1">{key}</h4>
+                                        </div>                           
                                         <p className="ml-2 child-key-value m-0">{value.object === "json-ld-1.1" ? "" : value.object}</p>
                                         {typeof value === "object" &&
                                             value.length > 0 &&
@@ -91,22 +101,25 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             )
                         })}
                     </div>
-                    <div style={{flex:"20%"}}>
-                        <img src="/parent_child1.png" alt="" />
-                        {/* <img src="/parent_child2.png" alt="" width="100px" /> */}
+                    <div style={{flex:"20%"}} className="parent-child-icon">                  
+                        <img src="/parent_child2.png" alt="" width="50px" height="auto" />
                     </div>
                     <div style={{ flex: "40%" }}>
-                        <h4 className="m-0 mb-3">Parent</h4>
+                        <h4 className="m-0 mb-3 parent-heading">Parent</h4>
                         {parentRelations.map((item, index) => {
                             const { product_name, id, asset_category } = item;
-
                             return (
                                 <>
-                                    <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
-                                    <ul className="mb-4 m-0">
+                                <div className="flex gap-2 relation-container">
+                                <div className="bullet-point"></div>
+                                <div>
+                                <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
+                                    <ul className=" m-0">
                                         <li className="child-key-value">{id}</li>
                                         <li className="child-key-value">{asset_category?.value}</li>
                                     </ul>
+                                </div>
+                                </div>                                   
                                 </>
                             )
                         })

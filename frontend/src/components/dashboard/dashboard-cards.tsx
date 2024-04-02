@@ -19,7 +19,8 @@ const DashboardCards: React.FC = () => {
         setNotificationData,
         allOnlineTime,
         relationsCount,
-        setRelationsCount
+        setRelationsCount,
+        assetCount
     } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
@@ -35,12 +36,12 @@ const DashboardCards: React.FC = () => {
             try {
                 const response = await getAlerts();
                 // console.log(response, "akert");
-                console.log(response.alerts, "alerts response");
+                // console.log(response.alerts, "alerts response");
                 const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
 
                 setNotificationData(filteredNotifications)
             } catch (error) {
-                console.error(error)
+                // console.error(error)
             }
         }
         fetchAllAlerts();
@@ -50,7 +51,7 @@ const DashboardCards: React.FC = () => {
         let intervalId: any;
         const runningSince = () => {
             // Reverse the keys of the object
-            console.log("is coming here");
+            // console.log("is coming here");
 
 
             for (const date in machineStateData) {
@@ -59,7 +60,7 @@ const DashboardCards: React.FC = () => {
                 }
             }
             const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
-            console.log("reversedData", reversedData);
+            // console.log("reversedData", reversedData);
 
             function hasKeysWithNoValues(obj: any) {
                 return Object.keys(obj).some(key => !obj[key]);
@@ -81,12 +82,12 @@ const DashboardCards: React.FC = () => {
                                 }
                             }
                         }
-                        console.log("allOnlineValues", allOnlineValues);
+                        // console.log("allOnlineValues", allOnlineValues);
                         setOnlineAverage(findOnlineAverage(allOnlineValues))
 
 
                         const foundElement = dataArray.find((item: any) => item.prev_value === "2");
-                        console.log("foundElement", foundElement);
+                        // console.log("foundElement", foundElement);
 
                         if (foundElement) {
                             const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
@@ -101,7 +102,7 @@ const DashboardCards: React.FC = () => {
                 }
             }
             else {
-                console.log("no values here");
+                // console.log("no values here");
                 intervalId = setInterval(() => {
                     setDifference(prevTimer => {
                         // Parse the current time
@@ -135,18 +136,10 @@ const DashboardCards: React.FC = () => {
         const hasPropertiesArray = [];
 
         if (Object.keys(selectedAssetData).length > 0) {
-            console.log("is come inside");
-
             for (const key in selectedAssetData) {
-                console.log("is  coming here");
-
                 if (key.startsWith("has")) {
-                    console.log("is checking this");
-
                     const propertyName = key.substring(3); // Remove the "has" prefix
                     const propertyValue = selectedAssetData[key];
-                    console.log("has valiess", propertyName, propertyValue);
-
                     hasPropertiesArray.push({ [propertyName]: propertyValue });
                 }
             }
@@ -158,14 +151,10 @@ const DashboardCards: React.FC = () => {
 
     }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
 
-    // console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
-
-    console.log("relationsCount in card", relationsCount);
+ 
 
 
     const getHasProperties = () => {
-        console.log("is it calling here");
-
         const propertiesArray = [];
         for (const key in selectedAssetData) {
             if (key.startsWith("has")) {
@@ -174,7 +163,7 @@ const DashboardCards: React.FC = () => {
                 propertiesArray.push({ [propertyName]: propertyValue });
             }
         }
-        console.log("propertiesArray in dashboard cards", propertiesArray);
+        // console.log("propertiesArray in dashboard cards", propertiesArray);
         propertiesArray.forEach(property => {
             const key = Object.keys(property)[0];
             const value = property[key];
@@ -205,7 +194,7 @@ const DashboardCards: React.FC = () => {
                 },
                 withCredentials: true,
             });
-            console.log("parent relation response", response);
+            // console.log("parent relation response", response);
            
             response?.data.forEach(item =>{
                 if(item.id !== "json-ld-1.1"){
@@ -213,7 +202,7 @@ const DashboardCards: React.FC = () => {
                 }
             })
         } catch (error) {
-            console.error(error)
+            // console.error(error)
         }
     }
 
@@ -242,8 +231,8 @@ const DashboardCards: React.FC = () => {
                             </div>
 
                         </div>
-                        <span className="text-green-500 font-medium">520 </span>
-                        <span className="text-500">newly registered</span>
+                        <span className="text-green-500 font-medium">{assetCount} </span>
+                        <span className="text-500"> registered</span>
 
                     </div>
                 </div>
@@ -271,7 +260,9 @@ const DashboardCards: React.FC = () => {
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
                                     <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length.toString().padStart(3, '0')}</div>
-                                    <span className="relation-text font-medium">child objects</span>
+                                    <span className="relation-text font-medium mt-1"
+                                    style={{color:"#adb5bd"}}
+                                    >child object</span>
                                 </div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
