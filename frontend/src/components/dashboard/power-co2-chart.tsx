@@ -2,12 +2,17 @@
 import { Chart } from 'primereact/chart';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import ChartJS from 'chart.js/auto';
 import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
 import { ProgressSpinner } from "primereact/progressspinner";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+ChartJS.register(ChartDataLabels);
 export interface Datasets {
     label: string;
     data: number[];
@@ -115,6 +120,11 @@ const PowerCo2Chart = () => {
                         labels: {
                             color: textColor
                         }
+                    },
+                    datalabels: {                           
+                        color: 'black', // Customize the color of the labels
+                        align: 'end', // Align the labels to the end of the bars
+                        anchor: 'center'
                     }
                 },
                 scales: {

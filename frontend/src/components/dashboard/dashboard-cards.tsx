@@ -153,8 +153,6 @@ const DashboardCards: React.FC = () => {
     }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
 
  
-
-
     const getHasProperties = () => {
         const propertiesArray = [];
         for (const key in selectedAssetData) {
@@ -234,7 +232,7 @@ const DashboardCards: React.FC = () => {
                             </div>
 
                         </div>
-                        <span className="text-green-500 font-medium">{assetCount} </span>
+                        <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
                         <span className="text-500"> registered</span>
 
                     </div>
