@@ -3,6 +3,8 @@ import { Dialog } from 'primereact/dialog';
 import { Divider } from 'primereact/divider';
 import { Avatar } from "primereact/avatar";
 import "../../app/globals.css"
+import "../../styles/asset-list.css"
+import { Button } from "primereact/button";
 
 interface AlertDetailsProps {
   alerts: Alerts[];
@@ -11,8 +13,6 @@ interface AlertDetailsProps {
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
   assetData: any;
 }
-
-
 
 interface Alerts {
   lastReceiveTime: string;
@@ -23,6 +23,8 @@ interface Alerts {
   text: string;
   repeat: boolean;
   origin: string;
+  type: string;
+  updateTime: string;
 }
 
 
@@ -48,16 +50,29 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
         return 'black';
     }
   };
+
   const getIcon = (severity: string) => {
     switch (severity) {
-      default:
       case 'ok':
+        return {
+          icon: 'pi pi-info-circle',
+          color: "#04c904"
+        };
       case 'warning':
-        return 'pi pi-info-circle';
-      case 'machine-warning':
-        return 'pi pi-exclamation-triangle';
+        return {
+          icon: 'pi pi-exclamation-circle',
+          color: "#ffc107"
+        }
+      case 'machine-danger':
+        return {
+          icon: 'pi pi-exclamation-triangle',
+          color: "#ff0000"
+        };
       case 'machine-error':
-        return 'pi pi-times';
+        return{
+          icon: 'pi pi-times',
+          color: "#ff0000"
+        }
     }
   };
 
@@ -74,6 +89,27 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
         return '#ff0000';
     }
   };
+
+  const getStatusTextColor = (status: string) => {
+    switch (status) {
+      case 'open':
+        return '#ff0000';
+      case 'assign':
+        return '';
+      case 'ack':
+        return '';
+      case 'closed':
+        return '#058f05';
+      case 'expired':
+        return '';
+      case 'blackout':
+        return '';
+      case 'shelved':
+        return '';
+      case 'unknown':
+        return '';
+    }
+  }
 
   const getBackgroundColor = (severity: string) => {
     switch (severity) {
@@ -102,57 +138,96 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
             alerts.map((alert, index) => {
               const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource))
               // console.log("findAsset", findAsset)
+              const text = alert?.text;          
+              let updatedText;
+              if (text && text.includes("http://www.industry-fusion.org/fields#noise")) {
+                const regex = /Value.*$/;
+                const match = text.match(regex);
+                if (match) {
+                  updatedText = "Property #noise : " + match[0];
+                }
+              }
+              else {
+                updatedText = text;
+              }
+              
               return (
                 <>
-                  <div key={index} className="alerts-container">
-                    <div className="flex align-center">
-                      <p className="font-medium">Last Receive Time: </p>
-                      <p className="ml-2 ">  {alert?.lastReceiveTime}</p>
+                  <div key={index} className="alerts-container card mb-4">
+                    <div className="flex gap-3  ">
+                      <div className="mt-4">
+                        <i className={getIcon(alert?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(alert?.severity).color }}></i>
+                      </div>
+                      <div style={{ flex: "0 90%" }} className="data-container">
+                        <div>
+                          <div className=" align-center">
+                            {/* <p className="font-medium">Product name: </p> */}
+                            <p className="ml-2 mb-0"
+                              style={{
+                                fontStyle: 'italic',
+                                color: "#d5d5d5",
+                                fontSize: "15px"
+                              }}
+                            >{findAsset?.product_name} - {findAsset?.id}  </p>
+                          </div>
+                          <div className="flex align-center">
+                            <p className="ml-2 alert-type-text mb-0"> {updatedText}</p>
+                          </div>
+                          <div className="flex align-center">
+                            <p className="ml-2 alert-text mb-0 "></p>
+                          </div>
+                          <div className="flex align-center  mb-2" style={{ gap: "10rem" }}>
+                            <div>
+                              <p className="ml-2 alert-time mt-2"> {alert?.updateTime}</p>
+                              <p className="label-text ml-2">Update Time</p>
+                            </div>
+                            <div>
+                              <p className="ml-2 mt-2 "
+                                style={{ color: "#212529", textTransform: "capitalize" }}
+                              >{alert?.type}</p>
+                              <p className="label-text ml-2">Type</p>
+                            </div>
+                          </div>
+                          <div className="flex align-center  mb-2" style={{ gap: "15.4rem" }}>
+                            <div>
+                              <p className="ml-2 "> {findAsset?.asset_category}</p>
+                              <p className="label-text ml-2">Product category</p>
+                            </div>
+                            <div>
+                              <p>{alert?.origin}</p>
+                              <p className="label-text">Origin</p>
+                            </div>
+                          </div>
+                          <div className="flex align-center  mb-2" style={{ gap: "17.1rem" }}>
+                            <div> <p className="ml-2 "> {alert?.severity}</p>
+                              <p className="label-text ml-2">Severity</p>
+                            </div>
+                            <div>
+                              <p className="ml-2 mt-2" style={{ color: "#212529" }}
+                              >{alert?.previousSeverity}</p>
+                              <p className="label-text ml-2">Previous Severity</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex  flex-column ">
+                          <p className="ml-2 mt-2 px-1 "
+                            style={{
+                              color: getStatusTextColor(alert?.status),
+                              border: `1px solid ${getStatusTextColor(alert?.status)}`,
+                              borderRadius: "4px"
+                            }}
+                          > {alert?.status}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Previous Severity: </p>
-                      <p className="ml-2 "> {alert?.previousSeverity}</p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Resource: </p>
-                      <p className="ml-2 ">{alert?.resource} </p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Severity: </p>
-                      <p className="ml-2 "> {alert?.severity}</p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Status: </p>
-                      <p className="ml-2 "> {alert?.status}</p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Text: </p>
-                      <p className="ml-2 ">{alert?.text}</p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Repeat: </p>
-                      <p className="ml-2 ">{alert?.repeat ? "true" : "false"} </p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Origin: </p>
-                      <p className="ml-2 "> {alert?.origin}</p>
+                    <div className='alert-btn'>
+                      <Button
+                        className="alert-btn-text"
+                        label="Acknowledge"
+                        severity="warning"
+                      />
                     </div>
                   </div>
-                  <div className="alerts-container">
-                    <div className="flex align-center">
-                      <p className="font-medium">URN ID: </p>
-                      <p className="ml-2 ">{findAsset?.id} </p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Product name: </p>
-                      <p className="ml-2 ">{findAsset?.product_name} </p>
-                    </div>
-                    <div className="flex align-center">
-                      <p className="font-medium">Asset Category:  </p>
-                      <p className="ml-2 "> {findAsset?.asset_category}</p>
-                    </div>
-                  </div>
-                  <Divider />
                 </>
               )
             }

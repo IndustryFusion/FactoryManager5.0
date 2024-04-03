@@ -6,6 +6,7 @@ import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Dropdown } from "primereact/dropdown";
+import { BlockUI } from 'primereact/blockui';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 export interface Datasets {
     label: string;
@@ -27,6 +28,7 @@ const PowerCo2Chart = () => {
     const [chartOptions, setChartOptions] = useState({});
     const [checkChart, setCheckChart] = useState<boolean>(false)
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
+    const [noChartData, setNoChartData] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const { autorefresh } = useDashboard();
@@ -37,7 +39,7 @@ const PowerCo2Chart = () => {
         { label: "weeks", interval: "weeks" },
         { label: "months", interval: "months" }
     ];
-    
+
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
@@ -60,6 +62,7 @@ const PowerCo2Chart = () => {
             console.log('response of powerconsumption chart ', response);
             setIsLoading(false);
             setCheckChart(true);
+            setNoChartData(false);
             return response.data;
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
@@ -154,6 +157,7 @@ const PowerCo2Chart = () => {
 
             setChartData(data);
             setChartOptions(options);
+            setNoChartData(false);
         }
 
         if (autorefresh === true) {
@@ -173,7 +177,7 @@ const PowerCo2Chart = () => {
 
     }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
 
-
+    console.log("what's the chartData", chartData);
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>

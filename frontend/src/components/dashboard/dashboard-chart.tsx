@@ -11,6 +11,12 @@ import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
 import { useDashboard } from "@/context/dashboard-context";
 import { Toast, ToastMessage } from "primereact/toast";
+import { Dropdown } from "primereact/dropdown";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { ProgressSpinner } from "primereact/progressspinner";
+
+// Chart.register(ChartDataLabels);
+
 
 export interface Datasets {
     label?: string;
@@ -43,9 +49,21 @@ const DashboardChart = () => {
     const [checkFactory, setCheckFactory] = useState(false);
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
+    const [isLoading ,setIsLoading] = useState<boolean>(true);
     const { entityIdValue, setMachineStateData, autorefresh,  setAllOnlineTime } = useDashboard();
+const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
+
+    const intervalButtons = [
+        { label: "days", interval: "days" },
+        { label: "weeks", interval: "weeks" },
+        { label: "months", interval: "months" }
+    ];
+
+
+    console.log("selectedInterval in machineChart", selectedInterval);
+    
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
@@ -65,15 +83,11 @@ const DashboardChart = () => {
         try {
             type DataType = any;
             const finalData: { [key: string]: DataType[] } = {};
-            const day = moment().subtract(6, 'days').startOf('day');
-            let startTime = day.format().split('+')[0] + '-00:00';
-            let endTime = moment().format().split('+')[0] + '-00:00';
-            let response = await axios.get(API_URL + `/value-change-state`, {
+            setIsLoading(true);
+                let response = await axios.get(API_URL + `/value-change-state/chart`, {
                 params: {
-                    attributeId: attributeId,
-                    entityId: entityId,
-                    observedAt_gte: startTime,
-                    observedAt_lte: endTime
+                    'asset-id': entityId,
+                    'type': selectedInterval
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -81,40 +95,49 @@ const DashboardChart = () => {
                 },
                 withCredentials: true,
             });
-
-            console.log('response ', response);
-            if (!(response.data.length > 0)) {
-                response = await axios.get(API_URL + `/value-change-state`, {
-                    params: {
-                        attributeId: attributeId,
-                        entityId: entityId,
-                        order: "observedAt.desc",
-                        limit: '1'
-                    },
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    withCredentials: true,
-                });
-                console.log('response from else', response);
-
-                setLastData(response.data);
-            }
-            for (let i = 6; i >= 0; i--) {
-                const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
-                finalData[day] = [];
-                response.data.forEach((data: any) => {
-                    if (data.observedAt.includes(day)) {
-                        finalData[day].push(data);
-                    }
-                })
-            }
-            console.log('factoryData ', finalData);
-            setNoChartData(false);
-            setFactoryData(finalData);
-            setMachineStateData(finalData)
-            setCheckFactory(true);
+            setIsLoading(false);
+            console.log('response ', response.data);
+            if(selectedInterval === "days"){
+                console.log("is getting selectedInterval");
+                
+                if (!(response.data.length > 0)) {
+                    response = await axios.get(API_URL + `/value-change-state`, {
+                        params: {
+                            attributeId: attributeId,
+                            entityId: entityId,
+                            order: "observedAt.desc",
+                            limit: '1'
+                        },
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        withCredentials: true,
+                    });
+                    console.log('response from else', response);
+    
+                    setLastData(response.data);
+                }
+    
+                for (let i = 6; i >= 0; i--) {
+                    const day = moment().subtract(i, 'days').startOf('day').format().split('T')[0];
+                //    console.log(response.data , "data here");
+                   console.log(day , "day here");
+                    finalData[day] = [];
+                    response.data.forEach((data: any) => {
+                        if (data.observedAt.includes(day)) {
+                            finalData[day].push(data);
+                        }
+                    })
+                }
+                console.log('factoryData ', finalData);
+                setNoChartData(false);
+                setFactoryData( finalData);
+                setMachineStateData(finalData)
+                setCheckFactory(true);
+            }else{
+                setNoChartData(true);  
+            }   
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
@@ -154,9 +177,10 @@ const DashboardChart = () => {
 
     const formatChartData = (dataset: any) => {
         const documentStyle = getComputedStyle(document.documentElement);
-        // console.log(dataset, "what's the dataset here");
+        console.log(dataset, "what's the dataset here");
 
-        const labels = Object.keys(dataset);
+       
+        const labels = Object.keys(dataset).map(label => moment(label).format('MMMM Do'));
         const finalData = [];
         for (let key in dataset) {
             let eachDateArr = dataset[key];
@@ -176,9 +200,9 @@ const DashboardChart = () => {
                     })
                 }
             }
-        }
-        console.log('dataSet all datavalues in macine chart ', finalData);
-        // console.log('labels ', labels);
+        }    console.log('dataSet all datavalues in macine chart ', finalData);
+    
+        console.log('labels ', labels);
         return {
             labels,
             datasets: finalData,
@@ -188,9 +212,11 @@ const DashboardChart = () => {
     const groupData = (data: any) => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
+  
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             groupedByDate[key] = [];
+
             if (data[key].length > 0) {
                 let startTime = data[key][0].observedAt.split('T')[1].split('.')[0];
                 groupedByDate[key].push({
@@ -256,74 +282,86 @@ const DashboardChart = () => {
                         date: key
                     })
                 }
-            } else {
-                let check = false;
-                for (let j = i + 1; j < keys.length; j++) {
-                    let key2 = keys[j];
-                    const dateToCheck = moment(key);
-                    const currentDate = moment().startOf('day');
-                    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
-                    let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                    if (data[key2].length > 0) {
-                        groupedByDate[key].push({
-                            time: convertToSecondsTime(time),
-                            type: data[key2][0].prev_value == '0' ? 'offline' : 'online',
-                            date: key
-                        }, {
-                            time: 0,
-                            type: data[key2][0].prev_value == '0' ? 'online' : 'offline',
-                            date: key
-                        });
-                        check = true;
-                        break;
-                    }
-                }
-
-                if (!check) {
-                    for (let j = i - 1; j >= 0; j--) {
+            }
+            //change this logic - call pgrest with observedAt and with limit:2 and order:desc get last changed state
+            //more the for loop-> time complexity increases
+            else{
+             console.log("is coming here");
+             
+                    let check = false;
+                    for (let j = i + 1; j < keys.length; j++) {
                         let key2 = keys[j];
-                        // console.log('key2 ', key2);
+                        // console.log("key here in else",moment(key));
+                        
                         const dateToCheck = moment(key);
                         const currentDate = moment().startOf('day');
                         const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
-                        let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
+                        let time = isCurrentDate ? moment().format('HH:mm:ss') : 
+                        moment(key).endOf('day').format().split('T')[1].split('+')[0];
+    
                         if (data[key2].length > 0) {
                             groupedByDate[key].push({
                                 time: convertToSecondsTime(time),
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'offline' : 'online',
+                                type: data[key2][0].prev_value == '0' ? 'offline' : 'online',
                                 date: key
                             }, {
                                 time: 0,
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'online' : 'offline',
+                                type: data[key2][0].prev_value == '0' ? 'online' : 'offline',
                                 date: key
                             });
                             check = true;
                             break;
                         }
                     }
-                }
-
-                if (!check) {
-                    const dateToCheck = moment(key);
-                    const currentDate = moment().startOf('day');
-                    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
-                    let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                    if (Object.keys(lastData).length) {
-                        groupedByDate[key].push({
-                            time: convertToSecondsTime(time),
-                            type: lastData['value'] == '0' ? 'offline' : 'online',
-                            date: key
-                        }, {
-                            time: 0,
-                            type: lastData['value'] == '0' ? 'online' : 'offline',
-                            date: key
-                        });
+                    if (!check) {
+                        for (let j = i - 1; j >= 0; j--) {
+                            let key2 = keys[j];
+                            // console.log('key2 ', key2);
+                            const dateToCheck = moment(key);
+                            const currentDate = moment().startOf('day');
+                            const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
+                            let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
+                            if (data[key2].length > 0) {
+                                groupedByDate[key].push({
+                                    time: convertToSecondsTime(time),
+                                    type: data[key2][data[key2].length - 1].value == '0' ? 'offline' : 'online',
+                                    date: key
+                                }, {
+                                    time: 0,
+                                    type: data[key2][data[key2].length - 1].value == '0' ? 'online' : 'offline',
+                                    date: key
+                                });
+                                check = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!check) {
+                        const dateToCheck = moment(key);
+                        const currentDate = moment().startOf('day');
+                        const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
+                        let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
+                        if (Object.keys(lastData).length) {
+                            groupedByDate[key].push({
+                                time: convertToSecondsTime(time),
+                                type: lastData['value'] == '0' ? 'offline' : 'online',
+                                date: key
+                            }, {
+                                time: 0,
+                                type: lastData['value'] == '0' ? 'online' : 'offline',
+                                date: key
+                            });
+                        }
                     }
                 }
             }
-        }
+            
+        
         return groupedByDate;
     }
+
+    console.log("loader chartdata", isLoading);
+    
 
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
@@ -345,7 +383,12 @@ const DashboardChart = () => {
                     '--text-color-secondary'
                 );
                 const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
                 if (Object.keys(factoryData).length > 0) {
+                    console.log("is coming here inside if condition ");
+                    console.log("factoryData", factoryData);
+                    
+                    
                     const groupedData = groupData(factoryData);
                     // console.log('groupedData ', groupedData);
                     const chartDataValue = formatChartData(groupedData);
@@ -356,7 +399,6 @@ const DashboardChart = () => {
                         setAllOnlineTime(datasets[i]?.data);
                     }
                    
-
                     const options = {
                         indexAxis: 'y',
                         maintainAspectRatio: false,
@@ -366,7 +408,7 @@ const DashboardChart = () => {
                                 mode: 'index',
                                 intersect: false,
                                 callbacks: {
-                                    label: (context: any) => {
+                                    label: (context:any) => {
                                         const { dataset, dataIndex } = context;
                                         const value = dataset.data[dataIndex];
                                         if (value > 0) {
@@ -382,11 +424,17 @@ const DashboardChart = () => {
                                     },
                                 },
                             },
-                            // legend: {
-                            //     labels: {
-                            //         color: textColor,
-                            //     },
-                            // },
+                            datalabels: { 
+                                display: true,
+                                color: 'black', // Customize the color of the labels
+                                align: 'end', // Align the labels to the end of the bars
+                                anchor: 'end', // Anchor the labels to the end of the bars
+                                formatter: (value, context) => {
+                                   console.log("what's the value in datalabels", value,context);
+                                   
+                                    return value; // Format the labels to display the data value
+                                }
+                            }
                         },
                         scales: {
                             y: {
@@ -405,19 +453,19 @@ const DashboardChart = () => {
                                     suggestedMin: 0, // Assuming 0 is the minimum value
                                     suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                     stepSize: 10800, // Step size in seconds (1 hour)
-                                    callback: (value: any) => {
+                                    callback: (value) => {
                                         // Convert seconds back to "hh:mm:ss" format for display
                                         const hours = Math.floor(value / 3600);
                                         const minutes = Math.floor((value % 3600) / 60);
                                         const seconds = value % 60;
-
+                    
                                         return `${hours === 0 ? 0 : hours}:${minutes.toString().padStart(2, '0')} `;
                                     },
                                 }
-
                             },
                         },
                     };
+                    
 
                     setChartData(chartDataValue);
                     setChartOptions(options);
@@ -429,25 +477,59 @@ const DashboardChart = () => {
                 clearInterval(intervalId.current);
             }
         };
-    }, [router.isReady, checkFactory, entityIdValue, autorefresh])
+    }, [router.isReady, checkFactory, entityIdValue, autorefresh, selectedInterval])
 
 
-    console.log("chartData in machine", chartData);
+    console.log("chartData when weeks",chartData);
+    
 
     return (
         <div className="card h-auto" style={{ width: "37%" }}>
             <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
+            <div className="interval-filter-container">
+                <p>Filter Interval</p>
+                <div
+                    className="dropdown-container custom-button"
+                    style={{ padding: "0" }}
+                >
+                    <Dropdown
+                        value={selectedInterval}
+                        options={intervalButtons.map(({ label, interval }) => ({
+                            label,
+                            value: interval,
+                        }))}
+                        onChange={(e) => setSelectedInterval(e.value)}
+                        placeholder="Select an Interval"
+                        style={{ width: "100%", border: "none" }}
+                    />
+                </div>
+            </div>
             {
-                JSON.stringify(chartData) === "{}" || noChartData ?
-                    <div className="flex flex-column justify-content-center align-items-center">
-                        <p> No data available</p>
-                        <img src="/noDataFound.png" alt="" width="45%" height="45%" />
-                    </div>
+    JSON.stringify(chartData) === "{}" || noChartData ?
+        <div className="flex flex-column justify-content-center align-items-center"
+            style={{marginTop:"9rem"}}
+        >
+            <p> No data available</p>
+            <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+        </div>
+        :
+        isLoading ? (
+            <div
+            style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "60vh",
+            }}
+            >
+                 <ProgressSpinner />
+            </div>
+        ) : (
+            <Chart type="bar" data={chartData} options={chartOptions} />
+        )
+}
 
-                    :
-                    <Chart type="bar" data={chartData} options={chartOptions} />
-            }
 
         </div>
     )

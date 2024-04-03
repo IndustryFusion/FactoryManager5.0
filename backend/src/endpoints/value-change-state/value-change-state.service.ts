@@ -61,7 +61,7 @@ export class ValueChangeStateService {
           }
         }
       } else if(type == 'weeks'){
-        for (let i = 5; i >= 0; i--) {
+        for (let i = 6; i >= 0; i--) {
           // Calculate the start and end of the each week
           let startOfWeek = moment().clone().subtract(i, 'weeks').startOf('week');
           let endOfWeek = moment().clone().subtract(i, 'weeks').endOf('week');
@@ -83,7 +83,7 @@ export class ValueChangeStateService {
           }
         }
       } else{
-        for (let i = 5; i >= 0; i--) {
+        for (let i = 6; i >= 0; i--) {
           // Calculate the start and end of the current month
           const startOfMonth = moment().clone().subtract(i, 'months').startOf('month');
           const endOfMonth = moment().clone().subtract(i, 'months').endOf('month');
