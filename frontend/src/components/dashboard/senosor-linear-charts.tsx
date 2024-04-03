@@ -6,8 +6,6 @@ import { Chart } from "primereact/chart";
 import axios from "axios";
 import { LayoutContext } from "../../pages/factory-site/layout/layout-context";
 import { Asset } from "@/interfaces/asset-types";
-import { Button } from "primereact/button";
-import { Image } from "primereact/image";
 import { Dropdown } from "primereact/dropdown";
 import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
@@ -108,7 +106,7 @@ const [data, setChartData] = useState<ChartDataState>({
   const socketRef = useRef<any>(null);
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
-  const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
+  const [selectedInterval, setSelectedInterval] = useState<number>(120); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -196,6 +194,12 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
+     tooltip: {
+      enabled: false, // Disable tooltip
+    },
+    datalabels: {
+    display: false,
+  },
     zoom: {
       pan: {
         enabled: true,
@@ -672,7 +676,7 @@ useEffect(() => {
               </div>
               <div className="custom-button-container">
                   <div className="custom-button">
-                    <img src="/dashboard-field-icon.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
+                    <img src="/data-transfer.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
                    <span className="button-text">
                     {selectedAttribute.replace('eq.http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
                   </span>

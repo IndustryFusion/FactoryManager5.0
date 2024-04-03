@@ -1,4 +1,5 @@
 
+const moment = require('moment');
 
 export const mapBackendDataToAssetState = (backendData: any) => {
   const modifiedObject: any = {};
@@ -51,3 +52,25 @@ export const findOnlineAverage = (onlineTime: any) => {
   // console.log("averageOnline ",averageOnline  );
   // console.log("avgOnlinePercent", avgOnlinePercent);
 }
+
+
+ export const getAllDaysOfWeek = (startDate) => {
+  let finalDays = [];
+  let daysRequired = 6;
+
+  // Start from the given date
+  let currentDay = moment(startDate, 'YYYY-MM-DD');
+  finalDays.push(currentDay.format('YYYY-MM-DD'));
+  for (let i = 0; i < daysRequired; i++) {
+      // Add one day to the current day in each iteration
+      let day = currentDay.add(1, 'days');
+      // Push the formatted date string into the finalDays array
+      finalDays.push(day.format('YYYY-MM-DD'));
+  }
+
+  console.log(finalDays);
+  return finalDays;
+};
+
+// Example usage
+getAllDaysOfWeek("2024-02-18");

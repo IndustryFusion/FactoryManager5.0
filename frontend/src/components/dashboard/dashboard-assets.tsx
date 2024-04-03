@@ -41,7 +41,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const router = useRouter();
   const { entityIdValue, setEntityIdValue,
     machineStateValue, setMachineStateValue,
-    selectedAssetData, setSelectedAssetData } = useDashboard();
+    selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
 
 
@@ -86,12 +86,13 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       if (response !== undefined) {
         setAssetData(response);
         setAllAssets(response);
-        console.log(response, "allresponse");
+        setAssetCount(response.length)
+        // console.log(response.length, "allresponse");
       } else {
         console.error("Fetch returned undefined");
       }
     } catch (error) {
-      console.error(error)
+      // console.error(error)
     }
   }
 
@@ -103,7 +104,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
     setEntityIdValue(selectedAsset?.id);
-    console.log(selectedAsset, "what's the asset here");
+    // console.log(selectedAsset, "what's the asset here");
     setSelectedAssetData(selectedAsset)
     // console.log(prefixedKeys, "what's here");
     // console.log(prefixedKeys.length, "the length of prefix");
@@ -132,12 +133,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     if (searchedText.length === 0) {
       setAssetData(allAssets)
     } else {
-      console.log("assetData", assetData);
+      // console.log("assetData", assetData);
 
       const filteredAssets = searchedText.length > 0 ? [...assetData].filter(ele =>
         ele?.product_name?.toLowerCase().includes(searchedAsset.toLowerCase())
       ) : allAssets;
-      console.log(filteredAssets, "filteredAssets");
       setAssetData(filteredAssets)
     }
   }
@@ -170,12 +170,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   useEffect(() => {
     if (onboardAsset && showBlocker === false) {
-      console.log("is coming here for onboard Asset");
+      // console.log("is coming here for onboard Asset");
       showToast("warn", "warning", "file already exists")
     }
   }, [onboardAsset, showBlocker])
 
-  console.log(onboardAsset, "onboard Asset value here");
 
 
   return (
