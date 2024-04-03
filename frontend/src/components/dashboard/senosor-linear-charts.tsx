@@ -127,7 +127,7 @@ const [data, setChartData] = useState<ChartDataState>({
 
 
   const intervalButtons = [
-      { label: "Live", interval: 1 },
+    { label: "Live", interval: 1 },
     { label: "1 Min", interval: 2 },
     { label: "3 Min", interval: 6 },
     { label: "5 Min", interval: 10 },
