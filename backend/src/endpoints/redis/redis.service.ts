@@ -7,7 +7,7 @@ export class RedisService {
   private redisClient: Redis;
   private readonly CREDENTIALS_KEY = `global:credentials`;
   private readonly STORED_DATA_KEY = `global:storedData`;
-  private readonly REDIS_SERVER =  JSON.stringify(process.env.REDIS_SERVE);
+  private readonly REDIS_SERVER =  JSON.stringify(process.env.REDIS_SERVER);
   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
 
   constructor() {
