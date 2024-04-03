@@ -7,14 +7,12 @@ export class RedisService {
   private redisClient: Redis;
   private readonly CREDENTIALS_KEY = `global:credentials`;
   private readonly STORED_DATA_KEY = `global:storedData`;
+  private readonly REDIS_SERVER =  JSON.stringify(process.env.REDIS_SERVE);
+  private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
 
   constructor() {
-    this.redisClient = new Redis({
-      host: 'localhost',
-      port: 6379,
-    });
+    this.redisClient = new Redis({host: this.REDIS_SERVER, port: this.REDIS_PORT});
   }
-
 
   async credentialsChanged(token: string, queryParams: any, entityId: string): Promise<boolean> {
   const currentCredentials = await this.getTokenAndEntityId();
