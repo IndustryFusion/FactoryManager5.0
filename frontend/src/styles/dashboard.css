@@ -44,14 +44,36 @@
 
 .dashboard-card-container {
     gap: 1.2rem;
-    justify-content: center;  
+    justify-content: center; 
+    margin-top: 10rem; 
 }
 .autorefresh-btn{
-    margin-top: 6rem;
+    margin-top: 0rem;
+    position: fixed;
+    top: 4.3rem;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    /* padding-right: 1rem; */
+    background: #fff;
+    width: 100%;
+    padding-right: 3rem;
+
 }
 
 .dashboard-card {
     width: 450px;
+}
+.child-key-text{
+   color: #3dd7e8;
+}
+.child-key-value{
+    color: #7c7c7c;
+    font-size: 14px;
+    padding: 0;
+}
+.parent-key-text{
+    color:#7d7d7d;
 }
 
 .finish-btn {

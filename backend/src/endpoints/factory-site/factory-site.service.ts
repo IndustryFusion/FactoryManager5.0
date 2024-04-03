@@ -48,7 +48,10 @@ export class FactorySiteService {
             };
             result[resultKey] = obj;
           } else {
-            result[resultKey] = data.properties[key];
+            result[resultKey] = {
+              type: "Property",
+              value: data.properties[key]
+            };
           }
         }
         //update the last urn with the current urn in scorpio

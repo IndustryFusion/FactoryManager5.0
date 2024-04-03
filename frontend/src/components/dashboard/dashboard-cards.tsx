@@ -3,6 +3,8 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
 import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
+import { getAlerts } from "../alert/alert-service";
+import axios from "axios";
 
 
 const DashboardCards: React.FC = () => {
@@ -12,23 +14,46 @@ const DashboardCards: React.FC = () => {
         entityIdValue,
         setMachineStateValue,
         selectedAssetData,
-        machineStateData } = useDashboard();
+        machineStateData,
+        notificationData,
+        setNotificationData,
+        allOnlineTime,
+        relationsCount,
+        setRelationsCount,
+        assetCount
+    } = useDashboard();
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
     const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const [onlineAverage, setOnlineAverage] = useState(0);
     const [hasRelations, setHasRelations] = useState<any>([]);
+    const [childCount, setChildCount] = useState(0);
+
+    const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 
-    console.log(selectedAssetData, "selectedAssetData");
-    console.log("machineStateData", machineStateData);
-    
+    const getNotifications = () => {
+        const fetchAllAlerts = async () => {
+            try {
+                const response = await getAlerts();
+                // console.log(response, "akert");
+                // console.log(response.alerts, "alerts response");
+                const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
+
+                setNotificationData(filteredNotifications)
+            } catch (error) {
+                // console.error(error)
+            }
+        }
+        fetchAllAlerts();
+    }
+
     useEffect(() => {
         let intervalId: any;
         const runningSince = () => {
             // Reverse the keys of the object
-            console.log("is coming here");
-            
+            // console.log("is coming here");
+
 
             for (const date in machineStateData) {
                 if (machineStateData[date].length > 0) {
@@ -36,16 +61,17 @@ const DashboardCards: React.FC = () => {
                 }
             }
             const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
-            console.log("reversedData", reversedData);
+            // console.log("reversedData", reversedData);
 
-            function hasKeysWithNoValues(obj:any) {
+            function hasKeysWithNoValues(obj: any) {
                 return Object.keys(obj).some(key => !obj[key]);
-               }
+            }
 
             // Iterate over the reversed keys
             if (hasKeysWithNoValues(reversedData)) {
                 for (const key in reversedData) {
                     const dataArray: any = reversedData[key];
+
                     if (dataArray.length > 0) {
                         // Find the first element with prev_value === "2"
                         const allOnlineValues = [];
@@ -57,12 +83,12 @@ const DashboardCards: React.FC = () => {
                                 }
                             }
                         }
-                        console.log("allOnlineValues", allOnlineValues);
+                        // console.log("allOnlineValues", allOnlineValues);
                         setOnlineAverage(findOnlineAverage(allOnlineValues))
 
 
                         const foundElement = dataArray.find((item: any) => item.prev_value === "2");
-                        console.log("foundElement", foundElement);
+                        // console.log("foundElement", foundElement);
 
                         if (foundElement) {
                             const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
@@ -77,7 +103,7 @@ const DashboardCards: React.FC = () => {
                 }
             }
             else {
-                console.log("no values here");
+                // console.log("no values here");
                 intervalId = setInterval(() => {
                     setDifference(prevTimer => {
                         // Parse the current time
@@ -98,10 +124,10 @@ const DashboardCards: React.FC = () => {
                         return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
                     });
                 }, 1000)
+                setOnlineAverage(findOnlineAverage(allOnlineTime))
             }
 
         }
-
 
         if (machineStateValue === "2") {
             runningSince();
@@ -111,31 +137,83 @@ const DashboardCards: React.FC = () => {
         const hasPropertiesArray = [];
 
         if (Object.keys(selectedAssetData).length > 0) {
-            console.log("is come inside");
-
             for (const key in selectedAssetData) {
-                console.log("is  coming here");
-
                 if (key.startsWith("has")) {
-                    console.log("is checking this");
-
                     const propertyName = key.substring(3); // Remove the "has" prefix
                     const propertyValue = selectedAssetData[key];
-                    console.log("has valiess", propertyName, propertyValue);
-
                     hasPropertiesArray.push({ [propertyName]: propertyValue });
                 }
             }
         }
         setHasRelations(hasPropertiesArray);
+        getNotifications();
 
         return () => clearInterval(intervalId)
 
-    }, [machineStateValue, entityIdValue, machineStateData, selectedAssetData])
+    }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
 
-    console.log(" hasPropertiesArray", hasRelations, hasRelations.length);
+ 
+    const getHasProperties = () => {
+        const propertiesArray = [];
+        for (const key in selectedAssetData) {
+            if (key.startsWith("has")) {
+                const propertyName = key.substring(3); // Remove the "has" prefix
+                const propertyValue = selectedAssetData[key];
+                propertiesArray.push({ [propertyName]: propertyValue });
+            }
+        }
+        // console.log("propertiesArray in dashboard cards", propertiesArray);
+        propertiesArray.forEach(property => {
+            const key = Object.keys(property)[0];
+            const value = property[key];
+            if (value.object !== "json-ld-1.1") {
+                setRelationsCount((prev: any) => prev + 1);
+                setChildCount((prev: any) => prev + 1);
+            }
+            if(value.length > 0){
+               value.forEach(item => {
+                if (item.object !== "json-ld-1.1"){
+                    setChildCount((prev: any) => prev + 1);
+                    setRelationsCount((prev: any) => prev + 1); 
+                }
+               }) 
+            }
+        })
+
+    }
+
+    const relationParent = async () => {
+        try {
+            const response = await axios.get(API_URL + "/asset/parent-ids", {
+                params: {
+                    "asset-id": selectedAssetData?.id,
+                    "asset-category": selectedAssetData?.asset_category
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+            // console.log("parent relation response", response);
+           
+            response?.data.forEach(item =>{
+                if(item.id !== "json-ld-1.1"){
+                    setRelationsCount((prev: any) => prev + 1); 
+                }
+            })
+        } catch (error) {
+            // console.error(error)
+        }
+    }
 
 
+    useEffect(() => {
+        setRelationsCount(0);
+        getHasProperties();
+        relationParent();
+
+    }, [entityIdValue])
 
     return (
         <>
@@ -154,9 +232,9 @@ const DashboardCards: React.FC = () => {
                             </div>
 
                         </div>
-                        <span className="text-green-500 font-medium">520 </span>
-                        <span className="text-500">newly registered</span>
-                        
+                        <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
+                        <span className="text-500"> registered</span>
+
                     </div>
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
@@ -182,15 +260,16 @@ const DashboardCards: React.FC = () => {
                             <div>
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length.toString().padStart(3, '0')}</div>
-                                    <span className="relation-text font-medium">child objects</span>
+                                    <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
+                                    <span className="text-900 font-medium text-xl"
+                                    >child </span>
                                 </div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className="pi pi-inbox text-cyan-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">24 </span>
+                        <span className="text-green-500 font-medium">{relationsCount.toString().padStart(2, '0')} </span>
                         <span className="text-500">machines are connected</span>
                     </div>
                     {relations &&
@@ -205,13 +284,13 @@ const DashboardCards: React.FC = () => {
                         <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3">Notifications</span>
-                                <div className="text-900 font-medium text-xl">152 Unread</div>
+                                <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className="pi pi-comment text-purple-500 text-xl" />
                             </div>
                         </div>
-                        <span className="text-green-500 font-medium">85 </span>
+                        <span className="text-green-500 font-medium">00 </span>
                         <span className="text-500">responded</span>
 
                     </div>

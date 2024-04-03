@@ -18,10 +18,6 @@ export class AllocatedAssetService {
   async create(factoryId: string, token: string) {
     try{
       let assetArr = [];
-      let factoryData = await this.factorySiteService.findOne(factoryId, token);
-      let shopFloorIds = factoryData['http://www.industry-fusion.org/schema#hasShopFloor'];
-      console.log('factory id ',factoryData.id);
-      console.log('shopFloorIds ', shopFloorIds);
       let reactData = await this.reactFlowService.findOne(factoryId);
       if(reactData && reactData.factoryData) {
         let edges = reactData.factoryData['edges'];
@@ -35,7 +31,6 @@ export class AllocatedAssetService {
         }
       }
       assetArr = [...new Set(assetArr)];
-      console.log('assetArr ',assetArr);
       if (assetArr.length > 0) {
         const headers = {
           Authorization: 'Bearer ' + token,
@@ -52,10 +47,7 @@ export class AllocatedAssetService {
             object: assetArr
           }
         };
-        console.log('data ',data);
         let response = await axios.post(this.scorpioUrl, data, {headers});
-        console.log('status ',response.status)
-        console.log('statusText ',response.statusText)
         return {
           status: response.status,
           statusText: response.statusText
@@ -74,7 +66,6 @@ export class AllocatedAssetService {
   async createGlobal(token: string) {
     try{
       let reactData = await this.reactFlowService.findAll();
-      console.log('reactData ',reactData);
       let assetArr = [];
       for(let i = 0; i < reactData.length; i++){
         if(reactData[i].factoryData){
@@ -88,7 +79,6 @@ export class AllocatedAssetService {
         }
       }
       assetArr = [...new Set(assetArr)];
-      console.log('assetArr ',assetArr);
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
@@ -104,10 +94,7 @@ export class AllocatedAssetService {
           object: assetArr
         }
       };
-      console.log('data ',data);
       let response = await axios.post(this.scorpioUrl, data, {headers});
-      console.log('status ',response.status)
-      console.log('statusText ',response.statusText)
       return {
         status: response.status,
         statusText: response.statusText

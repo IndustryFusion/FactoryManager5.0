@@ -12,7 +12,6 @@ export class AssetService {
     try {
       const templateData = [];
       const templates = await this.templatesService.getTemplates();
-      console.log('templates ',templates);
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
@@ -96,7 +95,7 @@ export class AssetService {
     try {
       const templateData = [];
       const templates = await this.templatesService.getTemplates();
-      console.log('templates ',templates);
+      // console.log('templates ',templates);
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',

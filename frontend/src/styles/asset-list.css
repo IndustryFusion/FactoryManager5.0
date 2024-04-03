@@ -10,7 +10,7 @@ li {
   font-size: 1.2em;
 }
 
-li:hover,
+
 .selected {
   background-color: #e0e0e0;
 }
@@ -28,4 +28,33 @@ li:hover,
 .filter-button {
   background-color: white ; 
   border: none;
+}
+.alert-type-text{
+  color: #666666;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+}
+.alert-text{
+  color: #606060;
+}
+.alert-time{
+  color:  #212529;;
+  margin-top: 5px;
+}
+.alert-btn{
+  display: flex;
+  justify-content: flex-end;
+}
+.alert-btn-text{
+  font-size: 12px;
+}
+.data-container{
+  flex: 0 1 90%;
+    display: flex;
+    justify-content: space-between;
+}
+.label-text{
+  font-size: 11px !important;
+  color: #a39999;
 }

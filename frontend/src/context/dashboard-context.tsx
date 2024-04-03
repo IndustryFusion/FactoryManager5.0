@@ -45,6 +45,10 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [autorefresh, setAutorefresh] = useState(false);
   const [selectedAssetData, setSelectedAssetData] = useState<{ [key: string]: any; }>({});
   const [machineStateData, setMachineStateData] = useState({});
+  const [notificationData, setNotificationData] = useState([]);
+  const [allOnlineTime, setAllOnlineTime]= useState([]);
+  const [relationsCount, setRelationsCount] = useState(0);
+  const [assetCount, setAssetCount] = useState(0);
 
   return (
     <DashboardContext.Provider
@@ -56,7 +60,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
         blocker, setBlocker,
         selectedAssetData, setSelectedAssetData,
         machineStateData, setMachineStateData,
-        autorefresh, setAutorefresh
+        autorefresh, setAutorefresh,
+        notificationData, setNotificationData,
+        allOnlineTime, setAllOnlineTime,
+        relationsCount, setRelationsCount,
+        assetCount, setAssetCount
       }}
     >
       {children}

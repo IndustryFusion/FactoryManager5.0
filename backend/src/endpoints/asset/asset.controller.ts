@@ -45,7 +45,6 @@ export class AssetController {
   @Get(':id')
   async getAssetDataById(@Param('id') id: string, @Req() req: Request) {
     try {
-      console.log('inside asset data func');
       const token = await getSessionToken(req);
       return await this.assetService.getAssetDataById(id, token);
     } catch (err) {

@@ -5,10 +5,9 @@ export const getAlerts = async () => {
     try {
         let url = API_URL + '/alerts';
         const response = await axios.get(url);
-        console.log('response from frontend ',response.data);
         return response.data;
     } catch (err) {
-        console.log('error ',err);
+        // console.log('error ',err);
     }
-    
+
 }
