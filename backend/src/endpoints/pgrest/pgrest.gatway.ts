@@ -13,6 +13,8 @@ export class PgRestGateway {
   server: Server;
 
   sendUpdate(data: any) {
+
+    console.log("updates", data)
     this.server.emit('dataUpdate', data);
   }
 }

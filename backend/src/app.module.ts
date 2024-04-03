@@ -11,6 +11,7 @@ import { AlertsController } from './endpoints/alerts/alerts.controller';
 import { PgRestController } from './endpoints/pgrest/pgrest.controller';
 import { PgRestService } from './endpoints/pgrest/pgrest.service';
 import { PgRestGatewayModule } from './endpoints/pgrest/pgrest.module';
+import { PgRestGateway } from './endpoints/pgrest/pgrest.gatway';
 import { TemplatesService } from './endpoints/templates/templates.service';
 import { TemplatesController } from './endpoints/templates/templates.controller';
 import { AssetController } from './endpoints/asset/asset.controller';
@@ -40,6 +41,7 @@ import { ValueChangeStateController } from './endpoints/value-change-state/value
 import { ValueChangeStateService } from './endpoints/value-change-state/value-change-state.service';
 import { OnboardingAssetController } from './endpoints/onboarding-asset/onboarding-asset.controller';
 import { OnboardingAssetService } from './endpoints/onboarding-asset/onboarding-asset.service';
+import { RedisService } from './endpoints/redis/redis.service';
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -54,6 +56,7 @@ console.log('FactorySite ',FactorySite)
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule
+  
     
   ],
   controllers: [
@@ -95,7 +98,8 @@ console.log('FactorySite ',FactorySite)
     CronService,
     ValueChangeStateService,
     OnboardingAssetService,
-    PgRestService
+    PgRestService,
+    RedisService
   ]
 })
 export class AppModule {

@@ -17,4 +17,5 @@ export class CronController {
             throw new NotFoundException("Error fetching assets " + err);
         }
     }
+    
 }

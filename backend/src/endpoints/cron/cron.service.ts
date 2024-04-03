@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron,CronExpression  } from '@nestjs/schedule';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AssetService } from '../asset/asset.service';
 import { HttpService } from '@nestjs/axios';
+import { PgRestService } from '../pgrest/pgrest.service';
 import axios, { AxiosResponse } from 'axios';
 import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
-
+import { RedisService } from '../redis/redis.service';
+import { isEqual } from 'lodash';
+import { Server } from 'socket.io';
+import { WebSocketServer } from '@nestjs/websockets';
+import { PgRestGateway } from '../pgrest/pgrest.gatway';
 @Injectable()
+
 export class CronService {
   constructor(
     private readonly httpService: HttpService,
@@ -16,12 +22,81 @@ export class CronService {
     private readonly factorySiteService: FactorySiteService,
     private readonly shopFloorService: ShopFloorService,
     private readonly assetService: AssetService,
-    ) {}
+    private readonly pgRestService: PgRestService,
+    private readonly redisService : RedisService,
+    private readonly pgrestGatway : PgRestGateway,
 
-  // this method run at every end of the day
+    ) {}
+ onModuleInit() {
+    this.handleFindAllEveryFiveSeconds();
+  }
+
+private previousData: any = {};
+
+
+
+private emitDataChangeToClient(data: any) {
+
+  this.pgrestGatway.sendUpdate(data);
+}
+
+@Cron(CronExpression.EVERY_5_SECONDS)
+async handleFindAllEveryFiveSeconds() {
+
+  const credentials = await this.redisService.getTokenAndEntityId();
+
+  if (!credentials) {
+    console.error('No credentials found');
+    return;
+  }
+
+  const { token, queryParams } = credentials;
+
+    // Check if credentials have changed
+    const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
+    if (haveCredentialsChanged) {
+      console.log('Credentials have changed. Clearing stored data.');
+      // Delete stored data from Redis
+      await this.redisService.saveData('storedData', null); // You can also implement a deleteData method in RedisService
+      // Save the new credentials
+      await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
+    }
+
+  try {
+  
+    const newData = await this.pgRestService.findAll(token, queryParams);
+    let storedData = await this.redisService.getData('storedData');
+  
+    
+    // // Set the previousData to newData the first time data is fetched
+    // if (Object.keys(storedData).length === 0) {
+    //   console.log("Setting initial previousData");
+    //   storedData = newData;
+    // }
+    
+    // Compare the newly fetched data with the previously fetched data
+    if (!isEqual(newData, storedData)) {
+      console.log("Data has changed. Emitting event to notify frontend.");
+      this.emitDataChangeToClient(newData);
+      await this.redisService.saveData('storedData', newData);
+     
+
+     
+    } else {
+      console.log("Data unchanged. No need to emit event.");
+    }
+  } catch (error) {
+    console.error(`Error in scheduled task: ${error.message}`);
+  }
+}
+
+
+    // Existing method that runs at the end of the day
   @Cron('0 0 * * *')
   async handleCron() {
     console.log('time ', new Date());
+    
+
     const url = 'http://localhost:4002/cron'; // Replace with your actual URL
 
     // axios.get(url, { 
