@@ -24,14 +24,13 @@ export interface pgData {
 
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const { entityIdValue, setEntityIdValue } = useDashboard();
+    const { entityIdValue , autorefresh} = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
     const [checkChart, setCheckChart] = useState<boolean>(false)
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const [noChartData, setNoChartData] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
-    const { autorefresh } = useDashboard();
     const intervalId: any = useRef(null);
 
     const intervalButtons = [
@@ -46,7 +45,7 @@ const PowerCo2Chart = () => {
 
     const fetchData = async () => {
         try {
-            console.log('entity id here ',entityIdValue);
+            // console.log('entity id here ',entityIdValue);
             setIsLoading(true);
             const response = await axios.get(API_URL + '/power-consumption/chart', {
                 params: {
@@ -82,7 +81,7 @@ const PowerCo2Chart = () => {
             const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
             const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
             const obj = await fetchData();
-            // console.log('obj ',obj);
+            // console.log('obj datavalues ',obj);
             const data = {
                 labels: obj?.labels,
                 datasets: [
@@ -161,7 +160,6 @@ const PowerCo2Chart = () => {
         }
 
         if (autorefresh === true) {
-            console.log("is coming here to autoreferssh");
             intervalId.current = setInterval(() => {
                 fetchDataAndAssign();
             }, 10000);
@@ -177,29 +175,29 @@ const PowerCo2Chart = () => {
 
     }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
 
-    console.log("what's the chartData", chartData);
+
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
             <Toast ref={toast} />
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
-              <p>Filter Interval</p>
-              <div
-                className="dropdown-container custom-button"
-                style={{ padding: "0" }}
-              >
-                <Dropdown
-                  value={selectedInterval}
-                  options={intervalButtons.map(({ label, interval }) => ({
-                    label, 
-                    value: interval,
-                  }))}
-                  onChange={(e) => setSelectedInterval(e.value)} 
-                  placeholder="Select an Interval"
-                  style={{ width: "100%", border: "none" }} 
-                />
-              </div>
+                <p>Filter Interval</p>
+                <div
+                    className="dropdown-container custom-button"
+                    style={{ padding: "0" }}
+                >
+                    <Dropdown
+                        value={selectedInterval}
+                        options={intervalButtons.map(({ label, interval }) => ({
+                            label,
+                            value: interval,
+                        }))}
+                        onChange={(e) => setSelectedInterval(e.value)}
+                        placeholder="Select an Interval"
+                        style={{ width: "100%", border: "none" }}
+                    />
+                </div>
             </div>
             {isLoading ? (
                 <div
@@ -209,11 +207,11 @@ const PowerCo2Chart = () => {
                         alignItems: "center",
                         height: "60vh",
                     }}
-                    >
-                <ProgressSpinner />
+                >
+                    <ProgressSpinner />
                 </div>
-          ) : (
-            <Chart type="bar" data={chartData} options={chartOptions} />
+            ) : (
+                <Chart type="bar" data={chartData} options={chartOptions} />
             )}
         </div>
     )

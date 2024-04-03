@@ -27,6 +27,7 @@ const DashboardCards: React.FC = () => {
     const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const [onlineAverage, setOnlineAverage] = useState(0);
     const [hasRelations, setHasRelations] = useState<any>([]);
+    const [childCount, setChildCount] = useState(0);
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -169,10 +170,12 @@ const DashboardCards: React.FC = () => {
             const value = property[key];
             if (value.object !== "json-ld-1.1") {
                 setRelationsCount((prev: any) => prev + 1);
+                setChildCount((prev: any) => prev + 1);
             }
             if(value.length > 0){
                value.forEach(item => {
                 if (item.object !== "json-ld-1.1"){
+                    setChildCount((prev: any) => prev + 1);
                     setRelationsCount((prev: any) => prev + 1); 
                 }
                }) 
@@ -259,10 +262,9 @@ const DashboardCards: React.FC = () => {
                             <div>
                                 <span className="block text-500 font-medium mb-3">Relations</span>
                                 <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">{hasRelations.length.toString().padStart(3, '0')}</div>
-                                    <span className="relation-text font-medium mt-1"
-                                    style={{color:"#adb5bd"}}
-                                    >child object</span>
+                                    <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
+                                    <span className="text-900 font-medium text-xl"
+                                    >child </span>
                                 </div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
