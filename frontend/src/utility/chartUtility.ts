@@ -1,5 +1,8 @@
+import { Asset } from "@/interfaces/asset-types";
+import axios from "axios";
 
 const moment = require('moment');
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const mapBackendDataToAssetState = (backendData: any) => {
   const modifiedObject: any = {};
@@ -31,13 +34,20 @@ export const convertSecondsToTime = (seconds: number) => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-export const findDifference = (timeValue: any) => {
-  console.log("timeValue", convertToSecondsTime(timeValue));
-  const assetOnlineTime = convertToSecondsTime(timeValue);
-  const currentTimeString = convertToSecondsTime(new Date().toTimeString().slice(0, 8)); // today  currenttime                      
-  const difference = Math.abs(assetOnlineTime - currentTimeString);
-  const differenceTimeValue = convertSecondsToTime(difference);
-  return differenceTimeValue;
+export const findDifference = (givenDateTime:any) => {
+  //2024-03-31T11:45:10.573+00:00 
+ const givenMoment = moment(givenDateTime);
+ const currentMoment = moment();
+ const differenceInMilliseconds = currentMoment.diff(givenMoment);
+ const duration = moment.duration(differenceInMilliseconds);
+  
+ // Extract hours, minutes, and seconds
+ const hours = Math.trunc(duration.asHours());
+ const minutes = Math.trunc(duration.minutes());
+ const seconds = Math.trunc(duration.seconds());
+ const totalTime =  `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return totalTime;
+
 }
 
 export const findOnlineAverage = (onlineTime: any) => {
@@ -54,6 +64,32 @@ export const findOnlineAverage = (onlineTime: any) => {
 }
 
 
+export const fetchAssets = async (assetId: string) => {
+  // console.log(assetId, "getting assetId")
+  try {
+      const attributeIds: string[] = [];
+      const response = await axios.get(API_URL + `/asset/${assetId}`, {
+          headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+          },
+          withCredentials: true,
+      });
+      const assetData: Asset = response.data;
+      // console.log(assetData, "what's the data");
+
+      Object.keys(assetData).map((key) => {
+          if (key.includes("fields")) {
+              const newKey = 'eq.' + key;
+              attributeIds.push(newKey);
+          }
+      });
+      return attributeIds;
+  } catch (error) {
+      console.error("Error fetching asset data:", error);
+  }
+};
+
  export const getAllDaysOfWeek = (startDate) => {
   let finalDays = [];
   let daysRequired = 6;
@@ -68,9 +104,32 @@ export const findOnlineAverage = (onlineTime: any) => {
       finalDays.push(day.format('YYYY-MM-DD'));
   }
 
-  console.log(finalDays);
+  // console.log(finalDays);
   return finalDays;
 };
 
-// Example usage
-getAllDaysOfWeek("2024-02-18");
+
+export const getWeekHasData = (weeksArrayValue, finalDataValue) => { [{}]
+  //finalData: 49days: eachday: value from pgrest // 
+  /* {
+    finalData:{
+      "31/03/2024": [],
+      "01/05/2024":[]
+    }
+  } ***/
+  const result = [];
+  for (const weekKey in weeksArrayValue[0]) {
+      for (const arrayDate of weeksArrayValue[0][weekKey]) {
+          if (finalDataValue[arrayDate] && finalDataValue[arrayDate].length > 0) {
+              const dateOfValue = moment(finalDataValue[arrayDate][0].observedAt).format('YYYY-MM-DD');
+              const time = finalDataValue[arrayDate][0].observedAt.split("T")[1].split(".")[0];
+              result.push({
+                  weekKey: weekKey,
+                  time: time
+              });
+          }
+      }
+      
+  }
+  return result;
+}
