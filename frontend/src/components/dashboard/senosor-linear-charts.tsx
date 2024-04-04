@@ -519,14 +519,14 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
       return; // Skip this data item if corresponding dataset not found
     }
 
-   const numericValue = parseFloat(value).toFixed(1);
+   const numericValue:number = parseFloat(value).toFixed(1);
 
     const label = formatLabel(new Date(observedAt));
 
-    const labelIndex = currentChartData.labels.findIndex(existingLabel => existingLabel === label);
+    const labelIndex = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
     if (labelIndex === -1) {
       // If the label doesn't exist, append it and ensure data integrity
-      currentChartData.labels.push(label);
+      currentChartData.labels?.push(label);
       // Ensure all datasets have a value for this new label
       currentChartData.datasets.forEach((dataset, index) => {
         if (index === datasetIndex) {
@@ -545,13 +545,13 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
   
 
   // Sort the chart data based on labels
-  const sortedIndices = currentChartData.labels.map((label:any, index:any) => ({ label, index }))
+  const sortedIndices = currentChartData.labels?.map((label:any, index:any) => ({ label, index }))
     .sort((a:any, b:any) => new Date(a.label).getTime() - new Date(b.label).getTime())
     .map(data => data.index);
 
-  const sortedLabels = sortedIndices.map(index => currentChartData.labels[index]);
+  const sortedLabels = sortedIndices?.map(index => currentChartData.labels[index]);
   currentChartData.datasets.forEach(dataset => {
-    dataset.data = sortedIndices.map(index => dataset.data[index]);
+    dataset.data = sortedIndices?.map(index => dataset.data[index]);
   });
 
   currentChartData.labels = sortedLabels;
