@@ -1,14 +1,15 @@
+
+
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { ChartData, ChartOptions } from "chart.js";
+import { ChartData, ChartOptions,registerables  } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
 import { LayoutContext } from "../../pages/factory-site/layout/layout-context";
 import { Asset } from "@/interfaces/asset-types";
-import { Button } from "primereact/button";
-import { Image } from "primereact/image";
 import { Dropdown } from "primereact/dropdown";
 import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
+import socketIOClient from "socket.io-client";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import {
@@ -18,54 +19,94 @@ import {
   FaTemperatureHigh,
   FaCloud,
   FaBolt,
-  FaHourglassHalf
+  FaHourglassHalf 
 
 } from "react-icons/fa";
 import "../../styles/combine-chart.css";
 import { useDashboard } from "@/context/dashboard-context";
+
+import ChartJS from 'chart.js/auto';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import 'chartjs-adapter-date-fns';
+
+import { format, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths,differenceInYears ,differenceInWeeks} from 'date-fns';
+
+
+// Register the zoom plugin
+ChartJS.register(zoomPlugin);
+
+
+interface DataPoint {
+  observedAt: string;
+  attributeId: string;
+  value: string;
+}
+
+
+interface NewDataItem {
+  observedAt: string; 
+  value: string; 
+}
+interface DataItem {
+  observedAt: string;
+  attributeId: string;
+  value: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
 
 const graphMapping: any = {
   dustiness: "/graph-combine-chart.svg",
   humidity: "/graph-combine-chart2.svg",
   noise: "/graph-combine-chart3.svg",
   temperature: "/graph-combine-chart4.svg",
-  "power-consumption": "/graph-combine-chart4.svg",
+ "power-consumption": "/graph-combine-chart4.svg",
   "operating-hours": "/graph-combine-chart4.svg",
 };
 
 
 type AttributeOption = {
-  selectedDatasetIndex: number,
+  selectedDatasetIndex:number,
   label: string;
   value: string;
 };
 
-// Define the state type for chart data
-interface ChartDataState extends ChartData<"line", number[], string> {
-  datasets: Datasets[];
+interface ChartDataState extends ChartData<'line', (number | null)[], string> {
+  datasets: ChartDataSets[];
+}
+
+interface ChartDataSets {
+  label: string;
+  data: (number | null)[];
+  fill: boolean;
+  borderColor: string;
+  backgroundColor: string;
+  tension: number;
 }
 const iconMapping: any = {
   dustiness: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
-  dustiness1: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
+   dustiness1: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
   humidity: <FaTint style={{ color: "#00BFFF", marginRight: "8px" }} />,
   noise: <FaWind style={{ color: "#696969", marginRight: "8px" }} />,
   temperature: (
     <FaTemperatureHigh style={{ color: "#FF4500", marginRight: "8px" }} />
   ),
-  "power-consumption": <FaBolt style={{ color: "#ffd700", marginRight: "8px" }} />,
+  "power-consumption": <FaBolt style={{ color: "#ffd700", marginRight: "8px" }} />, 
   "operating-hours": <FaHourglassHalf style={{ color: "#6a5acd", marginRight: "8px" }} />,
 };
 
 const CombineSensorChart: React.FC = () => {
 
-  const [data, setChartData] = useState<ChartDataState>({
-    labels: [],
-    datasets: [],
-  });
+const [data, setChartData] = useState<ChartDataState>({
+  labels: [],
+  datasets: [],
+});
+
+  const socketRef = useRef<any>(null);
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
-  const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
+  const [selectedInterval, setSelectedInterval] = useState<number>(120); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -75,17 +116,25 @@ const CombineSensorChart: React.FC = () => {
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
+  const chartRef = useRef<ChartJS>(null);
+  const [zoomLevel, setZoomLevel] = useState({min: null, max: null});
+  const [zoomState, setZoomState] = useState({
+    x: {min: undefined, max: undefined},
+    y: {min: undefined, max: undefined}
+  });
 
-  // console.log("first row entityIdValue", entityIdValue);
+
+
 
   const intervalButtons = [
-    { label: "1 Min", interval: 1 },
-    { label: "3 Min", interval: 3 },
-    { label: "5 Min", interval: 5 },
-    { label: "30 Min", interval: 30 },
-    { label: "1 Hour", interval: 60 },
-    { label: "2 Hours", interval: 120 },
-    { label: "3 Hours", interval: 180 },
+    { label: "Live", interval: 1 },
+    { label: "1 Min", interval: 2 },
+    { label: "2 Min", interval: 6 },
+    { label: "3 Min", interval: 10 },
+    { label: "15 Min", interval: 60 },
+    { label: "2 Hour", interval: 120 },
+    { label: "3 Hours", interval: 240 },
+    // { label: "3 Hours", interval: 180 },
     { label: "1 Day", interval: 1440 },
     { label: "1 Week", interval: 10080 },
     { label: "1 Month", interval: 43200 },
@@ -112,110 +161,229 @@ const CombineSensorChart: React.FC = () => {
       borderColor: "rgb(153, 102, 255)",
     },
   ];
-  function generateLabels(
-    baseDate: Date,
-    selectedInterval: number,
-    dataLength: number
-  ) {
-    const labels = [];
-    // Start from the most recent (current) and go backwards directly
-    for (let i = dataLength - 1; i >= 0; i--) {
-      const adjustedDate = new Date(
-        baseDate.getTime() - selectedInterval * 60000 * i
-      );
-      labels.unshift(formatLabel(adjustedDate)); // Insert at the beginning
-    }
-    return labels; // Now labels are in descending order without needing to reverse
+
+
+
+const getLabelFormat = (minDate:any, maxDate:any) => {
+  const minuteDiff = differenceInMinutes(maxDate, minDate);
+  const hourDiff = differenceInHours(maxDate, minDate);
+  const dayDiff = differenceInDays(maxDate, minDate);
+  const monthDiff = differenceInMonths(maxDate, minDate);
+  const yearDiff = differenceInYears(maxDate, minDate);
+
+  if (minuteDiff <= 60) {
+    return 'mm:ss';
+  } else if (hourDiff <= 24) {
+    return 'HH:mm';
+  } else if (dayDiff <= 7) {
+    return 'MMM dd HH:mm';
+  } else if (monthDiff <= 12) {
+    return 'MMM yyyy';
+  } else {
+    return 'yyyy';
   }
-  const calculateLimit = (intervalMinutes: number): number => {
-    const pointsPerMinute = 4; // Data is stored every 15 seconds
-    const displayPoints = 10; // Desired points on the x-axis
-    const skip = intervalMinutes * pointsPerMinute; // Points to skip to get one point per interval
-    return skip * displayPoints; // Total limit
-  };
+};
+
+
+
+const chartOptions = {
+
+  animation: {
+      duration: 0, 
+    },
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+     tooltip: {
+      enabled: false, // Disable tooltip
+    },
+    datalabels: {
+    display: false,
+  },
+    zoom: {
+      pan: {
+        enabled: true,
+        mode: 'xy',
+      },
+       onZoom: function({chart}) {
+        const xAxis = chart.scales.x;
+        setZoomLevel({
+          min: xAxis.min,
+          max: xAxis.max
+        });
+        adjustTimeUnitBasedOnZoom(chart);
+      },
+      zoom: {
+        wheel: {
+          enabled: true,
+        },
+        pinch: {
+          enabled: true,
+        },
+        mode: 'xy',
+        onZoom: function({chart}) {
+          adjustTimeUnitBasedOnZoom(chart);
+        }
+      },
+    },
+  },
+  scales: {
+    x: {
+      type: 'time',
+      time: {
+        // Keep the time settings empty here. They will be set dynamically.
+      },
+      ticks: {
+        autoSkip: true,
+        maxTicksLimit: 20, 
+         ticks: {
+          autoSkip: true,
+          maxTicksLimit: 20,
+          callback: function(val:any, index:any) {
+            const labelDate = new Date(val);
+            const formatStr = getLabelFormat(this.chart.scales.x.min, this.chart.scales.x.max);
+            return format(labelDate, formatStr);
+          }
+        }
+      }
+    },
+    title: {
+          display: true,
+          text: 'Time',
+        },
+     y: { // Y-axis configuration
+      type: 'linear', 
+      beginAtZero: true, 
+    
+    }
+  
+  },
+  
+};
+
+function adjustTimeUnitBasedOnZoom(chart:any) {
+  const xAxis = chart.scales.x;
+  const minDate = new Date(xAxis.min);
+  const maxDate = new Date(xAxis.max);
+  
+  // Calculate the differences using date-fns functions
+  const minuteDiff = differenceInMinutes(maxDate, minDate);
+  const hourDiff = differenceInHours(maxDate, minDate);
+  const dayDiff = differenceInDays(maxDate, minDate);
+  const monthDiff = differenceInMonths(maxDate, minDate);
+
+  // Adjust the unit and display formats based on the difference
+  if (minuteDiff <= 60) {
+    xAxis.options.time.unit = 'minute';
+    xAxis.options.time.displayFormats = { minute: 'HH:mm' };
+  } else if (hourDiff <= 24) {
+    xAxis.options.time.unit = 'hour';
+    xAxis.options.time.displayFormats = { hour: 'HH:mm' };
+  } else if (dayDiff <= 30) {
+    xAxis.options.time.unit = 'day';
+    xAxis.options.time.displayFormats = { day: 'MMM d' };
+  } else if (monthDiff <= 12) {
+    xAxis.options.time.unit = 'month';
+    xAxis.options.time.displayFormats = { month: 'MMM yyyy' };
+  } else {
+    xAxis.options.time.unit = 'year';
+    xAxis.options.time.displayFormats = { year: 'yyyy' };
+  }
+
+  chart.update('none'); // Update the chart without animation
+}
+
+function generateLabels(
+  baseDate: Date,
+  selectedInterval: number,
+  dataLength: number
+) {
+  const labels = [];
+  // Start from the most recent (current) and go backwards directly
+  for (let i = 0; i < 7; i++) {
+    const adjustedDate = new Date(
+      baseDate.getTime() - selectedInterval * 60000 * i
+    );
+    labels.unshift(formatLabel(adjustedDate)); // Insert at the beginning
+  }
+  return labels; // Now labels are in descending order without needing to reverse
+}
+
+const calculateLimit = (intervalMinutes: number): number => {
+  const pointsPerMinute = 10; 
+  return pointsPerMinute * intervalMinutes; // Adjusted to reflect no skipping
+};
+
 
   const fetchData = async (
-    attributeId: string,
-    entityId: string,
-    index: number,
-    selectedInterval: number
-  ) => {
-    // Start loading
-    const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
-    if (dataCache[cacheKey]) {
-      return dataCache[cacheKey]; // Use cached data
-    }
-    const labelValue = attributeId ? String(attributeId.split("#").pop()) : "";
-    const limit = calculateLimit(selectedInterval); // Calculate dynamic limit
-    try {
-      const response = await axios.get(`${API_URL}/pgrest`, {
-        params: {
-          limit,
-          order: "observedAt.desc",
-          attributeId: encodeURIComponent(attributeId),
-          entityId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-      let factoryData: pgData[] = response.data;
+  attributeId: string,
+  entityId: string,
+  index: number,
+  selectedInterval: number
+) => {
+  // // Start loading
+  // const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
+  // if (dataCache[cacheKey]) {
+  //   return dataCache[cacheKey]; // Use cached data
+  // }
 
+  const limit = calculateLimit(selectedInterval); 
 
-      setLoading(false)
-      const skip = selectedInterval * 4; // Since data is recorded every 15 seconds, 4 data points per minute
+  try {
+    const response = await axios.get(`${API_URL}/pgrest`, {
+      params: {
+        limit,
+        order: "observedAt.desc",
+        entityId,
+        // observedAt: `gte.${startTime}&observedAt=lte.${endTime}`,
+        
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
 
-      // Filter the data points based on the skip value
-      let filteredDataPoints = factoryData
-        .filter((_, index) => index % skip === 0)
-        .slice(0, 10); // Ensure only 10 data points are selected
-      const baseDate = new Date();
-      let labels = generateLabels(
-        baseDate,
-        selectedInterval,
-        filteredDataPoints.length
-      );
+    let factoryData: pgData[] = response.data;
 
-      let dataPoints = filteredDataPoints.map((data) =>
-        data.value ? Number(data.value) : null
-      );
-      // Reverse the order of labels and dataPoints to match increasing chronological order for the chart
-      labels = labels.reverse();
-      dataPoints = dataPoints.reverse();
+    setLoading(false);
+   
+    // Filter the data points based on the skip value
+  const uniqueAndSortedDataPoints = factoryData
+        .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
+        .filter((data, index, self) =>
+          index === self.findIndex((t) => t.observedAt === data.observedAt)
+        );
+      let labels = uniqueAndSortedDataPoints.map(data => formatLabel(new Date(data.observedAt)));
+      let dataPoints = uniqueAndSortedDataPoints.map(data => data.value ? Number(data.value) : null);
 
-      const newDataset: Datasets = {
-        label: labelValue,
-        data: dataPoints,
-        fill: false,
-        borderColor: colors[index % colors.length].borderColor,
-        backgroundColor: colors[index % colors.length].backgroundColor,
-        tension: 0.4,
-      };
-      const fetchedData = { newDataset, labels };
-      setDataCache((prevCache) => ({
-        ...prevCache,
-        [cacheKey]: fetchedData,
-      }));
-      return fetchedData;
-    } catch (error) {
-      console.error("Error fetching asset data:", error);
-      throw error;
-    }
-  };
+    const newDataset: Datasets = {
+      label: attributeId, 
+      data: dataPoints,
+     
+      fill: false,
+      borderColor: colors[index % colors.length].borderColor,
+      backgroundColor: colors[index % colors.length].backgroundColor,
+      tension: 0.4,
+    };
+    const fetchedData = { newDataset, labels: generateLabels(new Date(), selectedInterval, dataPoints.length) };
+    // setDataCache(prevCache => ({ ...prevCache, [cacheKey]: fetchedData }));
+    
+   
 
-  // Helper function to format label based on date and interval
-  function formatLabel(date: Date) {
-    const day = date.getDate();
-    const month = date.getMonth() + 1; // JS months are 0-based
-    const year = date.getFullYear();
-    const hours = date.getHours();
-    const minutes =
-      date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    return fetchedData;
+  } catch (error) {
+    console.error("Error fetching asset data:", error);
+    throw error;
   }
+};
+
+function formatLabel(date:Date) {
+  // Format date as desired, e.g., "YYYY-MM-DD HH:mm:ss"
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+}
+
   const handleDatasetClick = (datasetIndex: number) => {
     // console.log("Dataset button clicked:", datasetIndex);
     setSelectedDatasetIndex(datasetIndex); // Update the selected dataset index
@@ -232,63 +400,84 @@ const CombineSensorChart: React.FC = () => {
       });
 
       const assetData: Asset = response.data;
+      const productName =
+        assetData["http://www.industry-fusion.org/schema#product_name"]
+          ?.value || "Unknown Product";
+      setProductName(productName); // Set the product name in the state
 
-      const attributeLabels: AttributeOption[] = Object.keys(assetData)
-        .filter(key => key.includes("fields"))
-        .map(key => {
-          let index = 0;
-          const label = key.split("#")[1] || key;
-          return { label, value: label, selectedDatasetIndex: index + 1 };
-        })
-        .filter(attribute => attribute.value !== "machine-state");
+     const attributeLabels: AttributeOption[] = Object.keys(assetData)
+      .filter(key => key.includes("fields" ))
+      .map(key => {
+        let index = 0;
+        const label = key.split("#")[1] || key;
+        return { label, value: label, selectedDatasetIndex:index+1 };
+      })
+      .filter(attribute => attribute.value !== "machine-state"); 
 
-      setAttributes(attributeLabels);
-      if (attributeLabels.length > 0) {
+    setAttributes(attributeLabels);
+    if (attributeLabels.length > 0) {
         setSelectedAttribute(attributeLabels[0].value);
+        
         setSelectedDatasetIndex(0);
       }
 
-      // Return attributeIds for compatibility with existing code
-      return Object.keys(assetData)
-        .filter(key => key.includes("fields"))
-        .map(key => "eq." + key);
+
+    // Return attributeIds for compatibility with existing code
+    return Object.keys(assetData)
+      .filter(key => key.includes("fields"  ))
+      .map(key => "eq." + key);
     } catch (error) {
       console.error("Error fetching asset data:", error);
     }
   };
 
+// console.log(entityIdValue, "in sensor chart");
+const skipInterval = 3; // Define the interval to skip
+let skipCounter = 0; // Initialize skip counter
 
-  const fetchDataAndAssign = async () => {
+    const fetchDataAndAssign = async () => {
     try {
+      
       let entityId = entityIdValue;
+      console.log("selected asset entityId ", entityId);
+
       let attributeIds = await fetchAsset(entityId);
+    
 
       if (attributeIds && attributeIds.length > 0) {
         setNoChartData(false)
         const chartData: ChartDataState = { labels: [], datasets: [] };
-        // console.log("chartData:sensor ", chartData);
+        console.log("chartData:sensor ", chartData);
+
 
         for (let i = 0; i < attributeIds.length; i++) {
-          const { newDataset, labels } = await fetchData(
-            attributeIds[i],
-            "eq." + entityId,
-            i,
-            selectedInterval
-          );
+        if (attributeIds[i].includes('machine-state')) {
+          // Skip the machine-state attribute
+          continue;
+        }
+
+        const { newDataset, labels } = await fetchData(
+          attributeIds[i],
+          "eq." + entityId,
+          i,
+          selectedInterval
+        );
+
 
           // Exclude the dataset with the label "machine-state"
-          if (newDataset.label !== "machine-state") {
-            const updatedLabels = generateLabels(
-              new Date(), // Use current time
-              selectedInterval,
-              labels.length // Use the same length as the existing labels
-            );
-            chartData.labels = updatedLabels;
-            chartData.datasets.push(newDataset);
-          }
+          newDataset.data = newDataset.data.slice(-10);
+          chartData.labels = labels.slice(-10); // Adjust this line if labels should be handled differently
+
+          chartData.datasets.push(newDataset);
         }
+
+
         setChartData(chartData);
-        // console.log("apple ", chartData)
+        if (chartData.datasets.length > 0) {
+        setSelectedAttribute(chartData.datasets[0].label);
+      }
+        
+        console.log("apple ", data)
       } else {
         setNoChartData(true)
         // console.log("No attribute set available");
@@ -301,66 +490,207 @@ const CombineSensorChart: React.FC = () => {
         console.error("Error:", error);
         // showToast('error', 'Error', error);
       }
-    }
+    }  
   }
+
+const handleAttributeChange = (e: any) => {
+  const modifiedAttributeName = `eq.http://www.industry-fusion.org/fields#${e.target.value}`;
+  setSelectedAttribute(modifiedAttributeName);
+};
+
+
+
+function updateChartDataWithSocketData(currentChartData: ChartDataState, newData: DataPoint[]): ChartDataState {
+  
+ newData.forEach(dataItem => {
+    const { observedAt, attributeId, value } = dataItem;
+    const modifiedAttributeId = `eq.${attributeId}`;
+
+    // Find the correct dataset based on modifiedAttributeId
+    const datasetIndex = currentChartData.datasets.findIndex(dataset => dataset.label === modifiedAttributeId);
+    if (datasetIndex === -1) {
+      console.error("Dataset with label", modifiedAttributeId, "not found.");
+      return; // Skip this data item if corresponding dataset not found
+    }
+
+   const numericValue = parseFloat(value).toFixed(1);
+
+    const label = formatLabel(new Date(observedAt));
+
+    const labelIndex = currentChartData.labels.findIndex(existingLabel => existingLabel === label);
+    if (labelIndex === -1) {
+      // If the label doesn't exist, append it and ensure data integrity
+      currentChartData.labels.push(label);
+      // Ensure all datasets have a value for this new label
+      currentChartData.datasets.forEach((dataset, index) => {
+        if (index === datasetIndex) {
+          dataset.data.push(numericValue);
+        } else {
+          // Use the last value or 0 if it's the first entry
+          const lastValue = dataset.data[dataset.data.length - 1] || 0;
+          dataset.data.push(lastValue);
+        }
+      });
+    } else {
+      currentChartData.datasets[datasetIndex].data[labelIndex] = numericValue;
+    }
+  });
+
+  
+
+  // Sort the chart data based on labels
+  const sortedIndices = currentChartData.labels.map((label:any, index:any) => ({ label, index }))
+    .sort((a:any, b:any) => new Date(a.label).getTime() - new Date(b.label).getTime())
+    .map(data => data.index);
+
+  const sortedLabels = sortedIndices.map(index => currentChartData.labels[index]);
+  currentChartData.datasets.forEach(dataset => {
+    dataset.data = sortedIndices.map(index => dataset.data[index]);
+  });
+
+  currentChartData.labels = sortedLabels;
+
+  return { ...currentChartData };
+}
 
 
   useEffect(() => {
-    setChartData({ labels: [], datasets: [] });
+    // Fetch data effect
+    fetchDataAndAssign();
+
+    return () => {
+      if (intervalId.current) {
+        clearInterval(intervalId.current);
+      }
+    };
+  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]); // Dependency array includes variables affecting data fetching
+
+useEffect(() => {
+
+  const socket = socketIOClient(`${API_URL}/`);
+  socketRef.current = socket;
+ 
+
+    socketRef.current.on("dataUpdate", (updatedData:any) => {
+        try {
+            const transformedData = updateChartDataWithSocketData(data, updatedData);
+            setChartData(transformedData);
+            console.log("apple2 ", data)
+        } catch (error) {
+            console.error("Error processing data update:", error);
+        }
+    });
+  
+     
+    return () => {
+        if (socketRef.current) {
+            socketRef.current.disconnect();
+        }
+    };
+}, [data]); 
+
+const chartOptionsWithZoomPan = {
+  ...chartOptions, 
+  scales: {
+    x: {
+      ...chartOptions.scales?.x,
+      min: zoomState.x.min,
+      max: zoomState.x.max,
+    },
+    y: {
+      ...chartOptions.scales?.y,
+      min: zoomState.y.min,
+      max: zoomState.y.max,
+    }
+  }
+};
+
+
+useEffect(() => {
+  if (chartRef.current && zoomLevel.min && zoomLevel.max) {
+ 
+    const chartInstance = chartRef.current.chart;
+    if (chartInstance) {
+      const xAxis = chartInstance.scales['x-axis-0']; 
+      if (xAxis) {
+        xAxis.options.ticks.min = zoomLevel.min;
+        xAxis.options.ticks.max = zoomLevel.max;
+        chartInstance.update();
+      }
+    }
+  }
+}, [data, zoomLevel]);
+
+  useEffect(() => {
+ 
+    
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
       if (router.isReady) {
         const { } = router.query;
         if (autorefresh) {
+          console.log("is sensor-chart autoreferssh");
           intervalId.current = setInterval(() => {
             fetchDataAndAssign();
           }, 10000);
+          
         } else {
+          console.log("is calling when eneityId changes");
+
           fetchDataAndAssign();
         }
       }
     }
+    
     return () => {
-      if (intervalId.current) {
-        clearInterval(intervalId.current);
-      }
-    };
+          if (intervalId.current) {
+            clearInterval(intervalId.current);
+          }
+        };
+
+        
 
   }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);
 
+
+
+
   return (
     <div style={{ zoom: "80%" }}>
+    
+     
+    
+      <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
+        {selectedAssetData?.product_name === undefined ?
+          "Unknown Product" : selectedAssetData?.product_name
+        }</h3> 
       <div className="grid p-fluid">
         <div className="col-12">
-          <div className="control-container">
-            <div className="attribute-dropdown-container">
-              <p className="font-bold">Select Attributes</p>
-              <Dropdown
-                value={selectedAttribute}
-                options={attributes}
-                onChange={(e) => {
-                  const selectedIndex = data.datasets.findIndex(dataset => dataset.label === e.value);
-                  if (selectedIndex !== -1) {
-                    setSelectedDatasetIndex(selectedIndex);
-                  }
-                  setSelectedAttribute(e.value);
-                }}
-                placeholder="Please Select"
-                filter
-                showClear
-                filterBy="label,value"
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div className="custom-button-container">
-              <div className="custom-button">
-                <img src="/data-transfer.png" style={{ width: "4%", marginRight: "21px" }} alt="Field Icon" />
-                <span className="button-text"
-                style={{textTransform:"capitalize", letterSpacing:"0.3px"}}
-                >{selectedAttribute || 'Select an Attribute'}</span>
+            <div className="control-container">
+              <div className="attribute-dropdown-container">
+                <p className="font-bold">Select Attributes</p>
+                <Dropdown
+                  value={selectedAttribute}
+                  options={attributes}
+                  onChange={handleAttributeChange}
+                  placeholder="Please Select"
+                  filter
+                  showClear
+                  filterBy="label,value"
+                  style={{ width: '100%' }}
+                />
               </div>
-            </div>
+              <div className="custom-button-container">
+                  <div className="custom-button">
+                    <img src="/data-transfer.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
+                   <span className="button-text">
+                    {selectedAttribute.replace('eq.http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
+                  </span>
+                  </div>
+                </div>
+
             <div className="interval-dropdown-container">
               <p className="font-bold">Interval</p>
               <Dropdown
@@ -371,42 +701,48 @@ const CombineSensorChart: React.FC = () => {
                 }))}
                 onChange={(e) => setSelectedInterval(e.value)}
                 placeholder="Select an Interval"
-                // style={{ width: "100%", border: "none" }}
-                className="w-full sm:w-14rem"
+                
+                className="w-full sm:w-14rem" 
               />
             </div>
           </div>
-          <div>
-            {data.datasets.length > 0 && !noChartData ? (
-              <Chart
-                key={entityIdValue}
-                type="line"
-                data={{
-                  labels: data.labels,
-                  datasets: [data.datasets[selectedDatasetIndex]],
-                }}
-                style={{ height: "60vh" }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                }}
-              />
-            ) :
-              (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "60vh",
-                  }}
-                >
-                  <span>No data available</span>
-                </div>
-              )}
-          </div>
+           
+
+        <div>
+        
+        {data.datasets && data.datasets.length > 0 && !noChartData ? (
+        <Chart
+          key={JSON.stringify(data)} 
+          type="line"
+         data={{
+            ...data,
+            datasets: data.datasets.filter(dataset => dataset.label === selectedAttribute)
+          }}
+          options={chartOptionsWithZoomPan}
+   
+          style={{ height: "60vh" }}
+        />
+      
+          ) :
+          (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "60vh",
+              }}
+            >
+              <span>No data available</span>
+            </div>
+          )}
+        </div>
+
+
         </div>
       </div>
+  
+   
     </div>
   );
 };

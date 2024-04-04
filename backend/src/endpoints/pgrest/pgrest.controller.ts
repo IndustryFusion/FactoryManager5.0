@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Session, NotFoundException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Session, NotFoundException, Req,Injectable } from '@nestjs/common';
 import { PgRestService } from './pgrest.service';
 import { Request } from 'express';
 import { getSessionToken } from '../session/session.service';
-
+@Injectable()
 @Controller('pgrest')
 export class PgRestController {
   constructor(private readonly pgRestService: PgRestService) {}
@@ -14,6 +14,7 @@ export class PgRestController {
 
   @Get()
   async findAll(@Query() queryParams: any, @Req() req: Request) {
+    const { entityId } = queryParams;
     try{
       let token = await getSessionToken(req);
       return this.pgRestService.findAll(token, queryParams);
@@ -36,4 +37,6 @@ export class PgRestController {
   remove(@Param('id') id: string) {
     return this.pgRestService.remove(id);
   }
+
+  
 }
