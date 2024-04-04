@@ -43,7 +43,7 @@ export class PgRestService {
             .map(key => key + '=' + queryParams[key])
             .join('&').replace('#','%23');
 
-      const url = this.timescaleUrl + '?' + queryString;
+      const url = this.timescaleUrl + '/entityhistory?' + queryString;
       
       const response = await axios.get(url, {headers});
         if (response.data) {
