@@ -129,12 +129,12 @@ const [data, setChartData] = useState<ChartDataState>({
   const intervalButtons = [
     { label: "Live", interval: 1 },
     { label: "1 Min", interval: 2 },
-    { label: "3 Min", interval: 6 },
-    { label: "5 Min", interval: 10 },
-    { label: "30 Min", interval: 60 },
-    { label: "1 Hour", interval: 60 },
-    { label: "2 Hours", interval: 120 },
-    { label: "3 Hours", interval: 180 },
+    { label: "2 Min", interval: 6 },
+    { label: "3 Min", interval: 10 },
+    { label: "15 Min", interval: 60 },
+    { label: "2 Hour", interval: 120 },
+    { label: "3 Hours", interval: 240 },
+    // { label: "3 Hours", interval: 180 },
     { label: "1 Day", interval: 1440 },
     { label: "1 Week", interval: 10080 },
     { label: "1 Month", interval: 43200 },
@@ -321,11 +321,11 @@ const calculateLimit = (intervalMinutes: number): number => {
   index: number,
   selectedInterval: number
 ) => {
-  // Start loading
-  const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
-  if (dataCache[cacheKey]) {
-    return dataCache[cacheKey]; // Use cached data
-  }
+  // // Start loading
+  // const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
+  // if (dataCache[cacheKey]) {
+  //   return dataCache[cacheKey]; // Use cached data
+  // }
 
   const limit = calculateLimit(selectedInterval); 
 
@@ -368,7 +368,7 @@ const calculateLimit = (intervalMinutes: number): number => {
       tension: 0.4,
     };
     const fetchedData = { newDataset, labels: generateLabels(new Date(), selectedInterval, dataPoints.length) };
-    setDataCache(prevCache => ({ ...prevCache, [cacheKey]: fetchedData }));
+    // setDataCache(prevCache => ({ ...prevCache, [cacheKey]: fetchedData }));
     
    
 
@@ -451,12 +451,18 @@ let skipCounter = 0; // Initialize skip counter
 
 
         for (let i = 0; i < attributeIds.length; i++) {
-          const { newDataset, labels } = await fetchData(
-            attributeIds[i],
-            "eq." + entityId,
-            i,
-            selectedInterval
-          );
+        if (attributeIds[i].includes('machine-state')) {
+          // Skip the machine-state attribute
+          continue;
+        }
+
+        const { newDataset, labels } = await fetchData(
+          attributeIds[i],
+          "eq." + entityId,
+          i,
+          selectedInterval
+        );
+
 
           // Exclude the dataset with the label "machine-state"
           newDataset.data = newDataset.data.slice(-10);
@@ -467,7 +473,9 @@ let skipCounter = 0; // Initialize skip counter
 
 
         setChartData(chartData);
-        
+        if (chartData.datasets.length > 0) {
+        setSelectedAttribute(chartData.datasets[0].label);
+      }
         
         console.log("apple ", data)
       } else {
@@ -706,7 +714,7 @@ useEffect(() => {
         <Chart
           key={JSON.stringify(data)} 
           type="line"
-          data={{
+         data={{
             ...data,
             datasets: data.datasets.filter(dataset => dataset.label === selectedAttribute)
           }}
