@@ -13,6 +13,8 @@ import { isEqual } from 'lodash';
 import { Server } from 'socket.io';
 import { WebSocketServer } from '@nestjs/websockets';
 import { PgRestGateway } from '../pgrest/pgrest.gatway';
+import { PowerConsumptionGateway } from '../power-consumption/power-consumption-gateway';
+import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
 @Injectable()
 
 export class CronService {
@@ -25,6 +27,8 @@ export class CronService {
     private readonly pgRestService: PgRestService,
     private readonly redisService : RedisService,
     private readonly pgrestGatway : PgRestGateway,
+    private readonly powerConsumptionGateway: PowerConsumptionGateway,
+    private readonly powerConsumptionService: PowerConsumptionService,
 
     ) {}
  onModuleInit() {
@@ -88,6 +92,79 @@ async handleFindAllEveryFiveSeconds() {
   } catch (error) {
     console.error(`Error in scheduled task: ${error.message}`);
   }
+}
+
+
+ @Cron(CronExpression.EVERY_5_SECONDS)
+  async handlePowerConsumptionAndChartDataUpdates() {
+    const tokenDetails = await this.redisService.getTokenAndEntityId();
+    if (!tokenDetails) {
+      console.error('Token details not found in Redis.');
+      return;
+    }
+    const { token, entityId } = tokenDetails;
+
+    // Assuming a method exists to get types (e.g., 'days', 'weeks', 'months')
+    const types = ['days', 'weeks', 'months'];
+
+    for (const type of types) {
+      try {
+        const chartData = await this.powerConsumptionService.findChartData(entityId, type, token);
+        const chartDataKey = `chartData:${entityId}:${type}`;
+        const storedChartData = await this.redisService.getData(chartDataKey);
+
+        if (!isEqual(chartData, storedChartData)) {
+          console.log(`Chart data has changed for ${entityId} (${type}). Updating stored data and emitting event.`);
+          // Update stored chart data in Redis
+          await this.redisService.saveData(chartDataKey, chartData);
+          // Emit event with new chart data
+          this.powerConsumptionGateway.sendPowerConsumptionUpdate({ entityId, type, chartData });
+        }
+      } catch (error) {
+        console.error(`Failed to update chart data for ${entityId} (${type}): ${error.message}`);
+      }
+    }
+
+    // Handling the daily power consumption updates
+    try {
+      const consumptionData = await this.powerConsumptionService.findComsumtionPerDay(token);
+      const consumptionDataKey = 'powerConsumptionData';
+      const storedConsumptionData = await this.redisService.getData(consumptionDataKey);
+
+      if (!isEqual(consumptionData, storedConsumptionData)) {
+        console.log('Power consumption data has changed. Updating stored data and emitting event.');
+        // Update stored consumption data in Redis
+        await this.redisService.saveData(consumptionDataKey, consumptionData);
+        // Emit event with new consumption data
+        this.powerConsumptionGateway.sendPowerConsumptionUpdate(consumptionData);
+      }
+    } catch (error) {
+      console.error(`Failed to update daily power consumption data: ${error.message}`);
+    }
+  }
+  
+@Cron(CronExpression.EVERY_5_SECONDS)
+async handlePowerConsumptionUpdate() {
+    // Retrieve the token from Redis
+    const tokenDetails = await this.redisService.getTokenAndEntityId();
+    if (!tokenDetails) {
+        console.error('No token found in Redis.');
+        // Consider re-authentication logic here if necessary
+        return;
+    }
+    const token = tokenDetails.token; // Use the retrieved token
+
+    const currentData = await this.powerConsumptionService.findComsumtionPerDay(token);
+    const storedDataKey = 'powerConsumptionData';
+    const storedData = await this.redisService.getData(storedDataKey);
+
+    if (!isEqual(currentData, storedData)) {
+        console.log('Power consumption data has changed. Emitting update.', storedDataKey, currentData);
+        this.powerConsumptionGateway.sendPowerConsumptionUpdate(currentData);
+        await this.redisService.saveData(storedDataKey, currentData);
+    } else {
+        console.log('No change in power consumption data.');
+    }
 }
 
 

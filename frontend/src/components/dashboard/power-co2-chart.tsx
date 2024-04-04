@@ -9,7 +9,7 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
-
+import socketIOClient from "socket.io-client";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -37,6 +37,35 @@ const PowerCo2Chart = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
+const lastDataRef = useRef(null); // 
+    // State and refs initialization remains the same
+
+        useEffect(() => {
+        const socket = socketIOClient(`${API_URL}/`);
+
+        socket.on("connect", () => {
+            console.log('WebSocket Connected');
+        });
+
+        socket.on("powerConsumptionUpdate", (newData) => {
+            console.log("Data received from WebSocket:", newData);
+            // Transform newData if necessary to match your chart's expected data structure
+            
+            // Compare the new data with the last data
+            if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
+                console.log("New data is different. Updating chart.");
+                setChartData(newData); // Update your chart data state
+                lastDataRef.current = newData; // Update the lastDataRef
+            } else {
+                console.log("Received data is the same as the last. No update needed.");
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+            console.log('WebSocket Disconnected');
+        };
+    }, []); // This effect runs once on mount
 
     const intervalButtons = [
         { label: "days", interval: "days" },
@@ -47,7 +76,7 @@ const PowerCo2Chart = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
-
+  
     const fetchData = async () => {
         try {
             // console.log('entity id here ',entityIdValue);

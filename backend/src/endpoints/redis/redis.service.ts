@@ -7,10 +7,19 @@ export class RedisService {
   private redisClient: Redis;
   private readonly CREDENTIALS_KEY = `global:credentials`;
   private readonly STORED_DATA_KEY = `global:storedData`;
+  
+//   private readonly REDIS_SERVER =  JSON.stringify(process.env.REDIS_SERVE);
+//   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
+ 
+//  constructor() {
+//     this.redisClient = new Redis({host: this.REDIS_SERVER, port: this.REDIS_PORT});
+
+//  }
+
 
   constructor() {
     this.redisClient = new Redis({
-      host: 'localhost',
+       host: 'localhost',
       port: 6379,
     });
   }
