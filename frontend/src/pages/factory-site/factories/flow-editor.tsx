@@ -232,7 +232,7 @@ const FlowEditor: React.FC<
         const newNode = {
           id: shopFloorNodeId,
           type: "shopFloor",
-          data: { label: `${latestShopFloor.name}`, type: "shopFloor" },
+          data: { label: `${latestShopFloor.name.value}`, type: "shopFloor" },
           position: { x: newXPosition, y: startY },
           style: { backgroundColor: "#faedc4", border: "none" },
         };

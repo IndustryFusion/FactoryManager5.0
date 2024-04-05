@@ -9,7 +9,11 @@ import HorizontalNavbar from "@/components/horizontal-navbar";
 import "../../styles/dashboard.css"
 import DashboardChart from "@/components/dashboard/dashboard-chart";
 import DashboardCards from "@/components/dashboard/dashboard-cards";
-import CombineSensorChart from "@/components/dashboard/senosor-linear-charts";
+const CombineSensorChart = dynamic(
+  () => import('@/components/dashboard/senosor-linear-charts'),
+  { ssr: false }
+);
+
 import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
