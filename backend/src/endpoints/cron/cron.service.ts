@@ -50,7 +50,7 @@ async handleFindAllEveryFiveSeconds() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
   if (!credentials) {
-    console.error('No credentials found');
+   
     return;
   }
 
@@ -59,7 +59,7 @@ async handleFindAllEveryFiveSeconds() {
     // Check if credentials have changed
     const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
     if (haveCredentialsChanged) {
-      console.log('Credentials have changed. Clearing stored data.');
+      // console.log('Credentials have changed. Clearing stored data.');
       // Delete stored data from Redis
       await this.redisService.saveData('storedData', null); // You can also implement a deleteData method in RedisService
       // Save the new credentials
@@ -80,81 +80,35 @@ async handleFindAllEveryFiveSeconds() {
     
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
-      console.log("Data has changed. Emitting event to notify frontend.");
+      // console.log("Data has changed. Emitting event to notify frontend.");
       this.emitDataChangeToClient(newData);
       await this.redisService.saveData('storedData', newData);
      
 
      
     } else {
-      console.log("Data unchanged. No need to emit event.");
+      // console.log("Data unchanged. No need to emit event.");
     }
   } catch (error) {
-    console.error(`Error in scheduled task: ${error.message}`);
+    // console.log(`Error in scheduled task: ${error.message}`);
   }
 }
 
-
- @Cron(CronExpression.EVERY_5_SECONDS)
-  async handlePowerConsumptionAndChartDataUpdates() {
-    const tokenDetails = await this.redisService.getTokenAndEntityId();
-    if (!tokenDetails) {
-      console.error('Token details not found in Redis.');
-      return;
-    }
-    const { token, entityId } = tokenDetails;
-
-    // Assuming a method exists to get types (e.g., 'days', 'weeks', 'months')
-    const types = ['days', 'weeks', 'months'];
-
-    for (const type of types) {
-      try {
-        const chartData = await this.powerConsumptionService.findChartData(entityId, type, token);
-        const chartDataKey = `chartData:${entityId}:${type}`;
-        const storedChartData = await this.redisService.getData(chartDataKey);
-
-        if (!isEqual(chartData, storedChartData)) {
-          console.log(`Chart data has changed for ${entityId} (${type}). Updating stored data and emitting event.`);
-          // Update stored chart data in Redis
-          await this.redisService.saveData(chartDataKey, chartData);
-          // Emit event with new chart data
-          this.powerConsumptionGateway.sendPowerConsumptionUpdate({ entityId, type, chartData });
-        }
-      } catch (error) {
-        console.error(`Failed to update chart data for ${entityId} (${type}): ${error.message}`);
-      }
-    }
-
-    // Handling the daily power consumption updates
-    try {
-      const consumptionData = await this.powerConsumptionService.findComsumtionPerDay(token);
-      const consumptionDataKey = 'powerConsumptionData';
-      const storedConsumptionData = await this.redisService.getData(consumptionDataKey);
-
-      if (!isEqual(consumptionData, storedConsumptionData)) {
-        console.log('Power consumption data has changed. Updating stored data and emitting event.');
-        // Update stored consumption data in Redis
-        await this.redisService.saveData(consumptionDataKey, consumptionData);
-        // Emit event with new consumption data
-        this.powerConsumptionGateway.sendPowerConsumptionUpdate(consumptionData);
-      }
-    } catch (error) {
-      console.error(`Failed to update daily power consumption data: ${error.message}`);
-    }
-  }
   
 @Cron(CronExpression.EVERY_5_SECONDS)
 async handlePowerConsumptionUpdate() {
     // Retrieve the token from Redis
     const tokenDetails = await this.redisService.getTokenAndEntityId();
     if (!tokenDetails) {
-        console.error('No token found in Redis.');
+        // console.error('No token found in Redis.');
         // Consider re-authentication logic here if necessary
         return;
     }
     const token = tokenDetails.token; // Use the retrieved token
+ 
 
     const currentData = await this.powerConsumptionService.findComsumtionPerDay(token);
+       console.log(currentData, "currentData")
     const storedDataKey = 'powerConsumptionData';
     const storedData = await this.redisService.getData(storedDataKey);
 

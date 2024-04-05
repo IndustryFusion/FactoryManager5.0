@@ -7,6 +7,7 @@ export class RedisService {
   private redisClient: Redis;
   private readonly CREDENTIALS_KEY = `global:credentials`;
   private readonly STORED_DATA_KEY = `global:storedData`;
+   private readonly TOKEN_PREFIX = 'token:';
   
 //   private readonly REDIS_SERVER =  JSON.stringify(process.env.REDIS_SERVE);
 //   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
@@ -62,9 +63,29 @@ export class RedisService {
     }
     return null;
   }
-  async saveData(key: string, data: any): Promise<void> {
- 
-  await this.redisClient.set(key, JSON.stringify(data), 'EX', 36000); 
-}
+  async saveData(key: string, data: any, ttl?: number): Promise<void> {
+    if (typeof ttl === 'number') {
+      await this.redisClient.set(key, JSON.stringify(data), 'EX', ttl);
+    } else {
+      await this.redisClient.set(key, JSON.stringify(data));
+    }
+  }
 
+  // Checks if the token has changed for the given key
+  async tokenHasChanged(key: string, newToken: string): Promise<boolean> {
+    const currentToken = await this.redisClient.get(`${this.TOKEN_PREFIX}${key}`);
+    return currentToken !== newToken;
+  }
+
+  // Saves data with an associated token to track changes
+  async saveDataWithToken(key: string, data: any, token: string, ttl?: number): Promise<void> {
+    // Save the data
+    if (typeof ttl === 'number') {
+      await this.redisClient.set(key, JSON.stringify(data), 'EX', ttl);
+    } else {
+      await this.redisClient.set(key, JSON.stringify(data));
+    }
+    // Associate the current token with this data
+    await this.redisClient.set(`${this.TOKEN_PREFIX}${key}`, token, 'EX', ttl);
+  }
 }

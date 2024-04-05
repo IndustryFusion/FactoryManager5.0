@@ -51,7 +51,7 @@ export class PgRestService {
           let storedData = await this.redisService.getData(storedDataKey) || {};
         
             if (!isEqual(response.data, storedData)) {
-              console.log("Data has changed. Emitting new data through WebSocket.");
+              // console.log("Data has changed. Emitting new data through WebSocket.");
               await this.redisService.saveData(storedDataKey, response.data); // Update stored data
               this.emitUpdate(response.data); // Emit only the new or updated data points
             } else {

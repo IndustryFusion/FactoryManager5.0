@@ -37,7 +37,7 @@ const PowerCo2Chart = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
-const lastDataRef = useRef(null); // 
+   const lastDataRef = useRef(null); // 
     // State and refs initialization remains the same
 
         useEffect(() => {
