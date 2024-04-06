@@ -1,5 +1,5 @@
 
-
+import dynamic from 'next/dynamic';
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { ChartData, ChartOptions,registerables  } from "chart.js";
 import { Chart } from "primereact/chart";
@@ -350,29 +350,23 @@ const calculateLimit = (intervalMinutes: number): number => {
     setLoading(false);
    
     // Filter the data points based on the skip value
-  const uniqueAndSortedDataPoints = factoryData
-        .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-        .filter((data, index, self) =>
-          index === self.findIndex((t) => t.observedAt === data.observedAt)
-        );
-      let labels = uniqueAndSortedDataPoints.map(data => formatLabel(new Date(data.observedAt)));
-      let dataPoints = uniqueAndSortedDataPoints.map(data => data.value ? Number(data.value) : null);
+   const uniqueAndSortedDataPoints = factoryData
+      .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
+      .filter((data, index, self) => index === self.findIndex((t) => t.observedAt === data.observedAt));
+    
+    let labels = uniqueAndSortedDataPoints.map(data => formatLabel(new Date(data.observedAt)));
+    let dataPoints = uniqueAndSortedDataPoints.map(data => data.value ? Number(data.value) : null);
 
-    const newDataset: Datasets = {
+    const newDataset = {
       label: attributeId, 
       data: dataPoints,
-     
       fill: false,
       borderColor: colors[index % colors.length].borderColor,
       backgroundColor: colors[index % colors.length].backgroundColor,
       tension: 0.4,
     };
-    const fetchedData = { newDataset, labels: generateLabels(new Date(), selectedInterval, dataPoints.length) };
-    // setDataCache(prevCache => ({ ...prevCache, [cacheKey]: fetchedData }));
-    
-   
 
-    return fetchedData;
+    return { newDataset, labels };
   } catch (error) {
     console.error("Error fetching asset data:", error);
     throw error;
@@ -380,7 +374,7 @@ const calculateLimit = (intervalMinutes: number): number => {
 };
 
 function formatLabel(date:Date) {
-  // Format date as desired, e.g., "YYYY-MM-DD HH:mm:ss"
+  // Format date: "YYYY-MM-DD HH:mm:ss"
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
 
@@ -440,6 +434,12 @@ let skipCounter = 0; // Initialize skip counter
       
       let entityId = entityIdValue;
       console.log("selected asset entityId ", entityId);
+      
+        // Clear existing chart data before fetching new
+      setChartData({
+        labels: [],
+        datasets: [],
+      });
 
       let attributeIds = await fetchAsset(entityId);
     
@@ -447,8 +447,6 @@ let skipCounter = 0; // Initialize skip counter
       if (attributeIds && attributeIds.length > 0) {
         setNoChartData(false)
         const chartData: ChartDataState = { labels: [], datasets: [] };
-        console.log("chartData:sensor ", chartData);
-
 
         for (let i = 0; i < attributeIds.length; i++) {
         if (attributeIds[i].includes('machine-state')) {
@@ -504,23 +502,31 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
   
  newData.forEach(dataItem => {
     const { observedAt, attributeId, value } = dataItem;
+
+
+  
     const modifiedAttributeId = `eq.${attributeId}`;
+  // Skip updates for the machine-state attribute
+        if (attributeId.includes('http://www.industry-fusion.org/fields#machine-state')) {
+    
+            return;
+        }
 
     // Find the correct dataset based on modifiedAttributeId
     const datasetIndex = currentChartData.datasets.findIndex(dataset => dataset.label === modifiedAttributeId);
     if (datasetIndex === -1) {
-      console.error("Dataset with label", modifiedAttributeId, "not found.");
+      // console.error("Dataset with label", modifiedAttributeId, "not found.");
       return; // Skip this data item if corresponding dataset not found
     }
 
-   const numericValue = parseFloat(value).toFixed(1);
+   const numericValue:number = parseFloat(value).toFixed(1);
 
     const label = formatLabel(new Date(observedAt));
 
-    const labelIndex = currentChartData.labels.findIndex(existingLabel => existingLabel === label);
+    const labelIndex = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
     if (labelIndex === -1) {
       // If the label doesn't exist, append it and ensure data integrity
-      currentChartData.labels.push(label);
+      currentChartData.labels?.push(label);
       // Ensure all datasets have a value for this new label
       currentChartData.datasets.forEach((dataset, index) => {
         if (index === datasetIndex) {
@@ -539,13 +545,13 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
   
 
   // Sort the chart data based on labels
-  const sortedIndices = currentChartData.labels.map((label:any, index:any) => ({ label, index }))
+  const sortedIndices = currentChartData.labels?.map((label:any, index:any) => ({ label, index }))
     .sort((a:any, b:any) => new Date(a.label).getTime() - new Date(b.label).getTime())
     .map(data => data.index);
 
-  const sortedLabels = sortedIndices.map(index => currentChartData.labels[index]);
+  const sortedLabels = sortedIndices?.map(index => currentChartData.labels[index]);
   currentChartData.datasets.forEach(dataset => {
-    dataset.data = sortedIndices.map(index => dataset.data[index]);
+    dataset.data = sortedIndices?.map(index => dataset.data[index]);
   });
 
   currentChartData.labels = sortedLabels;
@@ -554,19 +560,26 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
 }
 
 
-  useEffect(() => {
-    // Fetch data effect
+useEffect(() => {
     fetchDataAndAssign();
+
+    if (intervalId.current) {
+      clearInterval(intervalId.current);
+    }
+
+    if (autorefresh) {
+      intervalId.current = setInterval(fetchDataAndAssign, 10000); // Auto-refresh every 10 seconds
+    }
 
     return () => {
       if (intervalId.current) {
         clearInterval(intervalId.current);
       }
     };
-  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]); // Dependency array includes variables affecting data fetching
+  }, [entityIdValue, autorefresh]);
 
 useEffect(() => {
-
+  if (typeof window !== "undefined") {
   const socket = socketIOClient(`${API_URL}/`);
   socketRef.current = socket;
  
@@ -587,6 +600,7 @@ useEffect(() => {
             socketRef.current.disconnect();
         }
     };
+  }
 }, [data]); 
 
 const chartOptionsWithZoomPan = {
@@ -639,17 +653,12 @@ useEffect(() => {
         } else {
           console.log("is calling when eneityId changes");
 
-          fetchDataAndAssign();
+        fetchDataAndAssign ()
         }
       }
     }
     
-    return () => {
-          if (intervalId.current) {
-            clearInterval(intervalId.current);
-          }
-        };
-
+   
         
 
   }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);

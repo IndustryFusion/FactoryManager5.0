@@ -8,7 +8,7 @@ import React, {
 
 interface ShopFloor {
   id: string;
-  name: string;
+  name: any;
 }
 
 interface ShopFloorContextType {

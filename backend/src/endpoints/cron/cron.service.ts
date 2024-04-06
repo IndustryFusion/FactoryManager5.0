@@ -46,7 +46,7 @@ async handleFindAllEveryFiveSeconds() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
   if (!credentials) {
-    console.error('No credentials found');
+  
     return;
   }
 
