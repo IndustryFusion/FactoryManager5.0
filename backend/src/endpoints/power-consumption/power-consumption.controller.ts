@@ -10,11 +10,11 @@ export class PowerConsumptionController {
     private readonly redisService: RedisService) {}
 
   @Get()
-  async findComsumtionPerDay(@Req() req: Request) {
+  async findComsumtionPerDay(@Req() req: Request,assetId: string) {
     try {
       const token = await getSessionToken(req);
       
-      let response = this.powerConsumptionService.findComsumtionPerDay(token);
+      let response = this.powerConsumptionService.findComsumtionPerDay(token,assetId);
       return response;
     } catch(err) {
       throw new NotFoundException();

@@ -107,7 +107,7 @@ async handlePowerConsumptionUpdate() {
     const token = tokenDetails.token; // Use the retrieved token
  
 
-    const currentData = await this.powerConsumptionService.findComsumtionPerDay(token);
+    const currentData = await this.powerConsumptionService.findComsumtionPerDay(token,assetId);
        console.log(currentData, "currentData")
     const storedDataKey = 'powerConsumptionData';
     const storedData = await this.redisService.getData(storedDataKey);
