@@ -51,6 +51,7 @@ const DashboardChart = () => {
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isError, setIsError] = useState<boolean>(false);
     const { entityIdValue, setMachineStateData, autorefresh, setAllOnlineTime } = useDashboard();
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const [weeksResponse, setWeeksResponse] = useState({})
@@ -79,6 +80,29 @@ const DashboardChart = () => {
         } else {
             setNoChartData(true);
             console.log('No attribute set available');
+        }
+    }
+
+    const validateIfMachineIsNew = async ( response:string, attributeId:string, entityId:string ) => {
+        const responseOtherState = await axios.get(API_URL + `/pgrest`, {
+            params: {
+                attributeId: attributeId,
+                entityId: entityId,
+                order: "observedAt.desc",
+                limit: '1',
+                value: `neq.${response}`
+            },
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            withCredentials: true,
+        });
+        console.log(responseOtherState.data, "responsePgrest not value");
+        if(responseOtherState.data.length>0)
+        {
+            console.log(responseOtherState.data[0], "responsePgrest value --");
+            setIsError(true);
         }
     }
 
@@ -119,25 +143,9 @@ const DashboardChart = () => {
                 });
                 // console.log('response from else', response.data);
                 // console.log("what's the value here in response", response.data[0].value);
-
                 if (response.data[0].value) {
-                    let responsePgrest = await axios.get(API_URL + `/pgrest`, {
-                        params: {
-                            attributeId: attributeId,
-                            entityId: entityId,
-                            order: "observedAt.desc",
-                            limit: '1',
-                            value: `neq.${response.data[0].value}`
-                        },
-                        headers: {
-                            "Content-Type": "application/json",
-                            Accept: "application/json",
-                        },
-                        withCredentials: true,
-                    });
-                    console.log(responsePgrest, "responsePgrest not value");
-
-                }
+                validateIfMachineIsNew( response.data[0].value, attributeId, entityId)
+            }
 
                 setLastData(response.data);
             }
@@ -151,8 +159,7 @@ const DashboardChart = () => {
                         finalData[day].push(data);
                     }
                 })
-                console.log("finalData here", finalData);
-
+                console.log("finalData NewMachine here", finalData);
             }
 
             // if (selectedInterval === "weeks") {
@@ -402,6 +409,7 @@ const DashboardChart = () => {
                 if (!check) {
                     for (let j = i - 1; j >= 0; j--) {
                         let key2 = keys[j];
+                        console.log("when check failed");
                         // console.log('key2 ', key2);
                         const dateToCheck = moment(key);
                         const currentDate = moment().startOf('day');
@@ -452,15 +460,7 @@ const DashboardChart = () => {
             router.push("/login");
         } else {
             if (router.isReady) {
-                if (autorefresh === true) {
-                    console.log("is machine-chart autoreferssh");
-                    intervalId.current = setInterval(() => {
-                        fetchDataAndAssign();
-                    }, 10000);
-                } else {
-                    fetchDataAndAssign();
-                }
-
+                fetchDataAndAssign();
                 const documentStyle = getComputedStyle(document.documentElement);
                 const textColor = documentStyle.getPropertyValue('--text-color');
                 const textColorSecondary = documentStyle.getPropertyValue(
@@ -557,13 +557,14 @@ const DashboardChart = () => {
                 clearInterval(intervalId.current);
             }
         };
-    }, [router.isReady, checkFactory, entityIdValue, autorefresh, selectedInterval])
+    }, [router.isReady, checkFactory, entityIdValue, autorefresh, selectedInterval]);
 
 
     return (
         <div className="card h-auto" style={{ width: "37%" }}>
             <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
+            {isError && <p style={{color:"red"}}>"value_change_state record is not working</p>}
             <div className="interval-filter-container">
                 <p>Filter Interval</p>
                 <div
