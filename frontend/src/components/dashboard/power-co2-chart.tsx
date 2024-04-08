@@ -41,7 +41,7 @@ const PowerCo2Chart = () => {
     // State and refs initialization remains the same
 
         useEffect(() => {
-        const socket = socketIOClient(`${API_URL}/`);
+        const socket = socketIOClient(`${API_URL}/power-consumption/`);
 
         socket.on("connect", () => {
             console.log('WebSocket Connected');

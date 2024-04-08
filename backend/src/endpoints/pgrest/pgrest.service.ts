@@ -24,14 +24,14 @@ export class PgRestService {
   }
 
   async findAll(token : string, queryParams: any) {
-    console.log("queryparams ", queryParams)
+    // console.log("queryparams ", queryParams)
    // Check if credentials or query parameters have changed
  const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
   if (credentialsChanged) {
     await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
-    console.log("Credentials or queryParams have changed. Saving new values to Redis.");
+    // console.log("Credentials or queryParams have changed. Saving new values to Redis.");
   } else {
-    console.log("Credentials and queryParams unchanged. Skipping Redis update.");
+    // console.log("Credentials and queryParams unchanged. Skipping Redis update.");
   }
 
     try {
@@ -55,7 +55,7 @@ export class PgRestService {
               await this.redisService.saveData(storedDataKey, response.data); // Update stored data
               this.emitUpdate(response.data); // Emit only the new or updated data points
             } else {
-              console.log("Data unchanged. No need to emit.");
+              // console.log("Data unchanged. No need to emit.");
             }
       
             return response.data;

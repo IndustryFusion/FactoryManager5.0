@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable , Logger, OnModuleInit} from '@nestjs/common';
 import { Cron,CronExpression  } from '@nestjs/schedule';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
@@ -17,7 +17,10 @@ import { PowerConsumptionGateway } from '../power-consumption/power-consumption-
 import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
 @Injectable()
 
-export class CronService {
+export class CronService  
+// implements OnModuleInit {
+  {
+   private readonly logger = new Logger(CronService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly reactFlowService: ReactFlowService,
@@ -31,9 +34,9 @@ export class CronService {
     private readonly powerConsumptionService: PowerConsumptionService,
 
     ) {}
- onModuleInit() {
-    this.handleFindAllEveryFiveSeconds();
-  }
+//  onModuleInit() {
+//     this.handleFindAllEveryFiveSeconds();
+//   }
 
 private previousData: any = {};
 
@@ -93,34 +96,46 @@ async handleFindAllEveryFiveSeconds() {
     // console.log(`Error in scheduled task: ${error.message}`);
   }
 }
+// @Cron(CronExpression.EVERY_10_SECONDS) // Modify based on your actual requirements
+//   async handleChartDataUpdate() {
+//     try {
+//       const tokenDetails = await this.redisService.getTokenAndEntityId();
+//       if (!tokenDetails) {
+//         this.logger.warn('Token details not found in Redis.');
+//         return;
+//       }
 
-  
-@Cron(CronExpression.EVERY_5_SECONDS)
-async handlePowerConsumptionUpdate() {
-    // Retrieve the token from Redis
-    const tokenDetails = await this.redisService.getTokenAndEntityId();
-    if (!tokenDetails) {
-        // console.error('No token found in Redis.');
-        // Consider re-authentication logic here if necessary
-        return;
-    }
-    const token = tokenDetails.token; // Use the retrieved token
- 
+//       const { token, queryParams } = tokenDetails;
+//       let assetId =tokenDetails.entityId
+    
+//       if (!assetId || queryParams.assetId) {
+//         // this.logger.warn('Asset ID not found in token details.');
+//         return;
+//       }
 
-    const currentData = await this.powerConsumptionService.findComsumtionPerDay(token,assetId);
-       console.log(currentData, "currentData")
-    const storedDataKey = 'powerConsumptionData';
-    const storedData = await this.redisService.getData(storedDataKey);
+//       const types = ['days', 'weeks', 'months'];
+//       for (const type of types) {
+//         const chartData = await this.powerConsumptionService.findChartData(assetId, type, token);
+        
+//         // Fetch previous chart data for comparison
+//         const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
+//         if (!isEqual(previousChartData, chartData)) {
+//           // Update the stored chart data in Redis if there is a change
+//           await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
+//           this.emitChartDataUpdate(chartData, assetId, type);
+//         } else {
+//           // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+//         }
+//       }
+//     } catch (error) {
+//       this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
+//     }
+//   }
 
-    if (!isEqual(currentData, storedData)) {
-        console.log('Power consumption data has changed. Emitting update.', storedDataKey, currentData);
-        this.powerConsumptionGateway.sendPowerConsumptionUpdate(currentData);
-        await this.redisService.saveData(storedDataKey, currentData);
-    } else {
-        console.log('No change in power consumption data.');
-    }
-}
-
+//   private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
+//     this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
+//     this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
+//   }
 
     // Existing method that runs at the end of the day
   @Cron('0 0 * * *')

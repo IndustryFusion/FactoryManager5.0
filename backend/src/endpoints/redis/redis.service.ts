@@ -35,7 +35,7 @@ export class RedisService {
 }
 
   // Enhanced to include queryParams in the stored data
-  async saveTokenAndEntityId(token: string, queryParams: any, entityId: string): Promise<void> {
+    async saveTokenAndEntityId(token: string, queryParams: any, entityId: string): Promise<void> {
  
     await this.redisClient.set(this.CREDENTIALS_KEY, JSON.stringify({ token, queryParams, entityId }), 'EX', 36000);
   }
