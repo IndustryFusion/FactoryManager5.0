@@ -409,10 +409,10 @@ function formatLabel(date:Date) {
       .filter(attribute => attribute.value !== "machine-state"); 
 
     setAttributes(attributeLabels);
-    if (attributeLabels.length > 0) {
+    if (attributeLabels.length > 0  && !selectedAttribute) {
         setSelectedAttribute(attributeLabels[0].value);
         
-        setSelectedDatasetIndex(0);
+        // setSelectedDatasetIndex(0);
       }
 
 
@@ -461,7 +461,7 @@ let skipCounter = 0; // Initialize skip counter
           selectedInterval
         );
 
-
+          newDataset.label = newDataset.label.replace('eq.', '');
           // Exclude the dataset with the label "machine-state"
           newDataset.data = newDataset.data.slice(-10);
           chartData.labels = labels.slice(-10); // Adjust this line if labels should be handled differently
@@ -472,7 +472,7 @@ let skipCounter = 0; // Initialize skip counter
 
         setChartData(chartData);
         if (chartData.datasets.length > 0) {
-        setSelectedAttribute(chartData.datasets[0].label);
+        setSelectedAttribute(chartData.datasets[0].label.replace('eq.', ''));
       }
         
         console.log("apple ", data)
@@ -492,8 +492,9 @@ let skipCounter = 0; // Initialize skip counter
   }
 
 const handleAttributeChange = (e: any) => {
-  const modifiedAttributeName = `eq.http://www.industry-fusion.org/fields#${e.target.value}`;
+  const modifiedAttributeName = `http://www.industry-fusion.org/fields#${e.target.value}`;
   setSelectedAttribute(modifiedAttributeName);
+  // setSelectedAttribute(e.value); 
 };
 
 
@@ -505,7 +506,7 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
 
 
   
-    const modifiedAttributeId = `eq.${attributeId}`;
+    const modifiedAttributeId = `${attributeId}`;
   // Skip updates for the machine-state attribute
         if (attributeId.includes('http://www.industry-fusion.org/fields#machine-state')) {
     
@@ -684,7 +685,7 @@ useEffect(() => {
                   value={selectedAttribute}
                   options={attributes}
                   onChange={handleAttributeChange}
-                  placeholder="Please Select"
+                  placeholder={selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
                   filter
                   showClear
                   filterBy="label,value"
@@ -695,7 +696,7 @@ useEffect(() => {
                   <div className="custom-button">
                     <img src="/data-transfer.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
                    <span className="button-text">
-                    {selectedAttribute.replace('eq.http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
+                    {selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
                   </span>
                   </div>
                 </div>
