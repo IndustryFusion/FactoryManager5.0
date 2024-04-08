@@ -82,7 +82,7 @@ if (!tokenChanged) {
           console.log('startTime ',startTime);
           console.log('endTime ',endTime);
           labels.push(day.format('MMMM Do'));
-          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
+          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             let startValue = response.data[0].value;
@@ -120,7 +120,7 @@ if (!tokenChanged) {
           console.log('End:', formattedEndOfWeek);
           console.log();
           labels.push(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
-          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}&order=observedAt.asc&value=neq.0`;
+          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             console.log(`response from week ${i + 1} `,response.data);
@@ -159,7 +159,7 @@ if (!tokenChanged) {
           console.log();
           const monthName = moment(startOfMonth).format('MMMM');
           labels.push(monthName);
-          const url = this.timescaleUrl + `?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
+          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             let startValue = response.data[0].value;

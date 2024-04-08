@@ -7,6 +7,7 @@ import { getAlerts } from "../alert/alert-service";
 import axios from "axios";
 
 
+
 const DashboardCards: React.FC = () => {
 
     // const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
@@ -31,7 +32,7 @@ const DashboardCards: React.FC = () => {
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-
+    const moment = require('moment');
     const getNotifications = () => {
         const fetchAllAlerts = async () => {
             try {
@@ -48,8 +49,80 @@ const DashboardCards: React.FC = () => {
         fetchAllAlerts();
     }
 
+
+    const fetchPgRest =async ()=>{    
+     try{
+        const  response = await axios.get(API_URL + `/pgrest`, {
+            params: {
+                attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",        
+                entityId: entityIdValue,
+                order: "observedAt.asc",
+                limit: '1'
+            },
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            withCredentials: true,
+        });
+        console.log(response.data ,"pgrest data")
+
+     }catch(error){
+        console.log(error);
+        
+     }
+    }
+
+    const fetchData = async () => {
+        try {
+            let response = await axios.get(API_URL + '/value-change-state', {
+                params: {
+                    attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
+                    entityId: 'eq.'+ entityIdValue,
+                    order: "observedAt.desc",
+                    limit: '1'
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,       
+            }
+            )
+            
+            console.log(response.data[0].value, "value chnage response");
+            const responseArr = response.data;
+            if(response.data[0].value === "2"){
+                console.log(response.data[0].observedAt , "what's the value");
+
+                const timeValue = response.data[0].observedAt.split('T')[1].split('.')[0];
+                const dateTime = moment(response.data[0].observedAt);
+                const dateOnly = dateTime.format("YYYY-MM-DD");
+                console.log(dateOnly, "timeValue here");
+                const timeValueReceived  = findDifference(response.data[0].observedAt);
+                console.log(timeValueReceived , "timeValueReceived ");
+                
+                console.log( setDifference(findDifference(response.data[0].observedAt)),"difference here" );
+                
+               
+            }
+
+
+            if (!(response.data.length > 0)) {
+                fetchPgRest()
+            }
+            
+        } catch (error:any) {
+            console.error(error)
+        }
+    }
+
+
+
     useEffect(() => {
         let intervalId: any;
+
+        fetchData();
         const runningSince = () => {
             // Reverse the keys of the object
             // console.log("is coming here");
@@ -61,7 +134,7 @@ const DashboardCards: React.FC = () => {
                 }
             }
             const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
-            // console.log("reversedData", reversedData);
+            console.log("reversedData", reversedData);
 
             function hasKeysWithNoValues(obj: any) {
                 return Object.keys(obj).some(key => !obj[key]);
@@ -88,17 +161,18 @@ const DashboardCards: React.FC = () => {
 
 
                         const foundElement = dataArray.find((item: any) => item.prev_value === "2");
-                        // console.log("foundElement", foundElement);
+                        console.log("foundElement", foundElement);
 
-                        if (foundElement) {
-                            const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
-                            if (matchResult) {
-                                const time = matchResult[0];
-                                // console.log("time", time);
-                                setDifference(findDifference(time));
-                                break; // Exit the loop once the condition is met
-                            }
-                        }
+                        // if (foundElement) {
+                        //     const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
+
+                        //     if (matchResult) {
+                        //         const time = matchResult[0];
+                        //         // console.log("time", time);
+                        //         setDifference(findDifference(time));
+                        //         break; // Exit the loop once the condition is met
+                        //     }
+                        // }
                     }
                 }
             }
@@ -120,9 +194,12 @@ const DashboardCards: React.FC = () => {
                             newMinutes = 0;
                             newHours += 1;
                         }
+                        const timerValue = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+                        localStorage.setItem("runningTime", timerValue)
                         // Format the updated time
-                        return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+                        return timerValue
                     });
+
                 }, 1000)
                 setOnlineAverage(findOnlineAverage(allOnlineTime))
             }
@@ -130,6 +207,7 @@ const DashboardCards: React.FC = () => {
         }
 
         if (machineStateValue === "2") {
+            fetchData();
             runningSince();
         } else {
             setDifference("00:00:00")
@@ -152,7 +230,7 @@ const DashboardCards: React.FC = () => {
 
     }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
 
- 
+
     const getHasProperties = () => {
         const propertiesArray = [];
         for (const key in selectedAssetData) {
@@ -170,13 +248,13 @@ const DashboardCards: React.FC = () => {
                 setRelationsCount((prev: any) => prev + 1);
                 setChildCount((prev: any) => prev + 1);
             }
-            if(value.length > 0){
-               value.forEach(item => {
-                if (item.object !== "json-ld-1.1"){
-                    setChildCount((prev: any) => prev + 1);
-                    setRelationsCount((prev: any) => prev + 1); 
-                }
-               }) 
+            if (value.length > 0) {
+                value.forEach(item => {
+                    if (item.object !== "json-ld-1.1") {
+                        setChildCount((prev: any) => prev + 1);
+                        setRelationsCount((prev: any) => prev + 1);
+                    }
+                })
             }
         })
 
@@ -196,10 +274,10 @@ const DashboardCards: React.FC = () => {
                 withCredentials: true,
             });
             // console.log("parent relation response", response);
-           
-            response?.data.forEach(item =>{
-                if(item.id !== "json-ld-1.1"){
-                    setRelationsCount((prev: any) => prev + 1); 
+
+            response?.data.forEach(item => {
+                if (item.id !== "json-ld-1.1") {
+                    setRelationsCount((prev: any) => prev + 1);
                 }
             })
         } catch (error) {
@@ -262,7 +340,7 @@ const DashboardCards: React.FC = () => {
                                 <div className="flex gap-1">
                                     <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
                                     <span className="text-900 font-medium text-xl"
-                                    >child </span>
+                                    >Child </span>
                                 </div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
