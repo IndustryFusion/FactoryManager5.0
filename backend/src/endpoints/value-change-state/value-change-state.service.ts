@@ -21,9 +21,7 @@ export class ValueChangeStateService {
                 }
               })
             .join('&').replace('#','%23');
-      // console.log('queryString ',queryString);
       const url = this.timescaleUrl + '/value_change_state_entries?' + queryString;
-      // console.log('url ',url);
       const response = await axios.get(url, {headers});
       // console.log('response ',response.data)
       if (response.data) {
@@ -54,10 +52,10 @@ export class ValueChangeStateService {
           // console.log('endTime ',endTime);
           let key = day.format('MMMM Do');
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
-            finalData[key].push(response.data);
+            finalData[key].push(...response.data);
           }
         }
       } else if(type == 'weeks'){
@@ -76,10 +74,10 @@ export class ValueChangeStateService {
           // console.log();
           let key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
-            finalData[key].push(response.data);
+            finalData[key].push(...response.data);
           }
         }
       } else{
@@ -98,13 +96,14 @@ export class ValueChangeStateService {
           // console.log();
           const key = moment(startOfMonth).format('MMMM');
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
-            finalData[key].push(response.data);
+            finalData[key].push(...response.data);
           }
         }
       }
+      console.log('final data ',finalData);
       return finalData;
     }catch(err) {
       throw new NotFoundException(
