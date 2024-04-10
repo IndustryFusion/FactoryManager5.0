@@ -18,6 +18,8 @@ import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
 import { Toast } from "primereact/toast";
+import AssetManagement from "@/components/asset-management";
+import AssetManagementDialog from "@/components/asset-management";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -32,6 +34,8 @@ const FactoryOverview = () => {
   const [visible, setVisible] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editFactory, setEditFactory] = useState<string | undefined>("");
+  const [assetManageDialog, setAssetManageDialog] = useState(false);
+
 
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
@@ -132,9 +136,13 @@ const FactoryOverview = () => {
   const fileInputRef = useRef(null);
   const triggerFileInput = () => {
     // Trigger the hidden file input onClick of the button
+
     if (fileInputRef.current != null) {
       fileInputRef.current.click();
     }
+    setAssetManageDialog(true);
+    console.log("fileInputRef.current", fileInputRef.current);
+    
   };
 
   async function createAssets(body: any) {
@@ -146,7 +154,10 @@ const FactoryOverview = () => {
         },
         withCredentials: true,
       });
-      console.log(response);
+      // if(response.data?.status === 201 && response.data?.success=== true ){
+        // setAssetManageDialog(true);
+      // }
+      console.log("file uploaded ", response.data);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -232,6 +243,13 @@ const FactoryOverview = () => {
             onChange={handleFileChange}
             style={{ display: 'none' }} // Hide the file input
           />
+          {
+            assetManageDialog && 
+            < AssetManagementDialog 
+            assetManageDialogProp={assetManageDialog}
+            setAssetManageDialogProp={setAssetManageDialog}
+            />
+          }
         </div>
         <Button
           label="Create Factory"

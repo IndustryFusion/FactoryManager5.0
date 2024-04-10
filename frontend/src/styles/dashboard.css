@@ -2,8 +2,17 @@
 
 
 .dashboard-container,
-.dashboard-assets {
+.dashboard-assets ,
+.assets-table{
     font-family: "Inter", sans-serif !important;
+}
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+    background: #ecfeff;
+    color: #0e7490;
+}
+.p-datatable .p-datatable-tbody >  tr.p-selectable-row.p-highlight {
+    background: #ecfeff !important;
+    color: #0e7490 !important;
 }
 
 .card {
@@ -132,10 +141,7 @@
 textarea {
     resize: none;
 }
-.p-datatable .p-datatable-tbody > tr.p-highlight {
-    background: #ecfeff;
-    color: #0e7490;
-}
+
 .p-inputswitch .p-inputswitch-slider {
     background: #ced4da;
     transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
@@ -154,6 +160,17 @@ textarea {
     background: #007bff !important;
 }
 
+   
+.assets-table th {
+    text-align: left;
+        border: none;
+        font-weight: 600;
+        color: #212529;
+        background: #c6b9e2;
+        transition: box-shadow 0.15s;
+        font-size: 16px;
+   
+    }
 
 @media screen and (min-width: 1550px){
     .chart-content,
