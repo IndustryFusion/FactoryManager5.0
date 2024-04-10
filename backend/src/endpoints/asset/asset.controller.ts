@@ -15,7 +15,7 @@ export class AssetController {
       if (type) {
         return this.getAssetByType(type, token);
       } else {
-      console.log('im here')
+     
       return await this.assetService.getAssetData(token);
       }
     } catch (err) {

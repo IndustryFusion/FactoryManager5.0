@@ -46,18 +46,16 @@ export class PgRestService {
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
       
       const response = await axios.get(url, {headers});
-        if (response.data) {
-          let storedDataKey = `data:${queryParams.entityId}`; 
-          let storedData = await this.redisService.getData(storedDataKey) || {};
-        
+
+     if (response.data) {
+            let storedDataKey = `data:${queryParams.entityId}`;
+            let storedData = await this.redisService.getData(storedDataKey) || {};
+
             if (!isEqual(response.data, storedData)) {
-              // console.log("Data has changed. Emitting new data through WebSocket.");
-              await this.redisService.saveData(storedDataKey, response.data); // Update stored data
-              this.emitUpdate(response.data); // Emit only the new or updated data points
-            } else {
-              // console.log("Data unchanged. No need to emit.");
+                await this.redisService.saveData(storedDataKey, response.data);
+                this.emitUpdate(response.data);
             }
-      
+
             return response.data;
       } else {
         throw new NotFoundException('Data not found.');

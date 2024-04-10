@@ -21,24 +21,28 @@ export class RedisService {
   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
 
   constructor() {
-    this.redisClient = new Redis({host: this.REDIS_SERVER, port: +this.REDIS_PORT});
+    this.redisClient = new Redis({host: "localhost", port: 6379});
   }
-
   async credentialsChanged(token: string, queryParams: any, entityId: string): Promise<boolean> {
-  const currentCredentials = await this.getTokenAndEntityId();
-  if (!currentCredentials) return true; // If there are no credentials, they "changed"
-  
-  // Compare the current credentials with the new ones
-  return !(
-           currentCredentials.entityId === entityId &&
-           isEqual(currentCredentials.queryParams, queryParams));
-}
+    const currentCredentials = await this.getTokenAndEntityId();
+    if (!currentCredentials) return true; // If there are no credentials, they "changed"
+
+    // Compare the current credentials with the new ones
+    return !(
+      currentCredentials.entityId === entityId &&
+      isEqual(currentCredentials.queryParams, queryParams)
+    );
+  }
 
   // Enhanced to include queryParams in the stored data
-    async saveTokenAndEntityId(token: string, queryParams: any, entityId: string): Promise<void> {
- 
-    await this.redisClient.set(this.CREDENTIALS_KEY, JSON.stringify({ token, queryParams, entityId }), 'EX', 36000);
-  }
+   async saveTokenAndEntityId(token: string, queryParams: any, entityId: string, attributeId?: string): Promise<void> {
+    const dataToStore = { token, queryParams, entityId };
+    if (attributeId) {
+        dataToStore['attributeId'] = attributeId;
+    }
+    await this.redisClient.set(this.CREDENTIALS_KEY, JSON.stringify(dataToStore), 'EX', 36000);
+}
+
 
   // Returns an enhanced object including queryParams
   async getTokenAndEntityId(): Promise<{ token: string; queryParams: any; entityId: string } | null> {

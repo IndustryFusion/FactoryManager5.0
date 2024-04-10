@@ -38,6 +38,7 @@ export class CronService
 //     this.handleFindAllEveryFiveSeconds();
 //   }
 
+
 private previousData: any = {};
 
 
@@ -47,56 +48,49 @@ private emitDataChangeToClient(data: any) {
   this.pgrestGatway.sendUpdate(data);
 }
 
-@Cron(CronExpression.EVERY_5_SECONDS)
-async handleFindAllEveryFiveSeconds() {
-
+@Cron(CronExpression.EVERY_SECOND)
+async handleFindAllEverySecond() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
   if (!credentials) {
-   
     return;
   }
 
   const { token, queryParams } = credentials;
 
-    // Check if credentials have changed
-    const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
-    if (haveCredentialsChanged) {
-      // console.log('Credentials have changed. Clearing stored data.');
-      // Delete stored data from Redis
-      await this.redisService.saveData('storedData', null); 
-      // Save the new credentials
-      await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
-    }
+  // console.log(queryParams, "gggg");
+
+  // Check if credentials have changed
+  const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
+  if (haveCredentialsChanged) {
+    await this.redisService.saveData('storedData', null); // Clear stored data
+    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId); // Save new credentials
+  }
 
   try {
-  
-    const newData = await this.pgRestService.findAll(token, queryParams);
-     let storedData = await this.redisService.getData('storedData');
-  
-    
-    // // Set the previousData to newData the first time data is fetched
-    // if (Object.keys(storedData).length === 0) {
-    //   console.log("Setting initial previousData");
-    //   storedData = newData;
-    // }
-    
+    // Update queryParams to limit the result to 1
+    const modifiedQueryParams = { ...queryParams, limit: 5, attributeId: queryParams.attributeId !== 'eq.http://www.industry-fusion.org/fields#machine-state' ? queryParams.attributeId : undefined };
+    const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
+    let storedData = await this.redisService.getData('storedData');
+
+    // Set the previousData to newData the first time data is fetched
+    if (Object.keys(storedData).length === 0) {
+      storedData = newData;
+    }
+
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
-      // console.log("Data has changed. Emitting event to notify frontend.");
       this.emitDataChangeToClient(newData);
       await this.redisService.saveData('storedData', newData);
-     
-
-     
-    } else {
-      // console.log("Data unchanged. No need to emit event.");
     }
   } catch (error) {
-    // console.log(`Error in scheduled task: ${error.message}`);
+    // Handle error
   }
 }
-@Cron(CronExpression.EVERY_5_SECONDS) // Modify based on your actual requirements
+
+
+
+@Cron(CronExpression.EVERY_SECOND) 
 async handleChartDataUpdate() {
   try {
     const tokenDetails = await this.redisService.getTokenAndEntityId();
@@ -106,7 +100,10 @@ async handleChartDataUpdate() {
     }
 
     const { token, queryParams } = tokenDetails;
+    // console.log(tokenDetails, "kkkk")
     let assetId = tokenDetails.entityId;
+
+
 
     if (!assetId || queryParams.assetId) {
       // this.logger.warn('Asset ID not found in token details.');

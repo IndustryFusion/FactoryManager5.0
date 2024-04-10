@@ -80,12 +80,12 @@ export class PowerConsumptionService {
           const day = moment().subtract(i, 'days').startOf('day');
           let startTime = day.format().split('+')[0] + '-00:00';
           let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
-          console.log('startTime ',i, startTime);
-          console.log('endTime ',i, endTime);
+          // console.log('startTime ',i, startTime);
+          // console.log('endTime ',i, endTime);
           labels.push(day.format('MMMM Do'));
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
-          console.log("labels",response.data)
+          // console.log("labels",response.data)
           if(response.data.length > 0){
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
@@ -132,7 +132,7 @@ export class PowerConsumptionService {
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
-            console.log(`response from week ${i + 1} `,response.data);
+            // console.log(`response from week ${i + 1} `,response.data);
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
@@ -175,8 +175,8 @@ export class PowerConsumptionService {
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
-            powerConsumption.push(endValue);
-            emission.push((endValue * 485) / 1000);
+            powerConsumption.push(finalValue);
+            emission.push((finalValue * 485) / 1000);
           } else {
             powerConsumption.push(0);
             emission.push(0);

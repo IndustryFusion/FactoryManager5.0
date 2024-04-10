@@ -88,8 +88,8 @@ const PowerCo2Chart = () => {
             lastDataRef.current = newData;
 
             // Log the index at which the data changed
-            console.log(`Data changed at index ${currentDayIndex}`);
-
+            // console.log(`Data changed at index ${currentDayIndex}`);
+            console.log(updatedChartData, "lllll")
             return updatedChartData;
         });
 
@@ -179,6 +179,9 @@ const PowerCo2Chart = () => {
             };
             const options = {
                 maintainAspectRatio: false,
+                 animation: {
+                    duration: 0, 
+                    },
                 aspectRatio: 0.6,
                 plugins: {
                     legend: {
