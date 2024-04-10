@@ -589,7 +589,6 @@ useEffect(() => {
         try {
             const transformedData = updateChartDataWithSocketData(data, updatedData);
             setChartData(transformedData);
-            console.log("apple2 ", data)
         } catch (error) {
             console.error("Error processing data update:", error);
         }
