@@ -341,8 +341,8 @@ const DashboardChart = () => {
                 console.log('groupedByDate ',groupedByDate);
                 if (data[key].length > 1) {
                     for (let idx = 1; idx < data[key].length; idx++) {
-                        let startTime = data[key][idx - 1].observedAt.split('.')[0];
-                        let endTime = data[key][idx].observedAt.split('.')[0];
+                        let startTime = moment(data[key][idx - 1].observedAt.split('.')[0]);
+                        let endTime = moment(data[key][idx].observedAt.split('.')[0]);
                         const differenceInSeconds = endTime.diff(startTime, 'seconds');
                         let type = data[key][idx - 1].value == '0' ? 'offline' : 'online';
                         let check = false;
