@@ -64,7 +64,7 @@ async handleFindAllEveryFiveSeconds() {
     if (haveCredentialsChanged) {
       // console.log('Credentials have changed. Clearing stored data.');
       // Delete stored data from Redis
-      await this.redisService.saveData('storedData', null); // You can also implement a deleteData method in RedisService
+      await this.redisService.saveData('storedData', null); 
       // Save the new credentials
       await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
     }
@@ -72,7 +72,7 @@ async handleFindAllEveryFiveSeconds() {
   try {
   
     const newData = await this.pgRestService.findAll(token, queryParams);
-    let storedData = await this.redisService.getData('storedData');
+     let storedData = await this.redisService.getData('storedData');
   
     
     // // Set the previousData to newData the first time data is fetched
@@ -96,46 +96,49 @@ async handleFindAllEveryFiveSeconds() {
     // console.log(`Error in scheduled task: ${error.message}`);
   }
 }
-// @Cron(CronExpression.EVERY_10_SECONDS) // Modify based on your actual requirements
-//   async handleChartDataUpdate() {
-//     try {
-//       const tokenDetails = await this.redisService.getTokenAndEntityId();
-//       if (!tokenDetails) {
-//         this.logger.warn('Token details not found in Redis.');
-//         return;
-//       }
+@Cron(CronExpression.EVERY_5_SECONDS) // Modify based on your actual requirements
+async handleChartDataUpdate() {
+  try {
+    const tokenDetails = await this.redisService.getTokenAndEntityId();
+    if (!tokenDetails) {
+      this.logger.warn('Token details not found in Redis.');
+      return;
+    }
 
-//       const { token, queryParams } = tokenDetails;
-//       let assetId =tokenDetails.entityId
+    const { token, queryParams } = tokenDetails;
+    let assetId = tokenDetails.entityId;
+
+    if (!assetId || queryParams.assetId) {
+      // this.logger.warn('Asset ID not found in token details.');
+      return;
+    }
+
+    // We only handle the "days" type here
+    const type = 'days';
+    const chartData = await this.powerConsumptionService.findChartData(assetId, type, token);
     
-//       if (!assetId || queryParams.assetId) {
-//         // this.logger.warn('Asset ID not found in token details.');
-//         return;
-//       }
+    // Fetch previous chart data for comparison
+    const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
+    if (!isEqual(previousChartData, chartData)) {
+      // Update the stored chart data in Redis if there is a change
+      await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
+      this.emitChartDataUpdate(chartData, assetId, type);
+    } else {
+      this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+    }
+  } catch (error) {
+    this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
+  }
+}
 
-//       const types = ['days', 'weeks', 'months'];
-//       for (const type of types) {
-//         const chartData = await this.powerConsumptionService.findChartData(assetId, type, token);
-        
-//         // Fetch previous chart data for comparison
-//         const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
-//         if (!isEqual(previousChartData, chartData)) {
-//           // Update the stored chart data in Redis if there is a change
-//           await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
-//           this.emitChartDataUpdate(chartData, assetId, type);
-//         } else {
-//           // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
-//         }
-//       }
-//     } catch (error) {
-//       this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
-//     }
-//   }
+private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
+  // Emit only if type is 'days'
+  if (type === 'days') {
+    this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
+    this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
+  }
+}
 
-//   private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
-//     this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
-//     this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
-//   }
 
     // Existing method that runs at the end of the day
   @Cron('0 0 * * *')

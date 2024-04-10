@@ -106,7 +106,7 @@ const [data, setChartData] = useState<ChartDataState>({
   const socketRef = useRef<any>(null);
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
-  const [selectedInterval, setSelectedInterval] = useState<number>(120); // Default selected interval
+  const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -310,7 +310,7 @@ function generateLabels(
 }
 
 const calculateLimit = (intervalMinutes: number): number => {
-  const pointsPerMinute = 10; 
+  const pointsPerMinute = 1; 
   return pointsPerMinute * intervalMinutes; // Adjusted to reflect no skipping
 };
 
@@ -520,7 +520,8 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
       return; // Skip this data item if corresponding dataset not found
     }
 
-   const numericValue:number = parseFloat(value).toFixed(1);
+  //  const numericValue:number = parseFloat(value).toFixed(1);
+     const numericValue:number = parseFloat(value)
 
     const label = formatLabel(new Date(observedAt));
 

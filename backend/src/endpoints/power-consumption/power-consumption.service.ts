@@ -66,7 +66,7 @@ export class PowerConsumptionService {
       const credentialsChanged = await this.redisService.credentialsChanged(token, { assetId, type }, assetId);
       if (credentialsChanged) {
           await this.redisService.saveTokenAndEntityId(token, { assetId, type }, assetId);
-          console.log("Credentials or queryParams have changed. Saving new values to Redis.");
+          // console.log("Credentials or queryParams have changed. Saving new values to Redis.");
       }
 
       // Try fetching cached data first
@@ -83,19 +83,25 @@ export class PowerConsumptionService {
           console.log('startTime ',i, startTime);
           console.log('endTime ',i, endTime);
           labels.push(day.format('MMMM Do'));
-          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc`;
+          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           console.log("labels",response.data)
           if(response.data.length > 0){
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
-            console.log("startValue", i, startValue)
-            console.log("endValue", i, endValue)
+              if (i === 0) { // Check if it's the current day
+                let modValue = Math.abs(Number(startValue) - Number(endValue));
+                powerConsumption.push(modValue);
+                emission.push((modValue * 485) / 1000);
+             } else {
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
-            console.log(finalValue, i, "hui hui")
-            powerConsumption.push(endValue);
-            emission.push((endValue * 485) / 1000);
-          } else {
+            
+            powerConsumption.push(finalValue);
+            emission.push((finalValue * 485) / 1000);
+         } 
+        } 
+         
+         else {
             powerConsumption.push(0);
             emission.push(0);
           }
@@ -130,8 +136,8 @@ export class PowerConsumptionService {
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
-            powerConsumption.push(endValue);
-            emission.push((endValue * 485) / 1000);
+            powerConsumption.push(finalValue);
+            emission.push((finalValue * 485) / 1000);
           } else {
             powerConsumption.push(0);
             emission.push(0);
@@ -147,47 +153,47 @@ export class PowerConsumptionService {
           powerConsumption,
           emission
         }
-      // } else{
-      //   for (let i = 5; i >= 0; i--) {
-      //     // Calculate the start and end of the current month
-      //     const startOfMonth = moment().clone().subtract(i, 'months').startOf('month');
-      //     const endOfMonth = moment().clone().subtract(i, 'months').endOf('month');
+      } else{
+        for (let i = 5; i >= 0; i--) {
+          // Calculate the start and end of the current month
+          const startOfMonth = moment().clone().subtract(i, 'months').startOf('month');
+          const endOfMonth = moment().clone().subtract(i, 'months').endOf('month');
       
-      //     // Format the start and end dates
-      //     const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
-      //     const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
+          // Format the start and end dates
+          const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
+          const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
       
-      //     // console.log(`Month ${i + 1}:`);
-      //     // console.log('Start:', formattedStartOfMonth);
-      //     // console.log('End:', formattedEndOfMonth);
-      //     // console.log();
-      //     const monthName = moment(startOfMonth).format('MMMM');
-      //     labels.push(monthName);
-      //     const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
-      //     const response = await axios.get(url, {headers});
-      //     if(response.data.length > 0){
-      //       let startValue = response.data[0].value;
-      //       let endValue = response.data[response.data.length - 1].value;
-      //       let finalValue = Math.abs(Number(startValue) - Number(endValue));
-      //       powerConsumption.push(endValue);
-      //       emission.push((endValue * 485) / 1000);
-      //     } else {
-      //       powerConsumption.push(0);
-      //       emission.push(0);
-      //     }
-      //   }
-      //   // console.log('labels for months ',labels);
-      //   // console.log('powerConsumption ',powerConsumption);
-      //   // console.log('emission ',emission);
-      //   await this.redisService.saveData(redisKey, { labels, powerConsumption, emission });
+          // console.log(`Month ${i + 1}:`);
+          // console.log('Start:', formattedStartOfMonth);
+          // console.log('End:', formattedEndOfMonth);
+          // console.log();
+          const monthName = moment(startOfMonth).format('MMMM');
+          labels.push(monthName);
+          const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
+          const response = await axios.get(url, {headers});
+          if(response.data.length > 0){
+            let startValue = response.data[0].value;
+            let endValue = response.data[response.data.length - 1].value;
+            let finalValue = Math.abs(Number(startValue) - Number(endValue));
+            powerConsumption.push(endValue);
+            emission.push((endValue * 485) / 1000);
+          } else {
+            powerConsumption.push(0);
+            emission.push(0);
+          }
+        }
+        // console.log('labels for months ',labels);
+        // console.log('powerConsumption ',powerConsumption);
+        // console.log('emission ',emission);
+        await this.redisService.saveData(redisKey, { labels, powerConsumption, emission });
       
-      //   return {
-      //     labels,
-      //     powerConsumption,
-      //     emission
-      //   }
-      // }
+        return {
+          labels,
+          powerConsumption,
+          emission
+        }
       }
+      
     }catch(err) {
       throw new NotFoundException(
         `Failed to fetch repository data: ${err.message}`,
