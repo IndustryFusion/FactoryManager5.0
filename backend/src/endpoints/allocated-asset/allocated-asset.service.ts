@@ -157,34 +157,37 @@ export class AllocatedAssetService {
         'Accept': 'application/ld+json'
       };
       //fetch the allocated assets from scorpio
-      const fetchUrl = `${this.scorpioUrl}/urn:ngsi-ld:allocated-assets-store`;
+      const fetchUrl = `${this.scorpioUrl}/?idPattern=urn:ngsi-ld:.*.:allocated-assets&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+
       let response = await axios.get(fetchUrl, {
         headers
       });
+    // console.log(response, "response of all allocated asset")
+      return response.data;
       
-      let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
-      let finalArray = [];
-      if (Array.isArray(assetIds) && assetIds.length > 0) {
-        for (let i = 0; i < assetIds.length; i++) {
-          let id = assetIds[i];
-          const assetData = await this.assetService.getAssetDataById(id, token);
-          const finalData = {
-            id,
-            product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-          };
-          finalArray.push(finalData);
-        }
-      } else if(assetIds && assetIds.includes('urn')){
-        const assetData = await this.assetService.getAssetDataById(assetIds, token);
-        const finalData = {
-          id: assetIds,
-          product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-        };
-        finalArray.push(finalData);
-      }
-      return finalArray;
+      // let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
+      // let finalArray = [];
+      // if (Array.isArray(assetIds) && assetIds.length > 0) {
+      //   for (let i = 0; i < assetIds.length; i++) {
+      //     let id = assetIds[i];
+      //     const assetData = await this.assetService.getAssetDataById(id, token);
+      //     const finalData = {
+      //       id,
+      //       product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
+      //       asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+      //     };
+      //     finalArray.push(finalData);
+      //   }
+      // } else if(assetIds && assetIds.includes('urn')){
+      //   const assetData = await this.assetService.getAssetDataById(assetIds, token);
+      //   const finalData = {
+      //     id: assetIds,
+      //     product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
+      //     asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+      //   };
+      //   finalArray.push(finalData);
+      // }
+      // return finalArray;
     } catch(err) {
       return err;
     }

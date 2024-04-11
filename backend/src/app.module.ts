@@ -43,6 +43,8 @@ import { OnboardingAssetController } from './endpoints/onboarding-asset/onboardi
 import { OnboardingAssetService } from './endpoints/onboarding-asset/onboarding-asset.service';
 import { RedisService } from './endpoints/redis/redis.service';
 import { ValueChangeStateGateway } from './endpoints/value-change-state/value-change-state.gateway';
+import { PowerConsumptionGateway } from './endpoints/power-consumption/power-consumption-gateway';
+
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
 console.log('mongoURI ',mongoURI)
@@ -101,7 +103,8 @@ console.log('FactorySite ',FactorySite)
     OnboardingAssetService,
     PgRestService,
     RedisService,
-    ValueChangeStateGateway
+    ValueChangeStateGateway,
+    PowerConsumptionGateway
   ]
 })
 export class AppModule {

@@ -11,7 +11,25 @@
     background: #ecfeff !important;
     color: #0e7490 !important;
 }
-
+.factory-table th{
+    display: none;
+}
+.factory-table table{
+    border:1px solid #8a8282;
+}
+.factory-table tr td{
+    border: 0.1px solid #8a828245;
+}
+.factory-urn-text{
+  font-size: 13.2px;
+  width: 150px;
+}
+.factory-id-text{
+    font-weight: 600;
+    font-size: 14px;
+    width: 175px;
+    background-color: #ffe0c7;
+}
 /* .p-datatable .p-datatable-tbody >  tr.p-selectable-row.p-highlight {
     background: #ecfeff !important;
     color: #0e7490 !important;
