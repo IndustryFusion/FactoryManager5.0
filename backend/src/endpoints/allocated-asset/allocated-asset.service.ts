@@ -20,15 +20,13 @@ export class AllocatedAssetService {
       let assetArr = [];
       let reactData = await this.reactFlowService.findOne(factoryId);
       if(reactData && reactData.factoryData) {
-        let edges = reactData.factoryData['edges'];
-        for(let i = 0; i < edges.length; i++){
-          let obj = edges[i];
-          if(obj.target.includes('asset') && !obj.target.includes('relation')){
-            assetArr.push(obj.target.split('_')[1]);
-          }else if(obj.target.includes('relation')){
-            assetArr.push(obj.target.split('_')[3]);
+        let nodes = reactData.factoryData['nodes'];
+        nodes.forEach(data => {
+          if(data.id.startsWith('asset')){
+            let assetId = data.id.split('_')[1];
+            assetArr.push(assetId);
           }
-        }
+        })
       }
       assetArr = [...new Set(assetArr)];
       if (assetArr.length > 0) {

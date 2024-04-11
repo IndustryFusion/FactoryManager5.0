@@ -13,6 +13,8 @@ import { isEqual } from 'lodash';
 import { Server } from 'socket.io';
 import { WebSocketServer } from '@nestjs/websockets';
 import { PgRestGateway } from '../pgrest/pgrest.gatway';
+import { ValueChangeStateService } from '../value-change-state/value-change-state.service';
+import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
 @Injectable()
 
 export class CronService {
@@ -25,7 +27,8 @@ export class CronService {
     private readonly pgRestService: PgRestService,
     private readonly redisService : RedisService,
     private readonly pgrestGatway : PgRestGateway,
-
+    private readonly valueChangeStateService : ValueChangeStateService,
+    private readonly valueChangeStateGateway : ValueChangeStateGateway,
     ) {}
  onModuleInit() {
     this.handleFindAllEveryFiveSeconds();
@@ -90,8 +93,30 @@ async handleFindAllEveryFiveSeconds() {
   }
 }
 
+@Cron('* * * * *')
+async handleMachineStateRefresh(){
+  let machineStateParams = await this.redisService.getData('machine-state-params');
+  console.log('machineStateParams ', machineStateParams);
+  if(machineStateParams && machineStateParams.type == 'days'){
+    let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
+    console.log('newData ', newData);
+    let storedData = await this.redisService.getData('machine-state-data');
+    console.log('storedData ', storedData);
+    if(storedData){
+      if(!isEqual(newData, storedData)){
+        console.log('inside not equal');
+        await this.redisService.saveData('machine-state-data',newData);
+        // call web socket
+        this.valueChangeStateGateway.sendUpdate(newData);
+      }
+    }else{
+      console.log('inside else condition');
+      await this.redisService.saveData('machine-state-data',newData);
+    }
+  }
+}
 
-    // Existing method that runs at the end of the day
+  // Existing method that runs at the end of the day
   @Cron('0 0 * * *')
   async handleCron() {
     console.log('time ', new Date());
