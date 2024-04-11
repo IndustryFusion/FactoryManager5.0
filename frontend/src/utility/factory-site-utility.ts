@@ -581,6 +581,24 @@ export const fetchAllocatedAssets = async (factoryId:string)=> {
   }
 };
 
+export const fetchAllAllocatedAssets = async () =>{
+  try{
+    const response = await axios.get(`${API_URL}/allocated-asset`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    console.log(response, " all allocated asset data");
+    return response.data;
+  }catch (error) {
+    console.error("Error fetching all allocated assets:", error);
+    throw new Error("Failed to fetch allocated assets");
+  }
+
+}
+
 
 
 type ConsoleMethod = (message?: any, ...optionalParams: any[]) => void;
