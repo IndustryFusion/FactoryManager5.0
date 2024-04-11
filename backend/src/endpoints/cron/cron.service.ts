@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable , Logger, OnModuleInit} from '@nestjs/common';
 import { Cron,CronExpression  } from '@nestjs/schedule';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
@@ -13,9 +13,17 @@ import { isEqual } from 'lodash';
 import { Server } from 'socket.io';
 import { WebSocketServer } from '@nestjs/websockets';
 import { PgRestGateway } from '../pgrest/pgrest.gatway';
+import { ValueChangeStateService } from '../value-change-state/value-change-state.service';
+import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
+import { PowerConsumptionGateway } from '../power-consumption/power-consumption-gateway';
+import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
+
 @Injectable()
 
-export class CronService {
+export class CronService  
+// implements OnModuleInit {
+  {
+   private readonly logger = new Logger(CronService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly reactFlowService: ReactFlowService,
@@ -25,11 +33,15 @@ export class CronService {
     private readonly pgRestService: PgRestService,
     private readonly redisService : RedisService,
     private readonly pgrestGatway : PgRestGateway,
-
+    private readonly valueChangeStateService : ValueChangeStateService,
+    private readonly valueChangeStateGateway : ValueChangeStateGateway,
+    private readonly powerConsumptionGateway: PowerConsumptionGateway,
+    private readonly powerConsumptionService: PowerConsumptionService,
     ) {}
- onModuleInit() {
-    this.handleFindAllEveryFiveSeconds();
-  }
+//  onModuleInit() {
+//     this.handleFindAllEveryFiveSeconds();
+//   }
+
 
 private previousData: any = {};
 
@@ -40,58 +52,125 @@ private emitDataChangeToClient(data: any) {
   this.pgrestGatway.sendUpdate(data);
 }
 
-@Cron(CronExpression.EVERY_5_SECONDS)
-async handleFindAllEveryFiveSeconds() {
-
+@Cron(CronExpression.EVERY_SECOND)
+async handleFindAllEverySecond() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
   if (!credentials) {
-  
     return;
   }
 
   const { token, queryParams } = credentials;
+  // console.log(credentials, "ppppp")
 
-    // Check if credentials have changed
-    const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
-    if (haveCredentialsChanged) {
-      console.log('Credentials have changed. Clearing stored data.');
-      // Delete stored data from Redis
-      await this.redisService.saveData('storedData', null); // You can also implement a deleteData method in RedisService
-      // Save the new credentials
-      await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
-    }
+  // console.log(queryParams, "gggg");
+
+  // Check if credentials have changed
+  const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
+  if (haveCredentialsChanged) {
+    await this.redisService.saveData('storedData', null); // Clear stored data
+    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); // Save new credentials
+  }
 
   try {
-  
-    const newData = await this.pgRestService.findAll(token, queryParams);
+    // Update queryParams to limit the result to 1
+    const modifiedQueryParams = { ...queryParams, limit: 1  };
+    const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
+
+    // console.log("modifiedQueryParams ", modifiedQueryParams)
     let storedData = await this.redisService.getData('storedData');
-  
-    
-    // // Set the previousData to newData the first time data is fetched
-    // if (Object.keys(storedData).length === 0) {
-    //   console.log("Setting initial previousData");
-    //   storedData = newData;
-    // }
-    
+
+    // Set the previousData to newData the first time data is fetched
+    if (Object.keys(storedData).length === 0) {
+      storedData = newData;
+    }
+
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
-      console.log("Data has changed. Emitting event to notify frontend.");
       this.emitDataChangeToClient(newData);
+      // console.log("changed", newData, )
       await this.redisService.saveData('storedData', newData);
-     
-
-     
-    } else {
-      console.log("Data unchanged. No need to emit event.");
     }
   } catch (error) {
-    console.error(`Error in scheduled task: ${error.message}`);
+    // Handle error
   }
 }
 
 
-    // Existing method that runs at the end of the day
+
+@Cron(CronExpression.EVERY_10_SECONDS) 
+async handleChartDataUpdate() {
+  try {
+    const tokenDetails = await this.redisService.getTokenAndEntityId();
+    if (!tokenDetails) {
+      // this.logger.warn('Token details not found in Redis.');
+      return;
+    }
+
+    const { token, queryParams } = tokenDetails;
+    // console.log(tokenDetails, "kkkk")
+    let assetId = tokenDetails.entityId;
+
+
+
+    if (!assetId || queryParams.assetId) {
+      // this.logger.warn('Asset ID not found in token details.');
+      return;
+    }
+
+    // We only handle the "days" type here
+    const type = 'days';
+    const chartData = await this.powerConsumptionService.findChartData(assetId, type, token);
+    
+    // Fetch previous chart data for comparison
+    const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
+    if (!isEqual(previousChartData, chartData)) {
+
+
+
+      // Update the stored chart data in Redis if there is a change
+      await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
+      this.emitChartDataUpdate(chartData, assetId, type);
+    } else {
+      // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+    }
+  } catch (error) {
+    this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
+  }
+}
+
+private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
+  // Emit only if type is 'days'
+  if (type === 'days') {
+    this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
+    this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
+  }
+}
+
+@Cron('* * * * *')
+async handleMachineStateRefresh(){
+  let machineStateParams = await this.redisService.getData('machine-state-params');
+  console.log('machineStateParams ', machineStateParams);
+  if(machineStateParams && machineStateParams.type == 'days'){
+    let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
+    console.log('newData ', newData);
+    let storedData = await this.redisService.getData('machine-state-data');
+    console.log('storedData ', storedData);
+    if(storedData){
+      if(!isEqual(newData, storedData)){
+        console.log('inside not equal');
+        await this.redisService.saveData('machine-state-data',newData);
+        // call web socket
+        this.valueChangeStateGateway.sendUpdate(newData);
+      }
+    }else{
+      console.log('inside else condition');
+      await this.redisService.saveData('machine-state-data',newData);
+    }
+  }
+}
+
+  // Existing method that runs at the end of the day
   @Cron('0 0 * * *')
   async handleCron() {
     console.log('time ', new Date());

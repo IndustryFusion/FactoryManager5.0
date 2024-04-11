@@ -13,6 +13,7 @@ import { useDashboard } from "@/context/dashboard-context";
 import { Toast, ToastMessage } from "primereact/toast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Dropdown } from "primereact/dropdown";
+import socketIOClient from "socket.io-client";
 
 export interface Datasets {
     label?: string;
@@ -523,6 +524,24 @@ const DashboardChart = () => {
         }
     };
 
+    // useEffect to handle socket receiving data
+    useEffect(() => {
+        const socket = socketIOClient(`${API_URL}/`);
+ 
+        socket.on("connect", () => {
+            console.log('WebSocket Connected');
+        });
+ 
+        socket.on("valueChangeState", (newData) => {
+            console.log('web socket for machine state change')
+            setFactoryData(newData);
+        });
+        return () => {
+            socket.disconnect();
+        };
+    },[])
+
+    // useEffect to handle changes related to selectedIntervals
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
@@ -534,6 +553,7 @@ const DashboardChart = () => {
        
     }, [router.isReady, entityIdValue, selectedInterval])
 
+    // useEffect to create chart data and when there is a update in data
     useEffect(() => {
         const documentStyle = getComputedStyle(document.documentElement);
         const textColor = documentStyle.getPropertyValue('--text-color');
