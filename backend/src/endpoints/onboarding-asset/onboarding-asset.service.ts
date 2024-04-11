@@ -85,7 +85,7 @@ export class OnboardingAssetService {
         'Content-Type': 'application/json',
       };
       let url = this.gatwayUrl + '/' + fileName;
-      console.log('url ',url);
+      // console.log('url ',url);
 
       // Retrieve existing file content
       const getResponse = await axios.get(url, { 

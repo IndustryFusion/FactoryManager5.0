@@ -26,13 +26,13 @@ export class PgRestService {
   async findAll(token : string, queryParams: any) {
     // console.log("queryparams ", queryParams)
    // Check if credentials or query parameters have changed
- const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
-  if (credentialsChanged) {
-    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId);
-    // console.log("Credentials or queryParams have changed. Saving new values to Redis.");
-  } else {
-    // console.log("Credentials and queryParams unchanged. Skipping Redis update.");
-  }
+      const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
+        if (credentialsChanged) {
+          await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId,queryParams.attributeId);
+          // console.log("Credentials or queryParams have changed. Saving new values to Redis.",queryParams);
+        } else {
+          // console.log("Credentials and queryParams unchanged. Skipping Redis update.");
+        }
 
     try {
       const headers = {
@@ -46,18 +46,16 @@ export class PgRestService {
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
       
       const response = await axios.get(url, {headers});
-        if (response.data) {
-          let storedDataKey = `data:${queryParams.entityId}`; 
-          let storedData = await this.redisService.getData(storedDataKey) || {};
-        
+
+     if (response.data) {
+            let storedDataKey = `data:${queryParams.entityId}`;
+            let storedData = await this.redisService.getData(storedDataKey) || {};
+
             if (!isEqual(response.data, storedData)) {
-              // console.log("Data has changed. Emitting new data through WebSocket.");
-              await this.redisService.saveData(storedDataKey, response.data); // Update stored data
-              this.emitUpdate(response.data); // Emit only the new or updated data points
-            } else {
-              console.log("Data unchanged. No need to emit.");
+                await this.redisService.saveData(storedDataKey, response.data);
+                this.emitUpdate(response.data);
             }
-      
+
             return response.data;
       } else {
         throw new NotFoundException('Data not found.');

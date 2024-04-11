@@ -9,7 +9,7 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
-
+import socketIOClient from "socket.io-client";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -27,6 +27,22 @@ export interface pgData {
     value: string;
 }
 
+interface PowerConsumptionUpdate {
+  chartData: {
+    labels: string[];
+    powerConsumption: number[];
+    emission: number[];
+  };
+  assetId: string;
+  type: string;
+}
+const initialChartData = {
+  labels: [],
+  datasets: [
+    { label: 'Power Consumption (KW)', data: [], fill: false, backgroundColor: 'rgba(75,192,192,0.4)', borderColor: 'rgba(75,192,192,1)', tension: 0.4 },
+    { label: 'CO2 Emission (KG)', data: [], fill: false, backgroundColor: 'rgba(255,99,132,0.4)', borderColor: 'rgba(255,99,132,1)', tension: 0.4 },
+  ],
+};
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
     const { entityIdValue , autorefresh} = useDashboard();
@@ -37,6 +53,55 @@ const PowerCo2Chart = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
+    const lastDataRef:any = useRef(); // 
+    // State and refs initialization remains the same
+
+  useEffect(() => {
+    const socket = socketIOClient(`${API_URL}/`);
+
+    socket.on("connect", () => {
+        console.log('WebSocket Connected');
+    });
+
+    socket.on("powerConsumptionUpdate", (newData) => {
+        console.log("Data received from WebSocket:", newData);
+
+        // Make sure to check if the data structure is as expected
+        if (!newData || !newData.chartData || !newData.chartData.labels || !newData.chartData.powerConsumption) {
+            console.error("Received data format is not correct");
+            return;
+        }
+
+       setChartData((currentData) => {
+            const updatedChartData:any = { ...currentData };
+            const currentDayIndex = newData.chartData.labels.length - 1;
+
+            // Ensure datasets array exists and has necessary structure
+            if (updatedChartData.datasets && updatedChartData.datasets.length >= 2) {
+                updatedChartData.datasets[0].data[currentDayIndex] = newData.chartData.powerConsumption[currentDayIndex];
+                updatedChartData.datasets[1].data[currentDayIndex] = newData.chartData.emission[currentDayIndex];
+            } else {
+                console.error("Datasets are not properly initialized");
+            }
+
+            // Update the ref for comparison in future updates
+            lastDataRef.current = newData;
+
+            // Log the index at which the data changed
+            // console.log(`Data changed at index ${currentDayIndex}`);
+            console.log(updatedChartData, "lllll")
+            return updatedChartData;
+        });
+
+    });
+
+    // Disconnect socket on cleanup
+    return () => {
+        socket.disconnect();
+        console.log('WebSocket Disconnected');
+    };
+}, []);
+
 
     const intervalButtons = [
         { label: "days", interval: "days" },
@@ -47,7 +112,7 @@ const PowerCo2Chart = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
-
+  
     const fetchData = async () => {
         try {
             // console.log('entity id here ',entityIdValue);
@@ -114,6 +179,9 @@ const PowerCo2Chart = () => {
             };
             const options = {
                 maintainAspectRatio: false,
+                 animation: {
+                    duration: 0, 
+                    },
                 aspectRatio: 0.6,
                 plugins: {
                     legend: {

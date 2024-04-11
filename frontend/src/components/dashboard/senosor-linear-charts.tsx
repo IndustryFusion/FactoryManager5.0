@@ -30,6 +30,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
 
 import { format, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths,differenceInYears ,differenceInWeeks} from 'date-fns';
+import { skip } from 'node:test';
 
 
 // Register the zoom plugin
@@ -39,7 +40,7 @@ ChartJS.register(zoomPlugin);
 interface DataPoint {
   observedAt: string;
   attributeId: string;
-  value: string;
+  value: number;
 }
 
 
@@ -106,7 +107,7 @@ const [data, setChartData] = useState<ChartDataState>({
   const socketRef = useRef<any>(null);
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
-  const [selectedInterval, setSelectedInterval] = useState<number>(120); // Default selected interval
+  const [selectedInterval, setSelectedInterval] = useState<number>(10); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -122,16 +123,16 @@ const [data, setChartData] = useState<ChartDataState>({
     x: {min: undefined, max: undefined},
     y: {min: undefined, max: undefined}
   });
-
+const [selectedAttributeId, setSelectedAttributeId] = useState("");
 
 
 
   const intervalButtons = [
-    { label: "Live", interval: 1 },
-    { label: "1 Min", interval: 2 },
-    { label: "2 Min", interval: 6 },
-    { label: "3 Min", interval: 10 },
-    { label: "15 Min", interval: 60 },
+    { label: "Live", interval: 10 },
+    { label: "1 Min", interval: 20 },
+    { label: "2 Min", interval: 30 },
+    { label: "3 Min", interval: 50 },
+    { label: "15 Min", interval: 150 },
     { label: "2 Hour", interval: 120 },
     { label: "3 Hours", interval: 240 },
     // { label: "3 Hours", interval: 180 },
@@ -310,69 +311,59 @@ function generateLabels(
 }
 
 const calculateLimit = (intervalMinutes: number): number => {
-  const pointsPerMinute = 10; 
+  const pointsPerMinute = 1; 
   return pointsPerMinute * intervalMinutes; // Adjusted to reflect no skipping
 };
 
 
-  const fetchData = async (
-  attributeId: string,
-  entityId: string,
-  index: number,
-  selectedInterval: number
-) => {
-  // // Start loading
-  // const cacheKey = `${entityId}-${attributeId}-${selectedInterval}`;
-  // if (dataCache[cacheKey]) {
-  //   return dataCache[cacheKey]; // Use cached data
-  // }
+//  const fetchData = async (attributeId, entityId, index, selectedInterval) => {
+//   try {
+//     // Fetch data from the API using axios or any other method
+//     const response = await axios.get(`${API_URL}/pgrest`, {
+//       params: {
+//         limit: 5,
+//         order: "observedAt.desc",
+//         entityId,
+//       },
+//       headers: {
+//         "Content-Type": "application/json",
+//         Accept: "application/json",
+//       },
+//       withCredentials: true,
+//     });
 
-  const limit = calculateLimit(selectedInterval); 
+//     // Extract data from the response
+//     const factoryData = response.data;
 
-  try {
-    const response = await axios.get(`${API_URL}/pgrest`, {
-      params: {
-        limit,
-        order: "observedAt.desc",
-        entityId,
-        // observedAt: `gte.${startTime}&observedAt=lte.${endTime}`,
-        
-      },
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
+//     // Initialize arrays to hold labels and data points
+//     let labels = [];
+//     let dataPoints = [];
 
-    let factoryData: pgData[] = response.data;
+//     // Filter the data based on the attributeId
+//     factoryData.forEach(data => {
+//       if (data.attributeId === attributeId) {
+//         labels.push(formatLabel(new Date(data.observedAt)));
+//         dataPoints.push(data.value ? Number(data.value) : null);
+//       }
+//     });
 
-    setLoading(false);
-   
-    // Filter the data points based on the skip value
-   const uniqueAndSortedDataPoints = factoryData
-      .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-      .filter((data, index, self) => index === self.findIndex((t) => t.observedAt === data.observedAt));
-    
-    let labels = uniqueAndSortedDataPoints.map(data => formatLabel(new Date(data.observedAt)));
-    let dataPoints = uniqueAndSortedDataPoints.map(data => data.value ? Number(data.value) : null);
+//     // Create a new dataset object
+//     const newDataset = {
+//       label: attributeId,
+//       data: dataPoints,
+//       fill: false,
+//       borderColor: colors[index % colors.length].borderColor,
+//       backgroundColor: colors[index % colors.length].backgroundColor,
+//       tension: 0.4,
+//     };
 
-    const newDataset = {
-      label: attributeId, 
-      data: dataPoints,
-      fill: false,
-      borderColor: colors[index % colors.length].borderColor,
-      backgroundColor: colors[index % colors.length].backgroundColor,
-      tension: 0.4,
-    };
-
-    return { newDataset, labels };
-  } catch (error) {
-    console.error("Error fetching asset data:", error);
-    throw error;
-  }
-};
-
+//     // Return the new dataset and labels
+//     return { newDataset, labels };
+//   } catch (error) {
+//     console.error("Error fetching asset data:", error);
+//     throw error;
+//   }
+// };
 function formatLabel(date:Date) {
   // Format date: "YYYY-MM-DD HH:mm:ss"
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
@@ -429,125 +420,209 @@ function formatLabel(date:Date) {
 const skipInterval = 3; // Define the interval to skip
 let skipCounter = 0; // Initialize skip counter
 
-    const fetchDataAndAssign = async () => {
-    try {
-      
-      let entityId = entityIdValue;
-      console.log("selected asset entityId ", entityId);
-      
-        // Clear existing chart data before fetching new
-      setChartData({
-        labels: [],
-        datasets: [],
-      });
 
-      let attributeIds = await fetchAsset(entityId);
-    
 
-      if (attributeIds && attributeIds.length > 0) {
-        setNoChartData(false)
-        const chartData: ChartDataState = { labels: [], datasets: [] };
+const fetchDataAndAssign = async () => {
+  try {
+    let entityId = entityIdValue;
+    console.log("selected asset entityId ", entityId);
 
-        for (let i = 0; i < attributeIds.length; i++) {
+    // Clear existing chart data before fetching new
+    setChartData({
+      labels: [],
+      datasets: [],
+    });
+
+    let attributeIds = await fetchAsset(entityId); // Fetch attribute IDs from the API
+
+    if (attributeIds && attributeIds.length > 0) {
+     
+      setNoChartData(false);
+      const chartData = { labels: [], datasets: [] };
+
+      // Initialize an array to hold the data for each attribute label
+      const dataByLabel = new Map();
+
+      // Fetch data for each attribute ID and assign to chartData
+      for (let i = 0; i < attributeIds.length; i++) {
         if (attributeIds[i].includes('machine-state')) {
-          // Skip the machine-state attribute
+        // console.log(attributeIds[i])
           continue;
         }
 
-        const { newDataset, labels } = await fetchData(
-          attributeIds[i],
-          "eq." + entityId,
-          i,
-          selectedInterval
-        );
+        const response = await axios.get(`${API_URL}/pgrest`, {
+          params: {
+            limit: calculateLimit(selectedInterval),
+            order: "observedAt.desc",
+            entityId: "eq." + entityId,
+            attributeId: attributeIds[i],
+          },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        });
 
-          newDataset.label = newDataset.label.replace('eq.', '');
-          // Exclude the dataset with the label "machine-state"
-          newDataset.data = newDataset.data.slice(-10);
-          chartData.labels = labels.slice(-10); // Adjust this line if labels should be handled differently
+        const factoryData = response.data;
 
-          chartData.datasets.push(newDataset);
-        }
+        let labels:any = [];
+        let dataPoints:any = [];
 
+        factoryData.forEach(data => {
+          labels.push(formatLabel(new Date(data.observedAt)));
+          dataPoints.push(data.value ? Number(data.value) : null);
+        });
 
-        setChartData(chartData);
-        if (chartData.datasets.length > 0) {
-        setSelectedAttribute(chartData.datasets[0].label.replace('eq.', ''));
+        const newDataset = {
+          label: attributeIds[i].replace('eq.', ''),
+          data: dataPoints,
+          fill: false,
+          borderColor: colors[i % colors.length].borderColor,
+          backgroundColor: colors[i % colors.length].backgroundColor,
+          tension: 0.4,
+        };
+
+        chartData.labels = labels;
+        chartData.datasets.push(newDataset);
       }
-        
-        console.log("apple ", data)
-      } else {
-        setNoChartData(true)
-        // console.log("No attribute set available");
+
+      // Set chart data
+      setChartData(chartData);
+
+      // Set selected attribute
+      if (chartData.datasets.length > 0) {
+        setSelectedAttribute(chartData.datasets[0].label);
       }
-    } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        console.error("Error response:", error.response?.data.message);
-        // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
-      } else {
-        console.error("Error:", error);
-        // showToast('error', 'Error', error);
-      }
-    }  
+
+      console.log("apple ", data);
+    } else {
+      // No attribute IDs available
+      setNoChartData(true);
+    }
+  } catch (error: any) {
+    // Handle errors
+    console.error("Error:", error);
+    // Display error message to the user
+    // showToast('error', 'Error', error.message);
   }
+};
 
-const handleAttributeChange = (e: any) => {
-  const modifiedAttributeName = `http://www.industry-fusion.org/fields#${e.target.value}`;
+
+const handleAttributeChange = (selectedValue: string) => {
+  const modifiedAttributeName = `http://www.industry-fusion.org/fields#${selectedValue}`;
   setSelectedAttribute(modifiedAttributeName);
-  // setSelectedAttribute(e.value); 
+  setSelectedAttributeId(selectedValue);
+  fetchDataForAttribute(modifiedAttributeName); // Fetch data based on the selected attribute
+};
+
+const fetchDataForAttribute = async (attributeId: string) => {
+  // Add "eq." before the attributeId
+  const modifiedAttributeId = "eq." + attributeId;
+
+  console.log(attributeId, "oooo");
+  try {
+    let entityId = entityIdValue;
+    console.log("Selected attribute ID:", attributeId);
+
+    const response = await axios.get(`${API_URL}/pgrest`, {
+      params: {
+        limit: calculateLimit(selectedInterval),
+        order: "observedAt.desc",
+        entityId: "eq." + entityId,
+        attributeId: modifiedAttributeId, // Use the modified attributeId
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+
+    const factoryData = response.data;
+
+    let labels:any = [];
+    let dataPoints:any = [];
+
+    factoryData.forEach(data => {
+      labels.push(formatLabel(new Date(data.observedAt)));
+      dataPoints.push(data.value ? Number(data.value) : null);
+    });
+
+    const newDataset = {
+      label: attributeId.replace('eq.', ''), // Update the label
+      data: dataPoints,
+      fill: false,
+      borderColor: colors[0 % colors.length].borderColor, // Assuming only one dataset is fetched for the selected attribute
+      backgroundColor: colors[0 % colors.length].backgroundColor,
+      tension: 0.4,
+    };
+
+    // Set chart data
+    setChartData({
+      labels: labels,
+      datasets: [newDataset],
+    });
+
+    // Set selected attribute ID
+    setSelectedAttributeId(modifiedAttributeId);
+
+    setNoChartData(false);
+  } catch (error) {
+    console.error("Error fetching data for attribute:", error);
+    setNoChartData(true);
+  }
 };
 
 
 
 function updateChartDataWithSocketData(currentChartData: ChartDataState, newData: DataPoint[]): ChartDataState {
-  
- newData.forEach(dataItem => {
+  // Iterate through each new data point
+  newData.forEach(dataItem => {
     const { observedAt, attributeId, value } = dataItem;
 
-
-  
-    const modifiedAttributeId = `${attributeId}`;
-  // Skip updates for the machine-state attribute
-        if (attributeId.includes('http://www.industry-fusion.org/fields#machine-state')) {
-    
-            return;
-        }
-
-    // Find the correct dataset based on modifiedAttributeId
-    const datasetIndex = currentChartData.datasets.findIndex(dataset => dataset.label === modifiedAttributeId);
-    if (datasetIndex === -1) {
-      // console.error("Dataset with label", modifiedAttributeId, "not found.");
-      return; // Skip this data item if corresponding dataset not found
+    // Skip updates for the machine-state attribute
+    if (attributeId.includes('http://www.industry-fusion.org/fields#machine-state')) {
+       return;
     }
 
-   const numericValue:number = parseFloat(value).toFixed(1);
+    // Find the correct dataset based on attributeId
+    const datasetIndex = currentChartData.datasets.findIndex(dataset => dataset.label === attributeId);
+    if (datasetIndex === -1) {
+      // Dataset not found, skip this data item
+      return;
+    }
 
+    // Parse the value to a numeric format if needed
+    const numericValue = value
+
+    // Format the observedAt timestamp
     const label = formatLabel(new Date(observedAt));
 
-    const labelIndex = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
+    // Find the index of the label in the current chart data
+    const labelIndex:any = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
     if (labelIndex === -1) {
-      // If the label doesn't exist, append it and ensure data integrity
+      // Label not found, append it to the labels array and ensure data integrity
       currentChartData.labels?.push(label);
       // Ensure all datasets have a value for this new label
       currentChartData.datasets.forEach((dataset, index) => {
         if (index === datasetIndex) {
           dataset.data.push(numericValue);
         } else {
-          // Use the last value or 0 if it's the first entry
-          const lastValue = dataset.data[dataset.data.length - 1] || 0;
+          // Use the last value or null if it's the first entry
+          const lastValue = dataset.data[dataset.data.length - 1] || null;
           dataset.data.push(lastValue);
         }
       });
     } else {
+      // Label found, update the corresponding dataset with the new value
       currentChartData.datasets[datasetIndex].data[labelIndex] = numericValue;
     }
   });
 
-  
-
   // Sort the chart data based on labels
-  const sortedIndices = currentChartData.labels?.map((label:any, index:any) => ({ label, index }))
-    .sort((a:any, b:any) => new Date(a.label).getTime() - new Date(b.label).getTime())
+  const sortedIndices = currentChartData.labels?.map((label, index) => ({ label, index }))
+    .sort((a, b) => new Date(a.label).getTime() - new Date(b.label).getTime())
     .map(data => data.index);
 
   const sortedLabels = sortedIndices?.map(index => currentChartData.labels[index]);
@@ -563,6 +638,7 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
 
 useEffect(() => {
     fetchDataAndAssign();
+  
 
     if (intervalId.current) {
       clearInterval(intervalId.current);
@@ -579,16 +655,19 @@ useEffect(() => {
     };
   }, [entityIdValue, autorefresh]);
 
+
 useEffect(() => {
-  if (typeof window !== "undefined") {
+ 
   const socket = socketIOClient(`${API_URL}/`);
   socketRef.current = socket;
  
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
+
+      console.log("updatedData", updatedData)
         try {
             const transformedData = updateChartDataWithSocketData(data, updatedData);
-            setChartData(transformedData);
+            setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
         } catch (error) {
             console.error("Error processing data update:", error);
         }
@@ -600,8 +679,11 @@ useEffect(() => {
             socketRef.current.disconnect();
         }
     };
-  }
+  
 }, [data]); 
+
+
+
 
 const chartOptionsWithZoomPan = {
   ...chartOptions, 
@@ -680,16 +762,15 @@ useEffect(() => {
             <div className="control-container">
               <div className="attribute-dropdown-container">
                 <p className="font-bold">Select Attributes</p>
-                <Dropdown
-                  value={selectedAttribute}
-                  options={attributes}
-                  onChange={handleAttributeChange}
-                  placeholder={selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
-                  filter
-                  showClear
-                  filterBy="label,value"
-                  style={{ width: '100%' }}
-                />
+                          <Dropdown
+              value={selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
+              options={attributes.map(attr => ({ label: attr.label, value: attr.value.replace('http://www.industry-fusion.org/fields#', '') }))}
+              onChange={(e) => handleAttributeChange(e.value)}
+              placeholder="Select an Attribute"
+              filter
+              showClear
+              style={{ width: '100%' }}
+            />
               </div>
               <div className="custom-button-container">
                   <div className="custom-button">
