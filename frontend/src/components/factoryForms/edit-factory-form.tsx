@@ -414,7 +414,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
     return (
         <>
-            <div className="card flex justify-content-center">
+            <div className=" flex justify-content-center">
                 <Button label="Show" icon="pi pi-external-link" onClick={() => setIsEditProp(true)} />
                 <Dialog visible={isEditProp} modal footer={footerContent}
                     draggable={false} resizable={false}
