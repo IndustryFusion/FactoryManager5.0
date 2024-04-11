@@ -12,11 +12,11 @@ export class PowerConsumptionService {
       };
       const currentTime = moment().format().split('+')[0] + '-00:00';
       const startTimeOfDay = moment().startOf('day').format().split('+')[0] + '-00:00';
-      console.log('currentTime ',currentTime);
-      console.log('startTimeOfDay ',startTimeOfDay);
+      //console.log('currentTime ',currentTime);
+      //console.log('startTimeOfDay ',startTimeOfDay);
       const url = this.timescaleUrl + '/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTimeOfDay}&observedAt=lte.${currentTime}&order=observedAt.asc`;
       const response = await axios.get(url, {headers});
-      console.log('responsePgrest ',response.data)
+      //console.log('responsePgrest ',response.data)
       if(response.data.length > 0) {
         let startValue = response.data[0].value;
         let endValue = response.data[response.data.length - 1].value;
@@ -35,15 +35,12 @@ export class PowerConsumptionService {
       const headers = {
         Authorization: 'Bearer ' + token
       };
-      console.log('type ',type);
       const labels = [], powerConsumption = [], emission = [];
       if(type == 'days'){
         for (let i = 6; i >= 0; i--) {
           const day = moment().subtract(i, 'days').startOf('day');
           let startTime = day.format().split('+')[0] + '-00:00';
           let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
-          console.log('startTime ',startTime);
-          console.log('endTime ',endTime);
           labels.push(day.format('MMMM Do'));
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
@@ -58,9 +55,6 @@ export class PowerConsumptionService {
             emission.push(0);
           }
         }
-        console.log('labels for days ',labels);
-        console.log('powerConsumption ',powerConsumption);
-        console.log('emission ',emission);
         return {
           labels,
           powerConsumption,
@@ -76,15 +70,10 @@ export class PowerConsumptionService {
           const formattedStartOfWeek = startOfWeek.format().split('+')[0] + '-00:00';
           const formattedEndOfWeek = endOfWeek.format().split('+')[0] + '-00:00';
       
-          console.log(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
-          console.log('Start:', formattedStartOfWeek);
-          console.log('End:', formattedEndOfWeek);
-          console.log();
           labels.push(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
-            console.log(`response from week ${i + 1} `,response.data);
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
@@ -95,9 +84,6 @@ export class PowerConsumptionService {
             emission.push(0);
           }
         }
-        console.log('labels for weeks ',labels);
-        console.log('powerConsumption ',powerConsumption);
-        console.log('emission ',emission);
         return {
           labels,
           powerConsumption,
@@ -113,10 +99,6 @@ export class PowerConsumptionService {
           const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
           const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
       
-          console.log(`Month ${i + 1}:`);
-          console.log('Start:', formattedStartOfMonth);
-          console.log('End:', formattedEndOfMonth);
-          console.log();
           const monthName = moment(startOfMonth).format('MMMM');
           labels.push(monthName);
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
@@ -132,9 +114,6 @@ export class PowerConsumptionService {
             emission.push(0);
           }
         }
-        console.log('labels for months ',labels);
-        console.log('powerConsumption ',powerConsumption);
-        console.log('emission ',emission);
         return {
           labels,
           powerConsumption,
