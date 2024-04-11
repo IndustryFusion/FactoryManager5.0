@@ -1,7 +1,7 @@
 
 import dynamic from 'next/dynamic';
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { ChartData, ChartOptions,registerables  } from "chart.js";
+import { ChartData, ChartOptions, registerables } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
 import { LayoutContext } from "../../pages/factory-site/layout/layout-context";
@@ -19,7 +19,7 @@ import {
   FaTemperatureHigh,
   FaCloud,
   FaBolt,
-  FaHourglassHalf 
+  FaHourglassHalf
 
 } from "react-icons/fa";
 import "../../styles/combine-chart.css";
@@ -113,7 +113,7 @@ const [data, setChartData] = useState<ChartDataState>({
   const router = useRouter();
   const intervalId: any = useRef(null);
   const [noChartData, setNoChartData] = useState(false)
-  const { entityIdValue, setEntityIdValue, autorefresh, selectedAssetData } = useDashboard();
+  const { entityIdValue, setEntityIdValue, selectedAssetData } = useDashboard();
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
@@ -635,27 +635,6 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
   return { ...currentChartData };
 }
 
-
-useEffect(() => {
-    fetchDataAndAssign();
-  
-
-    if (intervalId.current) {
-      clearInterval(intervalId.current);
-    }
-
-    if (autorefresh) {
-      intervalId.current = setInterval(fetchDataAndAssign, 10000); // Auto-refresh every 10 seconds
-    }
-
-    return () => {
-      if (intervalId.current) {
-        clearInterval(intervalId.current);
-      }
-    };
-  }, [entityIdValue, autorefresh]);
-
-
 useEffect(() => {
  
   const socket = socketIOClient(`${API_URL}/`);
@@ -718,41 +697,20 @@ useEffect(() => {
 }, [data, zoomLevel]);
 
   useEffect(() => {
- 
-    
-   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
       if (router.isReady) {
         const { } = router.query;
-        if (autorefresh) {
-          console.log("is sensor-chart autoreferssh");
-          intervalId.current = setInterval(() => {
-            fetchDataAndAssign();
-          }, 10000);
-          
-        } else {
-          console.log("is calling when eneityId changes");
-
-        fetchDataAndAssign ()
-        }
+          fetchDataAndAssign()     
       }
     }
-    
-   
-        
-
-  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);
-
+  }, [selectedInterval, router.isReady, entityIdValue]);
 
 
 
   return (
     <div style={{ zoom: "80%" }}>
-    
-     
-    
       <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>
         {selectedAssetData?.product_name === undefined ?
           "Unknown Product" : selectedAssetData?.product_name

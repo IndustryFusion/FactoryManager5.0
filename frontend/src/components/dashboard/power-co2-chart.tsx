@@ -237,21 +237,11 @@ const PowerCo2Chart = () => {
             setNoChartData(false);
         }
 
-        if (autorefresh === true) {
-            intervalId.current = setInterval(() => {
-                fetchDataAndAssign();
-            }, 10000);
-        } else {
             fetchDataAndAssign();
-        }
+        
 
-        return () => {
-            if (intervalId.current) {
-                clearInterval(intervalId.current);
-            }
-        };
 
-    }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
+    }, [checkChart, entityIdValue, selectedInterval]);
 
 
 
