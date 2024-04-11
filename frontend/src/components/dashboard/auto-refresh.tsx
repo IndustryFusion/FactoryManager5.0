@@ -13,7 +13,7 @@ const AutoRefresh = () => {
           :
           <h3 style={{ fontSize: "20px", marginLeft: "2.5rem" }}>
             <span>  {`${selectedAssetData?.product_name} :`}</span>
-            <span style={{ textTransform: "uppercase" }}>{` ${selectedAssetData?.id}`}</span>
+            <span style={{ textTransform: "lowercase" }}>{` ${selectedAssetData?.id}`}</span>
           </h3>
         }
       </div>

@@ -58,11 +58,13 @@ const HorizontalNavbar: React.FC = () => {
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <Button label="About Us" link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} />
+          className="mr-2" style={{ fontFamily: "Segoe UI",
+           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button label="Contact Us" link
-          className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} />
+          className="mr-2" style={{ fontFamily: "Segoe UI",
+           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button
-          style={{ color: "#000", backgroundColor: "transparent", border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
           onClick={()=>setAssetManage(true)}
@@ -72,7 +74,7 @@ const HorizontalNavbar: React.FC = () => {
           alt="asset_manage_icon" />        
           </Button>
         <Button
-          style={{ color: "#000", backgroundColor: "transparent", border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e",backgroundColor:"transparent",border: "none" }}
           tooltip="Dashboard"
           onClick={() => router.push("/factory-site/dashboard")}
           tooltipOptions={{ position: 'bottom' }}
