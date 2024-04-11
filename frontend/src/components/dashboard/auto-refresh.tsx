@@ -2,26 +2,23 @@ import { useDashboard } from "@/context/dashboard-context";
 import { InputSwitch } from "primereact/inputswitch";
 import "../../styles/dashboard.css"
 
-const AutoRefresh = ()=>{
-  const {autorefresh, setAutorefresh, selectedAssetData} = useDashboard();
+const AutoRefresh = () => {
+  const { selectedAssetData } = useDashboard();
 
-    return(
-        <>
-         <div className="autorefresh-btn mr-5 flex justify-content-between">
-         <h3 style={{ fontSize: "20px",marginLeft:"2.5rem" }}>
+  return (
+    <>
+      <div className="autorefresh-btn mr-5 flex justify-content-between">
         {selectedAssetData?.product_name === undefined ?
-          "Unknown Product" : selectedAssetData?.product_name
-        }</h3>
-        <div className="flex justify-content-center align-items-center">
-        <span className="mr-2 autorefresh-text ">auto refresh</span>
-            <InputSwitch 
-             checked={autorefresh} onChange={(e) => setAutorefresh(e.value)}
-            />
-        </div>
-         
-        </div>
-        </>
-    )
+          <h3 style={{ fontSize: "20px", marginLeft: "2.5rem" }}> Unknown Product</h3>
+          :
+          <h3 style={{ fontSize: "20px", marginLeft: "2.5rem" }}>
+            <span>  {`${selectedAssetData?.product_name} :`}</span>
+            <span style={{ textTransform: "uppercase" }}>{` ${selectedAssetData?.id}`}</span>
+          </h3>
+        }
+      </div>
+    </>
+  )
 }
 
 export default AutoRefresh;
