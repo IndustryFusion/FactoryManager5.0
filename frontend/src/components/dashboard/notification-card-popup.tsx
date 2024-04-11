@@ -118,7 +118,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                         <div className="flex align-center">
                           <p className="ml-2 alert-text mb-0 "></p>
                         </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "10rem" }}>
+                        <div className="flex align-center  mb-2" style={{ gap: "9rem" }}>
                           <div>
                             <p className="ml-2 alert-time mt-2"> {notification?.updateTime}</p>
                             <p className="label-text ml-2">Update Time</p>
@@ -130,7 +130,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                             <p className="label-text ml-2">Type</p>
                           </div>
                         </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "15.4rem" }}>
+                        <div className="flex align-center  mb-2" style={{ gap: "14.4rem" }}>
                           <div>
                             <p className="ml-2 "> {selectedAssetData?.asset_category}</p>
                             <p className="label-text ml-2">Product category</p>
@@ -140,7 +140,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                             <p className="label-text">Origin</p>
                           </div>
                         </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "17.1rem" }}>
+                        <div className="flex align-center  mb-2" style={{gap: "16.8rem" }}>
                           <div> <p className="ml-2 "> {notification?.severity}</p>
                             <p className="label-text ml-2">Severity</p>
                           </div>
