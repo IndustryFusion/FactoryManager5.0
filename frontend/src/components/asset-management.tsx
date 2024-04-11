@@ -1,14 +1,28 @@
-
+//
+// Copyright (c) 2024 IB Systems GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+const moment = require('moment');
 import { Dialog } from "primereact/dialog";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import "../styles/dashboard.css"
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { fetchAsset } from "@/utility/asset-utility";
 import { Asset } from "@/interfaces/asset-types";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import "../styles/dashboard.css"
-
 
 
 interface AssetManagementDialogProps {
@@ -21,20 +35,29 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+
 
   const handleAsset = async () => {
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
-        setAssetData(response);
-
-        console.log(response, "all assets");
+        setIsLoading(false);
+        const sortedAssets = [...response].sort((a, b) => {
+          // Use Moment.js to parse and compare the dates
+          return moment(b.creation_date, "DD.MM.YYYY HH:mm:ss").diff(moment(a.creation_date, "DD.MM.YYYY HH:mm:ss"));
+      });
+      
+        setAssetData(sortedAssets);
+        // console.log(sortedAssets, "sorted Assets");
+        // console.log(response, "all assets");
       } else {
         console.error("Fetch returned undefined");
       }
     } catch (error) {
-      // console.error(error)
+      console.error(error)
     }
   }
 
@@ -86,7 +109,16 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       <div className="px-4"
         style={{ borderRadius: "10px" }}
       >
-        <DataTable
+        {
+          isLoading ?
+          <div className="flex flex-column justify-content-center align-items-center"
+          style={{  }}
+      >
+          <p> Loading... Assets</p>
+          <img src="/table.png" alt="" width="12%" height="12%" />
+      </div>
+          :
+          <DataTable
           rows={5}
           paginator
           value={assetData}
@@ -121,6 +153,8 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
           />
 
         </DataTable>
+        }
+       
       </div>
 
     </Dialog>

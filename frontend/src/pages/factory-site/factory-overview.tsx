@@ -17,7 +17,7 @@ import { Dialog } from "primereact/dialog";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
-import { Toast } from "primereact/toast";
+import { Toast, ToastMessage } from "primereact/toast";
 import AssetManagement from "@/components/asset-management";
 import AssetManagementDialog from "@/components/asset-management";
 
@@ -35,35 +35,18 @@ const FactoryOverview = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [editFactory, setEditFactory] = useState<string | undefined>("");
   const [assetManageDialog, setAssetManageDialog] = useState(false);
-
+  const toast = useRef<Toast | null>(null);
 
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
   ];
-  const toast = useRef<Toast | null>(null);
 
-  const showError = (message: any) => {
-    if (toast.current !== null) {
-      toast.current.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: message,
-        life: 2000
-      });
-    }
+
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
 
-  const showSuccess =(message:any)=>{
-    if (toast.current !== null) {
-      toast.current.show({
-        severity: 'success',
-        summary: 'Success',
-        detail: message,
-        life: 2000
-      });
-    }
-  }
   // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: any[]): Factory[] => {
     return backendData.map((item: any) => {
@@ -100,7 +83,7 @@ const FactoryOverview = () => {
       // console.log(mappedData, "factory response here");
     } catch (error: any) {
       if (error.response && error.response?.status === 404) {
-        showError("Getting factory lists");
+        showToast(error, "Error","Getting factory lists" )     
       }
     }
   };
@@ -140,7 +123,7 @@ const FactoryOverview = () => {
     if (fileInputRef.current != null) {
       fileInputRef.current.click();
     }
-    setAssetManageDialog(true);
+    //setAssetManageDialog(true);
     console.log("fileInputRef.current", fileInputRef.current);
     
   };
@@ -154,11 +137,13 @@ const FactoryOverview = () => {
         },
         withCredentials: true,
       });
-      // if(response.data?.status === 201 && response.data?.success=== true ){
-        // setAssetManageDialog(true);
-      // }
+      if(response.data?.status === 201 && response.data?.success=== true ){
+        showToast("success", "success","Asset imported successfully")
+        setAssetManageDialog(true);
+      }
       console.log("file uploaded ", response.data);
     } catch (error) {
+      showToast("error", "Error","Fetching imported asset")
       console.error("Error:", error);
     }
   }
@@ -217,6 +202,7 @@ const FactoryOverview = () => {
         placeholder="Sort By Factory Name"
         options={sortOptions}
         onChange={onSortChange}
+        className="flex justify-content-center align-items-center"
       />
       <div>
         <span className="p-input-icon-left">
@@ -277,10 +263,11 @@ const FactoryOverview = () => {
     try {
       await deleteFactory(factoryToDelete);
       await fetchFactoryLists();
-      showSuccess("Factory deleted successfully");
+      showToast("success", "success", "Factory deleted successfully")
+      
     } catch (error:any) {
       if( error.response && error.response?.status === 404){
-        showError("Error deleting factory")
+        showToast(error, "Error"," deleting factory")
       }
       console.error("Error deleting factory", error);
     }
