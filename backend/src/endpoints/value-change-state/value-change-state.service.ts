@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import * as moment from 'moment';
+import { RedisService } from '../redis/redis.service'; 
 
 @Injectable()
 export class ValueChangeStateService {
+  constructor(
+    private readonly redisService : RedisService,
+  ){}
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
   async findOne(queryParams: any, token: string) {
     try {
@@ -41,7 +45,14 @@ export class ValueChangeStateService {
       const headers = {
         Authorization: 'Bearer ' + token
       };
-      // console.log('type ',type);
+
+      let redisKey = 'machine-state-params';
+      await this.redisService.saveData(redisKey,{
+        assetId,
+        type,
+        token
+      })
+
       const finalData = {};
       if(type == 'days'){
         for (let i = 6; i >= 0; i--) {
