@@ -107,7 +107,7 @@ const [data, setChartData] = useState<ChartDataState>({
   const socketRef = useRef<any>(null);
   const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
-  const [selectedInterval, setSelectedInterval] = useState<number>(1); // Default selected interval
+  const [selectedInterval, setSelectedInterval] = useState<number>(10); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -128,10 +128,10 @@ const [selectedAttributeId, setSelectedAttributeId] = useState("");
 
 
   const intervalButtons = [
-    { label: "Live", interval: 5 },
-    { label: "1 Min", interval: 10 },
-    { label: "2 Min", interval: 20 },
-    { label: "3 Min", interval: 30 },
+    { label: "Live", interval: 10 },
+    { label: "1 Min", interval: 20 },
+    { label: "2 Min", interval: 30 },
+    { label: "3 Min", interval: 50 },
     { label: "15 Min", interval: 150 },
     { label: "2 Hour", interval: 120 },
     { label: "3 Hours", interval: 240 },
@@ -446,7 +446,7 @@ const fetchDataAndAssign = async () => {
       // Fetch data for each attribute ID and assign to chartData
       for (let i = 0; i < attributeIds.length; i++) {
         if (attributeIds[i].includes('machine-state')) {
-        console.log(attributeIds[i])
+        // console.log(attributeIds[i])
           continue;
         }
 
@@ -466,8 +466,8 @@ const fetchDataAndAssign = async () => {
 
         const factoryData = response.data;
 
-        let labels = [];
-        let dataPoints = [];
+        let labels:any = [];
+        let dataPoints:any = [];
 
         factoryData.forEach(data => {
           labels.push(formatLabel(new Date(data.observedAt)));
@@ -541,8 +541,8 @@ const fetchDataForAttribute = async (attributeId: string) => {
 
     const factoryData = response.data;
 
-    let labels = [];
-    let dataPoints = [];
+    let labels:any = [];
+    let dataPoints:any = [];
 
     factoryData.forEach(data => {
       labels.push(formatLabel(new Date(data.observedAt)));
@@ -594,13 +594,13 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
     }
 
     // Parse the value to a numeric format if needed
-    const numericValue = parseFloat(value);
+    const numericValue = value
 
     // Format the observedAt timestamp
     const label = formatLabel(new Date(observedAt));
 
     // Find the index of the label in the current chart data
-    const labelIndex = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
+    const labelIndex:any = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
     if (labelIndex === -1) {
       // Label not found, append it to the labels array and ensure data integrity
       currentChartData.labels?.push(label);
@@ -638,6 +638,7 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
 
 useEffect(() => {
     fetchDataAndAssign();
+  
 
     if (intervalId.current) {
       clearInterval(intervalId.current);
@@ -662,9 +663,11 @@ useEffect(() => {
  
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
+
+      console.log("updatedData", updatedData)
         try {
             const transformedData = updateChartDataWithSocketData(data, updatedData);
-            setChartData(transformedData);
+            setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
         } catch (error) {
             console.error("Error processing data update:", error);
         }

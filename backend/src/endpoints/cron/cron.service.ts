@@ -57,20 +57,23 @@ async handleFindAllEverySecond() {
   }
 
   const { token, queryParams } = credentials;
+  // console.log(credentials, "ppppp")
 
   // console.log(queryParams, "gggg");
 
   // Check if credentials have changed
-  const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId);
+  const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
   if (haveCredentialsChanged) {
     await this.redisService.saveData('storedData', null); // Clear stored data
-    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId); // Save new credentials
+    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); // Save new credentials
   }
 
   try {
     // Update queryParams to limit the result to 1
-    const modifiedQueryParams = { ...queryParams, limit: 5, attributeId: queryParams.attributeId !== 'eq.http://www.industry-fusion.org/fields#machine-state' ? queryParams.attributeId : undefined };
+    const modifiedQueryParams = { ...queryParams, limit: 1  };
     const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
+
+    // console.log("modifiedQueryParams ", modifiedQueryParams)
     let storedData = await this.redisService.getData('storedData');
 
     // Set the previousData to newData the first time data is fetched
@@ -81,6 +84,7 @@ async handleFindAllEverySecond() {
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
       this.emitDataChangeToClient(newData);
+      // console.log("changed", newData, )
       await this.redisService.saveData('storedData', newData);
     }
   } catch (error) {
@@ -90,12 +94,12 @@ async handleFindAllEverySecond() {
 
 
 
-@Cron(CronExpression.EVERY_SECOND) 
+@Cron(CronExpression.EVERY_10_SECONDS) 
 async handleChartDataUpdate() {
   try {
     const tokenDetails = await this.redisService.getTokenAndEntityId();
     if (!tokenDetails) {
-      this.logger.warn('Token details not found in Redis.');
+      // this.logger.warn('Token details not found in Redis.');
       return;
     }
 
@@ -117,11 +121,14 @@ async handleChartDataUpdate() {
     // Fetch previous chart data for comparison
     const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
     if (!isEqual(previousChartData, chartData)) {
+
+
+
       // Update the stored chart data in Redis if there is a change
       await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
       this.emitChartDataUpdate(chartData, assetId, type);
     } else {
-      this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+      // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
     }
   } catch (error) {
     this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
