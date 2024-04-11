@@ -24,6 +24,12 @@
   font-size: 13.2px;
   width: 150px;
 }
+.action-items-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-left: 6px;
+}
 .factory-id-text{
     font-weight: 600;
     font-size: 14px;
