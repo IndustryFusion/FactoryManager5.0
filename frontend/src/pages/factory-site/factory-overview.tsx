@@ -100,7 +100,7 @@ const FactoryOverview = () => {
       }
     }
 
-  }, [visible,isEdit, router.isReady]);
+  }, [visible, isEdit, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
@@ -125,7 +125,7 @@ const FactoryOverview = () => {
     }
     //setAssetManageDialog(true);
     console.log("fileInputRef.current", fileInputRef.current);
-    
+
   };
 
   async function createAssets(body: any) {
@@ -137,13 +137,13 @@ const FactoryOverview = () => {
         },
         withCredentials: true,
       });
-      if(response.data?.status === 201 && response.data?.success=== true ){
-        showToast("success", "success","Asset imported successfully")
+      if (response.data?.status === 201 && response.data?.success === true) {
+        showToast("success", "success", "Asset imported successfully")
         setAssetManageDialog(true);
       }
       console.log("file uploaded ", response.data);
     } catch (error) {
-      showToast("error", "Error","Fetching imported asset")
+      showToast("error", "Error", "Fetching imported asset")
       console.error("Error:", error);
     }
   }
@@ -230,10 +230,10 @@ const FactoryOverview = () => {
             style={{ display: 'none' }} // Hide the file input
           />
           {
-            assetManageDialog && 
-            < AssetManagementDialog 
-            assetManageDialogProp={assetManageDialog}
-            setAssetManageDialogProp={setAssetManageDialog}
+            assetManageDialog &&
+            < AssetManagementDialog
+              assetManageDialogProp={assetManageDialog}
+              setAssetManageDialogProp={setAssetManageDialog}
             />
           }
         </div>
@@ -264,10 +264,10 @@ const FactoryOverview = () => {
       await deleteFactory(factoryToDelete);
       await fetchFactoryLists();
       showToast("success", "success", "Factory deleted successfully")
-      
-    } catch (error:any) {
-      if( error.response && error.response?.status === 404){
-        showToast(error, "Error"," deleting factory")
+
+    } catch (error: any) {
+      if (error.response && error.response?.status === 404) {
+        showToast(error, "Error", " deleting factory")
       }
       console.error("Error deleting factory", error);
     }

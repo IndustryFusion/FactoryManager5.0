@@ -378,7 +378,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     return (
         <>
-            <div className="card flex justify-content-center">
+            <div className=" flex justify-content-center">
                 <Button label="Show" icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
                 <Dialog visible={visibleProp} modal footer={footerContent}
                     draggable={false} resizable={false}
