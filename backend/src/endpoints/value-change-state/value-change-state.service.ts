@@ -105,7 +105,7 @@ export class ValueChangeStateService {
           // console.log('Start:', formattedStartOfMonth);
           // console.log('End:', formattedEndOfMonth);
           // console.log();
-          const key = moment(startOfMonth).format('MMMM');
+          const key = moment(startOfMonth).format('MMMM YYYY');
           finalData[key] = [];
           const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
           const response = await axios.get(url, {headers});
