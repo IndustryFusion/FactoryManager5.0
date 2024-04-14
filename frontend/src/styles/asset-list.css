@@ -9,7 +9,13 @@ li {
   transition: background-color 0.3s;
   font-size: 1.2em;
 }
-
+.asset-heading{
+  margin: 0.5rem 0 0;
+  border-bottom: 2px solid #050583;
+  padding: 0px 0px 5px 0px;
+  color: #050583;
+ margin-right: 3rem;
+}
 
 .selected {
   background-color: #e0e0e0;

@@ -10,14 +10,14 @@ import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
-
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 interface ShopfloorListProps {
-  factoryId: string;
-  onShopFloorDeleted: (shopFloorId: string) => void;
+  factoryId?: string;
+  onShopFloorDeleted?: (shopFloorId: string) => void;
 }
+
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
@@ -25,7 +25,6 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedShopFloorId, setSelectedShopFloorId] = useState<string | null>(
     null
   );
@@ -39,68 +38,69 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [isTyped, setIsTyped] = useState(false);
 
 
-useEffect(() => {
-  
-  const filterShopFloors = () => {
-    if (searchValue.trim()) {
-      const filteredFloors = shopFloors.filter((floor) =>
-        floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      setFilteredShopFloors(filteredFloors);
-    } else {
-    
-      setFilteredShopFloors(shopFloors);
-    }
-  };
-
-  filterShopFloors();
-}, [searchValue, shopFloors]);
-
-const fetchShopFloors = async (factoryId: string) => {
-    
-      try {
-        
-        const factoryDetails = await getshopFloorById(factoryId);
-        setShopFloors(
-          factoryDetails.map((floor:ShopFloor) => ({
-            id: floor.id,
-            floorName:
-              floor["http://www.industry-fusion.org/schema#floor_name"].value,
-          }))
+  useEffect(() => {
+    const filterShopFloors = () => {
+      if (searchValue.trim()) {
+        const filteredFloors = shopFloors.filter((floor) =>
+          floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
         );
+        setFilteredShopFloors(filteredFloors);
+      } else {
 
-     
-      } catch (error) {
+        setFilteredShopFloors(shopFloors);
+      }
+    };
 
-       if (error instanceof Error) {
+    filterShopFloors();
+  }, [searchValue, shopFloors]);
+
+  const fetchShopFloors = async (factoryId: string) => {
+
+    console.log("factoryId here", factoryId );
+    
+    try {
+      const factoryDetails = await getshopFloorById(factoryId);
+      console.log("factoryDetails  here", factoryDetails );
+
+      setShopFloors(
+        factoryDetails.map((floor: ShopFloor) => ({
+          id: floor.id,
+          floorName:
+            floor["http://www.industry-fusion.org/schema#floor_name"].value,
+        }))
+      );
+
+
+    } catch (error) {
+
+      if (error instanceof Error) {
         console.error("Failed to fetch shop floors:", error);
         setError(error.message);
       } else {
         console.error("Failed to fetch shop floors:", error);
         setError("An error occurred");
       }
-       
-      }
-     
-    };
+
+    }
+
+  };
 
 
   useEffect(() => {
-   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } 
+    }
     else {
-     if (router.isReady) {
-      const factoryId = router.query.factoryId;
-      if (typeof factoryId === 'string') {
-        fetchShopFloors(factoryId);
-      } else {
-        console.error("factoryId is not a string or is undefined.");
+      if (router.isReady) {
+        // const factoryId = router.query.factoryId || ;
+        if (typeof factoryId === 'string') {
+          fetchShopFloors(factoryId);
+        } else {
+          console.error("factoryId is not a string or is undefined.");
+        }
       }
     }
-    }
-   
+
 
   }, [factoryId, isVisible, isEdit]);
 
@@ -116,7 +116,7 @@ const fetchShopFloors = async (factoryId: string) => {
     }
 
     try {
-       await deleteShopFloorById(
+      await deleteShopFloorById(
         selectedShopFloorId,
         factoryId
       );
@@ -156,7 +156,6 @@ const fetchShopFloors = async (factoryId: string) => {
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-
     console.log(item, "item")
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
@@ -168,30 +167,11 @@ const fetchShopFloors = async (factoryId: string) => {
 
   return (
     <>
-      <Card style={{ height: "99%", fontSize: "15px", overflowY: "scroll" }}>
+      <div>
         <Toast ref={toast} />
 
         <div>
-          <h3
-            className="font-medium text-xl"
-            style={{ marginTop: "2%", marginLeft: "5%" }}
-          >
-            Shop Floors
-          </h3>
-          <div className="p-input-icon-left flex align-items-center ml-4">
-            <i className="pi pi-search" />
-            <InputText
-              value={searchValue}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setSearchValue(e.target.value)
-              }
-              placeholder="Search by name..."
-              style={{ width: "70%", marginRight: "1rem" }}
-            >
-              <i className="pi pi-search" slot="prefix"></i>
-            </InputText>
-          </div>
-          <div className="form-btn-container mb-2 flex  ml-4 mt-4">
+        <div className="form-btn-container mb-2 flex  gap-2 mt-4">
             <Button
               label="New"
               severity="success"
@@ -219,6 +199,27 @@ const fetchShopFloors = async (factoryId: string) => {
               onClick={handleDelete}
             />
           </div>
+          <div className="p-input-icon-left flex align-items-center ">
+            <i className="pi pi-search" />
+            <InputText
+              value={searchValue}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearchValue(e.target.value)
+              }
+              placeholder="Search by name..."
+              style={{ width: "100%", marginRight: "1rem" }}
+            >
+              <i className="pi pi-search" slot="prefix"></i>
+            </InputText>
+          </div>
+        
+          <h3
+            className="font-medium text-xl"
+            style={{ marginTop: "2%", marginLeft: "5%" }}
+          >
+            Shop Floors
+          </h3>
+         < Card style={{ height: "auto", fontSize: "15px",  }}>
           <ul className="list-disc" style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
@@ -232,14 +233,17 @@ const fetchShopFloors = async (factoryId: string) => {
                     selectedShopFloorId === floor.id
                       ? "lightgrey"
                       : "transparent",
+                  fontSize:"16px"
                 }}
               >
                 {floor.floorName}
               </li>
             ))}
           </ul>
+          </Card>
         </div>
-      </Card>
+        </div>
+      
       {isEdit && (
         <EditShopFloor
           isEditProp={isEdit}

@@ -1,12 +1,13 @@
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
+import "../styles/factory-shopfloor.css"
 
 const FactoryShopFloorForm = () => {
     return (
-        <Card className="px-4 " style={{height:"90vh"}}>
-            <p>Form here</p>
+        <Card className="px-4 " style={{height:"90vh"}}>        
             <form>
+                <h1></h1>
                 <div className="input-container gap-6">
                     <label htmlFor="">ShopFloor</label>
                     <InputText
@@ -71,7 +72,7 @@ const FactoryShopFloorForm = () => {
                         </div>
                     </div>
                 </div>
-                <div>
+                <div className="form-btns">
                     <Button>Reset</Button>
                     <Button>Save</Button>
 

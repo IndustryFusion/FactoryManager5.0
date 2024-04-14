@@ -1,20 +1,37 @@
-.factory-shopfloor-container{
+.factory-shopfloor-container {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     grid-gap: 10px;
-    border: 1px solid #000;
-    height: 96vh;
-    overflow:hidden;
+    
+    padding: 0 1rem;
 }
-.form-container{
+
+.form-container {
     width: 90%;
     margin: 0 auto;
 }
-.input-container{
+
+.input-container {
     display: flex;
     align-items: center;
     margin-bottom: 1.2rem;
 }
-.input-content{
+
+.input-content {
     width: 90%;
+}
+
+.shopfloor-list-container {
+    border-right: 1px solid #ccc;
+    padding: 0 1.3rem;
+}
+.allocated-list-container{
+    border-left: 1px solid #ccc;
+    padding: 0 1.3rem;
+}
+.form-btns{
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 6rem;
 }

@@ -8,8 +8,17 @@ const FactoryShopFloor = () => {
     const factoryId = "urn:ngsi-ld:factories:2:04";
 
     return (
+        <>
+        <div style={{height: "96vh",
+    overflow: "hidden"}}>
+         <div className="flex justify-content-between px-4">
+                <h1>Test1</h1>
+                <div> <button>Add +</button></div>
+               
+            </div>
         <div className="factory-shopfloor-container">
-            <div>
+           
+            <div className="shopfloor-list-container">
                 <ShopFloorList
                     factoryId={factoryId}
                 />
@@ -17,12 +26,16 @@ const FactoryShopFloor = () => {
             <div className="form-container">
                 < FactoryShopFloorForm />
             </div>
-            <div style={{ height: "48%" }}>
+            <div
+                className="allocated-list-container"
+            >
                 <UnallocatedAssets
                     factoryId={factoryId}
                 />
             </div>
         </div>
+        </div>
+        </>
     )
 }
 
