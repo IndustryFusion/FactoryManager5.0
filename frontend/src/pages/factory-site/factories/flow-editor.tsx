@@ -30,7 +30,6 @@ import EdgeAddContext from "@/context/edge-add-context";
 import { RelationsModal } from "@/components/reactflow-relation-modal";
 import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
-import ShopFloorList from "@/components/shopfloor-list";
 import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
 

@@ -102,7 +102,7 @@ textarea {
   right: 0;
   width: 100%; */
   bottom: 0.2rem;
-  padding-right: 5rem;
+  /* padding-right: 5rem; */
   z-index: 100;
   background-color: #fff;
 }
