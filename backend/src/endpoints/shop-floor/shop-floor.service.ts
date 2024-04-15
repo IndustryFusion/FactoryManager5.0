@@ -76,6 +76,7 @@ export class ShopFloorService {
 
         //store the template data to scorpio
         const response = await axios.post(this.scorpioUrl, result, { headers });
+        
         return {
           status: response.status,
           statusText: response.statusText,

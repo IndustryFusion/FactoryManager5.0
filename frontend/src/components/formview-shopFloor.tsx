@@ -2,8 +2,10 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
 import "../styles/factory-shopfloor.css"
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 const FactoryShopFloorForm = () => {
+    const {shopfloor} = useFactoryShopFloor();
     return (
         <Card className="px-5 " style={{height:"90vh"}}>        
             <form>
@@ -13,6 +15,7 @@ const FactoryShopFloorForm = () => {
                     <InputText
                     className="input-content"
                         placeholder=""
+                        value={shopfloor?.floorName || ""}
                     />
                 </div>
                 <div className="input-container" style={{gap: "5.2rem"}} >
@@ -24,6 +27,7 @@ const FactoryShopFloorForm = () => {
                 </div>
                 <div className="mt-4">
                     <p style={{fontWeight:"bold"}}>Relations</p>
+                    <Card className="p-4">
                     <div className="input-container" style={{gap: "3.7rem"}}>
                         <label htmlFor="">HasFilter</label>
                         <InputText
@@ -71,6 +75,7 @@ const FactoryShopFloorForm = () => {
                         />
                         </div>
                     </div>
+                    </Card>
                 </div>
                 <div className="form-btns">
                     <Button

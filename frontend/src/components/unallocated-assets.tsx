@@ -138,7 +138,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   // reason : when in alloctaed asset  urn:ngsi-ld:allocated-assets-store  in  scorpio we have other values then urn inside object array then we dont get 200 response from
   // allocated-asset backend endpoint
   const filteredAllocatedAssets = useMemo(() => {
-    return allocatedAssets.filter(asset =>
+    return allocatedAssets?.filter(asset =>
       (selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category)) &&
       asset.product_name?.toLowerCase().includes(searchTermAllocated.toLowerCase())
     );
@@ -251,10 +251,8 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         <h3 className="font-medium text-xl asset-heading">
           Unallocated Assets
         </h3>
-
-
-        <div style={{ height: "53rem" }}>
-          <ul style={{ overflowY: "scroll", maxHeight: "30%",margin:"0px" }}>
+        <div style={{ height: "44rem" }}>
+          <ul style={{ overflowY: "scroll", maxHeight: "35%",margin:"0px" }}>
             {filteredAssets.map((asset, index) => (
               <li
                 style={{ fontSize: "16px", paddingBottom: "4px" }}
@@ -297,8 +295,8 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           Allocated Assets
         </h3>
         <Card style={{ paddingTop: "0" }}>
-          <div style={{ height: "470px" }}>
-            <ul style={{ overflowY: "scroll", maxHeight: "30%", margin: "0px" }}>
+          <div style={{ height: "492px" }}>
+            <ul style={{ overflowY: "scroll", maxHeight: "36%", margin: "0px" }}>
               {filteredAllocatedAssets.map((asset, index) => (
                 <li
                   style={{ fontSize: "16px", paddingBottom: "4px" }}

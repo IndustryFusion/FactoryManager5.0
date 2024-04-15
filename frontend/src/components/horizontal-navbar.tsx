@@ -7,7 +7,8 @@ import { useRouter } from "next/router";
 import Cookies from 'js-cookie';
 import Alerts from "./alert/alerts";
 import { LuLayoutDashboard } from "react-icons/lu";
-import AssetManagementDialog from "./asset-management";
+import { BiCube } from "react-icons/bi";
+import AssetManagementDialog from "./assetManagement/asset-management";
 
 
 const HorizontalNavbar: React.FC = () => {
@@ -64,14 +65,16 @@ const HorizontalNavbar: React.FC = () => {
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
           onClick={()=>setAssetManage(true)}
-        ><img src="/assetManage.png"
+        >
+          <img src="/square-blocks-outline.png"
           width="22px"
           height="22px"
-          alt="asset_manage_icon" />        
+          style={{color: "#615e5e"}}
+          alt="asset_manage_icon" />      
           </Button>
         <Button
           style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e",backgroundColor:"transparent",border: "none" }}

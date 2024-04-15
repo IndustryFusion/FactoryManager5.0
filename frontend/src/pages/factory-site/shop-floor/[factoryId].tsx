@@ -58,13 +58,13 @@ const ShopFloorManager: React.FC = () => {
   return (
     <>
       <HorizontalNavbar />
-
       <div
         style={{
           display: "flex",
-          height: "99vh",
+          height: "96vh",
           marginTop: "80px",
           zoom: "85%",
+          overflow:"hidden"
         }}
         className="bg-gray-100"
       >
@@ -91,7 +91,7 @@ const ShopFloorManager: React.FC = () => {
               border: "1px solid #ccc",
               borderRadius: "10px",
               padding: "10px",
-              maxWidth: "73%",
+              maxWidth: "63%",
               maxHeight: "98%",
             }}
           >
@@ -115,7 +115,7 @@ const ShopFloorManager: React.FC = () => {
             maxHeight: "100%",
           }}
         >
-          <UnallocatedAssets factoryId={factoryId} product_name="" />
+          {/* <UnallocatedAssets factoryId={factoryId} product_name="" /> */}
         </div>
       </div>
       <Footer />

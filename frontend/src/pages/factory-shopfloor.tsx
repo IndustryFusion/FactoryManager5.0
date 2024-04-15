@@ -3,13 +3,15 @@ import ShopFloorList from "@/components/shopfloor-list";
 import UnallocatedAssets from "@/components/unallocated-assets";
 import "../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
+import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 
 const FactoryShopFloor = () => {
 
-    const factoryId = "urn:ngsi-ld:factories:2:04";
+    const factoryId = "urn:ngsi-ld:factories:2:10";
 
     return (
         <>
+        <FactoryShopFloorProvider>
             <div style={{
                 height: "96vh",
                 overflow: "hidden",
@@ -41,6 +43,7 @@ const FactoryShopFloor = () => {
                     </div>
                 </div>
             </div>
+            </FactoryShopFloorProvider>
         </>
     )
 }

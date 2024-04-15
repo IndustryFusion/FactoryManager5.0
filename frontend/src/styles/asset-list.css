@@ -11,14 +11,17 @@ li {
 }
 .asset-heading{
   margin: 0.5rem 0 0;
-  border-bottom: 2px solid #050583;
+  /* border-bottom: 0.8px solid #000; */
   padding: 0px 0px 5px 0px;
-  color: #050583;
+  color: #000;
  margin-right: 3rem;
 }
 
 .selected {
   background-color: #e0e0e0;
+}
+.p-inputswitch.p-highlight .p-inputswitch-slider {
+  background: #6366f1;
 }
 
 .container {

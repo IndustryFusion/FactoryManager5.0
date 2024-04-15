@@ -14,6 +14,7 @@ import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 import "../styles/asset-list.css"
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -37,8 +38,10 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [isTyped, setIsTyped] = useState(false);
+  // const {shopfloor, setShopfloor} = useFactoryShopFloor();
 
-
+  // console.log("shopfloor here", shopfloor);
+  
   useEffect(() => {
     const filterShopFloors = () => {
       if (searchValue.trim()) {
@@ -217,12 +220,19 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           <h3 className="font-medium text-xl asset-heading mt-4" > Shop Floors </h3>
          < Card style={{ height: "auto", fontSize: "15px",padding:"0"  }}>
           <ul className="list-disc m-0">
-            {filteredShopFloors.map((floor) => (
-              <li
+            {filteredShopFloors.map((floor) => {
+              console.log("floor info here", floor);
+              
+              return(
+                <li
                 key={floor.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                onClick={() => setSelectedShopFloorId(floor.id)}
+                onClick={() => {
+                  setShopfloor(floor)
+                  setSelectedShopFloorId(floor.id)
+                }
+                }
                 style={{
                   cursor: "pointer",
                   backgroundColor:
@@ -234,7 +244,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               >
                 {floor.floorName}
               </li>
-            ))}
+              )
+             
+              })}
           </ul>
           </Card>
         </div>

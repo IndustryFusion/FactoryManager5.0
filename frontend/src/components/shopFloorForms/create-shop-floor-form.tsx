@@ -1,3 +1,4 @@
+
 import axios from "axios";
 import { useEffect, useState, ChangeEvent, useRef } from "react";
 import { Property, Schema } from "../../pages/factory-site/types/factory-form";
@@ -13,15 +14,15 @@ import "../../styles/factory-form.css";
 import Thumbnail from "@/components/thumbnail";
 import { Dialog } from "primereact/dialog";
 import { useShopFloor } from "@/context/shopfloor-context";
-
+ 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
+ 
 interface CreateShopFloorProps {
   isVisibleProp: boolean;
   setIsVisibleProp: React.Dispatch<React.SetStateAction<boolean>>;
   factoryId: string;
 }
-
+ 
 const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   isVisibleProp,
   setIsVisibleProp,
@@ -47,7 +48,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   useEffect(() => {
     findShopFloorTemplate();
   }, []);
-
+ 
   const findShopFloorTemplate = async () => {
     try {
       const response = await axios.get(API_URL + "/shop-floor/template", {
@@ -66,7 +67,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       console.error(" Fetching shopfloor template", error);
     }
   };
-
+ 
   const handleInputTextChange = (
     e: ChangeEvent<HTMLInputElement>,
     key: keyof ShopFloor
@@ -86,7 +87,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   const handleFileUpload = async (e: { files: File[] }) => {
     const file = e.files[0];
     console.log("file name", file);
-
+ 
     if (file) {
       setUploading(true);
       try {
@@ -101,13 +102,13 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       }
     }
   };
-
+ 
   const handleReset = (event: any) => {
     event.preventDefault();
     const newFormShopFloor = JSON.parse(JSON.stringify(shopFloor));
     newFormShopFloor.thumbnail = shopFloor.thumbnail;
     setFileUploadKey((prevKey) => prevKey + 1);
-
+ 
     Object.keys(shopFloorTemplate?.properties || {}).forEach((key) => {
       const property = shopFloorTemplate?.properties[key];
       console.log(property);
@@ -121,11 +122,11 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         newFormShopFloor[key] = "";
       }
     });
-
+ 
     setShopFloor(newFormShopFloor);
     setUploadedFileName("");
   };
-
+ 
   const handleSave = async () => {
     let payload;
     if (shopFloor.floor_name === "") {
@@ -146,7 +147,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         },
       };
     }
-
+ 
     try {
       const response = await axios.post(API_URL + "/shop-floor", payload, {
         params: {
@@ -158,11 +159,12 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         },
         withCredentials: true,
       });
-
+ 
       const shopFloorResponse = response.data;
-      console.log();
-      
-
+   
+     console.log("shopFloorResponse", shopFloorResponse);
+     
+ 
       if (shopFloorResponse.status === 201) {
         showSuccess();
         setIsVisibleProp(false);
@@ -183,7 +185,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       console.error("Error saving shop floor", error);
     }
   };
-
+ 
   const showSuccess = () => {
     if (toast.current !== null) {
       toast.current.show({
@@ -204,10 +206,10 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
     }
   };
-
+ 
   const renderFields = (key: string, property: Property) => {
     const value = shopFloor[key];
-
+ 
     return (
       <>
         {property.type === "string" && (
@@ -265,7 +267,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       </>
     );
   };
-
+ 
   const footerContent = (
     <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
       <Button
@@ -293,7 +295,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       />
     </div>
   );
-
+ 
   return (
     <div className="card flex justify-content-center">
       <Button
@@ -323,5 +325,6 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     </div>
   );
 };
-
+ 
 export default CreateShopFloor;
+ 

@@ -32,12 +32,13 @@ import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
+import { InputSwitch } from "primereact/inputswitch";
+import "../../../styles/asset-list.css"
 
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
 }
-
 
 interface RelationCounts {
   [key: string]: number;
@@ -119,10 +120,7 @@ const FlowEditor: React.FC<
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
-
- 
- 
- 
+  const [formView, setFormView] = useState(false);
 
  // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string,relationClass:string) => {
@@ -195,10 +193,7 @@ const FlowEditor: React.FC<
   };
 
 
- 
-
-  useEffect(() => {
-    
+  useEffect(() => {   
       const originalWarn = console.warn;
       console.warn = (...args) => {
         const [message] = args;
@@ -1051,8 +1046,6 @@ const handleConfirm = async () => {
     }, 3000); 
 };
 
-
-
   const handleCancel = () => {
     setIsDialogVisible(false);
     setTimeout(() => {
@@ -1065,12 +1058,16 @@ const handleConfirm = async () => {
     }, 3000); 
 };
 
+
+console.log("formView here", formView);
+
  const dialogFooter = (
     <div>
       <Button label="No" icon="pi pi-times" onClick={handleCancel} className="p-button-text" />
       <Button label="Yes" icon="pi pi-check" onClick={handleConfirm} autoFocus />
     </div>
   );
+
   return (
     <>
      <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
@@ -1081,7 +1078,8 @@ const handleConfirm = async () => {
       <EdgeAddContext.Provider value={{ onEdgeAdd }}>
     
         <BlockUI blocked={isOperationInProgress} fullScreen/>
-        <div style={{}}>
+        <div className="flex justify-content-between">
+          <div>
           <Button
             label="Save"
             onClick={handleSave}
@@ -1089,7 +1087,6 @@ const handleConfirm = async () => {
             raised
             disabled={isSaveDisabled}
           />
-
           <Button
             label="Undo"
             onClick={onRestore}
@@ -1102,19 +1099,23 @@ const handleConfirm = async () => {
             className="p-button-success m-2"
             raised
           />
-
           <Button
             label="Delete"
             onClick={handleDelete}
             className="p-button-danger m-2"
             raised
           />
-
           <Button
             label="Export as JPEG"
             className="m-2"
             onClick={handleExportClick}
           />
+          </div>
+         
+          <div className="flex align-items-center gap-2">
+            <span>Form View</span>
+          <InputSwitch checked={formView} onChange={(e) => setFormView(e.value)} />
+          </div>
 
           <Toast ref={toast} />
         </div>
@@ -1151,9 +1152,7 @@ const handleConfirm = async () => {
      
       </EdgeAddContext.Provider>
 
-    </ReactFlowProvider></>
-  
-    
+    </ReactFlowProvider></>   
   );
 };
 
