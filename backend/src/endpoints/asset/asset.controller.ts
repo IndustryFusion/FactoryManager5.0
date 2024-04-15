@@ -125,6 +125,27 @@ export class AssetController {
     }
   }
 
+  @Delete('/delete-asset')
+  async deleteAssetRelation(@Param('id') id: string, @Req() req: Request){
+    try {
+      const token = await getSessionToken(req);
+      const response = await this.assetService.deleteAssetRelation(id, token);
+      if(response['status'] == 200 || response['status'] == 204 || response['status'] == 201) {
+        return {
+          success: true,
+          status: response['status'],
+          message: 'Deleted Successfully',
+        }
+      }
+    } catch (err) {
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      };
+    }
+  }
+
   @Delete(':id')
   async deleteAssetById(@Param('id') id: string, @Req() req: Request) {
     try {
