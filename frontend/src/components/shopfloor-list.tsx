@@ -13,6 +13,7 @@ import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
+import "../styles/asset-list.css"
 interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -199,28 +200,23 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={handleDelete}
             />
           </div>
-          <div className="p-input-icon-left flex align-items-center ">
+          <div className="p-input-icon-left flex align-items-center mt-4 ">
             <i className="pi pi-search" />
             <InputText
               value={searchValue}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setSearchValue(e.target.value)
               }
-              placeholder="Search by name..."
+              placeholder="Search "
               style={{ width: "100%", marginRight: "1rem" }}
             >
               <i className="pi pi-search" slot="prefix"></i>
             </InputText>
           </div>
         
-          <h3
-            className="font-medium text-xl"
-            style={{ marginTop: "2%", marginLeft: "5%" }}
-          >
-            Shop Floors
-          </h3>
-         < Card style={{ height: "auto", fontSize: "15px",  }}>
-          <ul className="list-disc" style={{ marginTop: "20px" }}>
+          <h3 className="font-medium text-xl asset-heading mt-4" > Shop Floors </h3>
+         < Card style={{ height: "auto", fontSize: "15px",padding:"0"  }}>
+          <ul className="list-disc m-0">
             {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}

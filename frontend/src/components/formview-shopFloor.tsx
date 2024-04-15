@@ -5,7 +5,7 @@ import "../styles/factory-shopfloor.css"
 
 const FactoryShopFloorForm = () => {
     return (
-        <Card className="px-4 " style={{height:"90vh"}}>        
+        <Card className="px-5 " style={{height:"90vh"}}>        
             <form>
                 <h1></h1>
                 <div className="input-container gap-6">
@@ -22,8 +22,8 @@ const FactoryShopFloorForm = () => {
                         placeholder=""
                     />
                 </div>
-                <div>
-                    <p>Relations</p>
+                <div className="mt-4">
+                    <p style={{fontWeight:"bold"}}>Relations</p>
                     <div className="input-container" style={{gap: "3.7rem"}}>
                         <label htmlFor="">HasFilter</label>
                         <InputText
@@ -73,8 +73,15 @@ const FactoryShopFloorForm = () => {
                     </div>
                 </div>
                 <div className="form-btns">
-                    <Button>Reset</Button>
-                    <Button>Save</Button>
+                    <Button
+                     severity="secondary" text raised
+                     label="Reset"
+                     className="mr-2"
+                     type="button"
+                    ></Button>
+                    <Button
+                    className="save-btn"
+                    >Save</Button>
 
                 </div>
             </form>

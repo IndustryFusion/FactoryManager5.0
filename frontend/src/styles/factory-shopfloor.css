@@ -2,13 +2,12 @@
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     grid-gap: 10px;
-    
     padding: 0 1rem;
 }
 
 .form-container {
     width: 90%;
-    margin: 0 auto;
+    margin: 1.5rem auto;
 }
 
 .input-container {
@@ -25,13 +24,31 @@
     border-right: 1px solid #ccc;
     padding: 0 1.3rem;
 }
-.allocated-list-container{
+
+.allocated-list-container {
     border-left: 1px solid #ccc;
     padding: 0 1.3rem;
 }
-.form-btns{
+
+.form-btns {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
-    margin-top: 6rem;
+    margin-top: 4rem;
+}
+
+.factory-header {
+    border-bottom: 1px solid #ccc;
+}
+
+.add-btn {
+    background-color: #050583;
+}
+
+.factory-heading {
+    color: #050583;
+}
+
+.save-btn {
+    background-color: #050583;
 }

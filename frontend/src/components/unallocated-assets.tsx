@@ -232,55 +232,52 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
   return (
     <React.Fragment>
-      <div style={{height:"23rem", borderBottom: "1px solid #ccc"}}>
-        <h3
-          className="font-medium text-xl"
-          style={{ marginTop: "2%", marginLeft: "5%" }}
-        >
-          Unallocated Assets
-        </h3>
-        <div className="flex ">
+      <div style={{ height: "23rem", borderBottom: "1px solid #ccc" }}>
+        <div className="flex mt-3 gap-2 ">
           <div className="p-input-icon-left">
-            <i className="pi pi-search ml-2" />
+            <i className="pi pi-search " style={{ color: "#050583" }} />
             <InputText
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name..."
-              className="ml-2 w-100"
+              placeholder="Search"
+              className=" w-100"
             />
-
           </div>
           <div>
-            <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup className="filter-button" style={{ color: "grey", fontSize: "1.2em" }} />
+            <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup className="filter-button" style={{ color: "#050583", fontSize: "1.2em" }} />
             <Menu model={menuItems} popup ref={menu} id="popup_menu" style={{ marginLeft: "-15%" }} />
           </div>
         </div>
+        <h3 className="font-medium text-xl asset-heading">
+          Unallocated Assets
+        </h3>
 
-        <div style={{height:"53rem"}}>
-        <ul style={{  overflowY: "scroll", maxHeight: "30%"}}>
-          {filteredAssets.map((asset, index) => (
-            <li
-            style={{fontSize:"16px", paddingBottom:"4px"}}
-              key={index}
-              draggable={true}
-              // onClick={() => handleAssetClick(asset.id)}
-              onDragStart={(e) => handleDragStart(e, asset, "asset")}
-            >
-              {asset.product_name}
-            </li>
-          ))}
-        </ul>
+
+        <div style={{ height: "53rem" }}>
+          <ul style={{ overflowY: "scroll", maxHeight: "30%",margin:"0px" }}>
+            {filteredAssets.map((asset, index) => (
+              <li
+                style={{ fontSize: "16px", paddingBottom: "4px" }}
+                key={index}
+                draggable={true}
+                // onClick={() => handleAssetClick(asset.id)}
+                onDragStart={(e) => handleDragStart(e, asset, "asset")}
+              >
+                {asset.product_name}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <div style={{marginTop: "2rem"}}>
+      <div style={{ marginTop: "1rem" }}>
         <div className="flex gap-2">
           <div className="p-input-icon-left">
-            <i className="pi pi-search" style={{color:"#050583"}} />
+            <i className="pi pi-search" style={{ color: "#050583" }} />
             <InputText
               value={searchTermAllocated}
               onChange={(e) => setSearchTermAllocated(e.target.value)}
-              placeholder="Search by name..."
+              placeholder="Search"
             />
           </div>
           <div>
@@ -289,30 +286,29 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
               onClick={(e) => allocatedMenu.current?.toggle(e)}
               aria-haspopup
               className="filter-button"
-              style={{  color:"#050583", fontSize: "1.2em" }}
+              style={{ color: "#050583", fontSize: "1.2em" }}
             />
-
             <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{ marginLeft: "-20%", marginTop: "1" }} />
           </div>
-        </div>   
+        </div>
         <h3
-          className="font-medium text-xl asset-heading" 
+          className="font-medium text-xl asset-heading"
         >
           Allocated Assets
-        </h3> 
-        <Card style={{paddingTop:"0"}}>
-        <div style={{height:"470px"}}>
-        <ul style={{  overflowY: "scroll", maxHeight: "30%", margin:"0px"}}>
-          {filteredAllocatedAssets.map((asset, index) => (
-            <li
-            style={{fontSize:"16px", paddingBottom:"4px"}}
-            key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
-              {typeof asset === 'string' ? asset : asset.product_name}
-            </li>
-          ))}
-        </ul>
-        </div> 
-        </Card>       
+        </h3>
+        <Card style={{ paddingTop: "0" }}>
+          <div style={{ height: "470px" }}>
+            <ul style={{ overflowY: "scroll", maxHeight: "30%", margin: "0px" }}>
+              {filteredAllocatedAssets.map((asset, index) => (
+                <li
+                  style={{ fontSize: "16px", paddingBottom: "4px" }}
+                  key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                  {typeof asset === 'string' ? asset : asset.product_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
       </div>
     </React.Fragment>
   );
