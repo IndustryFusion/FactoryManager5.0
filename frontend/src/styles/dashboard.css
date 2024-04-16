@@ -6,11 +6,16 @@
 .assets-table {
     font-family: "Inter", sans-serif !important;
 }
-
-.p-datatable .p-datatable-tbody>tr.p-highlight {
+ /* .p-datatable .p-datatable-tbody >  tr.p-selectable-row.p-highlight {
+    background: #ecfeff !important;
+    color: #0e7490 !important;
+} */
+.selected-row{
     background: #ecfeff !important;
     color: #0e7490 !important;
 }
+
+
 .factory-table th{
     display: none;
 }
@@ -24,16 +29,19 @@
   font-size: 13.2px;
   width: 150px;
 }
+.action-items-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-left: 6px;
+}
 .factory-id-text{
     font-weight: 600;
     font-size: 14px;
     width: 175px;
     background-color: #ffe0c7;
 }
-/* .p-datatable .p-datatable-tbody >  tr.p-selectable-row.p-highlight {
-    background: #ecfeff !important;
-    color: #0e7490 !important;
-} */
+
 
 .card {
     background: #ffffff;

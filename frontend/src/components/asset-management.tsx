@@ -120,7 +120,13 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       </div>
     )
   }
-
+  const actionItemsTemplate = (rowData: Asset): React.ReactNode => {
+    return (
+   <button className="action-items-btn">
+      <i className="pi pi-trash"></i>
+   </button>
+   )
+  }
   const headerElement = (
     <h3 className="px-5"> Asset Management</h3>
   )
@@ -219,6 +225,9 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                   header="Manufacturer"
                   body={manufacturerDataTemplate}
                 />
+                <Column
+                  body={actionItemsTemplate}
+                ></Column>
               </DataTable>
               <h3>Allocated Assets</h3>
               <DataTable

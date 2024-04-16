@@ -44,7 +44,7 @@ const DashboardChart = () => {
     const [lastData, setLastData] = useState({});
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
-    const { entityIdValue, setMachineStateData, autorefresh,  setAllOnlineTime } = useDashboard();
+    const { entityIdValue, setMachineStateData,  setAllOnlineTime } = useDashboard();
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -546,23 +546,12 @@ const DashboardChart = () => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else {
-            if (router.isReady) {
-                if (autorefresh === true) {
-                    console.log("is machine-chart autoreferssh");
-                    intervalId.current = setInterval(() => {
-                        fetchDataAndAssign();
-                    }, 10000);
-                } else {
-                    fetchDataAndAssign();
-                }
+            if (router.isReady) {              
+                    fetchDataAndAssign();                
             }
         }
-        return () => {
-            if (intervalId.current) {
-                clearInterval(intervalId.current);
-            }
-        };
-    }, [router.isReady, entityIdValue, autorefresh, selectedInterval])
+       
+    }, [router.isReady, entityIdValue, selectedInterval])
 
     // useEffect to create chart data and when there is a update in data
     useEffect(() => {

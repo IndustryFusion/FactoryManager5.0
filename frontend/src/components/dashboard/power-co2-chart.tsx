@@ -271,16 +271,11 @@ useEffect(() => {
         setNoChartData(false);
     };
 
-    fetchDataAndAssign();
+            fetchDataAndAssign();
+        
 
-    // Clean-up interval on unmount if autorefresh is true
-    return () => {
-        if (autorefresh && intervalId.current) {
-            clearInterval(intervalId.current);
-        }
-    };
-}, [entityIdValue, selectedInterval, autorefresh]); // Add autorefresh to dependencies if its state should trigger updates
 
+    }, [checkChart, entityIdValue, selectedInterval]);
 
 
 
