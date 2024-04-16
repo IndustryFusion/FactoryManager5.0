@@ -18,11 +18,13 @@ import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
+  setShopfloorProp?: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
 }
 
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
+  setShopfloorProp
 }) => {
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,9 +61,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }, [searchValue, shopFloors]);
 
   const fetchShopFloors = async (factoryId: string) => {
-
     console.log("factoryId here", factoryId );
-    
     try {
       const factoryDetails = await getshopFloorById(factoryId);
       console.log("factoryDetails  here", factoryDetails );
@@ -229,7 +229,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 draggable
                 onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                 onClick={() => {
-                  setShopfloor(floor)
+                  setShopfloorProp(floor)
                   setSelectedShopFloorId(floor.id)
                 }
                 }

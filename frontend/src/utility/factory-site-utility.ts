@@ -556,13 +556,15 @@ export const fetchAssetById = async (assetId: string) => {
     });
     const responseData = response.data;
     const mappedData = extractHasRelations(responseData);
-    console.log(mappedData, "The asset Node data");
-      console.log(responseData, "1111");
+    // console.log(mappedData, "The asset Node data");
+    //   console.log(responseData, "1111");
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
   }
 };
+
+
 
 export const fetchAllocatedAssets = async (factoryId:string)=> {
   try {

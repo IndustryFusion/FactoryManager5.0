@@ -298,11 +298,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
  
   return (
     <div className="card flex justify-content-center">
-      <Button
-        label="Show"
-        icon="pi pi-external-link"
-        onClick={() => setIsVisibleProp(true)}
-      />
+   
       <Dialog
         visible={isVisibleProp}
         modal

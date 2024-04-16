@@ -1,13 +1,6 @@
 import { ReactNode, useContext, createContext, useState } from "react";
 
-
-interface FactoryShopFloorValue {
-    shopfloor: { [key: string]: any; };
-    setShopfloor: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
-}
-
-const FactoryShopFloorContext = createContext<FactoryShopFloorValue | undefined>(undefined);
-
+const FactoryShopFloorContext = createContext<undefined>(undefined);
 
 export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     children,
@@ -16,9 +9,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     const [shopfloor, setShopfloor] = useState({})
     return (
         <FactoryShopFloorContext.Provider
-            value={{
-                shopfloor, setShopfloor
-            }}
+            value={{}}
         >
             {children}
         </FactoryShopFloorContext.Provider>

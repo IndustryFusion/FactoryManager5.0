@@ -24,6 +24,7 @@ interface AssetProperty {
 interface AssetListProps {
   factoryId: string;
   product_name?: string;
+  setAssetProp?: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
 }
 
 interface AssetRelationship {
@@ -42,6 +43,7 @@ interface Asset {
 const UnallocatedAssets: React.FC<AssetListProps> = ({
   factoryId,
   product_name,
+  setAssetProp
 }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -258,7 +260,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
                 style={{ fontSize: "16px", paddingBottom: "4px" }}
                 key={index}
                 draggable={true}
-                // onClick={() => handleAssetClick(asset.id)}
+                onClick={() => setAssetProp(asset)}
                 onDragStart={(e) => handleDragStart(e, asset, "asset")}
               >
                 {asset.product_name}

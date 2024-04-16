@@ -115,7 +115,7 @@ const ShopFloorManager: React.FC = () => {
             maxHeight: "100%",
           }}
         >
-          {/* <UnallocatedAssets factoryId={factoryId} product_name="" /> */}
+          <UnallocatedAssets factoryId={factoryId} product_name="" />
         </div>
       </div>
       <Footer />
