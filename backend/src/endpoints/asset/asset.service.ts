@@ -271,4 +271,89 @@ export class AssetService {
       throw err;
     }
   }
+
+  async deleteAssetRelation(assetId: string, token: string){
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      // Delete AssetId from Global Allocated Asset
+      let globalAssetUrl = `${this.scorpioUrl}/urn:ngsi-ld:global-allocated-assets-store`;
+      let globalAssets = await axios.get(globalAssetUrl, {headers});
+      globalAssets = globalAssets.data["http://www.industry-fusion.org/schema#last-data"].object;
+      if(Array.isArray(globalAssets) && globalAssets.includes(assetId)){
+        const newArray = globalAssets.filter(item => item !== assetId);
+        let deleteGlobalResponse = await this.deleteAssetById("urn:ngsi-ld:global-allocated-assets-store",token);
+        if(deleteGlobalResponse['status'] == 200 || deleteGlobalResponse['status'] == 204) {
+          const data = {
+            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+            "id": "urn:ngsi-ld:global-allocated-assets-store",
+            "type": "urn-holder",
+            "http://www.industry-fusion.org/schema#last-data": {
+              type: 'Property',
+              object: newArray
+            }
+          };
+          await axios.post(this.scorpioUrl, data, {headers});
+        }
+      }
+
+      // Delete AssetId From Factory Specific Allocated Asset
+      let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`; 
+      const factoryAssetsResponse = await axios.get(factoryAssetsUrl, {headers});
+      if(factoryAssetsResponse.data.length > 0){
+        let lastData = factoryAssetsResponse.data["http://www.industry-fusion.org/schema#last-data"].object;
+        const newArray = lastData.filter(item => item !== assetId);
+        factoryAssetsResponse.data["http://www.industry-fusion.org/schema#last-data"].object = newArray;
+        await axios.post(this.scorpioUrl, factoryAssetsResponse.data, {headers});
+      }
+
+      // Remove AssetId From HasAsset Relation Of ShopFloor
+      let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`; 
+      const shopFloorResponse = await axios.get(shopFloorUrl, {headers});
+      if(shopFloorResponse.data.length > 0){
+        let hasAssetData = shopFloorResponse.data["http://www.industry-fusion.org/schema%23hasAsset"];
+        const newArray = hasAssetData.filter(item => item.object !== assetId);
+        shopFloorResponse.data["http://www.industry-fusion.org/schema%23hasAsset"] = newArray; 
+        let deleteResponse = this.deleteAssetById(shopFloorResponse.data.id, token);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+          await axios.post(this.scorpioUrl, shopFloorResponse.data, { headers });
+        }
+      }
+
+      // Delete Asset From Scorpio
+      let assetData = await this.getAssetDataById(assetId, token);
+      let assetCategory = assetData["http://www.industry-fusion.org/schema#asset_category"].split(" ").pop(); 
+      assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
+      let relationKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
+      let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`; 
+      const response = await axios.get(url, {headers});
+      if(response.data.length > 0) {
+        // Delete Asset From Parent Relation
+        let relationData = response.data[relationKey];
+        const newArray = relationData.filter(item => item !== assetId);
+        response.data[relationKey] = newArray;
+        let deleteResponse = this.deleteAssetById(response.data.id, token);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+          const createResponse = await axios.post(this.scorpioUrl, response.data, { headers });
+          return {
+            status: createResponse.status,
+            data: createResponse.data
+          }
+        }
+      }else{
+        // Delete AssetId From Scorpio
+        const url = this.scorpioUrl + '/' + assetId; 
+        let deleteResponse = await axios.delete(url, {headers});
+        return {
+          status: deleteResponse.status,
+          data: deleteResponse.data
+        }
+      }
+    }catch(err){
+      throw err;
+    }
+  }
 }

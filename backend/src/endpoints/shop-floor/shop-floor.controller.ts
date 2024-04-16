@@ -110,11 +110,14 @@ export class ShopFloorController {
       const token = await getSessionToken(req);
       const response = await this.shopFloorService.updateReact(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
-        return {
-          success: true,
-          status: response['status'],
-          message: 'Updated Successfully',
-        }
+        let updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
+        if(updateGlobalResponse['status'] == 200 || updateGlobalResponse['status'] == 204) {
+          return {
+            success: true,
+            status: response['status'],
+            message: 'Updated Successfully',
+          }
+       }
       } else {
         return response;
       }
