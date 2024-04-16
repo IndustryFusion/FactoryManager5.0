@@ -99,7 +99,6 @@ async handleChartDataUpdate() {
   try {
     const credentials = await this.redisService.getTokenAndEntityId();
     if (!credentials) {
-      this.logger.warn('Credentials not found.');
       return;
     }
 

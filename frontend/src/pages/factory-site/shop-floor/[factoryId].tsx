@@ -67,64 +67,61 @@ const ShopFloorManager: React.FC = () => {
           height: "99vh",
           marginTop: "80px",
           zoom: "85%",
+        
         }}
         className="bg-gray-100"
       >
-       
-        <ShopFloorProvider>
-          {" "}
-          <div
-            style={{
-              flex: 1,
-              borderRight: "1px solid #ccc",
-              padding: "10px",
-              maxWidth: "18%",
-              maxHeight: "100%",
-            }}
-          >
-            <ShopFloorList
-              factoryId={factoryId}
-              onShopFloorDeleted={handleShopFloorDeleted}
-            />
-          </div>
-          <div
-            ref={elementRef}
-            style={{
-              flex: 2,
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              padding: "10px",
-              maxWidth: "73%",
-              maxHeight: "98%",
-            }}
-          >
-            {factoryDetails && (
-              <FlowEditor
-                factoryId={factoryId}
-                factory={factoryDetails}
-                deletedShopFloors={deletedShopFloors}
-              />
-            )}
-
-            {!factoryDetails && <div>Loading factory details...</div>}
-          </div>
-        </ShopFloorProvider>
-     
+      <ShopFloorProvider>
         <div
           style={{
-            flex: 1,
+            borderRight: "1px solid #ccc",
             padding: "10px",
-            maxWidth: "15%",
+            width: "400px",
             maxHeight: "100%",
+            flexShrink: 0, // Prevents the component from shrinking
           }}
         >
-
-          
-          <UnallocatedAssets factoryId={factoryId} product_name="" />
-        
+          <ShopFloorList
+            factoryId={factoryId}
+            onShopFloorDeleted={handleShopFloorDeleted}
+          />
         </div>
-       
-      </div>
+        <div
+          ref={elementRef}
+          style={{
+            flex: 1,
+            border: "1px solid #ccc",
+            borderRadius: "10px",
+            padding: "10px",
+         
+            maxHeight: "98%",
+            flexShrink: 0,
+          }}
+        >
+          {factoryDetails && (
+            <FlowEditor
+              factoryId={factoryId}
+              factory={factoryDetails}
+              deletedShopFloors={deletedShopFloors}
+            />
+          )}
+
+          {!factoryDetails && <div>Loading factory details...</div>}
+        </div>
+       <div
+          style={{
+            borderRight: "1px solid #ccc",
+            padding: "10px",
+            width: "350px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
+            maxHeight: "100%",
+            flexShrink: 0, // Prevents the component from shrinking
+          }}
+        >
+          <UnallocatedAssets factoryId={factoryId} product_name="" />
+        </div>
+      </ShopFloorProvider>
+    </div>
+
       <Footer />
      </UpdateProvider>
     </>

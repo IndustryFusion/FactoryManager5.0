@@ -124,8 +124,8 @@ export class AllocatedAssetService {
           const assetData = await this.assetService.getAssetDataById(id, token);
           const finalData = {
             id,
-            product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+            product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
+            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
           };
           finalArray.push(finalData);
         }
@@ -133,8 +133,8 @@ export class AllocatedAssetService {
         const assetData = await this.assetService.getAssetDataById(assetIds, token);
         const finalData = {
           id: assetIds,
-          product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
+          product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
+          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
         };
         finalArray.push(finalData);
       }
@@ -162,7 +162,7 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-    // console.log(response, "response of all allocated asset")
+    
       return response.data;
       
       // let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;

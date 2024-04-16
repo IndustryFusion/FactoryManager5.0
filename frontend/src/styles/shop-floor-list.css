@@ -1,0 +1,29 @@
+@keyframes colorDip {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    background-color: #164B60; /* Dark blue */
+  }
+  50% {
+    transform: translateY(-50%) scale(0.8);
+    background-color: #dce2e7; /* Light blue */
+  }
+}
+
+
+.large-button {
+  padding: 12px 24px; /* Example padding, adjust as needed */
+  font-size: 1em; /* Larger text */
+}
+
+.bold-button {
+  font-size: 16px;
+  padding: 10px 15px;
+  min-width: 100px;
+  font-weight: bold; /* Makes text bold */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+.bold-button:hover {
+  background-color: #cccccc; /* Lighter shade on hover, adjust color based on your design */
+  color: #333333; /* Change text color on hover if needed */
+}

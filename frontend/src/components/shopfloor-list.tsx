@@ -14,6 +14,7 @@ import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
+import "../styles/shop-floor-list.css"
 interface ShopfloorListProps {
   factoryId: string;
   onShopFloorDeleted: (shopFloorId: string) => void;
@@ -168,12 +169,12 @@ const fetchShopFloors = async (factoryId: string) => {
 
   return (
     <>
-      <Card style={{ height: "99%", fontSize: "15px", overflowY: "scroll" }}>
+      <Card style={{ height: "99%", fontSize: "15px", overflowY: "scroll", backgroundColor:""}}>
         <Toast ref={toast} />
 
         <div>
           <h3
-            className="font-medium text-xl"
+            className="font-medium text-xl ml-5"
             style={{ marginTop: "2%", marginLeft: "5%" }}
           >
             Shop Floors
@@ -186,26 +187,28 @@ const fetchShopFloors = async (factoryId: string) => {
                 setSearchValue(e.target.value)
               }
               placeholder="Search by name..."
-              style={{ width: "70%", marginRight: "1rem" }}
+              style={{ width: "95%", marginRight: "1rem" }}
+              className=""
             >
               <i className="pi pi-search" slot="prefix"></i>
             </InputText>
           </div>
-          <div className="form-btn-container mb-2 flex  ml-4 mt-4">
-            <Button
+          <div className="form-btn-container mb-2 flex  ml-2 mt-4">
+          
+           <Button
               label="New"
               severity="success"
               outlined
               raised
               onClick={() => setIsVisible(true)}
-              className="border-none  mr-2"
+              className="bold-button border-none mr-2 ml-2"
             />
             <Button
               severity="secondary"
               text
               raised
               label="Edit"
-              className="mr-2"
+              className="bold-button mr-2 ml-2"
               type="button"
               onClick={handleEdit}
             />
@@ -214,7 +217,7 @@ const fetchShopFloors = async (factoryId: string) => {
               severity="danger"
               text
               raised
-              className="mr-2"
+              className="bold-button mr-2 ml-2"
               type="button"
               onClick={handleDelete}
             />
@@ -222,18 +225,29 @@ const fetchShopFloors = async (factoryId: string) => {
           <ul className="list-disc" style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
-                key={floor.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                onClick={() => setSelectedShopFloorId(floor.id)}
-                style={{
+                  key={floor.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
+                  onClick={() => setSelectedShopFloorId(floor.id)}
+                  style={{
                   cursor: "pointer",
-                  backgroundColor:
-                    selectedShopFloorId === floor.id
-                      ? "lightgrey"
-                      : "transparent",
+                  backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
+                  position: "relative",
+                  paddingLeft: "20px",
                 }}
+                className="ml-4"
               >
+                <span style={{
+                  position: "absolute",
+                  left: "0",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  height: "10px",
+                  width: "10px",
+                  backgroundColor: "#164B60", // Initial color set, animation will override this during cycles
+                  borderRadius: "50%",
+                  animation: "colorDip 2s infinite",
+                }} />
                 {floor.floorName}
               </li>
             ))}

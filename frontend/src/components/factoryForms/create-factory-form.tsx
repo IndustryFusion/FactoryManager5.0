@@ -243,25 +243,25 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     }, []);
 
 
-    useEffect(() => {
-        const fetchAllAlerts = async () => {
-            try {
-                const response = await axios.get(API_URL + "/alerts", {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    withCredentials: true,
-                });
-                console.log("alerts response", response.data);
+    // useEffect(() => {
+    //     const fetchAllAlerts = async () => {
+    //         try {
+    //             const response = await axios.get(API_URL + "/alerts", {
+    //                 headers: {
+    //                     "Content-Type": "application/json",
+    //                     Accept: "application/json",
+    //                 },
+    //                 withCredentials: true,
+    //             });
+    //             console.log("alerts response", response.data);
 
 
-            } catch (error) {
-                console.error(error)
-            }
-        }
-        fetchAllAlerts();
-    })
+    //         } catch (error) {
+    //             console.error(error)
+    //         }
+    //     }
+    //     fetchAllAlerts();
+    // })
 
 
     const renderFields = (key: string, property: Property) => {
@@ -390,7 +390,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             {schema &&
                                 schema?.properties &&
                                 Object.keys(schema.properties).map((key) =>
-                                    renderFields(key, schema.properties[key])
+                                    <div key={key}> {renderFields(key, schema.properties[key])}</div>
+                                   
                                 )}
                         </Card>
                     </div>

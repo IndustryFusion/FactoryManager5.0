@@ -106,7 +106,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
         setError("Failed to fetch assets");
         setLoading(false);
-         allocatedAssetsArray = null; 
+        allocatedAssetsArray = null; 
         
       }
     };
@@ -118,15 +118,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       if (typeof id === 'string') {
         fetchNonShopFloorAssets(id);
       }
+      else if (onUpdateTriggered) {
+            fetchNonShopFloorAssets(factoryId)  
+    }
   }
-  }, [factoryId, router.isReady]);
-
- useEffect(() => {
-        if (onUpdateTriggered) {
-            console.log("Update detected, react accordingly...");
-            // Perform actions like refreshing data or UI
-        }
-    }, [onUpdateTriggered]);
+  }, [factoryId, router.isReady, onUpdateTriggered]);
   // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
  useEffect(() => {
 
@@ -142,16 +138,21 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 }, [searchTerm, selectedCategories, assets]);
 
 
-// for allocated asset list : if we dont find any 200 response from backend , it will give the allocatedAssets.filter is not a function error
-// reason : when in alloctaed asset  urn:ngsi-ld:allocated-assets-store  in  scorpio we have other values then urn inside object array then we dont get 200 response from
-// allocated-asset backend endpoint
 const filteredAllocatedAssets = useMemo(() => {
-  return allocatedAssets.filter(asset => 
-    (selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category)) &&
-    asset.product_name?.toLowerCase().includes(searchTermAllocated.toLowerCase())
-  );
-}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
 
+  if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
+    return [];
+  }
+
+  return allocatedAssets.filter(asset => {
+   
+    const productName = asset.product_name?.toLowerCase() ?? '';
+    const isCategoryMatch = selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category);
+    const isSearchMatch = productName.includes(searchTermAllocated.toLowerCase());
+
+    return isCategoryMatch && isSearchMatch;
+  });
+}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
 
  const handleCategoryChange = (category: string) => {
   setSelectedCategories(prevCategories => {
@@ -240,7 +241,8 @@ const menuItems = [
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <React.Fragment>
+    <>
+  
       <Card style={{ height: "60%", overflowY: "scroll" }}>
         <h3
           className="font-medium text-xl"
@@ -317,7 +319,7 @@ const menuItems = [
            ))}
         </ul>
       </Card>
-    </React.Fragment>
+    </>
   );
 };
 
