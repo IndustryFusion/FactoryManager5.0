@@ -10,6 +10,5 @@ export class PowerConsumptionGateway {
 
   sendPowerConsumptionUpdate(data: any) {
     this.server.emit('powerConsumptionUpdate', data);
-    console.log(data, "called")
   }
 }

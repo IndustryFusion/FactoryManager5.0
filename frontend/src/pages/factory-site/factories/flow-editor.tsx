@@ -34,6 +34,8 @@ import ShopFloorList from "@/components/shopfloor-list";
 import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
 
+import { useUpdate  } from "@/context/react-flow-context";
+
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -120,7 +122,7 @@ const FlowEditor: React.FC<
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
-
+   const { triggerUpdate, onUpdateTriggered } = useUpdate();
  
  
  
@@ -295,7 +297,10 @@ const FlowEditor: React.FC<
       onRestore();
       setLoadedFlowEditor(true)
     }
-
+ if (onUpdateTriggered) {
+            console.log("Reacting to update...");
+          
+        }
      if (toastMessage) {
     toast.current?.show({
       severity: 'success', 
@@ -309,7 +314,7 @@ const FlowEditor: React.FC<
     console.warn = originalWarn;
   };
    
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage, onUpdateTriggered] );
 
 
 useEffect(() => {
@@ -493,6 +498,7 @@ const onEdgesChange = useCallback((changes:any) => {
         setToastMessage("Scorpio already has these data");
       }
       onRestore();
+      triggerUpdate();
    
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -502,7 +508,7 @@ const onEdgesChange = useCallback((changes:any) => {
       setIsOperationInProgress(false);
 
     }
-  }, [nodes, edges, factoryId]);
+  }, [nodes, edges, factoryId, triggerUpdate]);
 
   const onSave = useCallback(async () => {
   
