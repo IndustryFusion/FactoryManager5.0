@@ -12,7 +12,7 @@ export class NonShopFloorAssetsService {
   async findAll(id: string, token: string) {
     try {
       let assetIds = await this.assetService.getAssetIds(token);
-      let allocatedAssets = await this.allocatedAssetService.getAllocatedAssets(token);
+      let allocatedAssets = await this.allocatedAssetService.getGlobalAllocatedAssets(token);
       if (allocatedAssets.length > 0) {
         const filteredArray = [];
         for (let i = 0; i < assetIds.length; i++) {

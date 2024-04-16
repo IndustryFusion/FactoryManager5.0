@@ -150,15 +150,11 @@ private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
 @Cron('* * * * *')
 async handleMachineStateRefresh(){
   let machineStateParams = await this.redisService.getData('machine-state-params');
-  console.log('machineStateParams ', machineStateParams);
   if(machineStateParams && machineStateParams.type == 'days'){
     let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
-    console.log('newData ', newData);
     let storedData = await this.redisService.getData('machine-state-data');
-    console.log('storedData ', storedData);
     if(storedData){
       if(!isEqual(newData, storedData)){
-        console.log('inside not equal');
         await this.redisService.saveData('machine-state-data',newData);
         // call web socket
         this.valueChangeStateGateway.sendUpdate(newData);
