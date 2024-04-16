@@ -297,10 +297,6 @@ const FlowEditor: React.FC<
       onRestore();
       setLoadedFlowEditor(true)
     }
- if (onUpdateTriggered) {
-            console.log("Reacting to update...");
-          
-        }
      if (toastMessage) {
     toast.current?.show({
       severity: 'success', 
@@ -314,7 +310,7 @@ const FlowEditor: React.FC<
     console.warn = originalWarn;
   };
    
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage, onUpdateTriggered] );
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
 
 
 useEffect(() => {
@@ -464,7 +460,7 @@ const onEdgesChange = useCallback((changes:any) => {
       } else {
         setToastMessage("FlowChart already exist");
       }
-     const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+     const reactAllocatedAssetScorpio = await axios.patch(`${API_URL}/allocated-asset`,
        payLoad.factoryData.edges,{
         params: {
           "factory-id": factoryId,
@@ -498,6 +494,7 @@ const onEdgesChange = useCallback((changes:any) => {
         setToastMessage("Scorpio already has these data");
       }
       onRestore();
+      // triggerUpdate() used to trigger context so that unAllocated Assets componenet get refresh with new data
       triggerUpdate();
    
     } catch (error) {
@@ -592,6 +589,8 @@ const onEdgesChange = useCallback((changes:any) => {
      
         setNodesInitialized(true);
         onRestore();
+        // triggerUpdate() used to trigger context so that unAllocated Assets componenet get refresh with new data
+        triggerUpdate();
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
