@@ -48,21 +48,13 @@ export class PgRestService {
       const response = await axios.get(url, {headers});
 
      if (response.data) {
-            let storedDataKey = `data:${queryParams.entityId}`;
-            let storedData = await this.redisService.getData(storedDataKey) || {};
-
-            if (!isEqual(response.data, storedData)) {
-                await this.redisService.saveData(storedDataKey, response.data);
-                this.emitUpdate(response.data);
-            }
-
             return response.data;
       } else {
         throw new NotFoundException('Data not found.');
       }
 
     } catch(err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      console.log("Testing purpose : PGREST SERVICE ERROR FOUND")
     }
   }
 

@@ -33,7 +33,7 @@ if (!tokenChanged) {
       const startTimeOfDay = moment().startOf('day').format().split('+')[0] + '-00:00';
       // //console.log('currentTime ',currentTime);
       // //console.log('startTimeOfDay ',startTimeOfDay);
-      const url = this.timescaleUrl + '?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTimeOfDay}&observedAt=lte.${currentTime}&order=observedAt.asc`;
+      const url = this.timescaleUrl + '?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.urn:ngsi-ld:asset:2:089' + `&observedAt=gte.${startTimeOfDay}&observedAt=lte.${currentTime}&order=observedAt.asc&value=neq.0`;
       const response = await axios.get(url, {headers});
       //console.log('responsePgrest ',response.data)
       if(response.data.length > 0) {
@@ -46,9 +46,7 @@ if (!tokenChanged) {
         return finalValue;
       }
     } catch(err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      console.log("No Data")
     }
   }
 
@@ -66,11 +64,13 @@ if (!tokenChanged) {
       const credentialsChanged = await this.redisService.credentialsChanged(token, { assetId, type }, assetId);
       if (credentialsChanged) {
           await this.redisService.saveTokenAndEntityId(token, { assetId, type }, assetId);
+
+          // console.log("types",{ assetId, type }, assetId);
           // console.log("Credentials or queryParams have changed. Saving new values to Redis.");
       }
 
       // Try fetching cached data first
-      const cachedData = await this.redisService.getData(redisKey);
+      // const cachedData = await this.redisService.getData(redisKey);
       // if (cachedData) {
       //     console.log("Returning cached data for", redisKey);
       //     return cachedData;
@@ -106,7 +106,6 @@ if (!tokenChanged) {
         }
 
        await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
-     
         return {
           labels,
           powerConsumption,
@@ -125,8 +124,8 @@ if (!tokenChanged) {
           labels.push(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
-          if(response.data.length > 0){
-            // console.log(`response from week ${i + 1} `,response.data);
+
+          if(response.data.length >= 0){
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
@@ -137,6 +136,7 @@ if (!tokenChanged) {
             emission.push(0);
           }
         }
+        await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
         return {
           labels,
           powerConsumption,
@@ -156,7 +156,7 @@ if (!tokenChanged) {
           labels.push(monthName);
           const url = this.timescaleUrl + `/entityhistory?attributeId=eq.http://www.industry-fusion.org/fields%23power-consumption&entityId=eq.${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}&order=observedAt.asc&value=neq.0`;
           const response = await axios.get(url, {headers});
-          if(response.data.length > 0){
+          if(response.data.length >= 0){
             let startValue = response.data[0].value;
             let endValue = response.data[response.data.length - 1].value;
             let finalValue = Math.abs(Number(startValue) - Number(endValue));
@@ -167,10 +167,7 @@ if (!tokenChanged) {
             emission.push(0);
           }
         }
-        // console.log('labels for months ',labels);
-        // console.log('powerConsumption ',powerConsumption);
-        // console.log('emission ',emission);
-        await this.redisService.saveData(redisKey, { labels, powerConsumption, emission });
+   
       
         return {
           labels,
@@ -179,10 +176,42 @@ if (!tokenChanged) {
         }
       }
       
-    }catch(err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+    }catch (err) {
+    // this.logger.error('Error fetching chart data: ' + err.message);
+    //When we dont Get data for a particular Time Frame then its coming in catch block 
+    const defaultData = {
+        labels: [],  // You should populate this with the intended date labels
+        powerConsumption: [],
+        emission: []
+    };
+
+    // Generate labels based on the 'type' provided, for example, last 7 days if type is 'days'
+    if (type === 'days') {
+        for (let i = 6; i >= 0; i--) {
+            const day = moment().subtract(i, 'days').format('MMMM Do');
+            defaultData.labels.push(day);
+            defaultData.powerConsumption.push(0);
+            defaultData.emission.push(0);
+        }
+    } else if (type === 'weeks') {
+        for (let i = 5; i >= 0; i--) {
+            const weekStart = moment().subtract(i, 'weeks').startOf('week').format('YYYY-MM-DD');
+            defaultData.labels.push(` ${weekStart}`);
+            defaultData.powerConsumption.push(0);
+            defaultData.emission.push(0);
+        }
+    } else if (type === 'months') {
+        for (let i = 5; i >= 0; i--) {
+            const month = moment().subtract(i, 'months').format('MMMM');
+            defaultData.labels.push(month);
+            defaultData.powerConsumption.push(0);
+            defaultData.emission.push(0);
+        }
     }
+
+    return defaultData;
   }
+
+  }
+
 }

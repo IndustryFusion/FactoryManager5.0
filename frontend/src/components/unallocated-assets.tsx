@@ -15,6 +15,8 @@ import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
 
+import { useUpdate  } from "@/context/react-flow-context";
+
 interface AssetProperty {
   type: "Property";
   value: string;
@@ -60,6 +62,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
    
   let allocatedAssetsArray = null;
+  const { onUpdateTriggered } = useUpdate();
 
 
   useEffect(() => {
@@ -118,7 +121,12 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   }
   }, [factoryId, router.isReady]);
 
-
+ useEffect(() => {
+        if (onUpdateTriggered) {
+            console.log("Update detected, react accordingly...");
+            // Perform actions like refreshing data or UI
+        }
+    }, [onUpdateTriggered]);
   // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
  useEffect(() => {
 

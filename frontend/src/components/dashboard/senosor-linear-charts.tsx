@@ -231,21 +231,23 @@ const chartOptions = {
   scales: {
     x: {
       type: 'time',
-      time: {
-        // Keep the time settings empty here. They will be set dynamically.
-      },
+     time: {
+      unit: 'minute', // Adjust based on your data's granularity
+      displayFormats: {
+        minute: 'HH:mm:ss'  // Ensure format is suitable for your labels
+      }
+    },
       ticks: {
         autoSkip: true,
         maxTicksLimit: 20, 
          ticks: {
           autoSkip: true,
-          maxTicksLimit: 20,
           callback: function(val:any, index:any) {
             const labelDate = new Date(val);
             const formatStr = getLabelFormat(this.chart.scales.x.min, this.chart.scales.x.max);
             return format(labelDate, formatStr);
           }
-        }
+        },
       }
     },
     title: {
@@ -422,7 +424,7 @@ let skipCounter = 0; // Initialize skip counter
 
 
 
-const fetchDataAndAssign = async () => {
+const fetchDataAndAssign = async (entityIdValue:string) => {
   try {
     let entityId = entityIdValue;
     console.log("selected asset entityId ", entityId);
@@ -481,6 +483,7 @@ const fetchDataAndAssign = async () => {
           borderColor: colors[i % colors.length].borderColor,
           backgroundColor: colors[i % colors.length].backgroundColor,
           tension: 0.4,
+          stepped: true,
         };
 
         chartData.labels = labels;
@@ -520,14 +523,14 @@ const fetchDataForAttribute = async (attributeId: string) => {
   // Add "eq." before the attributeId
   const modifiedAttributeId = "eq." + attributeId;
 
-  console.log(attributeId, "oooo");
+  // console.log(attributeId, "oooo");
   try {
     let entityId = entityIdValue;
     console.log("Selected attribute ID:", attributeId);
 
     const response = await axios.get(`${API_URL}/pgrest`, {
       params: {
-        limit: calculateLimit(selectedInterval),
+        limit: "10",
         order: "observedAt.desc",
         entityId: "eq." + entityId,
         attributeId: modifiedAttributeId, // Use the modified attributeId
@@ -556,6 +559,7 @@ const fetchDataForAttribute = async (attributeId: string) => {
       borderColor: colors[0 % colors.length].borderColor, // Assuming only one dataset is fetched for the selected attribute
       backgroundColor: colors[0 % colors.length].backgroundColor,
       tension: 0.4,
+      stepped: true,
     };
 
     // Set chart data
@@ -637,24 +641,10 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
 
 
 useEffect(() => {
-    fetchDataAndAssign();
-  
-
-    if (intervalId.current) {
-      clearInterval(intervalId.current);
-    }
-
-    if (autorefresh) {
-      intervalId.current = setInterval(fetchDataAndAssign, 10000); // Auto-refresh every 10 seconds
-    }
-
-    return () => {
-      if (intervalId.current) {
-        clearInterval(intervalId.current);
-      }
-    };
-  }, [entityIdValue, autorefresh]);
-
+  if ( selectedAttribute) {
+    fetchDataForAttribute(selectedAttribute);
+  }
+}, [selectedAttribute]); // Depend on selectedAttribute and attributes to refetch when changed
 
 useEffect(() => {
  
@@ -664,7 +654,7 @@ useEffect(() => {
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
 
-      console.log("updatedData", updatedData)
+   
         try {
             const transformedData = updateChartDataWithSocketData(data, updatedData);
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
@@ -723,27 +713,21 @@ useEffect(() => {
    
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { } = router.query;
-        if (autorefresh) {
-          console.log("is sensor-chart autoreferssh");
-          intervalId.current = setInterval(() => {
-            fetchDataAndAssign();
-          }, 10000);
-          
-        } else {
+    } 
+    else {
           console.log("is calling when eneityId changes");
 
-        fetchDataAndAssign ()
-        }
+        fetchDataAndAssign (entityIdValue)
       }
-    }
+      
+
+
+    
     
    
         
 
-  }, [selectedInterval, router.isReady, entityIdValue, autorefresh]);
+  }, [ router.isReady, entityIdValue, selectedInterval]);
 
 
 
