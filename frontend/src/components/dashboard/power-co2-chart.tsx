@@ -9,7 +9,9 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
-
+import socketIOClient from "socket.io-client";
+import { Asset } from "@/interfaces/asset-types";
+import { types } from 'util';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -27,6 +29,22 @@ export interface pgData {
     value: string;
 }
 
+interface PowerConsumptionUpdate {
+  chartData: {
+    labels: string[];
+    powerConsumption: number[];
+    emission: number[];
+  };
+  assetId: string;
+  type: string;
+}
+const initialChartData = {
+  labels: [],
+  datasets: [
+    { label: 'Power Consumption (KW)', data: [], fill: false, backgroundColor: 'rgba(75,192,192,0.4)', borderColor: 'rgba(75,192,192,1)', tension: 0.4 },
+    { label: 'CO2 Emission (KG)', data: [], fill: false, backgroundColor: 'rgba(255,99,132,0.4)', borderColor: 'rgba(255,99,132,1)', tension: 0.4 },
+  ],
+};
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
     const { entityIdValue , autorefresh} = useDashboard();
@@ -37,6 +55,55 @@ const PowerCo2Chart = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
+    const lastDataRef:any = useRef(); // 
+    // State and refs initialization remains the same
+
+  useEffect(() => {
+    const socket = socketIOClient(`${API_URL}/`);
+
+    socket.on("connect", () => {
+        console.log('WebSocket Connected');
+    });
+
+    socket.on("powerConsumptionUpdate", (newData) => {
+        // console.log("Data received from WebSocket:", newData);
+
+        // Make sure to check if the data structure is as expected
+        // if (!newData || !newData.chartData || !newData.chartData.labels || !newData.chartData.powerConsumption) {
+        //     console.error("Received data format is not correct");
+        //     return;
+        // }
+    console.log("power data update ",newData)
+       setChartData((currentData) => {
+            const updatedChartData:any = { ...currentData };
+            const currentDayIndex = newData.chartData.labels.length - 1;
+
+            // Ensure datasets array exists and has necessary structure
+            if (updatedChartData.datasets && updatedChartData.datasets.length >= 2) {
+                updatedChartData.datasets[0].data[currentDayIndex] = newData.chartData.powerConsumption[currentDayIndex];
+                updatedChartData.datasets[1].data[currentDayIndex] = newData.chartData.emission[currentDayIndex];
+            } else {
+                console.error("Datasets are not properly initialized");
+            }
+
+            // Update the ref for comparison in future updates
+            lastDataRef.current = newData;
+
+            // Log the index at which the data changed
+            // console.log(`Data changed at index ${currentDayIndex}`);
+            console.log(updatedChartData, "lllll")
+            return updatedChartData;
+        });
+
+    });
+
+    // Disconnect socket on cleanup
+    return () => {
+        socket.disconnect();
+        console.log('WebSocket Disconnected');
+    };
+}, []);
+
 
     const intervalButtons = [
         { label: "days", interval: "days" },
@@ -47,12 +114,12 @@ const PowerCo2Chart = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
-
-    const fetchData = async () => {
+  
+    const fetchData = async (entityIdValue:any,selectedInterval:string) => {
         try {
-            // console.log('entity id here ',entityIdValue);
+            console.log('selectedInterval here ',selectedInterval);
             setIsLoading(true);
-            const response = await axios.get(API_URL + '/power-consumption/chart', {
+            const response = await axios.get(`${API_URL}/power-consumption/chart`, {
                 params: {
                     'asset-id': entityIdValue,
                     'type': selectedInterval
@@ -63,9 +130,9 @@ const PowerCo2Chart = () => {
                 },
                 withCredentials: true,
             });
-            console.log('response of powerconsumption chart ', response);
+            console.log('response of powerconsumption chart ', response, selectedInterval);
             setIsLoading(false);
-            setCheckChart(true);
+            // setCheckChart(true);
             setNoChartData(false);
             return response.data;
         } catch (error: any) {
@@ -78,112 +145,137 @@ const PowerCo2Chart = () => {
             }
         }
     }
+    
 
-    useEffect(() => {
-        const fetchDataAndAssign = async () => {
-            const documentStyle = getComputedStyle(document.documentElement);
-            const textColor = documentStyle.getPropertyValue('--text-color');
-            const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
-            const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-            const obj = await fetchData();
-            // console.log('obj datavalues ',obj);
-            const data = {
-                labels: obj?.labels,
-                datasets: [
-                    {
-                        type: 'bar',
-                        label: 'Power Consumption (KW)',
-                        backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                        yAxisID: 'y',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        data: obj?.powerConsumption,
-                    },
-                    {
-                        type: 'bar',
-                        label: 'CO2 Emission (KG)',
-                        backgroundColor: documentStyle.getPropertyValue('--blue-500'),
-                        yAxisID: 'y1',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        data: obj?.emission
-                    }
-                ]
-            };
-            const options = {
-                maintainAspectRatio: false,
-                aspectRatio: 0.6,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor
-                        }
-                    },
-                    datalabels: {                           
-                        color: 'black', // Customize the color of the labels
-                        align: 'end', // Align the labels to the end of the bars
-                        anchor: 'center'
+
+    const fetchAssets = async (assetId: string) => {
+        try {
+            const attributeIds: string[] = [];
+            const response = await axios.get(API_URL + `/asset/${assetId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+            const assetData: Asset = response.data;
+
+            Object.keys(assetData).map((key) => {
+                if (key.includes("fields")) {
+                    const newKey = 'eq.' + key;
+                    attributeIds.push(newKey);
+                }
+            });
+            return attributeIds;
+        } catch (error) {
+            console.error("Error fetching asset data:", error);
+        }
+    };
+  
+useEffect(() => {
+    // Define the fetchDataAndAssign function within the useEffect
+    const fetchDataAndAssign = async () => {
+        let attributeIds = await fetchAssets(entityIdValue);
+        if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
+            await fetchData(`eq.${entityIdValue}`, selectedInterval);
+            console.log('Fetching data for power consumption');
+        } else {
+            console.log('No attribute set available for power consumption');
+            setNoChartData(true);
+        }
+
+        // Assume fetchData returns data required for updating chart
+        const obj = await fetchData(entityIdValue, selectedInterval);
+        const documentStyle = getComputedStyle(document.documentElement);
+
+        const data = {
+            labels: obj?.labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Power Consumption (KW)',
+                    backgroundColor: documentStyle.getPropertyValue('--green-400'),
+                    yAxisID: 'y',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    data: obj?.powerConsumption,
+                },
+                {
+                    type: 'bar',
+                    label: 'CO2 Emission (KG)',
+                    backgroundColor: documentStyle.getPropertyValue('--blue-500'),
+                    yAxisID: 'y1',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    data: obj?.emission
+                }
+            ]
+        };
+
+        const options = {
+            maintainAspectRatio: false,
+            aspectRatio: 0.6,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: documentStyle.getPropertyValue('--text-color')
                     }
                 },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColorSecondary
-                        },
-                        grid: {
-                            color: surfaceBorder
-                        }
+                datalabels: {
+                    color: 'black',
+                    align: 'end',
+                    anchor: 'center'
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: documentStyle.getPropertyValue('--text-color-secondary')
                     },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 25
-                        },
-                        grid: {
-                            color: surfaceBorder
-                        }
+                    grid: {
+                        color: documentStyle.getPropertyValue('--surface-border')
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    ticks: {
+                        stepSize: 25,
+                        color: documentStyle.getPropertyValue('--text-color-secondary')
                     },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        ticks: {
-                            color: textColorSecondary,
-                            stepSize: 10
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                            color: surfaceBorder
-                        }
+                    grid: {
+                        color: documentStyle.getPropertyValue('--surface-border')
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    ticks: {
+                        stepSize: 10,
+                        color: documentStyle.getPropertyValue('--text-color-secondary')
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        color: documentStyle.getPropertyValue('--surface-border')
                     }
                 }
-            };
-
-            setChartData(data);
-            setChartOptions(options);
-            setNoChartData(false);
-        }
-
-        if (autorefresh === true) {
-            intervalId.current = setInterval(() => {
-                fetchDataAndAssign();
-            }, 10000);
-        } else {
-            fetchDataAndAssign();
-        }
-
-        return () => {
-            if (intervalId.current) {
-                clearInterval(intervalId.current);
             }
         };
 
-    }, [checkChart, entityIdValue, autorefresh, selectedInterval]);
+        setChartData(data);
+        setChartOptions(options);
+        setNoChartData(false);
+    };
+
+            fetchDataAndAssign();
+        
+
+
+    }, [checkChart, entityIdValue, selectedInterval]);
 
 
 
@@ -209,7 +301,7 @@ const PowerCo2Chart = () => {
                     />
                 </div>
             </div>
-            {isLoading ? (
+            {/* {isLoading ? (
                 <div
                     style={{
                         display: "flex",
@@ -222,7 +314,31 @@ const PowerCo2Chart = () => {
                 </div>
             ) : (
                 <Chart type="bar" data={chartData} options={chartOptions} />
-            )}
+            )} */}
+              {
+                 noChartData ?
+                    <div className="flex flex-column justify-content-center align-items-center"
+                        style={{ marginTop: "9rem" }}
+                    >
+                        <p> No data available</p>
+                        <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+                    </div>
+                    :
+                    isLoading ? (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "60vh",
+                            }}
+                        >
+                            <ProgressSpinner />
+                        </div>
+                    ) : (
+                        <Chart type="bar" data={chartData} options={chartOptions} />
+                    )
+            }
         </div>
     )
 

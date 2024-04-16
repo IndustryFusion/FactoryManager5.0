@@ -6,10 +6,13 @@ import { CSSProperties } from "react";
 import { useRouter } from "next/router";
 import Cookies from 'js-cookie';
 import Alerts from "./alert/alerts";
+import { LuLayoutDashboard } from "react-icons/lu";
+import AssetManagementDialog from "./asset-management";
 
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
+  const [assetManage, setAssetManage] = useState(false);
 
   const navbarStyle: CSSProperties = {
     position: "fixed",
@@ -46,7 +49,6 @@ const HorizontalNavbar: React.FC = () => {
   };
 
 
-
   return (
     <div style={navbarStyle}>
       <div className="flex align-items-center logo-container cursor-pointer"
@@ -56,15 +58,37 @@ const HorizontalNavbar: React.FC = () => {
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <Button label="About Us" link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} />
+          className="mr-2" style={{ fontFamily: "Segoe UI",
+           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button label="Contact Us" link
-          className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} />
-        <Alerts />  
+          className="mr-2" style={{ fontFamily: "Segoe UI",
+           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
+        <Button
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
+          tooltip="Asset Management"
+          tooltipOptions={{ position: 'bottom' }}
+          onClick={()=>setAssetManage(true)}
+        ><img src="/assetManage.png"
+          width="22px"
+          height="22px"
+          alt="asset_manage_icon" />        
+          </Button>
+        <Button
+          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e",backgroundColor:"transparent",border: "none" }}
+          tooltip="Dashboard"
+          onClick={() => router.push("/factory-site/dashboard")}
+          tooltipOptions={{ position: 'bottom' }}
+        ><LuLayoutDashboard /></Button>
+        <Alerts />
         <Button icon="pi pi-user" link
           className="mr-2 " style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="Profile Details"
           tooltipOptions={{ position: 'bottom' }} />
         <Button onClick={logout} icon="pi pi-sign-out" link
           className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
+          {assetManage && <AssetManagementDialog
+          assetManageDialogProp={assetManage}
+          setAssetManageDialogProp={setAssetManage}
+          />}
       </div>
     </div>
   );

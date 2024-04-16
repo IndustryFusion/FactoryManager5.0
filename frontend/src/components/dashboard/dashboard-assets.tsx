@@ -1,10 +1,12 @@
 import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 import { Asset } from "@/interfaces/asset-types";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
-import "../../styles/dashboard.css"
 import { useRouter } from "next/router";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
@@ -14,6 +16,7 @@ import OnboardForm from "./onboard-form";
 import EditOnboardForm from "./edit-onboard-form";
 import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
+import "../../styles/dashboard.css"
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -43,6 +46,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
+
+
 
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
@@ -79,6 +84,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     )
   }
 
+  const rowClassName = (rowData:Asset) => {
+    return { 'selected-row': selectedRow && selectedRow.id === rowData.id };
+};
 
   const handleAsset = async () => {
     try {
@@ -176,7 +184,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   }, [onboardAsset, showBlocker])
 
 
-
   return (
     <>
       <Toast ref={toast} />
@@ -207,6 +214,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               selectionMode="single"
               selection={selectedRow}
               onSelectionChange={(e) => setSelectedRow(e.value)}
+              rowClassName={rowClassName}
             >
               <Column
                 header="Product Image"
