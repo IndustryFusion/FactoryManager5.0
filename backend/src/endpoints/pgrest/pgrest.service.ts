@@ -54,7 +54,7 @@ export class PgRestService {
       }
 
     } catch(err) {
-      console.log("Testing purpose : PGREST SERVICE ERROR FOUND")
+      // console.log("Testing purpose : PGREST SERVICE ERROR FOUND")
     }
   }
 

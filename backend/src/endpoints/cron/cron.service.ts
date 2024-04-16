@@ -116,7 +116,7 @@ async handleChartDataUpdate() {
           this.emitChartDataUpdate(newChartData, assetId, type);
         }
        } else {
-      this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+      // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
     }
   } catch (error) {
     this.logger.error('Error during chart data update', error);
