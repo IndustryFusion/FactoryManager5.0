@@ -14,8 +14,9 @@ import { AllocatedAsset } from "@/interfaces/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
-
-import { useUpdate  } from "@/context/react-flow-context";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/state/store";
+import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 
 interface AssetProperty {
   type: "Property";
@@ -62,14 +63,19 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
    
   let allocatedAssetsArray = null;
-  const { onUpdateTriggered } = useUpdate();
+  let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
+  console.log('unAllocatedAssets from redux ',unAllocatedAssetData);
+  const dispatch = useDispatch();
 
 
   useEffect(() => {
     const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
+        if (unAllocatedAssetData.length === 0) {
         const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-        console.log("fetchedAssetIds", fetchedAssetIds)
+        console.log("fetchedAssetIds", fetchedAssetIds);
+        dispatch(create(fetchedAssetIds));
+        }
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId); 
         console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
@@ -78,10 +84,10 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         // setAllocatedAssets(allocatedAssetsArray);
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-        const fetchedAssets:  Asset[]  = Object.keys(fetchedAssetIds).map((key) => ({
-          id: fetchedAssetIds[key].id,
-          product_name: fetchedAssetIds[key].product_name?.value,
-          asset_category: fetchedAssetIds[key].asset_category?.value,
+        const fetchedAssets:  Asset[]  = Object.keys(unAllocatedAssetData).map((key) => ({
+          id: unAllocatedAssetData[key].id,
+          product_name: unAllocatedAssetData[key].product_name?.value,
+          asset_category: unAllocatedAssetData[key].asset_category?.value,
         }));
 
         // destructuring the asset id, product_name, asset_catagory for allocated Asset
@@ -118,12 +124,9 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       if (typeof id === 'string') {
         fetchNonShopFloorAssets(id);
       }
-      else if (onUpdateTriggered) {
-            fetchNonShopFloorAssets(factoryId)  
     }
-  }
-  }, [factoryId, router.isReady, onUpdateTriggered]);
-  // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
+  }, [factoryId, router.isReady, unAllocatedAssetData]);
+  
  useEffect(() => {
 
   const results = assets.filter(asset => {
