@@ -106,7 +106,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
         setError("Failed to fetch assets");
         setLoading(false);
-         allocatedAssetsArray = null; 
+        allocatedAssetsArray = null; 
         
       }
     };
@@ -118,15 +118,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       if (typeof id === 'string') {
         fetchNonShopFloorAssets(id);
       }
+      else if (onUpdateTriggered) {
+            fetchNonShopFloorAssets(factoryId)  
+    }
   }
-  }, [factoryId, router.isReady]);
-
- useEffect(() => {
-        if (onUpdateTriggered) {
-            console.log("Update detected, react accordingly...");
-            // Perform actions like refreshing data or UI
-        }
-    }, [onUpdateTriggered]);
+  }, [factoryId, router.isReady, onUpdateTriggered]);
   // const normalizedAllocatedAssets = Array.isArray(allocatedAssets) ? allocatedAssets : [allocatedAssets];
  useEffect(() => {
 
@@ -142,16 +138,21 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 }, [searchTerm, selectedCategories, assets]);
 
 
-// for allocated asset list : if we dont find any 200 response from backend , it will give the allocatedAssets.filter is not a function error
-// reason : when in alloctaed asset  urn:ngsi-ld:allocated-assets-store  in  scorpio we have other values then urn inside object array then we dont get 200 response from
-// allocated-asset backend endpoint
 const filteredAllocatedAssets = useMemo(() => {
-  return allocatedAssets.filter(asset => 
-    (selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category)) &&
-    asset.product_name?.toLowerCase().includes(searchTermAllocated.toLowerCase())
-  );
-}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
 
+  if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
+    return [];
+  }
+
+  return allocatedAssets.filter(asset => {
+   
+    const productName = asset.product_name?.toLowerCase() ?? '';
+    const isCategoryMatch = selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category);
+    const isSearchMatch = productName.includes(searchTermAllocated.toLowerCase());
+
+    return isCategoryMatch && isSearchMatch;
+  });
+}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
 
  const handleCategoryChange = (category: string) => {
   setSelectedCategories(prevCategories => {
@@ -240,22 +241,23 @@ const menuItems = [
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <React.Fragment>
+    <>
+  
       <Card style={{ height: "60%", overflowY: "scroll" }}>
         <h3
-          className="font-medium text-xl"
+          className="font-medium text-xl ml-4"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
           Unallocated Assets
         </h3>
-        <div className="flex ">
+        <div className="flex ml-2">
          <div className="p-input-icon-left">
           <i className="pi pi-search ml-2" />
           <InputText
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name..."
-            className="ml-2 w-100"
+            className="ml-2 w-120"
           />
            
         </div>
@@ -273,7 +275,28 @@ const menuItems = [
               draggable={true}
               // onClick={() => handleAssetClick(asset.id)}
               onDragStart={(e) => handleDragStart(e, asset, "asset")}
+               style={{
+                  position: "relative",
+                  cursor: "pointer",
+                  padding: "10px 20px",
+                  marginBottom: "5px",
+                 
+                  borderRadius: "5px",
+                  // backgroundColor: selectedShopFloorId === asset.id ? "lightgrey" : "transparent",
+                }}
+                className="mb-2 ml-2"
             >
+               {/* <span style={{
+                  position: "absolute",
+                  left: "0",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  height: "10px",
+                  width: "10px",
+                  backgroundColor: "#164B60", // Initial color set, animation will override this during cycles
+                  borderRadius: "50%",
+                  animation: "colorDip 2s infinite",
+                }} /> */}
               {asset.product_name}
             </li>
           ))}
@@ -281,18 +304,19 @@ const menuItems = [
       </Card>
       <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
         <h3
-          className="font-medium text-xl"
+          className="font-medium text-xl ml-4"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
           Allocated Asset
         </h3>
-           <div className="flex">
+           <div className="flex ml-3">
             <div className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
             value={searchTermAllocated}
             onChange={(e) => setSearchTermAllocated(e.target.value)}
             placeholder="Search by name..."
+            className="w-120"
           />
            </div>
           <div> 
@@ -300,7 +324,7 @@ const menuItems = [
               icon="pi pi-filter-fill"
               onClick={(e) => allocatedMenu.current?.toggle(e)}
               aria-haspopup
-              className="filter-button"
+              className="filter-button ml-1"
               style={{ color: "grey", fontSize: "1.2em" }}
             />
 
@@ -311,13 +335,13 @@ const menuItems = [
         </div>
        <ul>
           {filteredAllocatedAssets.map((asset, index) => (
-            <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+            <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} className="mb-2 ml-3">
               {typeof asset === 'string' ? asset : asset.product_name}
             </li>
            ))}
         </ul>
       </Card>
-    </React.Fragment>
+    </>
   );
 };
 

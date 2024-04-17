@@ -160,7 +160,6 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
 
       const shopFloorResponse = response.data;
-      console.log();
       
 
       if (shopFloorResponse.status === 201) {
@@ -315,7 +314,9 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
             {shopFloorTemplate &&
               shopFloorTemplate?.properties &&
               Object.keys(shopFloorTemplate.properties).map((key) =>
-                renderFields(key, shopFloorTemplate.properties[key])
+                <div key={key}>
+                  {renderFields(key, shopFloorTemplate.properties[key])}
+                </div>
               )}
           </Card>
         </div>

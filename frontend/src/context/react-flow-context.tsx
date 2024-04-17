@@ -11,7 +11,7 @@ export const UpdateProvider:any = ({ children }) => {
 
     const triggerUpdate = () => {
         setOnUpdateTriggered(true);
-        setTimeout(() => setOnUpdateTriggered(false), 3000); // Reset after notification
+        setTimeout(() => setOnUpdateTriggered(false), 100); // Reset after notification
     };
 
     return (
