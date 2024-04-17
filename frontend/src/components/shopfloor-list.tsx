@@ -234,8 +234,9 @@ const fetchShopFloors = async (factoryId: string) => {
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
                   position: "relative",
                   paddingLeft: "20px",
+
                 }}
-                className="ml-4"
+                className="ml-4 mb-3"
               >
                 <span style={{
                   position: "absolute",

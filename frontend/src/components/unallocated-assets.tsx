@@ -245,19 +245,19 @@ const menuItems = [
   
       <Card style={{ height: "60%", overflowY: "scroll" }}>
         <h3
-          className="font-medium text-xl"
+          className="font-medium text-xl ml-4"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
           Unallocated Assets
         </h3>
-        <div className="flex ">
+        <div className="flex ml-2">
          <div className="p-input-icon-left">
           <i className="pi pi-search ml-2" />
           <InputText
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name..."
-            className="ml-2 w-100"
+            className="ml-2 w-120"
           />
            
         </div>
@@ -275,7 +275,28 @@ const menuItems = [
               draggable={true}
               // onClick={() => handleAssetClick(asset.id)}
               onDragStart={(e) => handleDragStart(e, asset, "asset")}
+               style={{
+                  position: "relative",
+                  cursor: "pointer",
+                  padding: "10px 20px",
+                  marginBottom: "5px",
+                 
+                  borderRadius: "5px",
+                  // backgroundColor: selectedShopFloorId === asset.id ? "lightgrey" : "transparent",
+                }}
+                className="mb-2 ml-2"
             >
+               {/* <span style={{
+                  position: "absolute",
+                  left: "0",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  height: "10px",
+                  width: "10px",
+                  backgroundColor: "#164B60", // Initial color set, animation will override this during cycles
+                  borderRadius: "50%",
+                  animation: "colorDip 2s infinite",
+                }} /> */}
               {asset.product_name}
             </li>
           ))}
@@ -283,18 +304,19 @@ const menuItems = [
       </Card>
       <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
         <h3
-          className="font-medium text-xl"
+          className="font-medium text-xl ml-4"
           style={{ marginTop: "2%", marginLeft: "5%" }}
         >
           Allocated Asset
         </h3>
-           <div className="flex">
+           <div className="flex ml-3">
             <div className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
             value={searchTermAllocated}
             onChange={(e) => setSearchTermAllocated(e.target.value)}
             placeholder="Search by name..."
+            className="w-120"
           />
            </div>
           <div> 
@@ -302,7 +324,7 @@ const menuItems = [
               icon="pi pi-filter-fill"
               onClick={(e) => allocatedMenu.current?.toggle(e)}
               aria-haspopup
-              className="filter-button"
+              className="filter-button ml-1"
               style={{ color: "grey", fontSize: "1.2em" }}
             />
 
@@ -313,7 +335,7 @@ const menuItems = [
         </div>
        <ul>
           {filteredAllocatedAssets.map((asset, index) => (
-            <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+            <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} className="mb-2 ml-3">
               {typeof asset === 'string' ? asset : asset.product_name}
             </li>
            ))}
