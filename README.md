@@ -5,7 +5,7 @@
 
 The Factory Manager 5.0 IFF application is responsible for managing the linked assets and thier data in the context of factories owned by the user. The assets created in Fleet Manager 5.0 can be imported to Factory Manager using the 'Import Assets' feature in the demo version or using IF-X dataspace manager in upcoming commercial version.
 
-For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running on the central IFF factory server with machines connected it using individual gateways. For detailed information on setup of the factory server and gateways to deploy PDT and data agents is described (here)[https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md]. Once the PDT is setup in the factory, the Factory Manager can be deployed on the same network to interact with the PDT semantic model and data. The Factory Manager can only manage and link the assets, the creation must be always done in Fleet Manager.
+For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running on the central IFF factory server with machines connected it using individual gateways. For detailed information on setup of the factory server and gateways to deploy PDT and data agents is described [here](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md). Once the PDT is setup in the factory, the Factory Manager can be deployed on the same network to interact with the PDT semantic model and data. The Factory Manager can only manage and link the assets, the creation must be always done in Fleet Manager.
 
 The PDT is also used in Factory Manager to create and handle Factory and ShopFloor objects. In order to enable the creation of these assets, some predefined ID store objects must be created before deploying Factory Manager. 
 
@@ -54,7 +54,39 @@ curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
 }'
 ```
 
-The application also uses S3 as object storage, MongoDB for UI object storage and redis as cache storage. Create a demo S3 bucket in your favourite cloud provider, deploy redis using (this)[https://github.com/OT-CONTAINER-KIT/redis-operator#quickstart] or using Docker and deploy MongoDB instance using Docker or Community Mongo Operator (link)[https://github.com/mongodb/mongodb-kubernetes-operator/blob/master/docs/install-upgrade.md]. Then feed the details in .env of backend folder together with PDT endpoint information as shown below.
+Aftr the above assets are created, it is also important to create custom functions in PDT Postgres to use in data dashboards. Using, Kubectl enter the acid-cluster pod in PDT. Then using below command, login to Postgres DB.
+
+```bash
+
+psql -U ngb -d tsdb
+
+```
+
+Then execute the following commands one by one,
+
+```sql
+
+CREATE VIEW value_change_state_entries AS SELECT * FROM ( SELECT *, LAG(value) OVER (PARTITION BY "entityId" ORDER BY "observedAt" ASC) AS prev_value FROM entityhistory WHERE "attributeId"='http://www.industry-fusion.org/fields#machine-state' ) AS subquery WHERE value IS DISTINCT FROM prev_value;
+
+CREATE VIEW power_emission_entries_days AS SELECT subquery."entityId", DATE_TRUNC('day', subquery.hour) AS day, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM entityhistory WHERE "attributeId" = 'http://www.industry-fusion.org/fields#power-consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('day', subquery.hour) ORDER BY day;
+
+CREATE VIEW power_emission_entries_months AS SELECT subquery."entityId", DATE_TRUNC('month', subquery.hour) AS month, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM entityhistory WHERE "attributeId" = 'http://www.industry-fusion.org/fields#power-consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('month', subquery.hour) ORDER BY month;
+
+CREATE VIEW power_emission_entries_weeks AS SELECT subquery."entityId", DATE_TRUNC('week', subquery.hour) AS week, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM entityhistory WHERE "attributeId" = 'http://www.industry-fusion.org/fields#power-consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('week', subquery.hour) ORDER BY week;
+
+GRANT SELECT ON value_change_state_entries TO pgrest;
+
+GRANT SELECT ON power_emission_entries_days TO pgrest;
+
+GRANT SELECT ON power_emission_entries_weeks TO pgrest;
+
+GRANT SELECT ON power_emission_entries_months TO pgrest;
+
+```
+
+After creation, close the pod console and refresh the timescale bridge. For more information, use [this](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md#pdt-endpoints) document.
+
+The application also uses S3 as object storage, MongoDB for UI object storage and redis as cache storage. Create a demo S3 bucket in your favourite cloud provider, deploy redis using [this](https://github.com/OT-CONTAINER-KIT/redis-operator#quickstart) or using Docker and deploy MongoDB instance using Docker or Community Mongo Operator [link](https://github.com/mongodb/mongodb-kubernetes-operator/blob/master/docs/install-upgrade.md). Then feed the details in .env of backend folder together with PDT endpoint information as shown below.
 
 
 Exmaple .env of backend root folder:
