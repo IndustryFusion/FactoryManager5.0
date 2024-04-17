@@ -33,8 +33,8 @@ import { useShopFloor } from "@/context/shopfloor-context";
 import ShopFloorList from "@/components/shopfloor-list";
 import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
-
-import { useUpdate  } from "@/context/react-flow-context";
+import { useDispatch } from "react-redux";
+import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 
 interface FlowEditorProps {
   factory: Factory;
@@ -122,8 +122,7 @@ const FlowEditor: React.FC<
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
-   const { triggerUpdate, onUpdateTriggered } = useUpdate();
- 
+  const dispatch = useDispatch();
  
  
 
@@ -494,8 +493,7 @@ const onEdgesChange = useCallback((changes:any) => {
         setToastMessage("Scorpio already has these data");
       }
       onRestore();
-      // triggerUpdate() used to trigger context so that unAllocated Assets componenet get refresh with new data
-      triggerUpdate();
+      dispatch(reset());
    
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -505,7 +503,7 @@ const onEdgesChange = useCallback((changes:any) => {
       setIsOperationInProgress(false);
 
     }
-  }, [nodes, edges, factoryId, triggerUpdate]);
+  }, [nodes, edges, factoryId]);
 
   const onSave = useCallback(async () => {
   
@@ -589,8 +587,7 @@ const onEdgesChange = useCallback((changes:any) => {
      
         setNodesInitialized(true);
         onRestore();
-        // triggerUpdate() used to trigger context so that unAllocated Assets componenet get refresh with new data
-        triggerUpdate();
+        dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");

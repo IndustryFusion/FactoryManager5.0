@@ -11,7 +11,6 @@ import HorizontalNavbar from "../../../components/horizontal-navbar";
 import Footer from "../../../components/footer";
 import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
-import { UpdateProvider  } from "@/context/react-flow-context";
 
 import {
   getshopFloorById,
@@ -58,72 +57,68 @@ const ShopFloorManager: React.FC = () => {
   }, []);
   return (
     <>
-      <UpdateProvider>
       <HorizontalNavbar />
-
-      <div
-        style={{
-          display: "flex",
-          height: "99vh",
-          marginTop: "80px",
-          zoom: "85%",
-        
-        }}
-        className="bg-gray-100"
-      >
-      <ShopFloorProvider>
         <div
           style={{
-            borderRight: "1px solid #ccc",
-            padding: "10px",
-            width: "400px",
-            maxHeight: "100%",
-            flexShrink: 0, // Prevents the component from shrinking
+            display: "flex",
+            height: "99vh",
+            marginTop: "80px",
+            zoom: "85%",
+          
           }}
+          className="bg-gray-100"
         >
-          <ShopFloorList
-            factoryId={factoryId}
-            onShopFloorDeleted={handleShopFloorDeleted}
-          />
-        </div>
-        <div
-          ref={elementRef}
-          style={{
-            flex: 1,
-            border: "1px solid #ccc",
-            borderRadius: "10px",
-            padding: "10px",
-         
-            maxHeight: "98%",
-            flexShrink: 0,
-          }}
-        >
-          {factoryDetails && (
-            <FlowEditor
+        <ShopFloorProvider>
+          <div
+            style={{
+              borderRight: "1px solid #ccc",
+              padding: "10px",
+              width: "400px",
+              maxHeight: "100%",
+              flexShrink: 0, // Prevents the component from shrinking
+            }}
+          >
+            <ShopFloorList
               factoryId={factoryId}
-              factory={factoryDetails}
-              deletedShopFloors={deletedShopFloors}
+              onShopFloorDeleted={handleShopFloorDeleted}
             />
-          )}
+          </div>
+          <div
+            ref={elementRef}
+            style={{
+              flex: 1,
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              padding: "10px",
+          
+              maxHeight: "98%",
+              flexShrink: 0,
+            }}
+          >
+            {factoryDetails && (
+              <FlowEditor
+                factoryId={factoryId}
+                factory={factoryDetails}
+                deletedShopFloors={deletedShopFloors}
+              />
+            )}
 
-          {!factoryDetails && <div>Loading factory details...</div>}
+            {!factoryDetails && <div>Loading factory details...</div>}
+          </div>
+        <div
+            style={{
+              borderRight: "1px solid #ccc",
+              padding: "10px",
+              width: "350px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
+              maxHeight: "100%",
+              flexShrink: 0, // Prevents the component from shrinking
+            }}
+          >
+            <UnallocatedAssets factoryId={factoryId} product_name="" />
+          </div>
+        </ShopFloorProvider>
         </div>
-       <div
-          style={{
-            borderRight: "1px solid #ccc",
-            padding: "10px",
-            width: "350px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
-            maxHeight: "100%",
-            flexShrink: 0, // Prevents the component from shrinking
-          }}
-        >
-          <UnallocatedAssets factoryId={factoryId} product_name="" />
-        </div>
-      </ShopFloorProvider>
-    </div>
-
       <Footer />
-     </UpdateProvider>
     </>
   );
 };
