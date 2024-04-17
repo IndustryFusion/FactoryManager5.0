@@ -11,6 +11,7 @@ import HorizontalNavbar from "../../../components/horizontal-navbar";
 import Footer from "../../../components/footer";
 import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
+import { UpdateProvider  } from "@/context/react-flow-context";
 
 import {
   getshopFloorById,
@@ -57,6 +58,7 @@ const ShopFloorManager: React.FC = () => {
   }, []);
   return (
     <>
+      <UpdateProvider>
       <HorizontalNavbar />
 
       <div
@@ -68,6 +70,7 @@ const ShopFloorManager: React.FC = () => {
         }}
         className="bg-gray-100"
       >
+       
         <ShopFloorProvider>
           {" "}
           <div
@@ -106,7 +109,7 @@ const ShopFloorManager: React.FC = () => {
             {!factoryDetails && <div>Loading factory details...</div>}
           </div>
         </ShopFloorProvider>
-
+     
         <div
           style={{
             flex: 1,
@@ -115,10 +118,15 @@ const ShopFloorManager: React.FC = () => {
             maxHeight: "100%",
           }}
         >
+
+          
           <UnallocatedAssets factoryId={factoryId} product_name="" />
+        
         </div>
+       
       </div>
       <Footer />
+     </UpdateProvider>
     </>
   );
 };

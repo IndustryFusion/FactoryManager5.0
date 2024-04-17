@@ -61,18 +61,14 @@ async handleFindAllEverySecond() {
   }
 
   const { token, queryParams } = credentials;
-  // console.log(credentials, "ppppp")
 
-  // console.log(queryParams, "gggg");
-
-  // Check if credentials have changed
   const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
   if (haveCredentialsChanged) {
     await this.redisService.saveData('storedData', null); // Clear stored data
     await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); // Save new credentials
   }
 
-  try {
+
     // Update queryParams to limit the result to 1
     const modifiedQueryParams = { ...queryParams, limit: 1  };
     const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
@@ -81,67 +77,56 @@ async handleFindAllEverySecond() {
     let storedData = await this.redisService.getData('storedData');
 
     // Set the previousData to newData the first time data is fetched
-    if (Object.keys(storedData).length === 0) {
-      storedData = newData;
-    }
+    // if (Object.keys(storedData).length === 0) {
+    //   storedData = newData;
+    // }
+    // console.log(storedData, newData, "pppp")
 
+    if(storedData){
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
       this.emitDataChangeToClient(newData);
-      // console.log("changed", newData, )
       await this.redisService.saveData('storedData', newData);
     }
-  } catch (error) {
-    // Handle error
   }
+ 
 }
 
 
 
-@Cron(CronExpression.EVERY_10_SECONDS) 
+@Cron(CronExpression.EVERY_30_SECONDS)
 async handleChartDataUpdate() {
   try {
-    const tokenDetails = await this.redisService.getTokenAndEntityId();
-    if (!tokenDetails) {
-      // this.logger.warn('Token details not found in Redis.');
+    const credentials = await this.redisService.getTokenAndEntityId();
+    if (!credentials) {
+      this.logger.warn('Credentials not found.');
       return;
     }
 
-    const { token, queryParams } = tokenDetails;
-    // console.log(tokenDetails, "kkkk")
-    let assetId = tokenDetails.entityId;
+    const { token, queryParams } = credentials;
+    const { assetId, type } = queryParams;
 
+    const redisKey = `chartData:${assetId}:${type}`;
+    const previousChartData = await this.redisService.getData(redisKey);
+    const newChartData = await this.powerConsumptionService.findChartData(assetId, type, token);
 
-
-    if (!assetId || queryParams.assetId) {
-      // this.logger.warn('Asset ID not found in token details.');
-      return;
-    }
-
-    // We only handle the "days" type here
-    const type = 'days';
-    const chartData = await this.powerConsumptionService.findChartData(assetId, type, token);
-    
-    // Fetch previous chart data for comparison
-    const previousChartData = await this.redisService.getData(`chartData:${assetId}:${type}`);
-    if (!isEqual(previousChartData, chartData)) {
-
-
-
-      // Update the stored chart data in Redis if there is a change
-      await this.redisService.saveData(`chartData:${assetId}:${type}`, chartData);
-      this.emitChartDataUpdate(chartData, assetId, type);
-    } else {
+    if (!isEqual(previousChartData, newChartData)) {
+      if(type=='days'){
+          await this.redisService.saveData(redisKey, newChartData);
+          this.emitChartDataUpdate(newChartData, assetId, type);
+        }
+       } else {
       // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
     }
   } catch (error) {
-    this.logger.error(`Error in handleChartDataUpdate: ${error.message}`, error.stack);
+    this.logger.error('Error during chart data update', error);
   }
 }
 
 private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
   // Emit only if type is 'days'
   if (type === 'days') {
+    // console.log("called days ")
     this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
     this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
   }
@@ -150,15 +135,11 @@ private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
 @Cron('* * * * *')
 async handleMachineStateRefresh(){
   let machineStateParams = await this.redisService.getData('machine-state-params');
-  console.log('machineStateParams ', machineStateParams);
   if(machineStateParams && machineStateParams.type == 'days'){
     let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
-    console.log('newData ', newData);
     let storedData = await this.redisService.getData('machine-state-data');
-    console.log('storedData ', storedData);
     if(storedData){
       if(!isEqual(newData, storedData)){
-        console.log('inside not equal');
         await this.redisService.saveData('machine-state-data',newData);
         // call web socket
         this.valueChangeStateGateway.sendUpdate(newData);

@@ -193,7 +193,7 @@ export class AllocatedAssetService {
     }
   }
 
-  async getAllocatedAssets(token: string) {
+  async getGlobalAllocatedAssets(token: string) {
     try{
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -205,10 +205,21 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-      
-      return response.data["http://www.industry-fusion.org/schema#last-data"].object;
+      if(response.data){
+        return response.data["http://www.industry-fusion.org/schema#last-data"].object;
+      }
     } catch(err) {
-      return err;
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      if (err.response && err.response.status === 404) {
+        await this.createGlobal(token);
+        return await this.getGlobalAllocatedAssets(token);
+      } else {
+        return err;
+      }
     }
   }
 
