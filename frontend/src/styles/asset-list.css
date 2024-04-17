@@ -1,6 +1,7 @@
 ul {
   list-style-type: none;
   padding-left: 0;
+  border:"none"
 }
 
 li {
@@ -58,3 +59,14 @@ li {
   font-size: 11px !important;
   color: #a39999;
 }
+@keyframes colorDip {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    background-color: #164B60; /* Dark blue */
+  }
+  50% {
+    transform: translateY(-50%) scale(0.8);
+    background-color: #dce2e7; /* Light blue */
+  }
+}
+
