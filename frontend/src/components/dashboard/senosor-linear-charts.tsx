@@ -141,14 +141,16 @@ const [selectedAttributeId, setSelectedAttributeId] = useState("");
     { label: "1 Month", interval: 43200 },
   ];
   const colors = [
-    {
-      backgroundColor: "rgba(255, 99, 132, 0.5)", // Pink
-      borderColor: "rgb(255, 99, 132)",
-    },
+
     {
       backgroundColor: "rgba(54, 162, 235, 0.5)", // Blue
       borderColor: "rgb(54, 162, 235)",
     },
+    {
+      backgroundColor: "rgba(255, 99, 132, 0.5)", // Pink
+      borderColor: "rgb(255, 99, 132)",
+    },
+
     {
       backgroundColor: "rgba(255, 206, 86, 0.5)", // Yellow
       borderColor: "rgb(255, 206, 86)",
@@ -189,6 +191,7 @@ const getLabelFormat = (minDate:any, maxDate:any) => {
 
 const chartOptions = {
 
+fill: true,
   animation: {
       duration: 0, 
     },
@@ -232,9 +235,12 @@ const chartOptions = {
     x: {
       type: 'time',
      time: {
-      unit: 'minute', // Adjust based on your data's granularity
+      unit: 'seconds', // Adjust based on your data's granularity
       displayFormats: {
-        minute: 'HH:mm:ss'  // Ensure format is suitable for your labels
+          minute: 'HH:mm',
+          hour: 'MMM dd HH:mm',
+          day: 'MMM dd',
+          month: 'MMM yyyy'
       }
     },
       ticks: {
@@ -263,7 +269,13 @@ const chartOptions = {
   },
   
 };
+function toCamelCase(str) {
+    return str
+        .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
+        .replace(/^./, (m) => m.toLowerCase());  // Ensure the first character is lowercase
+}
 
+const urlPrefix = 'http://www.industry-fusion.org/fields#';
 function adjustTimeUnitBasedOnZoom(chart:any) {
   const xAxis = chart.scales.x;
   const minDate = new Date(xAxis.min);
@@ -481,9 +493,10 @@ const fetchDataAndAssign = async (entityIdValue:string) => {
           data: dataPoints,
           fill: false,
           borderColor: colors[i % colors.length].borderColor,
-          backgroundColor: colors[i % colors.length].backgroundColor,
+          backgroundColor: "rgba(122, 162, 227, 0.1",
           tension: 0.4,
-          stepped: true,
+          fill: true,
+          // stepped: true,
         };
 
         chartData.labels = labels;
@@ -557,9 +570,10 @@ const fetchDataForAttribute = async (attributeId: string) => {
       data: dataPoints,
       fill: false,
       borderColor: colors[0 % colors.length].borderColor, // Assuming only one dataset is fetched for the selected attribute
-      backgroundColor: colors[0 % colors.length].backgroundColor,
+      backgroundColor:'rgba(122, 162, 227, 0.2)',
       tension: 0.4,
-      stepped: true,
+      fill:true,
+      // stepped: true,
     };
 
     // Set chart data
@@ -654,13 +668,15 @@ useEffect(() => {
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
 
-   
-        try {
-            const transformedData = updateChartDataWithSocketData(data, updatedData);
+      console.log("updateData", updatedData)
+
+        if(updatedData!=null){ const transformedData = updateChartDataWithSocketData(data, updatedData);
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
-        } catch (error) {
-            console.error("Error processing data update:", error);
+     
         }
+  
+           
+        
     });
   
      
@@ -752,7 +768,7 @@ useEffect(() => {
               </div>
               <div className="custom-button-container">
                   <div className="custom-button">
-                    <img src="/data-transfer.png" style={{ width: "7%", marginRight: "8px" }} alt="Field Icon" />
+                    <img src="/data-transfer.png" style={{ width: "3%", marginRight: "8px" }} alt="Field Icon" />
                    <span className="button-text">
                     {selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
                   </span>
