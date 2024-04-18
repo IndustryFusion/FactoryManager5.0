@@ -26,13 +26,10 @@ export class PgRestService {
   async findAll(token : string, queryParams: any) {
     // console.log("queryparams ", queryParams)
    // Check if credentials or query parameters have changed
-      const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
-        if (credentialsChanged) {
+  
           await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId,queryParams.attributeId);
-          // console.log("Credentials or queryParams have changed. Saving new values to Redis.",queryParams);
-        } else {
-          // console.log("Credentials and queryParams unchanged. Skipping Redis update.");
-        }
+          console.log("Credentials findAll.",queryParams);
+     
 
     try {
       const headers = {
