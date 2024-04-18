@@ -235,7 +235,7 @@ fill: true,
     x: {
       type: 'time',
      time: {
-      unit: 'seconds', // Adjust based on your data's granularity
+      unit: 'minute', 
       displayFormats: {
           minute: 'HH:mm',
           hour: 'MMM dd HH:mm',
