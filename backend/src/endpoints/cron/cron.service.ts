@@ -52,7 +52,7 @@ private emitDataChangeToClient(data: any) {
   this.pgrestGatway.sendUpdate(data);
 }
 
-@Cron(CronExpression.EVERY_SECOND)
+@Cron(CronExpression.EVERY_5_SECONDS)
 async handleFindAllEverySecond() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
@@ -62,13 +62,13 @@ async handleFindAllEverySecond() {
 
   const { token, queryParams } = credentials;
 
-  const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
-  if (haveCredentialsChanged) {
+  // const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
+  // if (haveCredentialsChanged || !haveCredentialsChanged) {
     await this.redisService.saveData('storedData', null); // Clear stored data
     await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); // Save new credentials
-  }
+  // }
 
-
+  console.log("credentials ", credentials)
     // Update queryParams to limit the result to 1
     const modifiedQueryParams = { ...queryParams, limit: 1  };
     const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
@@ -82,19 +82,21 @@ async handleFindAllEverySecond() {
     // }
     // console.log(storedData, newData, "pppp")
 
-    if(storedData){
+  
     // Compare the newly fetched data with the previously fetched data
     if (!isEqual(newData, storedData)) {
       this.emitDataChangeToClient(newData);
+
+      console.log("newData", newData)
       await this.redisService.saveData('storedData', newData);
     }
-  }
+  
  
 }
 
 
 
-@Cron(CronExpression.EVERY_30_SECONDS)
+@Cron(CronExpression.EVERY_30_MINUTES)
 async handleChartDataUpdate() {
   try {
     const credentials = await this.redisService.getTokenAndEntityId();
@@ -131,7 +133,7 @@ private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
   }
 }
 
-@Cron('* * * * *')
+@Cron(CronExpression.EVERY_30_MINUTES)
 async handleMachineStateRefresh(){
   let machineStateParams = await this.redisService.getData('machine-state-params');
   if(machineStateParams && machineStateParams.type == 'days'){
