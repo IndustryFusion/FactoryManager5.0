@@ -1,0 +1,44 @@
+.factory-shopfloor-container {
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 1.5fr;
+    grid-gap: 10px;
+    padding: 0 1rem;
+}
+
+.form-container {
+    width: 90%;
+    margin: 1.5rem auto;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.input-content {
+    width: 90%;
+}
+
+.shopfloor-list-container {
+    border-right: 1px solid #ccc;
+    /* padding: 0 1.3rem; */
+    width: 85%;
+}
+
+.allocated-list-container {
+    border-left: 1px solid #ccc;
+    padding: 0 1.3rem;
+}
+
+.form-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 4rem;
+}
+
+.factory-header {
+    border-bottom: 1px solid #ccc;
+}
+

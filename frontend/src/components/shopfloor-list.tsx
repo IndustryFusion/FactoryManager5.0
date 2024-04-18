@@ -46,16 +46,17 @@ useEffect(() => {
     if (searchValue.trim()) {
       const filteredFloors = shopFloors.filter((floor) =>
         floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-      );
+      );     
       setFilteredShopFloors(filteredFloors);
-    } else {
-    
+    } else {   
       setFilteredShopFloors(shopFloors);
     }
   };
 
   filterShopFloors();
 }, [searchValue, shopFloors]);
+
+
 
 const fetchShopFloors = async (factoryId: string) => {
     
@@ -169,7 +170,7 @@ const fetchShopFloors = async (factoryId: string) => {
 
   return (
     <>
-      <Card style={{ height: "99%", fontSize: "15px", overflowY: "scroll", backgroundColor:""}}>
+      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor:""}}>
         <Toast ref={toast} />
 
         <div>

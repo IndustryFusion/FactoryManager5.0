@@ -105,7 +105,7 @@ const ShopFloorManager: React.FC = () => {
 
             {!factoryDetails && <div>Loading factory details...</div>}
           </div>
-        <div
+           <div
             style={{
               borderRight: "1px solid #ccc",
               padding: "10px",
@@ -114,6 +114,7 @@ const ShopFloorManager: React.FC = () => {
               flexShrink: 0, // Prevents the component from shrinking
             }}
           >
+            
             <UnallocatedAssets factoryId={factoryId} product_name="" />
           </div>
         </ShopFloorProvider>
