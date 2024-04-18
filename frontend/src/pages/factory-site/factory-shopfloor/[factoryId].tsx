@@ -9,6 +9,9 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import HorizontalNavbar from "@/components/horizontal-navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
+import UnallocatedAsset from "@/components/factoryShopFloorForm/unallocated-asset";
+import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
+import { getShopFloorAssets } from "@/utility/factory-site-utility";
 
 const FactoryShopFloor = () => {
 
@@ -24,22 +27,32 @@ const FactoryShopFloor = () => {
             router.push("/login");
         } else if (router.isReady) {
             const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
-            console.log("id here", id);
-
-            // if (typeof id === 'string') {
-            //   fetchNonShopFloorAssets(id);
-            // }
         }
 
-    }, [router.isReady])
+    }, [router.isReady]);
 
+    const fetchShopFloorAssets = async () => {
+        try {
+            const response = await getShopFloorAssets(shopfloor?.id);
+            console.log("all shopfloor assets", response);
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        fetchShopFloorAssets();
+    }, [shopfloor?.id])
+
+
+    
     return (
         <>
             {/* <HorizontalNavbar /> */}
             <div style={{
                 height: "96vh",
                 overflow: "hidden",
-                backgroundColor: "#fcfcf2"
+
             }}>
                 <div className="flex justify-content-between px-5 factory-header">
                     <h1 className="factory-heading">Test1</h1>
@@ -60,7 +73,7 @@ const FactoryShopFloor = () => {
                                 setShopfloorProp={setShopfloor}
                             />
                             <div>
-                                <h4>Allocated Assets</h4>
+                                <AllocatedAsset />
                             </div>
                         </div>
 
@@ -73,12 +86,13 @@ const FactoryShopFloor = () => {
                         <div className="allocated-list-container" >
                             <div className="flex gap-4">
                                 <h4>ShopFloor Assets</h4>
-                                <h4>Unallocated Assets</h4>
+                                <UnallocatedAsset />
                             </div>
                             {/* <UnallocatedAssets
                             factoryId={factoryId}
                             setAssetProp={setAsset}
                         /> */}
+
                         </div>
                     </ShopFloorProvider>
                 </div>

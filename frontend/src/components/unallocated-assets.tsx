@@ -61,7 +61,6 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const allocatedMenu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
-
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
@@ -125,9 +124,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
   }, [factoryId, router.isReady, unAllocatedAssetData]);
 
-
   useEffect(() => {
-
     const results = assets.filter(asset => {
       const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
@@ -135,7 +132,6 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       return matchesSearchTerm && matchesCategories;
 
     });
-
     setFilteredAssets(results);
   }, [searchTerm, selectedCategories, assets]);
 
@@ -168,7 +164,6 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       }
     });
   };
-
 
   //unallocated assets Menu
   const menuItems = [
@@ -204,8 +199,6 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       })),
     },
   ];
-
-
 
   //allocated Asset check-box
   const handleAllocatedCategoryChange = (category: string) => {

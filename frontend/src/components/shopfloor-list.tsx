@@ -17,11 +17,13 @@ import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 interface ShopfloorListProps {
   factoryId: string;
-  onShopFloorDeleted: (shopFloorId: string) => void;
+  onShopFloorDeleted?: (shopFloorId: string) => void;
+  setShopfloorProp?: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
+  setShopfloorProp
 }) => {
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,7 +160,6 @@ const fetchShopFloors = async (factoryId: string) => {
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-
     console.log(item, "item")
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
@@ -229,7 +230,10 @@ const fetchShopFloors = async (factoryId: string) => {
                   key={floor.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                  onClick={() => setSelectedShopFloorId(floor.id)}
+                  onClick={() =>{
+                    setSelectedShopFloorId(floor.id);
+                    setShopfloorProp(floor)
+                  } }
                   style={{
                   cursor: "pointer",
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",

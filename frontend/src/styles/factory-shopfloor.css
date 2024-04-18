@@ -24,6 +24,7 @@
     border-right: 1px solid #ccc;
     /* padding: 0 1.3rem; */
     width: 85%;
+    zoom: 80%;
 }
 
 .allocated-list-container {

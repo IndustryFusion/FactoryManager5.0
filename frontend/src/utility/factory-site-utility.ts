@@ -598,6 +598,60 @@ export const fetchAllAllocatedAssets = async () =>{
   }
 
 }
+export async function getShopFloorAssets(shopFloorId:string){
+  try{
+    const shopFloorDataResponse = await axios.get(
+      `${API_URL}/shop-floor/${shopFloorId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+    const shopFloorData = shopFloorDataResponse.data;
+    console.log("shopFloorData", shopFloorData);
+    
+        // Normalize the assetId to always be an array
+        let assetIds =
+        shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]?.object;
+      assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
+
+      console.log(assetIds, "asset Ids");
+      
+  
+      let assetsData = [];
+      if (assetIds && assetIds.length > 0) {
+        // Fetch data for all assetIds
+        const assetDataPromises = assetIds.map((assetId: any) =>
+          axios.get(`${API_URL}/asset/${assetId}`, {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            withCredentials: true,
+          })
+        );
+        const assetsResponses = await Promise.all(assetDataPromises);
+        assetsData = assetsResponses.map((response) => response.data);
+      }
+  
+      return { shopFloorId, assetIds, assetsData };
+  }catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+
+
+
+
+
+
+
+
+
 
 
 
