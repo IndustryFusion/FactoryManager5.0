@@ -107,7 +107,7 @@ async handleChartDataUpdate() {
 
     const redisKey = `chartData:${assetId}:${type}`;
     const previousChartData = await this.redisService.getData(redisKey);
-    const newChartData = await this.powerConsumptionService.findChartData(assetId, type, token);
+    const newChartData = await this.powerConsumptionService.findChartData(queryParams, token);
 
     if (!isEqual(previousChartData, newChartData)) {
       if(type=='days'){
