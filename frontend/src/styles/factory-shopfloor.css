@@ -1,13 +1,16 @@
 .factory-shopfloor-container {
-    display: grid;
+    /* display: grid;
     grid-template-columns: 0.5fr 2fr 1.5fr;
-    grid-gap: 10px;
+    grid-gap: 10px; */
+    display: flex;
+    gap: 1rem;
     padding: 0 1rem;
 }
 
 .form-container {
     width: 90%;
     margin: 1.5rem auto;
+    flex: 0 0 35%;
 }
 
 .input-container {
@@ -25,11 +28,13 @@
     /* padding: 0 1.3rem; */
     width: 85%;
     zoom: 80%;
+    flex: 0 0 20%;
 }
 
 .allocated-list-container {
     border-left: 1px solid #ccc;
     padding: 0 1.3rem;
+    flex: 0 0 45%;
 }
 
 .form-btns {
@@ -41,5 +46,13 @@
 
 .factory-header {
     border-bottom: 1px solid #ccc;
+}
+.asset-lists{
+   height: 100vh;
+}
+.asset-lists div{
+    zoom: 96%;
+    flex: 0 0 44%;
+ 
 }
 

@@ -29,12 +29,19 @@ const FactoryShopFloorForm :React.FC<FactoryShopFloorProps>= ({shopfloorProp, as
                 </div>
                 <div className="input-container" style={{gap: "5.2rem"}} >
                     <label htmlFor="">Asset</label>
+                    <div style={{width: "100%"}}>
                     <InputText
+                    style={{width: "100%"}}
                     className="input-content"
                         placeholder=""
-                        value={assetProp?.product_name || ""}
+                        value={assetProp["http://www.industry-fusion.org/schema#product_name"]?.value  || ""}
                     />
+                    <p style={{fontSize:"12px"}}>Select asset from shopfloor assets</p>
+                    </div>
+                    
+                    
                 </div>
+                
                 <div className="mt-4">
                     <p style={{fontWeight:"bold"}}>Relations</p>
                   <Relations assetId={assetProp?.id} />

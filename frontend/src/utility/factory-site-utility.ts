@@ -155,11 +155,11 @@ export const deleteFactory = async (factoryToDelete: Factory) => {
 export const transformDataForBackend = (factoryData: Factory) => {
   interface TransformedData {
     [key: string]:
-      | {
-          type: string;
-          value: string;
-        }
-      | string;
+    | {
+      type: string;
+      value: string;
+    }
+    | string;
   }
 
   const transformedData: TransformedData = {};
@@ -266,7 +266,7 @@ export const getshopFloorById = async (factoryId: string) => {
   });
 
   const mappedData1 = flattenData(response.data);
-  
+
   return response.data;
 };
 
@@ -557,14 +557,14 @@ export const fetchAssetById = async (assetId: string) => {
     const responseData = response.data;
     const mappedData = extractHasRelations(responseData);
     console.log(mappedData, "The asset Node data");
-      console.log(responseData, "1111");
+    console.log(responseData, "1111");
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
   }
 };
 
-export const fetchAllocatedAssets = async (factoryId:string)=> {
+export const fetchAllocatedAssets = async (factoryId: string) => {
   try {
     const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {
       headers: {
@@ -581,8 +581,8 @@ export const fetchAllocatedAssets = async (factoryId:string)=> {
   }
 };
 
-export const fetchAllAllocatedAssets = async () =>{
-  try{
+export const fetchAllAllocatedAssets = async () => {
+  try {
     const response = await axios.get(`${API_URL}/allocated-asset`, {
       headers: {
         "Content-Type": "application/json",
@@ -592,14 +592,15 @@ export const fetchAllAllocatedAssets = async () =>{
     });
     console.log(response, " all allocated asset data");
     return response.data;
-  }catch (error) {
+  } catch (error) {
     console.error("Error fetching all allocated assets:", error);
     throw new Error("Failed to fetch allocated assets");
   }
 
 }
-export async function getShopFloorAssets(shopFloorId:string){
-  try{
+
+export async function getShopFloorAssets(shopFloorId: string) {
+  try {
     const shopFloorDataResponse = await axios.get(
       `${API_URL}/shop-floor/${shopFloorId}`,
       {
@@ -612,19 +613,29 @@ export async function getShopFloorAssets(shopFloorId:string){
     );
     const shopFloorData = shopFloorDataResponse.data;
     console.log("shopFloorData", shopFloorData);
-    
-        // Normalize the assetId to always be an array
-        let assetIds =
-        shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]?.object;
-      assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
 
-      console.log(assetIds, "asset Ids");
+    // Normalize the assetId to always be an array
+    const hasAsset = shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]
+    let assetIds =
+    Array.isArray(hasAsset)?
+      hasAsset.map((elem:{type:string, object:string})=> elem?.object) :
+      hasAsset?.object ;
+
+      console.log("assetIds", assetIds);
+
+      // console.log(  shopFloorData["http://www.industry-fusion.org/schema#hasAsset"],"hasAsset");
       
-  
-      let assetsData = [];
-      if (assetIds && assetIds.length > 0) {
-        // Fetch data for all assetIds
-        const assetDataPromises = assetIds.map((assetId: any) =>
+      
+    assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
+    assetIds = assetIds.filter(id => id !== "json-ld-1.1");
+    console.log(assetIds, "asset Ids");
+
+
+    let assetsData = [];
+    if (assetIds && assetIds.length > 0) {
+      // Fetch data for all assetIds
+      const assetDataPromises = assetIds.map((assetId: any) =>{
+      
           axios.get(`${API_URL}/asset/${assetId}`, {
             headers: {
               "Content-Type": "application/json",
@@ -632,13 +643,17 @@ export async function getShopFloorAssets(shopFloorId:string){
             },
             withCredentials: true,
           })
-        );
-        const assetsResponses = await Promise.all(assetDataPromises);
-        assetsData = assetsResponses.map((response) => response.data);
-      }
-  
-      return { shopFloorId, assetIds, assetsData };
-  }catch (error) {
+        
+      }   
+      );
+      const assetsResponses = await Promise.all(assetDataPromises);
+      console.log("assetsResponses", assetsResponses);
+      
+      assetsData = assetsResponses.map((response) => response.data);
+    }
+
+    return { shopFloorId, assetIds, assetsData };
+  } catch (error) {
     console.error("Error fetching data:", error);
     return null;
   }
@@ -659,7 +674,7 @@ type ConsoleMethod = (message?: any, ...optionalParams: any[]) => void;
 
 const filterPatterns: RegExp[] = [/^\[React Flow\]: Node type/]; // Add more patterns here as needed
 
- const shouldFilterMessage = (message: string, patterns: RegExp[]): boolean => 
+const shouldFilterMessage = (message: string, patterns: RegExp[]): boolean =>
   patterns.some(pattern => pattern.test(message));
 
 export const customLogger: {

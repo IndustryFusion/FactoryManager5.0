@@ -11,7 +11,8 @@ import HorizontalNavbar from "@/components/horizontal-navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 import UnallocatedAsset from "@/components/factoryShopFloorForm/unallocated-asset";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
-import { getShopFloorAssets } from "@/utility/factory-site-utility";
+import { fetchFactoryDetails, getShopFloorAssets } from "@/utility/factory-site-utility";
+import { Card } from "primereact/card";
 
 const FactoryShopFloor = () => {
 
@@ -19,14 +20,30 @@ const FactoryShopFloor = () => {
     const [shopfloor, setShopfloor] = useState({});
     const [asset, setAsset] = useState({});
     const [switchView, setSwitchView] = useState(false);
+    const [factoryName, setFactoryName] = useState("");
+    const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const router = useRouter();
     console.log("shopfloor", shopfloor);
+
+
+    const getFactoryDetails = async (factoryId) => {
+        try {
+            const response = await fetchFactoryDetails(factoryId);
+            const factoryname = response["http://www.industry-fusion.org/schema#factory_name"]?.value
+            setFactoryName(factoryname)
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
 
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
-            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
+            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+                router.query.factoryId;
+            getFactoryDetails(id);
         }
 
     }, [router.isReady]);
@@ -34,18 +51,24 @@ const FactoryShopFloor = () => {
     const fetchShopFloorAssets = async () => {
         try {
             const response = await getShopFloorAssets(shopfloor?.id);
+            const { assetsData } = response;
+            setShopFloorAssets(assetsData)
             console.log("all shopfloor assets", response);
         } catch (error) {
             console.error(error)
         }
     }
 
+
     useEffect(() => {
         fetchShopFloorAssets();
-    }, [shopfloor?.id])
+    }, [shopfloor?.id]);
+
+    console.log("asset here", asset);
 
 
-    
+
+
     return (
         <>
             {/* <HorizontalNavbar /> */}
@@ -55,8 +78,8 @@ const FactoryShopFloor = () => {
 
             }}>
                 <div className="flex justify-content-between px-5 factory-header">
-                    <h1 className="factory-heading">Test1</h1>
-                    <div className="mt-5 flex align-items-center gap-2">
+                    <h3 className="factory-heading">{factoryName}</h3>
+                    <div className=" flex align-items-center gap-2">
                         <span>Switch View</span>
                         <InputSwitch checked={switchView} onChange={(e) => {
                             setSwitchView(e.value);
@@ -84,15 +107,23 @@ const FactoryShopFloor = () => {
                             />
                         </div>
                         <div className="allocated-list-container" >
-                            <div className="flex gap-4">
-                                <h4>ShopFloor Assets</h4>
-                                <UnallocatedAsset />
-                            </div>
-                            {/* <UnallocatedAssets
-                            factoryId={factoryId}
-                            setAssetProp={setAsset}
-                        /> */}
+                            <div className="flex  asset-lists">
+                                <Card>
+                                    <h3
+                                        className="font-medium  ml-4"
+                                        style={{ marginTop: "2%", marginLeft: "5%", fontSize: "18px" }}
+                                    >
+                                        ShopFloor Assets
+                                    </h3>
+                                    {shopFloorAssets.map(assetData =>
+                                        <li onClick={() => setAsset(assetData)}>{assetData["http://www.industry-fusion.org/schema#product_name"]?.value}</li>
+                                    )}
 
+                                </Card>
+                                <div>
+                                    <UnallocatedAsset />
+                                </div>
+                            </div>
                         </div>
                     </ShopFloorProvider>
                 </div>
