@@ -160,6 +160,9 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             const responseData = response.data;
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
+                  setTimeout(() => {
+                    setVisibleProp(false);
+                }, 1000); 
             }
         } catch (error: any) {
             console.log(error, "what's the error");
