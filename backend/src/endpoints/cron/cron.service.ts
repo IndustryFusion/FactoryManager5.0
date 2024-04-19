@@ -17,6 +17,7 @@ import { ValueChangeStateService } from '../value-change-state/value-change-stat
 import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
 import { PowerConsumptionGateway } from '../power-consumption/power-consumption-gateway';
 import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
+import * as moment from 'moment';
 
 @Injectable()
 
@@ -73,39 +74,44 @@ async handleFindAllEverySecond() {
 }
 
 
-@Cron(CronExpression.EVERY_30_SECONDS)
+@Cron('* * * * *')
 async handleChartDataUpdate() {
   try {
+    
     const credentials = await this.redisService.getTokenAndEntityId();
     if (!credentials) {
       return;
     }
     const { token, queryParams } = credentials;
     const { assetId, type } = queryParams;
-
-    const redisKey = `chartData:${assetId}:${type}`;
-    const previousChartData = await this.redisService.getData(redisKey);
-    const newChartData = await this.powerConsumptionService.findChartData(queryParams, token);
-
-    if (!isEqual(previousChartData, newChartData)) {
-      if(type=='days'){
+    const dateToCheck = moment(queryParams.endTime);
+    const currentDate = moment().startOf('day');
+    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
+    if(type == 'days' && isCurrentDate){
+      const redisKey = `chartData:${assetId}:${type}`;
+      const previousChartData = await this.redisService.getData(redisKey);
+      const modifiedQueryParams = { ...queryParams, limit: 1  };
+      const newChartData = await this.powerConsumptionService.findOne(modifiedQueryParams, token);
+      if(previousChartData){
+        if (!isEqual(previousChartData, newChartData)) {
           await this.redisService.saveData(redisKey, newChartData);
           this.emitChartDataUpdate(newChartData, assetId, type);
         }
-       } 
+      }else{
+        await this.redisService.saveData(redisKey, newChartData);
+        this.emitChartDataUpdate(newChartData, assetId, type);
+      }
+    }
   } catch (error) {
     this.logger.error('Error during chart data update', error);
   }
 }
 
 private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
-  // Emit only if type is 'days'
-  if (type === 'days') {
-    // console.log("called days ")
-    this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
-    this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
-  }
+  this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
+  this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
 }
+
 @Cron('* * * * *')
 async handleMachineStateRefresh(){
   let machineStateParams = await this.redisService.getData('machine-state-params');
