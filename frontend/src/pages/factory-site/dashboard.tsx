@@ -4,24 +4,24 @@ import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState,useRef } from "react";
 import { LayoutContext } from './layout/layout-context';
 import axios from "axios";
-import DashboardAssets from "@/components/dashboard/dashboard-assets";
 import HorizontalNavbar from "@/components/horizontal-navbar";
 import "../../styles/dashboard.css"
-import DashboardChart from "@/components/dashboard/dashboard-chart";
-import DashboardCards from "@/components/dashboard/dashboard-cards";
 const CombineSensorChart = dynamic(
   () => import('@/components/dashboard/senosor-linear-charts'),
   { ssr: false }
 );
-
-import PowerCo2Chart from "@/components/dashboard/power-co2-chart";
+const AutoRefresh = dynamic(() => import("@/components/dashboard/auto-refresh"), { ssr: false });
+const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
+const DashboardChart = dynamic(() => import("@/components/dashboard/dashboard-chart"), { ssr: false });
+const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
+const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false, loading: () => <ProgressSpinner /> });
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
-import AutoRefresh from '@/components/dashboard/auto-refresh';
+
 
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;

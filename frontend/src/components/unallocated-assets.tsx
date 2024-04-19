@@ -61,6 +61,10 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const allocatedMenu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
+  const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
+  const [view, setView] = useState('unallocated');
+  
+    
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
@@ -234,107 +238,95 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  return (
+return (
     <>
+    <div className="flex justify-content-center mt-3 mb-3 ml-1">
+    <Button
+        label="Unallocated Assets"
+        onClick={() => setView('unallocated')}
+        severity="secondary"
+        text raised 
+        className={`p-button mr-4  ${view === 'unallocated' ? 'p-button-light-grey' : 'p-button'}`}  // Custom light grey class for active button
+    />
+    <Button
+        label="Allocated Assets"
+        text raised 
+        onClick={() => setView('allocated')}
+        className={`p-button ${view === 'allocated' ? 'p-button-light-grey' : 'p-button'}`} // Custom light grey class for active button
+    />
+    </div>
 
-      <Card style={{ height: "60%", overflowY: "scroll" }}>
-        <h3
-          className="font-medium text-xl ml-4"
-          style={{ marginTop: "2%", marginLeft: "5%" }}
-        >
-          Unallocated Assets
-        </h3>
-        <div className="flex ml-2">
-          <div className="p-input-icon-left">
-            <i className="pi pi-search ml-2" />
-            <InputText
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name..."
-              className="ml-2 w-120"
-            />
 
+      {view === 'unallocated' ? (
+        <Card style={{ height: '93%', overflowY: 'scroll' }}>
+          <h3 className="font-medium text-xl ml-4" style={{ marginTop: '2%', marginLeft: '5%' }}>
+            Unallocated Assets
+          </h3>
+          <div className="flex ml-2">
+            <div className="p-input-icon-left">
+              <i className="pi pi-search ml-2" />
+              <InputText
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by name..."
+                className="ml-2"
+                style={{width:"120%"}}
+              />
+            </div>
+            <div>
+               <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup  className="filter-button ml-7"  style={{ color: "grey", fontSize: "1.2em" }} />
+                <Menu model={menuItems} popup ref={menu} id="popup_menu"  style={{marginLeft:"-15%"}}/>
+
+
+            </div>
           </div>
-          <div>
-            <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup className="filter-button" style={{ color: "grey", fontSize: "1.2em" }} />
-            <Menu model={menuItems} popup ref={menu} id="popup_menu" style={{ marginLeft: "-15%" }} />
-          </div>
-
-        </div>
-
-        <ul>
-          {filteredAssets.map((asset, index) => (
-            <li
-              key={index}
-              draggable={true}
-              // onClick={() => handleAssetClick(asset.id)}
-              onDragStart={(e) => handleDragStart(e, asset, "asset")}
-              style={{
-                position: "relative",
-                cursor: "pointer",
-                padding: "10px 20px",
-                marginBottom: "5px",
-
-                borderRadius: "5px",
-                // backgroundColor: selectedShopFloorId === asset.id ? "lightgrey" : "transparent",
-              }}
-              className="mb-2 ml-2"
-            >
-              {/* <span style={{
-                  position: "absolute",
-                  left: "0",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  height: "10px",
-                  width: "10px",
-                  backgroundColor: "#164B60", // Initial color set, animation will override this during cycles
-                  borderRadius: "50%",
-                  animation: "colorDip 2s infinite",
-                }} /> */}
-              {asset.product_name}
-            </li>
-          ))}
-        </ul>
-      </Card>
-      <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
-        <h3
-          className="font-medium text-xl ml-4"
-          style={{ marginTop: "2%", marginLeft: "5%" }}
-        >
-          Allocated Asset
-        </h3>
-        <div className="flex ml-3">
-          <div className="p-input-icon-left">
-            <i className="pi pi-search" />
-            <InputText
-              value={searchTermAllocated}
-              onChange={(e) => setSearchTermAllocated(e.target.value)}
-              placeholder="Search by name..."
-              className="w-120"
-            />
-          </div>
-          <div>
-            <Button
+          <ul>
+            {filteredAssets.map((asset, index) => (
+              <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} style={{ position: 'relative', cursor: 'pointer', padding: '10px 20px', marginBottom: '5px', borderRadius: '5px' }} className="mb-2 ml-2">
+                {asset.product_name}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : (
+        <Card style={{ height: '93%', marginTop: '10px', overflowY: 'scroll' }}>
+          <h3 className="font-medium text-xl ml-4" style={{ marginTop: '2%', marginLeft: '5%' }}>
+            Allocated Asset
+          </h3>
+          <div className="flex ml-3">
+            <div className="p-input-icon-left">
+              <i className="pi pi-search" />
+              <InputText
+                value={searchTermAllocated}
+                onChange={(e) => setSearchTermAllocated(e.target.value)}
+                placeholder="Search by name..."
+                className=""
+                style={{width:"130%"}}
+              />
+            </div>
+            <div>
+              <Button
               icon="pi pi-filter-fill"
               onClick={(e) => allocatedMenu.current?.toggle(e)}
               aria-haspopup
-              className="filter-button ml-1"
+              className="filter-button ml-8"
               style={{ color: "grey", fontSize: "1.2em" }}
             />
 
-            <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{ marginLeft: "-20%", marginTop: "1" }} />
+            <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"1"}} />
+          
 
+            </div>
           </div>
-
-        </div>
-        <ul>
-          {filteredAllocatedAssets.map((asset, index) => (
-            <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} className="mb-2 ml-3">
-              {typeof asset === 'string' ? asset : asset.product_name}
-            </li>
-          ))}
-        </ul>
-      </Card>
+          <ul>
+            {filteredAllocatedAssets.map((asset, index) => (
+              <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} className="mb-2 ml-3">
+                {asset.product_name}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </>
   );
 };
