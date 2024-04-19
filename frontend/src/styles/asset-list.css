@@ -11,6 +11,9 @@ li {
   font-size: 1.2em;
 }
 
+.p-inputswitch.p-highlight .p-inputswitch-slider {
+  background: #6366f1;
+}
 
 .selected {
   background-color: #e0e0e0;

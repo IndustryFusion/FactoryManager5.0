@@ -87,9 +87,11 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     const urnObject = item.object;
     let dataItem = { factoryId };
 
-    urnObject.forEach((urn, index) => {
-      dataItem[`urn_${index + 1}`] = urn;
-    });
+    if(urnObject.length >0 ){
+      urnObject.forEach((urn, index) => {
+        dataItem[`urn_${index + 1}`] = urn;
+      });
+    }
 
     return dataItem;
   });
