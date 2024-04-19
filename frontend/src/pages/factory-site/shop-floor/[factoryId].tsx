@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback ,Suspense } from "react";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
-import FlowEditor from "../factories/flow-editor";
-import ShopFloorList from "../../../components/shopfloor-list";
-import UnallocatedAssets from "../../../components/unallocated-assets";
+import dynamic from 'next/dynamic'
 import { ShopFloor } from "../types/shop-floor";
 import { exportElementToJPEG } from "@/utility/factory-site-utility";
 import { Asset } from "../../../interfaces/asset-types";
@@ -11,7 +9,15 @@ import HorizontalNavbar from "../../../components/horizontal-navbar";
 import Footer from "../../../components/footer";
 import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
-
+const ShopFloorList = dynamic(() => import("../../../components/shopfloor-list"), {
+  suspense: true
+});
+const FlowEditor = dynamic(() => import("../factories/flow-editor"), {
+  suspense: true
+});
+const UnallocatedAssets = dynamic(() => import("../../../components/unallocated-assets"), {
+  suspense: true
+});
 import {
   getshopFloorById,
   getNonShopFloorAsset,
@@ -109,7 +115,7 @@ const ShopFloorManager: React.FC = () => {
             style={{
               borderRight: "1px solid #ccc",
               padding: "10px",
-              width: "350px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
+              width: "400px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
               maxHeight: "100%",
               flexShrink: 0, // Prevents the component from shrinking
             }}

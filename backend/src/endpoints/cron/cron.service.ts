@@ -17,6 +17,7 @@ import { ValueChangeStateService } from '../value-change-state/value-change-stat
 import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
 import { PowerConsumptionGateway } from '../power-consumption/power-consumption-gateway';
 import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
+import * as moment from 'moment';
 
 @Injectable()
 
@@ -38,21 +39,13 @@ export class CronService
     private readonly powerConsumptionGateway: PowerConsumptionGateway,
     private readonly powerConsumptionService: PowerConsumptionService,
     ) {}
-//  onModuleInit() {
-//     this.handleFindAllEveryFiveSeconds();
-//   }
-
-
-private previousData: any = {};
-
-
 
 private emitDataChangeToClient(data: any) {
 
   this.pgrestGatway.sendUpdate(data);
 }
 
-@Cron(CronExpression.EVERY_5_SECONDS)
+@Cron(CronExpression.EVERY_SECOND)
 async handleFindAllEverySecond() {
   const credentials = await this.redisService.getTokenAndEntityId();
 
@@ -61,63 +54,55 @@ async handleFindAllEverySecond() {
   }
 
   const { token, queryParams } = credentials;
+    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); 
 
-  // const haveCredentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.entityId, queryParams.attributeId);
-  // if (haveCredentialsChanged || !haveCredentialsChanged) {
-    await this.redisService.saveData('storedData', null); // Clear stored data
-    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); // Save new credentials
-  // }
-
-  console.log("credentials ", credentials)
-    // Update queryParams to limit the result to 1
-    const modifiedQueryParams = { ...queryParams, limit: 1  };
-    const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
-
-    // console.log("modifiedQueryParams ", modifiedQueryParams)
     let storedData = await this.redisService.getData('storedData');
+    console.log("storedData", storedData)
 
-    // Set the previousData to newData the first time data is fetched
-    // if (Object.keys(storedData).length === 0) {
-    //   storedData = newData;
-    // }
-    // console.log(storedData, newData, "pppp")
-
-  
-    // Compare the newly fetched data with the previously fetched data
-    if (!isEqual(newData, storedData)) {
-      this.emitDataChangeToClient(newData);
-
-      console.log("newData", newData)
-      await this.redisService.saveData('storedData', newData);
-    }
-  
- 
+    const { entityId, attributeId } = storedData[0];
+   
+    const modifiedQueryParams = {
+      limit: 1,
+      order: 'observedAt.desc',
+      entityId: `eq.${entityId}`,
+      attributeId: `eq.${attributeId.replace('#', '%23')}` 
+    };
+    const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
+      if(newData!=null){
+        this.emitDataChangeToClient(newData)
+      }
 }
 
 
 
-@Cron(CronExpression.EVERY_30_MINUTES)
+
+@Cron('* * * * *')
 async handleChartDataUpdate() {
   try {
+    
     const credentials = await this.redisService.getTokenAndEntityId();
     if (!credentials) {
       return;
     }
-
     const { token, queryParams } = credentials;
     const { assetId, type } = queryParams;
-
-    const redisKey = `chartData:${assetId}:${type}`;
-    const previousChartData = await this.redisService.getData(redisKey);
-    const newChartData = await this.powerConsumptionService.findChartData(queryParams, token);
-
-    if (!isEqual(previousChartData, newChartData)) {
-      if(type=='days'){
+    const dateToCheck = moment(queryParams.endTime);
+    const currentDate = moment().startOf('day');
+    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
+    if(type == 'days' && isCurrentDate){
+      const redisKey = `chartData:${assetId}:${type}`;
+      const previousChartData = await this.redisService.getData(redisKey);
+      const modifiedQueryParams = { ...queryParams, limit: 1  };
+      const newChartData = await this.powerConsumptionService.findOne(modifiedQueryParams, token);
+      if(previousChartData){
+        if (!isEqual(previousChartData, newChartData)) {
           await this.redisService.saveData(redisKey, newChartData);
           this.emitChartDataUpdate(newChartData, assetId, type);
         }
-       } else {
-      // this.logger.log(`No changes detected for assetId=${assetId}, type=${type}. No update emitted.`);
+      }else{
+        await this.redisService.saveData(redisKey, newChartData);
+        this.emitChartDataUpdate(newChartData, assetId, type);
+      }
     }
   } catch (error) {
     this.logger.error('Error during chart data update', error);
@@ -125,15 +110,11 @@ async handleChartDataUpdate() {
 }
 
 private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
-  // Emit only if type is 'days'
-  if (type === 'days') {
-    // console.log("called days ")
-    this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
-    this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
-  }
+  this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
+  this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
 }
 
-@Cron(CronExpression.EVERY_30_MINUTES)
+@Cron('* * * * *')
 async handleMachineStateRefresh(){
   let machineStateParams = await this.redisService.getData('machine-state-params');
   if(machineStateParams && machineStateParams.type == 'days'){

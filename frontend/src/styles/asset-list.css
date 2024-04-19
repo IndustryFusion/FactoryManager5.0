@@ -73,3 +73,10 @@ li {
   }
 }
 
+/* styles.css or in your component's module.css file */
+.p-button-light-grey {
+    background-color: #cdc9c9; /* Light grey background */
+    color: #333; /* Darker text for contrast */
+    border-color: #ccc; /* Slightly darker border for definition */
+    border: none;
+}
