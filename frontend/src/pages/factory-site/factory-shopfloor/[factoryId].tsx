@@ -12,7 +12,9 @@ import { ShopFloorProvider } from "@/context/shopfloor-context";
 import UnallocatedAsset from "@/components/factoryShopFloorForm/unallocated-asset";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
 import { fetchFactoryDetails, getShopFloorAssets } from "@/utility/factory-site-utility";
+import { PickList } from 'primereact/picklist';
 import { Card } from "primereact/card";
+import ShopFloorAssets from "@/components/factoryShopFloorForm/shopFloor-assets";
 
 const FactoryShopFloor = () => {
 
@@ -23,7 +25,10 @@ const FactoryShopFloor = () => {
     const [factoryName, setFactoryName] = useState("");
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const router = useRouter();
-    console.log("shopfloor", shopfloor);
+    const [source, setSource] = useState([]);
+    const [target, setTarget] = useState([]);
+    const shopFloorAsset = [{ id: 1, name: "X1176" }, { id: 2, name: "rtret" }, { id: 3, name: "Q800" }];
+    const targetAssets = [{ id: 4, name: "Q000" }, { id: 5, name: "X8176" }, { id: 6, name: "rkket" }];
 
 
     const getFactoryDetails = async (factoryId) => {
@@ -35,8 +40,6 @@ const FactoryShopFloor = () => {
             console.error(error);
         }
     }
-
-
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
@@ -48,26 +51,8 @@ const FactoryShopFloor = () => {
 
     }, [router.isReady]);
 
-    const fetchShopFloorAssets = async () => {
-        try {
-            const response = await getShopFloorAssets(shopfloor?.id);
-            const { assetsData } = response;
-            setShopFloorAssets(assetsData)
-            console.log("all shopfloor assets", response);
-        } catch (error) {
-            console.error(error)
-        }
-    }
 
-
-    useEffect(() => {
-        fetchShopFloorAssets();
-    }, [shopfloor?.id]);
-
-    console.log("asset here", asset);
-
-
-
+   
 
     return (
         <>
@@ -75,7 +60,6 @@ const FactoryShopFloor = () => {
             <div style={{
                 height: "96vh",
                 overflow: "hidden",
-
             }}>
                 <div className="flex justify-content-between px-5 factory-header">
                     <h3 className="factory-heading">{factoryName}</h3>
@@ -99,7 +83,6 @@ const FactoryShopFloor = () => {
                                 <AllocatedAsset />
                             </div>
                         </div>
-
                         <div className="form-container">
                             < FactoryShopFloorForm
                                 shopfloorProp={shopfloor}
@@ -107,8 +90,8 @@ const FactoryShopFloor = () => {
                             />
                         </div>
                         <div className="allocated-list-container" >
-                            <div className="flex  asset-lists">
-                                <Card>
+                            {/* <div className=" asset-lists">
+                                <div>
                                     <h3
                                         className="font-medium  ml-4"
                                         style={{ marginTop: "2%", marginLeft: "5%", fontSize: "18px" }}
@@ -118,12 +101,15 @@ const FactoryShopFloor = () => {
                                     {shopFloorAssets.map(assetData =>
                                         <li onClick={() => setAsset(assetData)}>{assetData["http://www.industry-fusion.org/schema#product_name"]?.value}</li>
                                     )}
-
-                                </Card>
+                                </div>
                                 <div>
                                     <UnallocatedAsset />
                                 </div>
-                            </div>
+                            </div> */}
+                            <ShopFloorAssets
+                            shopFloorProp={shopfloor}
+                            setAssetProp={setAsset}
+                            />
                         </div>
                     </ShopFloorProvider>
                 </div>

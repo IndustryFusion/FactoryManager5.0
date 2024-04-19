@@ -634,18 +634,19 @@ export async function getShopFloorAssets(shopFloorId: string) {
     let assetsData = [];
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
-      const assetDataPromises = assetIds.map((assetId: any) =>{
-      
-          axios.get(`${API_URL}/asset/${assetId}`, {
+      const assetDataPromises = assetIds.map((assetId: any) =>{     
+       return   axios.get(`${API_URL}/asset/${assetId}`, {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
             withCredentials: true,
-          })
-        
+          })   
       }   
       );
+
+      console.log(assetDataPromises, "assetData in shopfloor");
+      
       const assetsResponses = await Promise.all(assetDataPromises);
       console.log("assetsResponses", assetsResponses);
       
