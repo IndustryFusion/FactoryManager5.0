@@ -12,6 +12,8 @@ import { BlockUI } from 'primereact/blockui';
 import socketIOClient from "socket.io-client";
 import { Asset } from "@/interfaces/asset-types";
 import { types } from 'util';
+import moment from 'moment';
+import { Calendar } from 'primereact/calendar';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -29,14 +31,10 @@ export interface pgData {
     value: string;
 }
 
-interface PowerConsumptionUpdate {
-  chartData: {
+interface PowerConsumptionData {
     labels: string[];
     powerConsumption: number[];
     emission: number[];
-  };
-  assetId: string;
-  type: string;
 }
 const initialChartData = {
   labels: [],
@@ -49,80 +47,76 @@ const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
     const { entityIdValue , autorefresh} = useDashboard();
     const [chartOptions, setChartOptions] = useState({});
-    const [checkChart, setCheckChart] = useState<boolean>(false)
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
+    const [selectedWeekSubInterval, setSelectedWeekSubInterval] = useState<string>("months");
+    const [selectedMonthSubInterval, setSelectedMonthSubInterval] = useState<string>("all");
     const [noChartData, setNoChartData] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [startDate, setStartDate] = useState<Date | null>(moment().toDate());
+    const [endDate, setEndDate] = useState<Date | null>(moment().toDate());
+    const [startMonth, setStartMonth] = useState<Date | null>(moment().startOf('month').toDate());
+    const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate())
     const toast = useRef<any>(null);
-    const intervalId: any = useRef(null);
-    const lastDataRef:any = useRef(); // 
-    // State and refs initialization remains the same
 
-  useEffect(() => {
-    const socket = socketIOClient(`${API_URL}/`);
-
-    socket.on("connect", () => {
-        console.log('WebSocket Connected');
-    });
-
-    socket.on("powerConsumptionUpdate", (newData) => {
-        // console.log("Data received from WebSocket:", newData);
-
-        // Make sure to check if the data structure is as expected
-        // if (!newData || !newData.chartData || !newData.chartData.labels || !newData.chartData.powerConsumption) {
-        //     console.error("Received data format is not correct");
-        //     return;
-        // }
-    console.log("power data update ",newData)
-       setChartData((currentData) => {
-            const updatedChartData:any = { ...currentData };
-            const currentDayIndex = newData.chartData.labels.length - 1;
-
-            // Ensure datasets array exists and has necessary structure
-            if (updatedChartData.datasets && updatedChartData.datasets.length >= 2) {
-                updatedChartData.datasets[0].data[currentDayIndex] = newData.chartData.powerConsumption[currentDayIndex];
-                updatedChartData.datasets[1].data[currentDayIndex] = newData.chartData.emission[currentDayIndex];
-            } else {
-                console.error("Datasets are not properly initialized");
-            }
-
-            // Update the ref for comparison in future updates
-            lastDataRef.current = newData;
-
-            // Log the index at which the data changed
-            // console.log(`Data changed at index ${currentDayIndex}`);
-            console.log(updatedChartData, "lllll")
-            return updatedChartData;
+    useEffect(() => {
+        const socket = socketIOClient(`${API_URL}/`);
+        socket.on("connect", () => {
+            console.log('WebSocket Connected');
         });
 
-    });
+        socket.on("powerConsumptionUpdate", (newData) => {
+        console.log("power data update ",newData)
+        setChartData((currentData) => {
+                const updatedChartData:any = { ...currentData };
+                const lastIndex = updatedChartData.chartData.labels.length - 1;
+                
+                // Ensure datasets array exists and has necessary structure
+                if (updatedChartData.datasets && updatedChartData.datasets.length >= 2 && (updatedChartData.labels[lastIndex] == newData.labels[0])) {
+                    updatedChartData.datasets[0].data[lastIndex] = newData.powerConsumption[0];
+                    updatedChartData.datasets[1].data[lastIndex] = newData.emission[0];
+                } else {
+                    console.error("Datasets are not properly initialized");
+                }
+                console.log(updatedChartData, "lllll")
+                return updatedChartData;
+            });
+        });
 
-    // Disconnect socket on cleanup
-    return () => {
-        socket.disconnect();
-        console.log('WebSocket Disconnected');
-    };
-}, []);
-
+        // Disconnect socket on cleanup
+        return () => {
+            socket.disconnect();
+            console.log('WebSocket Disconnected');
+        };
+    }, []);
 
     const intervalButtons = [
-        { label: "days", interval: "days" },
-        { label: "weeks", interval: "weeks" },
-        { label: "months", interval: "months" }
+        { label: "Days", interval: "days" },
+        { label: "Weeks", interval: "weeks" },
+        { label: "Months", interval: "months" }
+    ];
+    const weekSubIntervalButtons = [
+        { label: 'Months', interval: 'months' },
+        { label: 'All', interval: 'all' },
+        { label: 'Time', interval: 'time' }
+    ];
+    const monthSubIntervalButtons = [
+        { label: 'All', interval: 'all' },
+        { label: 'Time', interval: 'time' }
     ];
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
   
-    const fetchData = async (entityIdValue:any,selectedInterval:string) => {
+    const fetchData = async (entityIdValue:any, selectedInterval:string, startTime: string, endTime: string) => {
         try {
-            console.log('selectedInterval here ',selectedInterval);
             setIsLoading(true);
             const response = await axios.get(`${API_URL}/power-consumption/chart`, {
                 params: {
-                    'asset-id': entityIdValue,
-                    'type': selectedInterval
+                    'assetId': entityIdValue,
+                    'type': selectedInterval,
+                    startTime,
+                    endTime
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -132,8 +126,6 @@ const PowerCo2Chart = () => {
             });
             console.log('response of powerconsumption chart ', response, selectedInterval);
             setIsLoading(false);
-            // setCheckChart(true);
-            setNoChartData(false);
             return response.data;
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
@@ -146,54 +138,14 @@ const PowerCo2Chart = () => {
         }
     }
     
-
-
-    const fetchAssets = async (assetId: string) => {
-        try {
-            const attributeIds: string[] = [];
-            const response = await axios.get(API_URL + `/asset/${assetId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            });
-            const assetData: Asset = response.data;
-
-            Object.keys(assetData).map((key) => {
-                if (key.includes("fields")) {
-                    const newKey = 'eq.' + key;
-                    attributeIds.push(newKey);
-                }
-            });
-            return attributeIds;
-        } catch (error) {
-            console.error("Error fetching asset data:", error);
-        }
-    };
-  
-useEffect(() => {
-    // Define the fetchDataAndAssign function within the useEffect
-    const fetchDataAndAssign = async () => {
-        let attributeIds = await fetchAssets(entityIdValue);
-        if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
-            await fetchData(`eq.${entityIdValue}`, selectedInterval);
-            console.log('Fetching data for power consumption');
-        } else {
-            console.log('No attribute set available for power consumption');
-            setNoChartData(true);
-        }
-
-        // Assume fetchData returns data required for updating chart
-        const obj = await fetchData(entityIdValue, selectedInterval);
+    const setGraphData = async (obj: PowerConsumptionData) => {
         const documentStyle = getComputedStyle(document.documentElement);
-
         const data = {
             labels: obj?.labels,
             datasets: [
                 {
                     type: 'bar',
-                    label: 'Power Consumption (KW)',
+                    label: 'Power Consumption (kw/h)',
                     backgroundColor: documentStyle.getPropertyValue('--green-400'),
                     yAxisID: 'y',
                     borderWidth: 2,
@@ -203,7 +155,7 @@ useEffect(() => {
                 },
                 {
                     type: 'bar',
-                    label: 'CO2 Emission (KG)',
+                    label: 'CO2 Emission (kg)',
                     backgroundColor: documentStyle.getPropertyValue('--blue-500'),
                     yAxisID: 'y1',
                     borderWidth: 2,
@@ -268,16 +220,108 @@ useEffect(() => {
 
         setChartData(data);
         setChartOptions(options);
+    }
+
+    const fetchDataAndAssign = async (startTime: string, endTime: string) => {
+        console.log('start time ',startTime);
+        console.log('end time ',endTime);
+        console.log('type of start time ',typeof startTime);
+        let attributeIds = await fetchAssets(entityIdValue);
         setNoChartData(false);
+        if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
+            const obj = await fetchData(entityIdValue, selectedInterval, startTime, endTime);
+            console.log('Fetching data for power consumption ',obj);
+            // check if there is data or not 
+            if(obj.labels.length > 0){
+                await setGraphData(obj);
+            }else {
+                setNoChartData(true);
+            }
+        } else {
+            console.log('No attribute set available for power consumption');
+            setNoChartData(true);
+        }
     };
 
-            fetchDataAndAssign();
-        
+    const fetchAssets = async (assetId: string) => {
+        try {
+            const attributeIds: string[] = [];
+            const response = await axios.get(API_URL + `/asset/${assetId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+            const assetData: Asset = response.data;
 
+            Object.keys(assetData).map((key) => {
+                if (key.includes("fields")) {
+                    const newKey = 'eq.' + key;
+                    attributeIds.push(newKey);
+                }
+            });
+            return attributeIds;
+        } catch (error) {
+            console.error("Error fetching asset data:", error);
+        }
+    };
+  
+    useEffect(() => {
+        setStartDate(moment().toDate());
+        setEndDate(moment().toDate());
+        setStartMonth(moment().startOf('month').toDate());
+        setStartYear(moment().startOf('year').toDate());
+        if(selectedInterval == 'days'){
+            let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+            let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+            fetchDataAndAssign(startTime, endTime);
+        }else if(selectedInterval == 'weeks'){
+            let startTime = moment(startMonth).startOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
+            let endTime = moment(startMonth).endOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
+            fetchDataAndAssign(startTime, endTime);
+        }else{
+            let startTime = moment(startYear).startOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+            let endTime = moment(startYear).endOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+            fetchDataAndAssign(startTime, endTime);
+        }
+    }, [entityIdValue, selectedInterval]);
 
-    }, [checkChart, entityIdValue, selectedInterval]);
-
-
+    useEffect(() => {
+        console.log('start date ',startDate);
+        console.log('end date ',endDate);
+        console.log('start month ',startMonth);
+        console.log('start year ',startYear);
+        if(selectedInterval == 'days'){
+            let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+            let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+            fetchDataAndAssign(startTime, endTime);
+        }else if(selectedInterval == 'weeks'){
+            if(selectedWeekSubInterval == 'months'){
+                let startTime = moment(startMonth).startOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
+                let endTime = moment(startMonth).endOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
+                fetchDataAndAssign(startTime, endTime);
+            }else if(selectedWeekSubInterval == 'all'){
+                let startTime = moment(startYear).startOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+                let endTime = moment(startYear).endOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+                fetchDataAndAssign(startTime, endTime);
+            }else{
+                let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+                let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+                fetchDataAndAssign(startTime, endTime);
+            }
+        }else{
+            if(selectedMonthSubInterval == 'all'){
+                let startTime = moment(startYear).startOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+                let endTime = moment(startYear).endOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
+                fetchDataAndAssign(startTime, endTime);
+            }else{
+                let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+                let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+                fetchDataAndAssign(startTime, endTime);
+            }
+        }
+    }, [startDate, endDate, startMonth, startYear, selectedWeekSubInterval, selectedMonthSubInterval]);
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
@@ -285,10 +329,10 @@ useEffect(() => {
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
                 <p>Filter Interval</p>
-                <div
-                    className="dropdown-container custom-button"
-                    style={{ padding: "0" }}
-                >
+            </div>
+            <div className="flex">
+                <div className="dropdown-container custom-button" style={{ marginLeft: "250px", marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+                    <p>Type</p>
                     <Dropdown
                         value={selectedInterval}
                         options={intervalButtons.map(({ label, interval }) => ({
@@ -297,51 +341,174 @@ useEffect(() => {
                         }))}
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
-                        style={{ width: "100%", border: "none" }}
+                        style={{ width: "100%" }}
                     />
                 </div>
-            </div>
-            {/* {isLoading ? (
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "60vh",
-                    }}
-                >
-                    <ProgressSpinner />
-                </div>
-            ) : (
-                <Chart type="bar" data={chartData} options={chartOptions} />
-            )} */}
-              {
-                 noChartData ?
-                    <div className="flex flex-column justify-content-center align-items-center"
-                        style={{ marginTop: "9rem" }}
-                    >
-                        <p> No data available</p>
-                        <img src="/noDataFound.png" alt="" width="15%" height="15%" />
-                    </div>
-                    :
-                    isLoading ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                height: "60vh",
-                            }}
-                        >
-                            <ProgressSpinner />
+                {
+                    selectedInterval == 'days' ? 
+                    <>
+                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <p>Start Time</p>
+                            <Calendar
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                maxDate={moment().toDate()}
+                            />
                         </div>
+                        
+                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <p>End Time</p>
+                            <Calendar
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                maxDate={moment().toDate()}
+                            />
+                        </div>
+                    </>
+                    : selectedInterval == 'weeks' ? (
+                        <>
+                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+                                <p>Interval</p>
+                                <Dropdown
+                                    value={selectedWeekSubInterval}
+                                    options={weekSubIntervalButtons.map(({ label, interval }) => ({
+                                        label,
+                                        value: interval,
+                                    }))}
+                                    onChange={(e) => setSelectedWeekSubInterval(e.value)}
+                                    placeholder="Select Sub Interval"
+                                    style={{ width: "100%" }}
+                                />
+                            </div>
+                            
+                            {
+                                selectedWeekSubInterval == 'months' ? 
+                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <p>Months</p>
+                                        <Calendar
+                                            value={startMonth}
+                                            onChange={(e) => setStartMonth(e.value ? moment(e.value).toDate() : null)}
+                                            view="month" 
+                                            dateFormat="mm/yy"
+                                            maxDate={moment().startOf('month').toDate()}
+                                        />
+                                    </div>
+                                : selectedWeekSubInterval == 'all' ?
+                                (
+                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <p>Years</p>
+                                        <Calendar
+                                            value={startYear}
+                                            onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
+                                            view="year" 
+                                            dateFormat="yy"
+                                            maxDate={moment().startOf('year').toDate()}
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                            <p>Start Time</p>
+                                            <Calendar
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                                maxDate={moment().toDate()}
+                                            />
+                                        </div>
+                                        
+                                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                            <p>End Time</p>
+                                            <Calendar
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                                maxDate={moment().toDate()}
+                                            />
+                                        </div>
+                                    </>
+                                )
+                            }
+                        </>
                     ) : (
-                        <Chart type="bar" data={chartData} options={chartOptions} />
+                        <>
+                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+                                <p>Interval</p>
+                                <Dropdown
+                                    value={selectedMonthSubInterval}
+                                    options={monthSubIntervalButtons.map(({ label, interval }) => ({
+                                        label,
+                                        value: interval,
+                                    }))}
+                                    onChange={(e) => setSelectedMonthSubInterval(e.value)}
+                                    placeholder="Select Sub Interval"
+                                    style={{ width: "100%" }}
+                                />
+                            </div>
+                            
+                            {
+                                selectedMonthSubInterval == 'all' ?
+                                (
+                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <p>Years</p>
+                                        <Calendar
+                                            value={startYear}
+                                            onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
+                                            view="year" 
+                                            dateFormat="yy"
+                                            maxDate={moment().startOf('year').toDate()}
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                            <p>Start Time</p>
+                                            <Calendar
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                                maxDate={moment().toDate()}
+                                            />
+                                        </div>
+                                        
+                                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                            <p>End Time</p>
+                                            <Calendar
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                                maxDate={moment().toDate()}
+                                            />
+                                        </div>
+                                    </>
+                                )
+                            }
+                        </>
                     )
+                }   
+            </div>
+            {
+                noChartData ?
+                <div className="flex flex-column justify-content-center align-items-center"
+                    style={{ marginTop: "9rem" }}
+                >
+                    <p> No data available</p>
+                    <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+                </div>
+                :
+                isLoading ? (
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            height: "60vh",
+                        }}
+                    >
+                        <ProgressSpinner />
+                    </div>
+                ) : (
+                    <Chart type="bar" data={chartData} options={chartOptions} />
+                )
             }
         </div>
     )
-
 };
 
 export default PowerCo2Chart;
