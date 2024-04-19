@@ -105,7 +105,6 @@ const [data, setChartData] = useState<ChartDataState>({
 });
 
   const socketRef = useRef<any>(null);
-  const [selectedDatasetIndex, setSelectedDatasetIndex] = useState<number>(0); // State to store the index of the selected dataset
   const { layoutConfig } = useContext(LayoutContext);
   const [selectedInterval, setSelectedInterval] = useState<number>(10); // Default selected interval
   const [dataCache, setDataCache] = useState<DataCache>({});
@@ -125,8 +124,6 @@ const [data, setChartData] = useState<ChartDataState>({
   });
 const [selectedAttributeId, setSelectedAttributeId] = useState("");
 
-
-
   const intervalButtons = [
     { label: "Live", interval: 10 },
     { label: "1 Min", interval: 20 },
@@ -135,10 +132,8 @@ const [selectedAttributeId, setSelectedAttributeId] = useState("");
     { label: "15 Min", interval: 150 },
     { label: "2 Hour", interval: 120 },
     { label: "3 Hours", interval: 240 },
-    // { label: "3 Hours", interval: 180 },
     { label: "1 Day", interval: 1440 },
-    { label: "1 Week", interval: 10080 },
-    { label: "1 Month", interval: 43200 },
+
   ];
   const colors = [
 
@@ -164,8 +159,6 @@ const [selectedAttributeId, setSelectedAttributeId] = useState("");
       borderColor: "rgb(153, 102, 255)",
     },
   ];
-
-
 
 const getLabelFormat = (minDate:any, maxDate:any) => {
   const minuteDiff = differenceInMinutes(maxDate, minDate);
@@ -235,7 +228,7 @@ fill: true,
     x: {
       type: 'time',
      time: {
-      unit: 'minute', 
+      unit: 'second', 
       displayFormats: {
           minute: 'HH:mm',
           hour: 'MMM dd HH:mm',
@@ -269,124 +262,16 @@ fill: true,
   },
   
 };
-function toCamelCase(str) {
-    return str
-        .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
-        .replace(/^./, (m) => m.toLowerCase());  // Ensure the first character is lowercase
-}
-
-const urlPrefix = 'http://www.industry-fusion.org/fields#';
-function adjustTimeUnitBasedOnZoom(chart:any) {
-  const xAxis = chart.scales.x;
-  const minDate = new Date(xAxis.min);
-  const maxDate = new Date(xAxis.max);
-  
-  // Calculate the differences using date-fns functions
-  const minuteDiff = differenceInMinutes(maxDate, minDate);
-  const hourDiff = differenceInHours(maxDate, minDate);
-  const dayDiff = differenceInDays(maxDate, minDate);
-  const monthDiff = differenceInMonths(maxDate, minDate);
-
-  // Adjust the unit and display formats based on the difference
-  if (minuteDiff <= 60) {
-    xAxis.options.time.unit = 'minute';
-    xAxis.options.time.displayFormats = { minute: 'HH:mm' };
-  } else if (hourDiff <= 24) {
-    xAxis.options.time.unit = 'hour';
-    xAxis.options.time.displayFormats = { hour: 'HH:mm' };
-  } else if (dayDiff <= 30) {
-    xAxis.options.time.unit = 'day';
-    xAxis.options.time.displayFormats = { day: 'MMM d' };
-  } else if (monthDiff <= 12) {
-    xAxis.options.time.unit = 'month';
-    xAxis.options.time.displayFormats = { month: 'MMM yyyy' };
-  } else {
-    xAxis.options.time.unit = 'year';
-    xAxis.options.time.displayFormats = { year: 'yyyy' };
-  }
-
-  chart.update('none'); // Update the chart without animation
-}
-
-function generateLabels(
-  baseDate: Date,
-  selectedInterval: number,
-  dataLength: number
-) {
-  const labels = [];
-  // Start from the most recent (current) and go backwards directly
-  for (let i = 0; i < 7; i++) {
-    const adjustedDate = new Date(
-      baseDate.getTime() - selectedInterval * 60000 * i
-    );
-    labels.unshift(formatLabel(adjustedDate)); // Insert at the beginning
-  }
-  return labels; // Now labels are in descending order without needing to reverse
-}
 
 const calculateLimit = (intervalMinutes: number): number => {
   const pointsPerMinute = 1; 
   return pointsPerMinute * intervalMinutes; // Adjusted to reflect no skipping
 };
 
-
-//  const fetchData = async (attributeId, entityId, index, selectedInterval) => {
-//   try {
-//     // Fetch data from the API using axios or any other method
-//     const response = await axios.get(`${API_URL}/pgrest`, {
-//       params: {
-//         limit: 5,
-//         order: "observedAt.desc",
-//         entityId,
-//       },
-//       headers: {
-//         "Content-Type": "application/json",
-//         Accept: "application/json",
-//       },
-//       withCredentials: true,
-//     });
-
-//     // Extract data from the response
-//     const factoryData = response.data;
-
-//     // Initialize arrays to hold labels and data points
-//     let labels = [];
-//     let dataPoints = [];
-
-//     // Filter the data based on the attributeId
-//     factoryData.forEach(data => {
-//       if (data.attributeId === attributeId) {
-//         labels.push(formatLabel(new Date(data.observedAt)));
-//         dataPoints.push(data.value ? Number(data.value) : null);
-//       }
-//     });
-
-//     // Create a new dataset object
-//     const newDataset = {
-//       label: attributeId,
-//       data: dataPoints,
-//       fill: false,
-//       borderColor: colors[index % colors.length].borderColor,
-//       backgroundColor: colors[index % colors.length].backgroundColor,
-//       tension: 0.4,
-//     };
-
-//     // Return the new dataset and labels
-//     return { newDataset, labels };
-//   } catch (error) {
-//     console.error("Error fetching asset data:", error);
-//     throw error;
-//   }
-// };
 function formatLabel(date:Date) {
   // Format date: "YYYY-MM-DD HH:mm:ss"
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
-
-  const handleDatasetClick = (datasetIndex: number) => {
-    // console.log("Dataset button clicked:", datasetIndex);
-    setSelectedDatasetIndex(datasetIndex); // Update the selected dataset index
-  };
 
   const fetchAsset = async (assetId: string) => {
     try {
@@ -417,11 +302,7 @@ function formatLabel(date:Date) {
     if (attributeLabels.length > 0  && !selectedAttribute) {
         setSelectedAttribute(attributeLabels[0].value);
         
-        // setSelectedDatasetIndex(0);
       }
-
-
-    // Return attributeIds for compatibility with existing code
     return Object.keys(assetData)
       .filter(key => key.includes("fields"  ))
       .map(key => "eq." + key);
@@ -429,12 +310,6 @@ function formatLabel(date:Date) {
       console.error("Error fetching asset data:", error);
     }
   };
-
-// console.log(entityIdValue, "in sensor chart");
-const skipInterval = 3; // Define the interval to skip
-let skipCounter = 0; // Initialize skip counter
-
-
 
 const fetchDataAndAssign = async (entityIdValue:string) => {
   try {
@@ -447,26 +322,22 @@ const fetchDataAndAssign = async (entityIdValue:string) => {
       datasets: [],
     });
 
-    let attributeIds = await fetchAsset(entityId); // Fetch attribute IDs from the API
+    let attributeIds = await fetchAsset(entityId); 
 
     if (attributeIds && attributeIds.length > 0) {
      
       setNoChartData(false);
       const chartData = { labels: [], datasets: [] };
 
-      // Initialize an array to hold the data for each attribute label
-      const dataByLabel = new Map();
-
       // Fetch data for each attribute ID and assign to chartData
       for (let i = 0; i < attributeIds.length; i++) {
         if (attributeIds[i].includes('machine-state')) {
-        // console.log(attributeIds[i])
           continue;
         }
 
         const response = await axios.get(`${API_URL}/pgrest`, {
           params: {
-            limit: calculateLimit(selectedInterval),
+            limit:calculateLimit(selectedInterval),
             order: "observedAt.desc",
             entityId: "eq." + entityId,
             attributeId: attributeIds[i],
@@ -512,15 +383,9 @@ const fetchDataAndAssign = async (entityIdValue:string) => {
       }
 
       console.log("apple ", data);
-    } else {
-      // No attribute IDs available
-      setNoChartData(true);
-    }
+    } 
   } catch (error: any) {
-    // Handle errors
     console.error("Error:", error);
-    // Display error message to the user
-    // showToast('error', 'Error', error.message);
   }
 };
 
@@ -533,20 +398,17 @@ const handleAttributeChange = (selectedValue: string) => {
 };
 
 const fetchDataForAttribute = async (attributeId: string) => {
-  // Add "eq." before the attributeId
   const modifiedAttributeId = "eq." + attributeId;
-
-  // console.log(attributeId, "oooo");
   try {
     let entityId = entityIdValue;
     console.log("Selected attribute ID:", attributeId);
-
+   
     const response = await axios.get(`${API_URL}/pgrest`, {
       params: {
-        limit: "10",
+        limit: calculateLimit(selectedInterval),
         order: "observedAt.desc",
         entityId: "eq." + entityId,
-        attributeId: modifiedAttributeId, // Use the modified attributeId
+        attributeId: modifiedAttributeId,
       },
       headers: {
         "Content-Type": "application/json",
@@ -555,10 +417,23 @@ const fetchDataForAttribute = async (attributeId: string) => {
       withCredentials: true,
     });
 
-    const factoryData = response.data;
+    // Check if the response is empty
+    if (!response.data || response.data.length === 0) {
+      return; 
+    }
 
-    let labels:any = [];
-    let dataPoints:any = [];
+    // Further checks for string responses which need to be parsed
+    let factoryData = response.data;
+    if (typeof factoryData === 'string') {
+        factoryData = JSON.parse(factoryData);
+    }
+    if (!Array.isArray(factoryData)) {
+      console.error("Expected factoryData to be an array but got:", typeof factoryData);
+      setNoChartData(true);
+      return;
+    }
+    let labels: any = [];
+    let dataPoints: any = [];
 
     factoryData.forEach(data => {
       labels.push(formatLabel(new Date(data.observedAt)));
@@ -566,17 +441,14 @@ const fetchDataForAttribute = async (attributeId: string) => {
     });
 
     const newDataset = {
-      label: attributeId.replace('eq.', ''), // Update the label
+      label: attributeId.replace('eq.', ''),
       data: dataPoints,
       fill: false,
-      borderColor: colors[0 % colors.length].borderColor, // Assuming only one dataset is fetched for the selected attribute
-      backgroundColor:'rgba(122, 162, 227, 0.2)',
+      borderColor: colors[0 % colors.length].borderColor,
+      backgroundColor: 'rgba(122, 162, 227, 0.2)',
       tension: 0.4,
-      fill:true,
-      // stepped: true,
+      fill: true,
     };
-
-    // Set chart data
     setChartData({
       labels: labels,
       datasets: [newDataset],
@@ -584,18 +456,17 @@ const fetchDataForAttribute = async (attributeId: string) => {
 
     // Set selected attribute ID
     setSelectedAttributeId(modifiedAttributeId);
-
     setNoChartData(false);
   } catch (error) {
     console.error("Error fetching data for attribute:", error);
-    setNoChartData(true);
   }
 };
 
 
 
+
+
 function updateChartDataWithSocketData(currentChartData: ChartDataState, newData: DataPoint[]): ChartDataState {
-  // Iterate through each new data point
   newData.forEach(dataItem => {
     const { observedAt, attributeId, value } = dataItem;
 
@@ -603,15 +474,12 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
     if (attributeId.includes('http://www.industry-fusion.org/fields#machine-state')) {
        return;
     }
-
     // Find the correct dataset based on attributeId
     const datasetIndex = currentChartData.datasets.findIndex(dataset => dataset.label === attributeId);
     if (datasetIndex === -1) {
       // Dataset not found, skip this data item
       return;
     }
-
-    // Parse the value to a numeric format if needed
     const numericValue = value
 
     // Format the observedAt timestamp
@@ -620,14 +488,13 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
     // Find the index of the label in the current chart data
     const labelIndex:any = currentChartData.labels?.findIndex(existingLabel => existingLabel === label);
     if (labelIndex === -1) {
-      // Label not found, append it to the labels array and ensure data integrity
+      // Label not found, append it to the labels array 
       currentChartData.labels?.push(label);
       // Ensure all datasets have a value for this new label
       currentChartData.datasets.forEach((dataset, index) => {
         if (index === datasetIndex) {
           dataset.data.push(numericValue);
         } else {
-          // Use the last value or null if it's the first entry
           const lastValue = dataset.data[dataset.data.length - 1] || null;
           dataset.data.push(lastValue);
         }
@@ -653,33 +520,30 @@ function updateChartDataWithSocketData(currentChartData: ChartDataState, newData
   return { ...currentChartData };
 }
 
+  useEffect(() => {
+    if (Cookies.get("login_flag") === "false") {
+      router.push("/login");
+    } 
+     fetchDataAndAssign (entityIdValue)
 
-useEffect(() => {
-  if ( selectedAttribute) {
-    fetchDataForAttribute(selectedAttribute);
-  }
-}, [selectedAttribute]); // Depend on selectedAttribute and attributes to refetch when changed
+  }, [ router.isReady, entityIdValue]);
+
+  useEffect(() => {
+
+      fetchDataForAttribute(selectedAttribute);
+    
+  }, [selectedAttribute]); 
 
 useEffect(() => {
  
   const socket = socketIOClient(`${API_URL}/`);
   socketRef.current = socket;
- 
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
-
-      console.log("updateData", updatedData)
-
-        if(updatedData!=null){ const transformedData = updateChartDataWithSocketData(data, updatedData);
+        if(updatedData!=null){ 
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
-     
         }
-  
-           
-        
     });
-  
-     
     return () => {
         if (socketRef.current) {
             socketRef.current.disconnect();
@@ -687,9 +551,6 @@ useEffect(() => {
     };
   
 }, [data]); 
-
-
-
 
 const chartOptionsWithZoomPan = {
   ...chartOptions, 
@@ -707,7 +568,6 @@ const chartOptionsWithZoomPan = {
   }
 };
 
-
 useEffect(() => {
   if (chartRef.current && zoomLevel.min && zoomLevel.max) {
  
@@ -722,28 +582,6 @@ useEffect(() => {
     }
   }
 }, [data, zoomLevel]);
-
-  useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } 
-    else {
-          console.log("is calling when eneityId changes");
-
-        fetchDataAndAssign (entityIdValue)
-      }
-      
-
-
-    
-    
-   
-        
-
-  }, [ router.isReady, entityIdValue, selectedInterval]);
-
-
-
 
   return (
     <div style={{ zoom: "80%" }}>

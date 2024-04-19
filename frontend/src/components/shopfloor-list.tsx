@@ -238,17 +238,7 @@ const fetchShopFloors = async (factoryId: string) => {
                 }}
                 className="ml-4 mb-3"
               >
-                <span style={{
-                  position: "absolute",
-                  left: "0",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  height: "10px",
-                  width: "10px",
-                  backgroundColor: "#164B60", // Initial color set, animation will override this during cycles
-                  borderRadius: "50%",
-                  animation: "colorDip 2s infinite",
-                }} />
+            
                 {floor.floorName}
               </li>
             ))}
