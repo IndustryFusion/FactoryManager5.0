@@ -8,8 +8,49 @@ export class PowerConsumptionService {
   private readonly logger = new Logger(PowerConsumptionService.name);
   constructor(private readonly redisService: RedisService) {}
 
+  async findOne(queryParams: any, token: string) {
+    try {
+      const headers = {
+        Authorization: 'Bearer ' + token
+      };
+      const labels = [], powerConsumption = [], emission = [];
+      const queryString = Object.keys(queryParams)
+            .map(key => {
+                if(key.includes('_')){
+                  let actualKey = key.split('_')[0];
+                  let filter = key.split('_')[1];
+                  return actualKey + '=' + `${filter}.${queryParams[key]}` 
+                } else {
+                  return key + '=' + queryParams[key] 
+                }
+              })
+            .join('&').replace('#','%23');
+      const url = this.timescaleUrl + '/power_emission_entries_days?' + queryString;
+      const response = await axios.get(url, {headers});
+      // console.log('response ',response.data)
+      if(response.data.length > 0){
+        response.data.forEach(data => {
+          const day = moment(data.day);
+          labels.push(day.format('MMMM Do'));
+          powerConsumption.push(Number(data.total_power_consumption).toFixed(2));
+          emission.push(Number(data.total_carbon_emission).toFixed(2));
+        });
+      }
+      return {
+        labels,
+        powerConsumption,
+        emission
+      }
+    } catch(err) {
+      throw new NotFoundException(
+        `Failed to fetch repository data: ${err.message}`,
+      );
+    }
+  }
+
   async findChartData(queryParams: any, token: string) {
     try {
+      console.log('queryParams ',queryParams);
       const headers = {
         Authorization: 'Bearer ' + token
       };
@@ -23,7 +64,8 @@ export class PowerConsumptionService {
       }
 
       if(queryParams.type == 'days'){
-        const url = this.timescaleUrl + `/power_emission_entries_days?entityId=eq.${queryParams.assetId}&day=gte.${moment(queryParams.startTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}&day=lte.${moment(queryParams.endTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}`;
+        const url = this.timescaleUrl + `/power_emission_entries_days?entityId=eq.${queryParams.assetId}&day=gte.${moment.utc(queryParams.startTime).toISOString()}&day=lte.${moment.utc(queryParams.endTime).toISOString()}`;
+        console.log('url ',url);
         const response = await axios.get(url, {headers});
         if(response.data.length > 0){
           response.data.forEach(data => {
@@ -35,7 +77,7 @@ export class PowerConsumptionService {
         }
        await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
       } else if(queryParams.type == 'weeks'){
-        const url = this.timescaleUrl + `/power_emission_entries_weeks?entityId=eq.${queryParams.assetId}&week=gte.${moment(queryParams.startTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}&week=lte.${moment(queryParams.endTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}`;
+        const url = this.timescaleUrl + `/power_emission_entries_weeks?entityId=eq.${queryParams.assetId}&week=gte.${moment.utc(queryParams.startTime).toISOString()}&week=lte.${moment.utc(queryParams.endTime).toISOString()}`;
         const response = await axios.get(url, {headers});
         if(response.data.length > 0){
           response.data.forEach(data => {
@@ -46,7 +88,7 @@ export class PowerConsumptionService {
           });
         }
       } else{
-        const url = this.timescaleUrl + `/power_emission_entries_months?entityId=eq.${queryParams.assetId}&month=gte.${moment(queryParams.startTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}&month=lte.${moment(queryParams.endTime, 'YYYY-MM-DDTHH:mm:ss Z').toISOString()}`;
+        const url = this.timescaleUrl + `/power_emission_entries_months?entityId=eq.${queryParams.assetId}&month=gte.${moment.utc(queryParams.startTime).toISOString()}&month=lte.${moment.utc(queryParams.endTime).toISOString()}`;
         const response = await axios.get(url, {headers});
         if(response.data.length > 0){
           response.data.forEach(data => {
