@@ -49,6 +49,7 @@ interface RelationCounts {
 interface ExtendedNodeData {
   label: string;
   id: string;
+  asset_category?:string
 }
 
 interface ExtendedNode extends Node<ExtendedNodeData> {
@@ -65,10 +66,12 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     label:string,
     id:string,
     class?:string
-    parentId?:string
+    parentId?:string,
+    
     
   },
   asset_category?:string
+
 
 }
 interface FactoryNodeData {
@@ -697,17 +700,28 @@ const onEdgesChange = useCallback((changes:any) => {
 
   
       const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
+//       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
+//   sourceNode.data.class = "machine";
+//   console.log("Classified as machine:", sourceNode);
+// }
+//before logic :   if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
 
       if (!sourceNode || !targetNode) return;
       // Check if the source node is a relation and it already has an outgoing connection
-     if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
+     if (sourceNode.data.type === "relation" && (
+      
+        sourceNode.id.includes("relation_hasCutter") ||
+        sourceNode.id.includes("relation_hasFilter") ||
+        sourceNode.id.includes("relation_hasTracker") ||
+        sourceNode.id.includes("relation_hasSource")
+    )) {
       const alreadyHasChild = edges.some((edge) => edge.source === source);
 
         if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
             summary: "Operation not allowed",
-            detail: "A material relation can only connect to one asset.",
+            detail: "A machine relation can only connect to one asset.",
           });
           return;
         }

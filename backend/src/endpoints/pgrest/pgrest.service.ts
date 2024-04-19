@@ -13,9 +13,7 @@ export class PgRestService {
   constructor(private pgRestGateway: PgRestGateway, private redisService: RedisService) {
     
   }
-  
     async emitUpdate(data: any) {
-    // Emit data update through WebSocket
     this.pgRestGateway.sendUpdate(data);
   }
 
@@ -23,19 +21,13 @@ export class PgRestService {
     return 'This action adds a new factoryManager';
   }
 
-  async findAll(token : string, queryParams: any) {
-    // console.log("queryparams ", queryParams)
-   // Check if credentials or query parameters have changed
-  
-          await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId,queryParams.attributeId);
-          console.log("Credentials findAll.",queryParams);
-     
-
+  async findAll(token : string, queryParams: any, interval?:string) {
+    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId,queryParams.attributeId);
+    
     try {
       const headers = {
         Authorization: 'Bearer ' + token
       };
-
       const queryString = Object.keys(queryParams)
             .map(key => key + '=' + queryParams[key])
             .join('&').replace('#','%23');
@@ -44,11 +36,10 @@ export class PgRestService {
       
       const response = await axios.get(url, {headers});
 
-     if (response.data) {
-            return response.data;
-      } else {
-        throw new NotFoundException('Data not found.');
-      }
+     if (response.data != null) {
+      await this.redisService.saveData("storedData",response.data );
+      return response.data;
+     }
 
     } catch(err) {
       // console.log("Testing purpose : PGREST SERVICE ERROR FOUND")
