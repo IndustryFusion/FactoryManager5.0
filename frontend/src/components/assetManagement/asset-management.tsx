@@ -17,7 +17,7 @@ const moment = require('moment');
 import { Dialog } from "primereact/dialog";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import "../styles/dashboard.css"
+import "../../styles/dashboard.css"
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
@@ -26,6 +26,11 @@ import { Asset } from "@/interfaces/asset-types";
 import { fetchAllAllocatedAssets } from "@/utility/factory-site-utility";
 import { InputText } from "primereact/inputtext";
 import { FilterMatchMode } from "primereact/api";
+import AllocatedAsset from "./allocated-asset";
+import { Button } from "primereact/button";
+import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface AssetManagementDialogProps {
   assetManageDialogProp: boolean;
@@ -37,13 +42,15 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    factoryId: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    product_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    asset_type: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    asset_manufacturer_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
   });
-  const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [deleteAsset, setDeleteAsset] = useState(false);
   const router = useRouter();
 
   const handleAsset = async () => {
@@ -67,34 +74,28 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     }
   }
 
-  const handleAllAllocatedAsset = async () => {
-    try {
-      const response = await fetchAllAllocatedAssets();
-      console.log(response, "all response allocated");
-      const allocatedAssets = [];
-      response.forEach(({ id, "http://www.industry-fusion.org/schema#last-data": { object } }) => {
-        allocatedAssets.push({ id: id, object: object });
-        setAllAllocatedAssets(allocatedAssets)
+  const deleteAssetData =async(assetId:string)=>{
+    console.log("assetId", assetId);
+    
+    try{
+        const response = await axios.delete( API_URL + '/asset/delete-asset' ,{
+            params:{
+                id: assetId
+            },
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            withCredentials: true,
+        })
+        console.log("delted asset", response);
+        
 
-      });
-    } catch (error) {
-      console.error(error)
+    }catch(error){
+        console.error(error)
     }
   }
 
-  const data = allAllocatedAssets.map(item => {
-    const factoryId = item.id.replace(/:allocated-assets$/, '');;
-    const urnObject = item.object;
-    let dataItem = { factoryId };
-
-    if(urnObject.length >0 ){
-      urnObject.forEach((urn, index) => {
-        dataItem[`urn_${index + 1}`] = urn;
-      });
-    }
-
-    return dataItem;
-  });
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -124,10 +125,36 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   }
   const actionItemsTemplate = (rowData: Asset): React.ReactNode => {
     return (
-   <button className="action-items-btn">
-      <i className="pi pi-trash"></i>
-   </button>
-   )
+        <>
+      <button className="action-items-btn"
+      onClick={()=>setDeleteAsset(true)}
+      >
+        <i className="pi pi-trash"></i>
+      </button>
+      {deleteAsset && 
+    <Dialog
+  
+      visible={deleteAsset}  onHide={() => setDeleteAsset(false)}
+    >
+     <p>Are you sure you want to delete this asset</p>
+     <div className="flex justify-content-end gap-3">
+        <Button 
+        label="OK"
+        onClick={()=>deleteAssetData(rowData?.id)}
+
+        ></Button>
+        <Button
+        label="Cancel"
+        severity="danger" outlined
+        className="mr-2"
+        type="button"
+        onClick={() => setDeleteAsset(false)}
+        ></Button>
+     </div>
+    </Dialog>
+    }
+      </>
+    )
   }
   const headerElement = (
     <h3 className="px-5"> Asset Management</h3>
@@ -141,13 +168,15 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     setGlobalFilterValue(value);
   };
 
+
   const renderHeader = () => {
     return (
       <div className="flex justify-content-center">
         <span className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
-            value={globalFilterValue} onChange={onGlobalFilterChange}
+            value={globalFilterValue}
+            onChange={onGlobalFilterChange}
             placeholder="Search" />
         </span>
       </div>
@@ -155,16 +184,9 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   };
   const header = renderHeader();
 
-  const maxUrnFields = data.reduce((max, item) => {
-    const urnFields = Object.keys(item).filter(key => key.startsWith('urn_')).length;
-    return Math.max(max, urnFields);
-  }, 0);
 
-  // Generate column definitions dynamically
-  const urnColumns = Array.from({ length: maxUrnFields }, (_, i) => ({
-    field: `urn_${i + 1}`,
-    header: `URN ${i + 1}`,
-  }));
+  
+
 
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
@@ -172,12 +194,12 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     } else {
       if (router.isReady) {
         handleAsset();
-        handleAllAllocatedAsset();
       }
     }
   }, [])
 
   return (
+    <>
     <Dialog
       header={headerElement}
       visible={assetManageDialogProp} style={{ width: '50vw' }} onHide={() => setAssetManageDialogProp(false)}>
@@ -205,6 +227,9 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                 selectionMode="single"
                 selection={selectedProduct}
                 onSelectionChange={(e) => setSelectedProduct(e.value)}
+                header={header}
+                filters={filters}
+                globalFilterFields={['product_name', 'asset_type', 'asset_manufacturer_name']}
               >
                 <Column
                   header="Product Image"
@@ -231,31 +256,14 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                   body={actionItemsTemplate}
                 ></Column>
               </DataTable>
-              <h3>Allocated Assets</h3>
-              <DataTable
-                style={{ zoom: "92%" }}
-                className="factory-table"
-                value={data} rowGroupMode="rowspan" showGridlines
-                header={header}
-                filters={filters}
-                globalFilterFields={['factoryId', ...urnColumns.map(col => col.field)]}
-                groupField="factoryId">
-                <Column field="factoryId"
-                  className="factory-id-text"
-                  filter
-                ></Column>
-                {urnColumns.map((col, i) => (
-                  <Column key={col.field}
-                    filter
-                    className="factory-urn-text"
-                    field={col.field} />
-                ))}
-              </DataTable>
+              <AllocatedAsset />
             </>
         }
       </div>
 
     </Dialog>
+    
+    </>
   )
 }
 
