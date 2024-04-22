@@ -42,6 +42,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [isTyped, setIsTyped] = useState(false);
 
 
+  console.log("setShopfloorProp", setShopfloorProp);
+  
+
 useEffect(() => {
   
   const filterShopFloors = () => {

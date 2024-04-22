@@ -55,7 +55,7 @@ const AllocatedAsset = () => {
     const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
     let allocatedAssetsArray = null;
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-    console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
+    // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -67,7 +67,7 @@ const AllocatedAsset = () => {
                     dispatch(create(fetchedAssetIds));
                 }
                 const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
                 if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                     allocatedAssetsArray = fetchedAllocatedAssets;
                 }

@@ -43,10 +43,10 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     const router = useRouter();
 
     const fetchShopFloorAssets = async () => {
-        console.log("is calling");
+        // console.log("is calling");
         try {
             const response = await getShopFloorAssets(shopFloorProp?.id);
-            console.log("response from shopfloor ", response);
+            // console.log("response from shopfloor ", response);
 
             const { assetsData } = response;
             setShopFloorAssets(assetsData);
@@ -62,16 +62,14 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
 
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
-            console.log("is calling here in allocated asst");
-
             try {
                 if (unAllocatedAssetData.length === 0) {
                     const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-                    console.log("fetchedAssetIds", fetchedAssetIds);
+                    // console.log("fetchedAssetIds", fetchedAssetIds);
                     dispatch(create(fetchedAssetIds));
                 }
                 const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
                 if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                     allocatedAssetsArray = fetchedAllocatedAssets;
                 }
@@ -83,9 +81,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                     product_name: unAllocatedAssetData[key].product_name?.value,
                     asset_category: unAllocatedAssetData[key].asset_category?.value,
                 }));
-                console.log("fetchedAssets", fetchedAssets);
-
-
+                // console.log("fetchedAssets", fetchedAssets);
                 setTarget(fetchedAssets)
 
                 // destructuring the asset id, product_name, asset_catagory for allocated Asset
@@ -118,7 +114,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
             }
         }
 
-    }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
+    }, [router.query.factoryId, router.isReady, unAllocatedAssetData ]);
 
 
     const onChange = (event) => {
@@ -127,29 +123,19 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     };
 
     const itemTemplate = (item) => {
-        console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value);
-    
-        // Check if source and target both have lengths
-        const hasSource = source.length > 0;
-        const hasTarget = target.length > 0;
-    
-        // Determine the product name based on the item data
+        // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
         const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value ;
         const targetProductName=  item.product_name;
-    
-        // Only one <li> should be displayed based on whether target has a length
-        if (hasTarget) {
-            return <li className="list-items">{targetProductName}</li>;
-        } else if (hasSource) {
-            return <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>;
-        }
-    
-        // Return null if neither source nor target have lengths
-        return null;
+        return(
+            <>
+            <li className="list-items">{targetProductName}</li>
+            <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>
+            </>
+        )
     };
     
 const headerSource =(
-    <div className="flex">
+    <div className="flex justify-content-between align-items-center gap-3">
         <h3>ShopFloor Assets</h3>
         <Button>Save</Button>
     </div>

@@ -71,7 +71,7 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     class?:string
     parentId?:string,
   },
-  asset_category?:string
+  asset_category?: string
 
 
 }

@@ -31,6 +31,7 @@ const ShopFloorManager: React.FC = () => {
   const router = useRouter();
   const elementRef = useRef(null);
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
+  const [shopfloor, setShopfloor] = useState({});
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -57,10 +58,12 @@ const ShopFloorManager: React.FC = () => {
       }
     }
   }, [factoryId, router.isReady]);
+  
   const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
     console.log(`Shop floor ${deletedShopFloorId} deleted`);
     setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
   }, []);
+
   return (
     <>
       <HorizontalNavbar />
@@ -87,6 +90,7 @@ const ShopFloorManager: React.FC = () => {
             <ShopFloorList
               factoryId={factoryId}
               onShopFloorDeleted={handleShopFloorDeleted}
+              setShopfloorProp={setShopfloor}
             />
           </div>
           <div

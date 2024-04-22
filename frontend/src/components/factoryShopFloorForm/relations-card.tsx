@@ -1,17 +1,28 @@
-import { fetchAssetById } from "@/utility/factory-site-utility";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
-import React, { useEffect, useState } from "react";
+import { fetchAssetById } from "@/utility/factory-site-utility";
 
 interface RelationsProp {
-    assetId: string
+    assetId: string;
+    additionalInputs?: any;
+    handleAddInput?: any;
 }
 
 const Relations: React.FC<RelationsProp> = ({ assetId }) => {
+    // const relationsArray = ["hasFilter", "hasTracker", "hasCatridge", "workPiece"];
+    const [additionalInputs, setAdditionalInputs] = useState<{ [key: string]: number }>({});
     const [relations, setRelations] = useState([]);
 
-    console.log("assetId in relations", assetId);
+
+
+    const handleAddInput = useCallback((relation: string) => {
+        setAdditionalInputs(prev => ({
+            ...prev,
+            [relation]: (prev[relation] || 0) + 1,
+        }));
+    }, []);
 
 
     const getRelations = async () => {
@@ -29,54 +40,86 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
         getRelations();
     }, [assetId]);
 
+    const MemoizedInputText = React.memo(({ relation, index }) => (
+        <InputText
+            key={`${relation}-${index}`}
+            style={{ flex: "0 70%" }}
+            className="input-content"
+            placeholder={relation}
+        />
+    ));
+
+
+
+
     return (
         <>
             <Card className="p-4">
-                <div >
-                    {relations.length > 0 ?
+                <div>
+                    {relations.length > 0 ? (
                         relations.map((relation, index) => (
-                            <>
-                                <div key={index} className="flex mb-4">
-                                    <label htmlFor=""
-                                        style={{ flex: "0 20%" }}
-                                    >{relation}</label>
+                            <div key={index} className="flex mb-4">
+                                <label htmlFor="" style={{ flex: "0 20%" }}>{relation}</label>
+                                {(relation === "hasCatridge" || relation === "workPiece") ? (
+                                    <>
+                                        <div style={{ flex: "0 70%" }}>
+                                            <div className="flex justify-content-between">
+                                                <div style={{ flex: "0 100%" }} >
+                                                    <InputText
+                                                        className="input-content"
+                                                        placeholder=""
+                                                    />
+                                                </div>
+                                                <div><Button onClick={() => handleAddInput(relation)}>add</Button></div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
                                     <InputText
                                         style={{ flex: "0 70%" }}
                                         className="input-content"
                                         placeholder=""
                                     />
-
-
-                                </div>
-
-                            </>
+                                )}
+                            </div>
                         ))
-                        : <p>No relations exists</p>
-                    }
+                    ) : (
+                        <p>No relations exists</p>
+                    )}
+                    <div>
+                        {Object.keys(additionalInputs).length > 0 && Object.keys(additionalInputs).map((relation, i) => (
+                            Array.from({ length: additionalInputs[relation] }).map((_, j) => (
+                                <MemoizedInputText relation={relation} index={j} />
+                            ))
+                        ))}
+                    </div>
+
                 </div>
                 {relations.length > 0 &&
-                <div className="form-btns">
-                    <Button
-                    //className="save-btn"
-                    >Save</Button>
-                    <Button
-                        severity="secondary" text raised
-                        label="Reset"
-                        className="mr-2"
-                        type="button"
-                    ></Button>
-                    <Button
-                        label="Delete"
-                        severity="danger"
-                        outlined
-                        className="mr-2"
-                        type="button"
-                    />
-                </div>
-                 }
+                    <div className="form-btns">
+                        <Button
+                        //className="save-btn"
+                        >Save</Button>
+                        <Button
+                            severity="secondary" text raised
+                            label="Reset"
+                            className="mr-2"
+                            type="button"
+                        ></Button>
+                        <Button
+                            label="Delete"
+                            severity="danger"
+                            outlined
+                            className="mr-2"
+                            type="button"
+                        />
+                    </div>
+                }
+
+
             </Card>
         </>
-    )
-}
+    );
+};
 
 export default Relations;

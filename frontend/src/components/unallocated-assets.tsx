@@ -65,7 +65,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [view, setView] = useState('unallocated');
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-  console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
+  // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
   const dispatch = useDispatch();
 
 
@@ -74,11 +74,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       try {
         if (unAllocatedAssetData.length === 0) {
           const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-          console.log("fetchedAssetIds", fetchedAssetIds);
+          // console.log("fetchedAssetIds", fetchedAssetIds);
           dispatch(create(fetchedAssetIds));
         }
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-        console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+        // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
           allocatedAssetsArray = fetchedAllocatedAssets;
         }
@@ -230,7 +230,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
-    console.log(`Dragging: ${data}`, data);
+    // console.log(`Dragging: ${data}`, data);
   }
 
   if (loading) return <div>Loading...</div>;

@@ -18,20 +18,22 @@ import ShopFloorAssets from "@/components/factoryShopFloorForm/shopFloor-assets"
 
 const FactoryShopFloor = () => {
 
-    const factoryId = "urn:ngsi-ld:factories:2:64";
+  
     const [shopfloor, setShopfloor] = useState({});
     const [asset, setAsset] = useState({});
     const [switchView, setSwitchView] = useState(false);
     const [factoryName, setFactoryName] = useState("");
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
+    const [factoryIdValue, setfactoryIdvalue] = useState("");
     const router = useRouter();
     const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
+   
     const shopFloorAsset = [{ id: 1, name: "X1176" }, { id: 2, name: "rtret" }, { id: 3, name: "Q800" }];
     const targetAssets = [{ id: 4, name: "Q000" }, { id: 5, name: "X8176" }, { id: 6, name: "rkket" }];
 
 
-    const getFactoryDetails = async (factoryId) => {
+    const getFactoryDetails = async (factoryId: string) => {
         try {
             const response = await fetchFactoryDetails(factoryId);
             const factoryname = response["http://www.industry-fusion.org/schema#factory_name"]?.value
@@ -40,20 +42,22 @@ const FactoryShopFloor = () => {
             console.error(error);
         }
     }
+
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
-            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
-                router.query.factoryId;
+             // Use TypeScript's non-null assertion operator to assert that `id` is not undefined
+            const id:string = Array.isArray(router.query.factoryId) ? router.query.factoryId[0]! : router.query.factoryId!;
             getFactoryDetails(id);
+            setfactoryIdvalue(id);
         }
 
     }, [router.isReady]);
 
-
    
 
+   
     return (
         <>
             {/* <HorizontalNavbar /> */}
@@ -67,16 +71,16 @@ const FactoryShopFloor = () => {
                         <span>Switch View</span>
                         <InputSwitch checked={switchView} onChange={(e) => {
                             setSwitchView(e.value);
-                            router.push(`/factory-site/shop-floor/${factoryId}`)
+                            router.push(`/factory-site/shop-floor/${factoryIdValue}`)
                         }} />
                     </div>
 
                 </div>
                 <div className="factory-shopfloor-container">
-                    <ShopFloorProvider>
+                
                         <div className="shopfloor-list-container">
                             <ShopFloorList
-                                factoryId={factoryId}
+                                factoryId={factoryIdValue}
                                 setShopfloorProp={setShopfloor}
                             />
                             <div>
@@ -87,6 +91,7 @@ const FactoryShopFloor = () => {
                             < FactoryShopFloorForm
                                 shopfloorProp={shopfloor}
                                 assetProp={asset}
+                                
                             />
                         </div>
                         <div className="allocated-list-container" >
@@ -106,17 +111,17 @@ const FactoryShopFloor = () => {
                                     <UnallocatedAsset />
                                 </div>
                             </div> */}
-                            <ShopFloorAssets
-                            shopFloorProp={shopfloor}
+                                <ShopFloorAssets
+                                shopFloorProp={shopfloor}
                             setAssetProp={setAsset}
                             />
                         </div>
-                    </ShopFloorProvider>
+                  
                 </div>
             </div>
 
         </>
     )
 }
-
+ 
 export default FactoryShopFloor;
