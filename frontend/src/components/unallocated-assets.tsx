@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useRef,useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
@@ -58,16 +58,14 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [searchTermAllocated, setSearchTermAllocated] = useState("");
   const menu = useRef<Menu>(null);
   const [visible, setVisible] = useState(false);
-  const allocatedMenu =useRef<Menu>(null);
+  const allocatedMenu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
   const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
   const [view, setView] = useState('unallocated');
-  
-    
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-  console.log('unAllocatedAssets from redux ',unAllocatedAssetData);
+  console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
   const dispatch = useDispatch();
 
 
@@ -75,11 +73,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
         if (unAllocatedAssetData.length === 0) {
-        const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-        console.log("fetchedAssetIds", fetchedAssetIds);
-        dispatch(create(fetchedAssetIds));
+          const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
+          console.log("fetchedAssetIds", fetchedAssetIds);
+          dispatch(create(fetchedAssetIds));
         }
-        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId); 
+        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
         console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
           allocatedAssetsArray = fetchedAllocatedAssets;
@@ -87,7 +85,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         // setAllocatedAssets(allocatedAssetsArray);
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-        const fetchedAssets:  Asset[]  = Object.keys(unAllocatedAssetData).map((key) => ({
+        const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
           id: unAllocatedAssetData[key].id,
           product_name: unAllocatedAssetData[key].product_name?.value,
           asset_category: unAllocatedAssetData[key].asset_category?.value,
@@ -100,23 +98,20 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           asset_category: fetchedAllocatedAssets[key]?.asset_category,
         }));
 
-       // combined asset catagories from both allocated asset and un allocated asset
-       const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-      
+        // combined asset catagories from both allocated asset and un allocated asset
+        const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+
         setAssetCategories(categories);
-
         setAssets(fetchedAssets);
-      
         setAllocatedAssets(fetchedAllocatedAssets);
-
         setLoading(false);
 
       } catch (err) {
 
         setError("Failed to fetch assets");
         setLoading(false);
-        allocatedAssetsArray = null; 
-        
+        allocatedAssetsArray = null;
+
       }
     };
 
@@ -128,60 +123,58 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         fetchNonShopFloorAssets(id);
       }
     }
+
   }, [factoryId, router.isReady, unAllocatedAssetData]);
-  
- useEffect(() => {
 
-  const results = assets.filter(asset => {
-    const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
+  useEffect(() => {
+    const results = assets.filter(asset => {
+      const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
 
-    return matchesSearchTerm && matchesCategories;
+      return matchesSearchTerm && matchesCategories;
 
-  });
-
-  setFilteredAssets(results);
-}, [searchTerm, selectedCategories, assets]);
+    });
+    setFilteredAssets(results);
+  }, [searchTerm, selectedCategories, assets]);
 
 
-const filteredAllocatedAssets = useMemo(() => {
+  const filteredAllocatedAssets = useMemo(() => {
 
-  if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
-    return [];
-  }
-
-  return allocatedAssets.filter(asset => {
-   
-    const productName = asset.product_name?.toLowerCase() ?? '';
-    const isCategoryMatch = selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category);
-    const isSearchMatch = productName.includes(searchTermAllocated.toLowerCase());
-
-    return isCategoryMatch && isSearchMatch;
-  });
-}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
-
- const handleCategoryChange = (category: string) => {
-  setSelectedCategories(prevCategories => {
-    const categoryIndex = prevCategories.indexOf(category);
-    if (categoryIndex > -1) {
-      // If found, remove it
-      return prevCategories.filter(c => c !== category);
-    } else {
-      // add it
-      return [...prevCategories, category];
+    if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
+      return [];
     }
-  });
-};
 
+    return allocatedAssets.filter(asset => {
 
-   //unallocated assets Menu
-const menuItems = [
+      const productName = asset.product_name?.toLowerCase() ?? '';
+      const isCategoryMatch = selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category);
+      const isSearchMatch = productName.includes(searchTermAllocated.toLowerCase());
+
+      return isCategoryMatch && isSearchMatch;
+    });
+  }, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prevCategories => {
+      const categoryIndex = prevCategories.indexOf(category);
+      if (categoryIndex > -1) {
+        // If found, remove it
+        return prevCategories.filter(c => c !== category);
+      } else {
+        // add it
+        return [...prevCategories, category];
+      }
+    });
+  };
+
+  //unallocated assets Menu
+  const menuItems = [
     {
       label: ' Asset Categories',
       items: assetCategories.map(category => ({
         template: () => (
           <div className="p-flex p-ai-center">
-            <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)}  />
+            <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)} />
             <label htmlFor={category} className="p-checkbox-label ml-2" style={{ cursor: "pointer" }}>
               {category}
             </label>
@@ -190,16 +183,16 @@ const menuItems = [
       })),
     },
   ];
-  
+
 
   //allocated Asset Menu
- const allocatedMenuItems = [
-   {
+  const allocatedMenuItems = [
+    {
       label: ' Asset Categories',
       items: assetCategories.map(category => ({
         template: () => (
           <div className="p-flex p-ai-center">
-            <Checkbox inputId={category} onChange={() => handleAllocatedCategoryChange(category)} checked={selectedCategoriesAllocated.includes(category)}  />
+            <Checkbox inputId={category} onChange={() => handleAllocatedCategoryChange(category)} checked={selectedCategoriesAllocated.includes(category)} />
             <label htmlFor={category} className="p-checkbox-label ml-2" style={{ cursor: "pointer" }}>
               {category}
             </label>
@@ -208,23 +201,20 @@ const menuItems = [
       })),
     },
   ];
-
-
 
   //allocated Asset check-box
   const handleAllocatedCategoryChange = (category: string) => {
     setSelectedCategoriesAllocated(prev => {
       const isAlreadySelected = prev.includes(category);
       if (isAlreadySelected) {
-        return prev.filter(c => c !== category); 
+        return prev.filter(c => c !== category);
       } else {
-        return [...prev, category]; 
+        return [...prev, category];
       }
     });
   };
 
-
-  const toggleMenu = (event:React.MouseEvent<HTMLButtonElement>) => {
+  const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     menu.current?.toggle(event);
     setVisible(!visible);
   };
@@ -320,10 +310,7 @@ return (
               className="filter-button ml-8"
               style={{ color: "grey", fontSize: "1.2em" }}
             />
-
             <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"1"}} />
-          
-
             </div>
           </div>
           <ul>

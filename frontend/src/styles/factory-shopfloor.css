@@ -1,0 +1,72 @@
+.factory-shopfloor-container {
+    /* display: grid;
+    grid-template-columns: 0.5fr 2fr 1.5fr;
+    grid-gap: 10px; */
+    display: flex;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.form-container {
+    width: 90%;
+    margin: 1.5rem auto;
+    flex: 0 0 35%;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.input-content {
+    width: 90%;
+}
+
+.shopfloor-list-container {
+    border-right: 1px solid #ccc;
+    /* padding: 0 1.3rem; */
+    width: 85%;
+    zoom: 80%;
+    flex: 0 0 20%;
+}
+
+.allocated-list-container {
+    border-left: 1px solid #ccc;
+    padding: 0 1.3rem;
+    flex: 0 0 39%;
+    zoom: 80%;
+    margin-top: 2rem;
+}
+
+.form-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 4rem;
+}
+
+.factory-header {
+    border-bottom: 1px solid #ccc;
+}
+.asset-lists{
+   height: 100vh;
+   display: flex;
+}
+.asset-lists div{
+    zoom: 86%;
+    /* flex: 0 0 44%; */
+}
+.asset-lists .p-picklist-source-controls .p-picklist-buttons,
+.p-picklist-target-controls .p-picklist-buttons{
+display: none !important;
+}
+.p-picklist-buttons {
+    justify-content: normal;
+    margin-top: 30px;
+}
+.list-items{
+    padding: 0;
+    font-size: 17px;
+}
+

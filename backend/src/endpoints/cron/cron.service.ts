@@ -74,6 +74,8 @@ async handleFindAllEverySecond() {
 }
 
 
+
+
 @Cron('* * * * *')
 async handleChartDataUpdate() {
   try {
