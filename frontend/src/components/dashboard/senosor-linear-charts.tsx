@@ -208,7 +208,7 @@ fill: true,
           min: xAxis.min,
           max: xAxis.max
         });
-        adjustTimeUnitBasedOnZoom(chart);
+        // adjustTimeUnitBasedOnZoom(chart);
       },
       zoom: {
         wheel: {
@@ -219,7 +219,7 @@ fill: true,
         },
         mode: 'xy',
         onZoom: function({chart}) {
-          adjustTimeUnitBasedOnZoom(chart);
+          // adjustTimeUnitBasedOnZoom(chart);
         }
       },
     },
