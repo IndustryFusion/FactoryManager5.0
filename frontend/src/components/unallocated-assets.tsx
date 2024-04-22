@@ -63,8 +63,6 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
   const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
   const [view, setView] = useState('unallocated');
-  
-    
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
@@ -312,10 +310,7 @@ return (
               className="filter-button ml-8"
               style={{ color: "grey", fontSize: "1.2em" }}
             />
-
             <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"1"}} />
-          
-
             </div>
           </div>
           <ul>

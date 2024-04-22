@@ -63,14 +63,13 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     x: number;
     y: number;
   };
+
   data:{
     type:string,
     label:string,
     id:string,
     class?:string
     parentId?:string,
-    
-    
   },
   asset_category?:string
 
@@ -700,8 +699,6 @@ const FlowEditor: React.FC<
 
       console.log("params ", params)
       const sourceNode = nodes.find((node): node is ExtendedNode => node.id === source);
-
-  
       const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
 //       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
 //   sourceNode.data.class = "machine";
@@ -719,7 +716,6 @@ const FlowEditor: React.FC<
         sourceNode.id.includes("relation_hasSource")
     )) {
       const alreadyHasChild = edges.some((edge) => edge.source === source);
-
         if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
