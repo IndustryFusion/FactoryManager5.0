@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useRef,useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   getNonShopFloorAsset,
   getNonShopFloorAssetDetails,
@@ -17,6 +17,7 @@ import { Checkbox } from "primereact/checkbox";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { TabView, TabPanel } from 'primereact/tabview';
 
 interface AssetProperty {
   type: "Property";
@@ -58,16 +59,14 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [searchTermAllocated, setSearchTermAllocated] = useState("");
   const menu = useRef<Menu>(null);
   const [visible, setVisible] = useState(false);
-  const allocatedMenu =useRef<Menu>(null);
+  const allocatedMenu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
   const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
   const [view, setView] = useState('unallocated');
-  
-    
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-  console.log('unAllocatedAssets from redux ',unAllocatedAssetData);
+  console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
   const dispatch = useDispatch();
 
 
@@ -75,11 +74,11 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
         if (unAllocatedAssetData.length === 0) {
-        const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-        console.log("fetchedAssetIds", fetchedAssetIds);
-        dispatch(create(fetchedAssetIds));
+          const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
+          console.log("fetchedAssetIds", fetchedAssetIds);
+          dispatch(create(fetchedAssetIds));
         }
-        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId); 
+        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
         console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
           allocatedAssetsArray = fetchedAllocatedAssets;
@@ -87,7 +86,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         // setAllocatedAssets(allocatedAssetsArray);
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-        const fetchedAssets:  Asset[]  = Object.keys(unAllocatedAssetData).map((key) => ({
+        const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
           id: unAllocatedAssetData[key].id,
           product_name: unAllocatedAssetData[key].product_name?.value,
           asset_category: unAllocatedAssetData[key].asset_category?.value,
@@ -100,23 +99,20 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           asset_category: fetchedAllocatedAssets[key]?.asset_category,
         }));
 
-       // combined asset catagories from both allocated asset and un allocated asset
-       const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-      
+        // combined asset catagories from both allocated asset and un allocated asset
+        const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+
         setAssetCategories(categories);
-
         setAssets(fetchedAssets);
-      
         setAllocatedAssets(fetchedAllocatedAssets);
-
         setLoading(false);
 
       } catch (err) {
 
         setError("Failed to fetch assets");
         setLoading(false);
-        allocatedAssetsArray = null; 
-        
+        allocatedAssetsArray = null;
+
       }
     };
 
@@ -128,106 +124,34 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         fetchNonShopFloorAssets(id);
       }
     }
+
   }, [factoryId, router.isReady, unAllocatedAssetData]);
-  
- useEffect(() => {
 
-  const results = assets.filter(asset => {
-    const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
+  useEffect(() => {
+    const results = assets.filter(asset => {
+      const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
 
-    return matchesSearchTerm && matchesCategories;
+      return matchesSearchTerm && matchesCategories;
 
-  });
-
-  setFilteredAssets(results);
-}, [searchTerm, selectedCategories, assets]);
+    });
+    setFilteredAssets(results);
+  }, [searchTerm, selectedCategories, assets]);
 
 
-const filteredAllocatedAssets = useMemo(() => {
-
-  if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
-    return [];
-  }
-
-  return allocatedAssets.filter(asset => {
-   
-    const productName = asset.product_name?.toLowerCase() ?? '';
-    const isCategoryMatch = selectedCategoriesAllocated.length === 0 || selectedCategoriesAllocated.includes(asset.asset_category);
-    const isSearchMatch = productName.includes(searchTermAllocated.toLowerCase());
-
-    return isCategoryMatch && isSearchMatch;
-  });
-}, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
-
- const handleCategoryChange = (category: string) => {
-  setSelectedCategories(prevCategories => {
-    const categoryIndex = prevCategories.indexOf(category);
-    if (categoryIndex > -1) {
-      // If found, remove it
-      return prevCategories.filter(c => c !== category);
-    } else {
-      // add it
-      return [...prevCategories, category];
-    }
-  });
-};
-
-
-   //unallocated assets Menu
-const menuItems = [
-    {
-      label: ' Asset Categories',
-      items: assetCategories.map(category => ({
-        template: () => (
-          <div className="p-flex p-ai-center">
-            <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)}  />
-            <label htmlFor={category} className="p-checkbox-label ml-2" style={{ cursor: "pointer" }}>
-              {category}
-            </label>
-          </div>
-        ),
-      })),
-    },
-  ];
-  
-
-  //allocated Asset Menu
- const allocatedMenuItems = [
-   {
-      label: ' Asset Categories',
-      items: assetCategories.map(category => ({
-        template: () => (
-          <div className="p-flex p-ai-center">
-            <Checkbox inputId={category} onChange={() => handleAllocatedCategoryChange(category)} checked={selectedCategoriesAllocated.includes(category)}  />
-            <label htmlFor={category} className="p-checkbox-label ml-2" style={{ cursor: "pointer" }}>
-              {category}
-            </label>
-          </div>
-        ),
-      })),
-    },
-  ];
-
-
-
-  //allocated Asset check-box
-  const handleAllocatedCategoryChange = (category: string) => {
-    setSelectedCategoriesAllocated(prev => {
-      const isAlreadySelected = prev.includes(category);
-      if (isAlreadySelected) {
-        return prev.filter(c => c !== category); 
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prevCategories => {
+      const categoryIndex = prevCategories.indexOf(category);
+      if (categoryIndex > -1) {
+        // If found, remove it
+        return prevCategories.filter(c => c !== category);
       } else {
-        return [...prev, category]; 
+        // add it
+        return [...prevCategories, category];
       }
     });
   };
 
-
-  const toggleMenu = (event:React.MouseEvent<HTMLButtonElement>) => {
-    menu.current?.toggle(event);
-    setVisible(!visible);
-  };
 
   function handleDragStart(
     event: React.DragEvent,
@@ -245,96 +169,66 @@ const menuItems = [
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value.toLowerCase());
+  };
 return (
     <>
-    <div className="flex justify-content-center mt-3 mb-3 ml-1">
-    <Button
-        label="Unallocated Assets"
-        onClick={() => setView('unallocated')}
-        severity="secondary"
-        text raised 
-        className={`p-button mr-4  ${view === 'unallocated' ? 'p-button-light-grey' : 'p-button'}`}  // Custom light grey class for active button
-    />
-    <Button
-        label="Allocated Assets"
-        text raised 
-        onClick={() => setView('allocated')}
-        className={`p-button ${view === 'allocated' ? 'p-button-light-grey' : 'p-button'}`} // Custom light grey class for active button
-    />
+   <div className="flex flex-column align-items-center mt-3 mb-3">
+      <div className="flex align-items-center justify-content-center gap-2 mb-4">
+        <InputText
+          value={searchTerm}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search by name..."
+          style={{width: "320px"}}
+        />
+        <Button icon="pi pi-filter-fill" onClick={(e) => menu.current?.toggle(e)}    style={{ backgroundColor: "white", borderColor: "darkgrey", color: "grey", border:"none"}} />
+        <Menu model={[
+          {
+            label: 'Asset Categories',
+            items: assetCategories.map(category => ({
+              template: () => (
+                <div className="p-flex p-ai-center">
+                  <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)} />
+                  <label htmlFor={category} className="p-checkbox-label ml-2">{category}</label>
+                </div>
+              ),
+            })),
+          },
+        ]} popup ref={menu} style={{marginLeft:"-20%"}} />
+      </div>
+
+      <TabView className="ml-1 ">
+        <TabPanel header="Unallocated Assets" >
+          <Card className="-ml-1" style={{ height: '93%', overflowY: 'scroll' }}>
+            <ul>
+              {assets.filter(asset => 
+                asset.product_name?.toLowerCase().includes(searchTerm) && 
+                (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
+              ).map((asset, index) => (
+                <li key={index} className="mb-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                  {asset.product_name}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </TabPanel>
+        <TabPanel header="Allocated Assets" className="-ml-2">
+          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'scroll' }}>
+            <ul>
+              {allocatedAssets.filter(asset => 
+                asset.product_name?.toLowerCase().includes(searchTerm) && 
+                (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
+              ).map((asset, index) => (
+                <li key={index} className="mb-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                  {asset.product_name}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </TabPanel>
+      </TabView>
     </div>
-
-
-      {view === 'unallocated' ? (
-        <Card style={{ height: '93%', overflowY: 'scroll' }}>
-          <h3 className="font-medium text-xl ml-4" style={{ marginTop: '2%', marginLeft: '5%' }}>
-            Unallocated Assets
-          </h3>
-          <div className="flex ml-2">
-            <div className="p-input-icon-left">
-              <i className="pi pi-search ml-2" />
-              <InputText
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name..."
-                className="ml-2"
-                style={{width:"120%"}}
-              />
-            </div>
-            <div>
-               <Button icon="pi pi-filter-fill" onClick={toggleMenu} aria-controls="popup_menu" aria-haspopup  className="filter-button ml-7"  style={{ color: "grey", fontSize: "1.2em" }} />
-                <Menu model={menuItems} popup ref={menu} id="popup_menu"  style={{marginLeft:"-15%"}}/>
-
-
-            </div>
-          </div>
-          <ul>
-            {filteredAssets.map((asset, index) => (
-              <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} style={{ position: 'relative', cursor: 'pointer', padding: '10px 20px', marginBottom: '5px', borderRadius: '5px' }} className="mb-2 ml-2">
-                {asset.product_name}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ) : (
-        <Card style={{ height: '93%', marginTop: '10px', overflowY: 'scroll' }}>
-          <h3 className="font-medium text-xl ml-4" style={{ marginTop: '2%', marginLeft: '5%' }}>
-            Allocated Asset
-          </h3>
-          <div className="flex ml-3">
-            <div className="p-input-icon-left">
-              <i className="pi pi-search" />
-              <InputText
-                value={searchTermAllocated}
-                onChange={(e) => setSearchTermAllocated(e.target.value)}
-                placeholder="Search by name..."
-                className=""
-                style={{width:"130%"}}
-              />
-            </div>
-            <div>
-              <Button
-              icon="pi pi-filter-fill"
-              onClick={(e) => allocatedMenu.current?.toggle(e)}
-              aria-haspopup
-              className="filter-button ml-8"
-              style={{ color: "grey", fontSize: "1.2em" }}
-            />
-
-            <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{marginLeft:"-20%",marginTop:"1"}} />
-          
-
-            </div>
-          </div>
-          <ul>
-            {filteredAllocatedAssets.map((asset, index) => (
-              <li key={index} draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")} className="mb-2 ml-3">
-                {asset.product_name}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
     </>
   );
 };

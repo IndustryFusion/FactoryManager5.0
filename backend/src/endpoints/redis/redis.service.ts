@@ -66,11 +66,14 @@ export class RedisService {
     }
     return null;
   }
-  async saveData(key: string, data: any, ttl?: number): Promise<void> {
+  async saveData(key: string, data: any, ttl?: number): Promise<boolean> {
     if (typeof ttl === 'number') {
-      await this.redisClient.set(key, JSON.stringify(data), 'EX', ttl);
+     const result = await this.redisClient.set(key, JSON.stringify(data), 'EX', ttl);
+        return result === "OK";
+      
     } else {
-      await this.redisClient.set(key, JSON.stringify(data));
+      const result = await this.redisClient.set(key, JSON.stringify(data));
+      return result === "OK";
     }
   }
 

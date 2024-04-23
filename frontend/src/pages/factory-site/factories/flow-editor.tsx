@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback,MouseEvent  } from "react";
+import React, { useState, useEffect, useRef, useCallback, MouseEvent } from "react";
 import { useRouter } from "next/router";
 import { useHotkeys } from "react-hotkeys-hook"; // Import the hook for handling keyboard shortcuts
 import ReactFlow, {
@@ -12,7 +12,7 @@ import ReactFlow, {
   OnSelectionChangeParams,
   Node,
   ReactFlowInstance,
-  Connection,NodeMouseHandler 
+  Connection, NodeMouseHandler
 } from "reactflow";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -23,7 +23,7 @@ import { Toast } from "primereact/toast";
 import {
   fetchAndDetermineSaveState,
   exportElementToJPEG,
-  fetchAssetById,customLogger 
+  fetchAssetById, customLogger
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -35,6 +35,8 @@ import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { InputSwitch } from "primereact/inputswitch";
+import "../../../styles/asset-list.css"
 
 interface FlowEditorProps {
   factory: Factory;
@@ -61,16 +63,15 @@ interface ExtendedNode extends Node<ExtendedNodeData> {
     x: number;
     y: number;
   };
+
   data:{
     type:string,
     label:string,
     id:string,
     class?:string
     parentId?:string,
-    
-    
   },
-  asset_category?:string
+  asset_category?: string
 
 
 }
@@ -97,7 +98,7 @@ const FlowEditor: React.FC<
       setSelectedElements(params);
     },
     []
-  ); 
+  );
   const [nodeUpdateTracker, setNodeUpdateTracker] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toast = useRef<Toast>(null);
@@ -105,13 +106,13 @@ const FlowEditor: React.FC<
   const [assetRelations, setAssetRelations] = useState({});
   const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance  | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [shopFloorAssets, setShopFloorAssets] = useState({});
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const elementRef = useRef(null);
   const [nodesInitialized, setNodesInitialized] = useState(false);
   const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
-  const [loadedFlowEditor , setLoadedFlowEditor] = useState(false)  ;
+  const [loadedFlowEditor, setLoadedFlowEditor] = useState(false);
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
   );
@@ -125,19 +126,20 @@ const FlowEditor: React.FC<
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
+  const [switchView, setSwitchView] = useState(false);
   const dispatch = useDispatch();
- 
- 
 
- // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
-  const onEdgeAdd = (assetId: string, relationsInput: string,relationClass:string) => {
+
+
+  // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
+  const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
     console.log(relationClass, "class", assetId, "assetId")
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
       return;
     }
-  
+
     // handle both single and multiple relations uniformly
     const relations = Array.isArray(relationsInput)
       ? relationsInput
@@ -172,11 +174,11 @@ const FlowEditor: React.FC<
           border: "none",
           borderRadius: "45%",
         },
-     
+
         data: {
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
-          class:relationClass,
+          class: relationClass,
           parentId: selectedAsset,
         },
         position: {
@@ -190,7 +192,7 @@ const FlowEditor: React.FC<
         id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${new Date().getTime()}`,
         source: selectedAsset ?? '',
         target: relationNodeId ?? '',
-       
+
       };
 
       // Update state with the new node and edge
@@ -200,18 +202,18 @@ const FlowEditor: React.FC<
   };
 
 
- 
+
 
   useEffect(() => {
-    
-      const originalWarn = console.warn;
-      console.warn = (...args) => {
-        const [message] = args;
-        if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
-          originalWarn.apply(console, args);
-        }
-      };
-    
+
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      const [message] = args;
+      if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
+        originalWarn.apply(console, args);
+      }
+    };
+
     //@desc : When we create new ShopFloor 
     if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory_${factoryId}`;
@@ -247,24 +249,24 @@ const FlowEditor: React.FC<
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}_${new Date().getTime()}`,
           source: factoryNodeId,
           target: shopFloorNodeId,
-     
+
         };
 
         setEdges((eds) => [...eds, newEdge]);
       }
     }
 
-    if(deletedShopFloors){
-       deletedShopFloors.forEach((deletedShopFloorId) => {
-      const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
-      setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
-      setEdges((edges) =>
-        edges.filter(
-          (edge) =>
-            edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
-        )
-      );
-    });
+    if (deletedShopFloors) {
+      deletedShopFloors.forEach((deletedShopFloorId) => {
+        const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
+        setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
+        setEdges((edges) =>
+          edges.filter(
+            (edge) =>
+              edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
+          )
+        );
+      });
     }
     if (nodesInitialized) {
 
@@ -279,9 +281,9 @@ const FlowEditor: React.FC<
 
       fetchDataAndDetermineSaveState().catch(console.error);
       setNodesInitialized(false);
-      
+
     }
-     if (factory && reactFlowInstance && !loadedFlowEditor ) {
+    if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
         id: factoryNodeId,
@@ -299,30 +301,30 @@ const FlowEditor: React.FC<
       onRestore();
       setLoadedFlowEditor(true)
     }
-     if (toastMessage) {
-    toast.current?.show({
-      severity: 'success', 
-      summary: toastMessage,
-      life: 3000, 
-    });
+    if (toastMessage) {
+      toast.current?.show({
+        severity: 'success',
+        summary: toastMessage,
+        life: 3000,
+      });
 
-    setToastMessage(null);
-  }
-  return () => {
-    console.warn = originalWarn;
-  };
-   
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors,nodesInitialized, factoryId, API_URL,toastMessage] );
+      setToastMessage(null);
+    }
+    return () => {
+      console.warn = originalWarn;
+    };
+
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors, nodesInitialized, factoryId, API_URL, toastMessage]);
 
 
-useEffect(() => {
+  useEffect(() => {
     const handleRouteChange = (url: string) => {
       if (hasChanges && !isDialogVisible) {
-        setNextUrl(url); 
+        setNextUrl(url);
         setIsDialogVisible(true);
         return false;
       }
-      return true; 
+      return true;
     };
 
     router.beforePopState(({ url }) => handleRouteChange(url));
@@ -331,30 +333,30 @@ useEffect(() => {
   }, [hasChanges, isDialogVisible, router]);
 
 
-const checkForNewAdditions = useCallback(() => {
-  const newNodesAdded = nodes.length > originalNodes.length  || nodes.length < originalNodes.length;
-  const newEdgesAdded = edges.length > originalEdges.length  ||  edges.length < originalEdges.length;
+  const checkForNewAdditions = useCallback(() => {
+    const newNodesAdded = nodes.length > originalNodes.length || nodes.length < originalNodes.length;
+    const newEdgesAdded = edges.length > originalEdges.length || edges.length < originalEdges.length;
 
-  return newNodesAdded || newEdgesAdded;
-}, [nodes, edges, originalNodes, originalEdges]);
+    return newNodesAdded || newEdgesAdded;
+  }, [nodes, edges, originalNodes, originalEdges]);
 
 
-const onNodesChange = useCallback((changes:any) => {
-  onNodesChangeProvide(changes);
-  if (isRestored && checkForNewAdditions()) {
-    setHasChanges(true);
-  }
-}, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
+  const onNodesChange = useCallback((changes: any) => {
+    onNodesChangeProvide(changes);
+    if (isRestored && checkForNewAdditions()) {
+      setHasChanges(true);
+    }
+  }, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
 
-const onEdgesChange = useCallback((changes:any) => {
-  onEdgesChangeProvide(changes);
-  if (isRestored && checkForNewAdditions()) {
-    setHasChanges(true);
-  }
-}, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
+  const onEdgesChange = useCallback((changes: any) => {
+    onEdgesChangeProvide(changes);
+    if (isRestored && checkForNewAdditions()) {
+      setHasChanges(true);
+    }
+  }, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
 
   const onRestore = useCallback(async () => {
-   
+
     if (factoryId) {
       try {
         setIsOperationInProgress(true);
@@ -374,12 +376,12 @@ const onEdgesChange = useCallback((changes:any) => {
           // First, set the nodes and edges as usual
           setNodes(getReactFlowMongo.data.factoryData.nodes);
           setEdges(getReactFlowMongo.data.factoryData.edges);
-          
+
           // Set original nodes and edges right after restoration
           setOriginalNodes(getReactFlowMongo.data.factoryData.nodes);
           setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
-          
-          setIsRestored(true); 
+
+          setIsRestored(true);
           // Then, analyze the relation nodes to update relationCounts
           const updatedRelationCounts: RelationCounts = {};
 
@@ -410,15 +412,15 @@ const onEdgesChange = useCallback((changes:any) => {
         console.error("Error fetching flowchart data:", error);
       }
 
-      finally{
-         setIsOperationInProgress(false);
+      finally {
+        setIsOperationInProgress(false);
       }
     }
 
   }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   const onUpdate = useCallback(async () => {
-   
+
     const payLoad = {
       factoryId: factoryId,
 
@@ -430,11 +432,11 @@ const onEdgesChange = useCallback((changes:any) => {
           data,
           style,
         })),
-        edges: edges.map(({ id, source, target,type, data }) => ({
+        edges: edges.map(({ id, source, target, type, data }) => ({
           id,
           source,
           target,
-       
+
           type,
           data,
         })),
@@ -443,7 +445,7 @@ const onEdgesChange = useCallback((changes:any) => {
 
     try {
 
-        setIsOperationInProgress(true);
+      setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
@@ -462,8 +464,8 @@ const onEdgesChange = useCallback((changes:any) => {
       } else {
         setToastMessage("FlowChart already exist");
       }
-     const reactAllocatedAssetScorpio = await axios.patch(`${API_URL}/allocated-asset`,
-       payLoad.factoryData.edges,{
+      const reactAllocatedAssetScorpio = await axios.patch(`${API_URL}/allocated-asset`,
+        payLoad.factoryData.edges, {
         params: {
           "factory-id": factoryId,
         },
@@ -473,7 +475,7 @@ const onEdgesChange = useCallback((changes:any) => {
         },
         withCredentials: true,
       });
-       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204  || reactAllocatedAssetScorpio.status == 201) {
+      if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
         setToastMessage("Allocated Asset Scorpio Not Updated");
@@ -497,19 +499,19 @@ const onEdgesChange = useCallback((changes:any) => {
       }
       onRestore();
       dispatch(reset());
-   
+
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
     }
-    finally{
+    finally {
       setIsOperationInProgress(false);
 
     }
   }, [nodes, edges, factoryId]);
 
   const onSave = useCallback(async () => {
-  
+
     const payLoad = {
       factoryId: factoryId,
 
@@ -525,7 +527,7 @@ const onEdgesChange = useCallback((changes:any) => {
           id,
           source,
           target,
-       
+
           type,
           data,
         })),
@@ -542,15 +544,15 @@ const onEdgesChange = useCallback((changes:any) => {
         },
         withCredentials: true,
       });
- 
-      if (reactFlowUpdateMongo.status == 201 ) {
+
+      if (reactFlowUpdateMongo.status == 201) {
         setToastMessage("Flowchart saved successfully");
       } else {
         setToastMessage("Flowchart already exist");
       }
-       
-       const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-       payLoad.factoryData.edges,{
+
+      const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+        payLoad.factoryData.edges, {
         params: {
           "factory-id": factoryId,
         },
@@ -560,14 +562,14 @@ const onEdgesChange = useCallback((changes:any) => {
         },
         withCredentials: true,
       });
-       
+
       if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
         setToastMessage("Allocated Asset Scorpio Not Updated");
       }
-      
-         const reactFlowScorpioUpdate = await axios.patch(
+
+      const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
@@ -579,25 +581,25 @@ const onEdgesChange = useCallback((changes:any) => {
           params: { id: factoryId },
         }
       );
-      
-      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 ||  reactFlowScorpioUpdate.status == 200) {
+
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-    
-   
-     
-        setNodesInitialized(true);
-        onRestore();
-        dispatch(reset());
+
+
+
+      setNodesInitialized(true);
+      onRestore();
+      dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
     }
     finally {
-    setIsOperationInProgress(false); 
-  }
+      setIsOperationInProgress(false);
+    }
   }, [nodes, edges, factoryId]);
   //
   const handleDelete = async () => {
@@ -634,9 +636,9 @@ const onEdgesChange = useCallback((changes:any) => {
 
       const reactFlowScorpioUpdate = await axios.delete(
         `${API_URL}/shop-floor/delete-react`,
-     
+
         {
-          data: nodes, 
+          data: nodes,
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -674,15 +676,15 @@ const onEdgesChange = useCallback((changes:any) => {
     }
   };
 
-  const onElementClick: NodeMouseHandler  = useCallback((event, element
-) => {
+  const onElementClick: NodeMouseHandler = useCallback((event, element
+  ) => {
     if (element.type === "asset") {
       // Fetch asset details and set relations
       fetchAssetById(element.data.id)
         .then(() => {
-       
-          setSelectedAsset(element.id); 
-       
+
+          setSelectedAsset(element.id);
+
         })
         .catch((error) =>
           console.error("Error fetching asset details:", error)
@@ -690,15 +692,13 @@ const onEdgesChange = useCallback((changes:any) => {
     }
   }, []);
 
-   const onConnect = useCallback(
-     (params : Connection ) => {
-     
-      const { source, target} = params;
+  const onConnect = useCallback(
+    (params: Connection) => {
+
+      const { source, target } = params;
 
       console.log("params ", params)
-      const sourceNode = nodes.find((node):node is ExtendedNode => node.id === source);
-
-  
+      const sourceNode = nodes.find((node): node is ExtendedNode => node.id === source);
       const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
 //       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
 //   sourceNode.data.class = "machine";
@@ -716,7 +716,6 @@ const onEdgesChange = useCallback((changes:any) => {
         sourceNode.id.includes("relation_hasSource")
     )) {
       const alreadyHasChild = edges.some((edge) => edge.source === source);
-
         if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
@@ -730,7 +729,7 @@ const onEdgesChange = useCallback((changes:any) => {
         sourceNode.data.type === "shopFloor" &&
         targetNode.data.type === "asset"
       ) {
-       
+
         setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
       } else if (
         sourceNode.data.type === "asset" &&
@@ -744,19 +743,19 @@ const onEdgesChange = useCallback((changes:any) => {
           )
         );
 
-        setEdges((prevEdges) => addEdge(params , prevEdges)); // Add edge
+        setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
       } else if (
         sourceNode.data.type === "relation" &&
         targetNode.data.type === "asset"
       ) {
-       
-       
+
+
 
         const newRelationNodeId = `${sourceNode.id}`;
         // access the asset_category and split it.
-      const assetCategoryPart = targetNode.asset_category?.split(" ")[1] || "";
-      const assetCategory = assetCategoryPart.toLowerCase();
-      console.log("asset category", assetCategoryPart);
+        const assetCategoryPart = targetNode.asset_category?.split(" ")[1] || "";
+        const assetCategory = assetCategoryPart.toLowerCase();
+        console.log("asset category", assetCategoryPart);
 
         // relation label is like "hasTracker_001", extract "Tracker" and normalize
         const relationType = sourceNode.data.label
@@ -765,15 +764,13 @@ const onEdgesChange = useCallback((changes:any) => {
           .toLowerCase();
         console.log(relationType, "relation type");
         // Check if the asset category === the relation type
-        if (assetCategory  !== relationType) {
+        if (assetCategory !== relationType) {
           toast.current?.show({
             severity: "warn",
             summary: "Connection not allowed",
-            detail: `Assets of category '${
-              targetNode.asset_category
-            }' can only connect to 'has${
-              assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)
-            }' relations.`,
+            detail: `Assets of category '${targetNode.asset_category
+              }' can only connect to 'has${assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)
+              }' relations.`,
           });
           return; // Prevent the connection
         }
@@ -788,7 +785,7 @@ const onEdgesChange = useCallback((changes:any) => {
         // Update the edges with the new source node ID for any edge connected to the updated relation node
         const updatedEdges = edges.map((edge) => {
           if (edge.source === sourceNode.id) {
-            return { ...edge, source: newRelationNodeId  };
+            return { ...edge, source: newRelationNodeId };
           } else if (edge.target === sourceNode.id) {
             return { ...edge, target: newRelationNodeId };
           }
@@ -800,7 +797,7 @@ const onEdgesChange = useCallback((changes:any) => {
           id: `reactflow_edge-${newRelationNodeId}_${new Date().getTime()}`,
           source: newRelationNodeId,
           target: targetNode.id,
-         
+
           animated: true,
         };
 
@@ -828,7 +825,7 @@ const onEdgesChange = useCallback((changes:any) => {
     [nodes, setNodes, setAssetRelations, setShopFloorAssets, setEdges, toast]
   );
 
- 
+
   const handleBackspacePress = useCallback(() => {
     if (!selectedElements) {
       return;
@@ -877,46 +874,46 @@ const onEdgesChange = useCallback((changes:any) => {
   ]);
 
 
-const performNavigation = () => {
-  setIsDialogVisible(false); 
+  const performNavigation = () => {
+    setIsDialogVisible(false);
 
-  console.log("nexturl", nextUrl)
-  if (nextUrl) {
+    console.log("nexturl", nextUrl)
+    if (nextUrl) {
       setTimeout(async () => {
-        await saveChanges(); 
-        router.reload(); 
-    }, 3000); 
-    
-    router.push(nextUrl);
-  }
-};
+        await saveChanges();
+        router.reload();
+      }, 3000);
+
+      router.push(nextUrl);
+    }
+  };
 
   useHotkeys(
     "backspace",
     (event) => {
-      event.preventDefault(); 
+      event.preventDefault();
       handleBackspacePress();
     },
     [handleBackspacePress]
   );
 
-  const onNodeDoubleClick:NodeMouseHandler = useCallback(
+  const onNodeDoubleClick: NodeMouseHandler = useCallback(
     (event, node) => {
       console.log(node, "JKB");
       if (node.type === "shopFloor") {
-    
-      if (checkForNewAdditions() ) {
-        
-        setNextUrl("/factory-site/dashboard"); 
-        setIsDialogVisible(true);
-     
-      } else {
-      
-        router.push("/factory-site/dashboard");
+
+        if (checkForNewAdditions()) {
+
+          setNextUrl("/factory-site/dashboard");
+          setIsDialogVisible(true);
+
+        } else {
+
+          router.push("/factory-site/dashboard");
+        }
       }
-    }
     },
-    [isSaveDisabled, performNavigation,router]
+    [isSaveDisabled, performNavigation, router]
   );
 
   const onDrop = useCallback(
@@ -1006,7 +1003,7 @@ const performNavigation = () => {
       setNodes,
       setShopFloorAssets,
       setDroppedShopFloors,
-    
+
     ]
   );
 
@@ -1023,8 +1020,6 @@ const performNavigation = () => {
     onUpdate();
   }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
 
-
-
   const handleSave = useCallback(async () => {
     onSave();
   }, [
@@ -1038,51 +1033,51 @@ const performNavigation = () => {
 
 
 
- const saveChanges = async () => {
+  const saveChanges = async () => {
     if (isSaveDisabled) {
       console.log(
         "update called"
       )
-      await onUpdate(); 
-      
+      await onUpdate();
+
     } else {
-        console.log(
+      console.log(
         "onSave  called"
       )
-      await onSave(); 
-    
+      await onSave();
+
     }
-    setIsDialogVisible(false); 
-  
- 
+    setIsDialogVisible(false);
+
+
   };
 
-  
-const handleConfirm = async () => {
+
+  const handleConfirm = async () => {
     setIsDialogVisible(false);
     await saveChanges();
     setHasChanges(false);
 
     setTimeout(() => {
-        performNavigation();
-    }, 3000); 
-};
+      performNavigation();
+    }, 3000);
+  };
 
 
 
   const handleCancel = () => {
     setIsDialogVisible(false);
     setTimeout(() => {
-        if (nextUrl) {
-            router.push(nextUrl);
-        } else {
-            router.reload();
-        }
-        setHasChanges(false);
-    }, 3000); 
-};
+      if (nextUrl) {
+        router.push(nextUrl);
+      } else {
+        router.reload();
+      }
+      setHasChanges(false);
+    }, 3000);
+  };
 
- const dialogFooter = (
+  const dialogFooter = (
     <div>
       <Button label="No" icon="pi pi-times" onClick={handleCancel} className="p-button-text" />
       <Button label="Yes" icon="pi pi-check" onClick={handleConfirm} autoFocus />
@@ -1090,87 +1085,92 @@ const handleConfirm = async () => {
   );
   return (
     <>
-     <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
+      <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
         Do you want to save changes before leaving?
       </Dialog>
-      
-    <ReactFlowProvider>
-      <EdgeAddContext.Provider value={{ onEdgeAdd }}>
-    
-        <BlockUI blocked={isOperationInProgress} fullScreen/>
-        <div style={{}}>
-          <Button
-            label="Save"
-            onClick={handleSave}
-            className="m-2"
-            raised
-            disabled={isSaveDisabled}
-          />
 
-          <Button
-            label="Undo"
-            onClick={onRestore}
-            className="p-button-secondary m-2"
-            raised
-          />
-          <Button
-            label="Update"
-            onClick={handleUpdate}
-            className="p-button-success m-2"
-            raised
-          />
+      <ReactFlowProvider>
+        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
 
-          <Button
-            label="Delete"
-            onClick={handleDelete}
-            className="p-button-danger m-2"
-            raised
-          />
+          <BlockUI blocked={isOperationInProgress} fullScreen />
+          <div className="flex justify-content-between">
+            <div>
+              <Button
+                label="Save"
+                onClick={handleSave}
+                className="m-2"
+                raised
+                disabled={isSaveDisabled}
+              />
+              <Button
+                label="Undo"
+                onClick={onRestore}
+                className="p-button-secondary m-2"
+                raised
+              />
+              <Button
+                label="Update"
+                onClick={handleUpdate}
+                className="p-button-success m-2"
+                raised
+              />
+              <Button
+                label="Delete"
+                onClick={handleDelete}
+                className="p-button-danger m-2"
+                raised
+              />
+              <Button
+                label="Export as JPEG"
+                className="m-2"
+                onClick={handleExportClick}
+              />
+            </div>
+            <div className="flex align-items-center gap-2">
+              <span>Switch View</span>
+              <InputSwitch checked={switchView} onChange={(e) => {
+                setSwitchView(e.value);
+                router.push(`/factory-site/factory-shopfloor/${factoryId}`)
+              }} />
+            </div>
+            <Toast ref={toast} />
+          </div>
 
-          <Button
-            label="Export as JPEG"
-            className="m-2"
-            onClick={handleExportClick}
-          />
-
-          <Toast ref={toast} />
-        </div>
-       
-        <div
-          ref={reactFlowWrapper}
-          style={{ height: "95%", width: "100%" }}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-        >
-         
-          <ReactFlow
-            nodesDraggable={true}
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onInit={onInit}
-            onNodeDoubleClick={onNodeDoubleClick}
-            onSelectionChange={onSelectionChange}
-            fitView
-            ref={elementRef}
-            onNodeClick={onElementClick}
-            nodeTypes={nodeTypes}
-            deleteKeyCode={null}
+          <div
+            ref={reactFlowWrapper}
+            style={{ height: "95%", width: "100%" }}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
           >
-            <MiniMap />
-            <Controls />
-            <Background />
-          </ReactFlow>
-          {/* <BlockUI/> */}
-        </div>
-     
-      </EdgeAddContext.Provider>
 
-    </ReactFlowProvider></>
-  
-    
+            <ReactFlow
+              nodesDraggable={true}
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onInit={onInit}
+              onNodeDoubleClick={onNodeDoubleClick}
+              onSelectionChange={onSelectionChange}
+              fitView
+              ref={elementRef}
+              onNodeClick={onElementClick}
+              nodeTypes={nodeTypes}
+              deleteKeyCode={null}
+            >
+              <MiniMap />
+              <Controls />
+              <Background />
+            </ReactFlow>
+            {/* <BlockUI/> */}
+          </div>
+
+        </EdgeAddContext.Provider>
+
+      </ReactFlowProvider></>
+
+
   );
 };
 
