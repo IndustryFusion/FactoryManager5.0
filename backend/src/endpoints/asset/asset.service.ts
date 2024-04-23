@@ -217,8 +217,7 @@ export class AssetService {
             for (let i = 0; i < relationArray.length; i++) {
               assetData[finalKey].push({
                 type: 'Relationship',
-                object: relationArray[i],
-                class: classValue
+                object: relationArray[i]              
               });
             }
           }else{

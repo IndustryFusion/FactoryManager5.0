@@ -4,6 +4,7 @@ import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
 import { fetchAssetById } from "@/utility/factory-site-utility";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import { Chips } from "primereact/chips";
 
 interface RelationsProp {
     assetId: string;
@@ -12,27 +13,16 @@ interface RelationsProp {
 }
 
 const Relations: React.FC<RelationsProp> = ({ assetId }) => {
-    // const relationsArray = ["hasFilter", "hasTracker", "hasCatridge", "workPiece"];
-    const [additionalInputs, setAdditionalInputs] = useState<{ [key: string]: number }>({});
     const [relations, setRelations] = useState([]);
-    const {inputValue, setFocused, inputValues} = useFactoryShopFloor();
-
-
-
-    const handleAddInput = useCallback((relation: string) => {
-        setAdditionalInputs(prev => ({
-            ...prev,
-            [relation]: (prev[relation] || 0) + 1,
-        }));
-    }, []);
-
+    const { setFocused, inputValues, setGetRelation, workPieceRelations,setWorkPieceRelations } = useFactoryShopFloor();
+    const [value, setValue] = useState([]);
 
     const getRelations = async () => {
         try {
             const response = await fetchAssetById(assetId);
             console.log("response here", Object?.keys(response));
             const relationsValues = Object?.keys(response);
-            setRelations(relationsValues);
+            setRelations(relationsValues);        
         } catch (error) {
             console.error(error)
         }
@@ -42,18 +32,31 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
         getRelations();
     }, [assetId]);
 
-    const MemoizedInputText = React.memo(({ relation, index }) => (
-        <InputText
-            key={`${relation}-${index}`}
-            style={{ flex: "0 70%" }}
-            className="input-content"
-            placeholder={relation}
-        />
-    ));
 
-    console.log("inputValues", inputValues);
+    const handleSave = () => {
 
+    }
+    const handleReset =()=>{
 
+    }
+
+    // console.log("inputValues",inputValues );
+    console.log("value in chip", value);
+    
+
+    const hasWorkPieceValues =()=>{
+
+    }
+
+    /**
+     * hasCatridge
+     * hasWorkpiece
+     * 
+     *    const [value, setValue] = useState([]);
+     */
+    
+
+    console.log("workPieceRelations in relationscard",workPieceRelations );
     return (
         <>
             <Card className="p-4">
@@ -62,19 +65,24 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
                         relations.map((relation, index) => (
                             <div key={index} className="flex mb-4">
                                 <label htmlFor="" style={{ flex: "0 20%" }}>{relation}</label>
-                                {(relation === "hasCatridge" || relation === "hasWorkpiece") ? (
+                                {(relation === "hasWorkpiece" ) ? (
                                     <>
-                                        <div style={{ flex: "0 70%" }}>
-                                            <div className="flex justify-content-between">
-                                                <div style={{ flex: "0 100%" }} >
-                                                    <InputText
-                                                        className="input-content"
-                                                        placeholder=""
-                                                    />
-                                                </div>
-                                                <div><Button onClick={() => handleAddInput(relation)}>add</Button></div>
-                                            </div>
-                                        </div>
+                                      {/* <Chips value={value} onChange={(e) => setValue(e.value)} /> */}
+                                        
+                                        <Chips
+                                            value={workPieceRelations || ""}
+                                            onFocus={() => {
+                                                setGetRelation(relation)
+                                                setFocused(true)
+                                            }}
+                                            onBlur={() => setFocused(false)}
+                                            onRemove={(e) => {
+                                                const [value] = e.value;                                             
+                                                const newRelations = workPieceRelations?.filter(relation => relation !== value);
+                                                setWorkPieceRelations(newRelations);
+                                             }}
+                                       />
+                                               
                                     </>
                                 ) : (
                                     <InputText
@@ -83,29 +91,48 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
                                         placeholder=""
                                         value={inputValues[relation] || ""}
                                         //value={inputValue}
-                                        onFocus={() => setFocused(true)}
+                                        onFocus={() => {
+                                            setGetRelation(relation)
+                                            setFocused(true)
+                                        }}
                                         onBlur={() => setFocused(false)}
                                     />
                                 )}
+                                {/* {relation === "hasCatridge" && 
+                                  <Chips
+                                  value={workPieceRelations || ""}
+                                  onFocus={() => {
+                                      setGetRelation(relation)
+                                      setFocused(true)
+                                  }}
+                                  onBlur={() => setFocused(false)}
+                                  onRemove={(e) => {
+                                      const [value] = e.value;                                             
+                                      const newRelations = workPieceRelations?.filter(relation => relation !== value);
+                                      setWorkPieceRelations(newRelations);
+                                   }}
+                             />
+                                } */}
                             </div>
                         ))
                     ) : (
                         <p>No relations exists</p>
                     )}
-                    <div>
+                    {/* <div>
                         {Object.keys(additionalInputs).length > 0 && Object.keys(additionalInputs).map((relation, i) => (
                             Array.from({ length: additionalInputs[relation] }).map((_, j) => (
                                 <MemoizedInputText relation={relation} index={j} />
                             ))
                         ))}
-                    </div>
+                    </div> */}
 
                 </div>
                 {relations.length > 0 &&
                     <div className="form-btns">
                         <Button
-                        //className="save-btn"
-                        >Save</Button>
+                            onClick={() => handleSave()}
+                        >Save
+                        </Button>
                         <Button
                             severity="secondary" text raised
                             label="Reset"

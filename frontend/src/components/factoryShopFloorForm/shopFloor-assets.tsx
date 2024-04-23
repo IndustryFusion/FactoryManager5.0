@@ -24,7 +24,7 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    [key: string]: AssetProperty | AssetRelationship | string | undefined;
+    relation: any[]
 }
 
 
@@ -64,8 +64,11 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
 
+
+
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
+
             try {
                 if (unAllocatedAssetData.length === 0) {
                     const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
@@ -80,11 +83,29 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 // setAllocatedAssets(allocatedAssetsArray);
 
                 // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
-                    id: unAllocatedAssetData[key].id,
-                    product_name: unAllocatedAssetData[key].product_name?.value,
-                    asset_category: unAllocatedAssetData[key].asset_category?.value,
-                }));
+                console.log("unAllocatedAssetData", unAllocatedAssetData);
+                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
+                    const relationsArr = [];
+                    console.log(unAllocatedAssetData[key], "its object here");
+                    const checkHas = 'http://www.industry-fusion.org/schema#has';
+
+                    Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
+                        // Check if the innerKey starts with the specified string
+                        if (innerKey.startsWith(checkHas)) {
+                            const modifiedKey = innerKey.replace('http://www.industry-fusion.org/schema#', '');
+                            relationsArr.push(modifiedKey);
+                        }
+                    });
+
+                    return ({
+                        id: unAllocatedAssetData[key].id,
+                        product_name: unAllocatedAssetData[key].product_name?.value,
+                        asset_category: unAllocatedAssetData[key].asset_category?.value,
+                        relation: relationsArr
+                    })
+                }
+
+                );
                 console.log("fetchedAssets", fetchedAssets);
                 setTarget(fetchedAssets)
 
@@ -129,16 +150,19 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     const itemTemplate = (item) => {
         // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
         const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
+        const sourceAssetCategory = item["http://www.industry-fusion.org/schema#asset_category"]?.value;
         const targetProductName = item.product_name;
 
-        console.log(item, "item here");
-        
         return (
             <>
                 <li className="list-items"
                     onClick={() => selectItems(targetProductName, item.asset_category)}
                 >{targetProductName}</li>
-                <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>
+                <li className="list-items" onClick={() => {
+                    selectItems(sourceProductName, sourceAssetCategory)
+                    setAssetProp(item)
+
+                }}>{sourceProductName}</li>
                 {/* <li   onClick={()=>selectItem(item.pr_name)}>{item.pr_name}</li> */}
 
             </>
