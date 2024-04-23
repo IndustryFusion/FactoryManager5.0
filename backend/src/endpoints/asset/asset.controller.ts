@@ -125,7 +125,7 @@ export class AssetController {
     }
   }
 
-  @Delete('/delete-asset')
+  @Delete('/delete-asset/:id')
   async deleteAssetRelation(@Param('id') id: string, @Req() req: Request){
     try {
       const token = await getSessionToken(req);
