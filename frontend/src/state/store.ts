@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import unAllocatedAssetReducer from './unAllocatedAsset/unAllocatedAssetSlice';
 import powerConsumptionReducer from "./powerConsumption/powerConsumptionSlice";
+import entityIdReducer from "./entityId/entityIdSlice";
 export const store = configureStore({
     reducer: {
         unAllocatedAsset: unAllocatedAssetReducer,
         powerConsumption: powerConsumptionReducer,
+        entityId: entityIdReducer
     },
 });
 
