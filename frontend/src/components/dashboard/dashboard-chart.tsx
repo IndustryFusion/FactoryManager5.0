@@ -14,6 +14,8 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Dropdown } from "primereact/dropdown";
 import socketIOClient from "socket.io-client";
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
 
 export interface Datasets {
     label?: string;
@@ -44,7 +46,8 @@ const DashboardChart = () => {
     const [lastData, setLastData] = useState({});
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
-    const { entityIdValue, setMachineStateData,  setAllOnlineTime } = useDashboard();
+    const { setMachineStateData,  setAllOnlineTime } = useDashboard();
+    const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);

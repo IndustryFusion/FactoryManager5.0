@@ -16,7 +16,9 @@ import OnboardForm from "./onboard-form";
 import EditOnboardForm from "./edit-onboard-form";
 import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
-import "../../styles/dashboard.css"
+import "../../styles/dashboard.css";
+import { useDispatch } from "react-redux";
+import { create, update} from '@/state/entityId/entityIdSlice';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -46,6 +48,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
+  const dispatch = useDispatch();
 
 
 
@@ -112,16 +115,12 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
     setEntityIdValue(selectedAsset?.id);
-    // console.log(selectedAsset, "what's the asset here");
-    setSelectedAssetData(selectedAsset)
-    // console.log(prefixedKeys, "what's here");
-    // console.log(prefixedKeys.length, "the length of prefix");
+    dispatch(update(selectedAsset?.id));
 
+    setSelectedAssetData(selectedAsset);
+  
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
-      setEntityIdValue(selectedAsset?.id);
-      setSelectedAssetData(selectedAsset)
-
     } else {
       setShowBlocker(true);
     }
@@ -165,6 +164,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             // console.log("first object value", newRowData[0]);
             setSelectedRow(assetData[0]);
             setEntityIdValue(assetData[0].id);
+            dispatch(create(assetData[0].id));
           }
         }
         if (editOnboardAsset.successToast) {
