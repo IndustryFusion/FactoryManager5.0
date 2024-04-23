@@ -25,6 +25,7 @@ import {
 } from "@/utility/factory-site-utility";
 import { any } from "prop-types";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
+import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -66,6 +67,7 @@ const ShopFloorManager: React.FC = () => {
 
   return (
     <>
+    <FactoryShopFloorProvider>
       <HorizontalNavbar />
         <div
           style={{
@@ -130,6 +132,7 @@ const ShopFloorManager: React.FC = () => {
         </ShopFloorProvider>
         </div>
       <Footer />
+      </FactoryShopFloorProvider>
     </>
   );
 };

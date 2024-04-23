@@ -17,6 +17,7 @@ import { Checkbox } from "primereact/checkbox";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 interface AssetProperty {
     type: "Property";
@@ -57,6 +58,7 @@ const AllocatedAsset = () => {
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
+    const { selectItem } = useFactoryShopFloor();
 
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
@@ -189,6 +191,7 @@ const AllocatedAsset = () => {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
+
     return (
         <>
             <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
@@ -224,10 +227,13 @@ const AllocatedAsset = () => {
                 </div>
                 <ul>
                     {filteredAllocatedAssets.map((asset, index) => (
-                        <li key={index} className="mb-2 ml-3">
+                        <li key={index} className="mb-2 ml-3"
+                            onClick={() => selectItem(asset.product_name)}
+                        >
                             {typeof asset === 'string' ? asset : asset.product_name}
                         </li>
                     ))}
+
                 </ul>
             </Card>
         </>

@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 interface AssetProperty {
     type: "Property";
@@ -35,12 +36,14 @@ interface ShopFloorAssetsProps {
 
 const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAssetProp }) => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
-    const [source, setSource] = useState([]);
+    const [source, setSource] = useState(shopfloorAssetLists);
     const [target, setTarget] = useState([]);
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
+    const { selectItem } = useFactoryShopFloor();
+
 
     const fetchShopFloorAssets = async () => {
         // console.log("is calling");
@@ -56,6 +59,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
             console.error(error)
         }
     }
+    
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
@@ -81,7 +85,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                     product_name: unAllocatedAssetData[key].product_name?.value,
                     asset_category: unAllocatedAssetData[key].asset_category?.value,
                 }));
-                // console.log("fetchedAssets", fetchedAssets);
+                console.log("fetchedAssets", fetchedAssets);
                 setTarget(fetchedAssets)
 
                 // destructuring the asset id, product_name, asset_catagory for allocated Asset
@@ -114,7 +118,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
             }
         }
 
-    }, [router.query.factoryId, router.isReady, unAllocatedAssetData ]);
+    }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
 
     const onChange = (event) => {
@@ -124,30 +128,35 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
 
     const itemTemplate = (item) => {
         // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
-        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value ;
-        const targetProductName=  item.product_name;
-        return(
+        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
+        const targetProductName = item.product_name;
+        return (
             <>
-            <li className="list-items">{targetProductName}</li>
-            <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>
+                <li className="list-items"
+                    onClick={() => selectItem(targetProductName)}
+                >{targetProductName}</li>
+                <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>
+                {/* <li   onClick={()=>selectItem(item.pr_name)}>{item.pr_name}</li> */}
+
             </>
         )
     };
-    
-const headerSource =(
-    <div className="flex justify-content-between align-items-center gap-3">
-        <h3>ShopFloor Assets</h3>
-        <Button>Save</Button>
-    </div>
-)
+
+    const headerSource = (
+        <div className="flex justify-content-between align-items-center gap-3">
+            <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
+            <Button>Save</Button>
+        </div>
+    )
 
     return (
         <>
             <PickList dataKey="id" source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"
-                sourceHeader={ headerSource} targetHeader="Unallocated Assets"
-                itemTemplate={itemTemplate} sourceStyle={{ height: '14rem' }} targetStyle={{ height: '14rem' }} />
+                sourceHeader={headerSource} targetHeader="Unallocated Assets"
+                itemTemplate={itemTemplate} sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
+
         </>
     )
 }

@@ -3,6 +3,7 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
 import { fetchAssetById } from "@/utility/factory-site-utility";
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 interface RelationsProp {
     assetId: string;
@@ -14,6 +15,7 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
     // const relationsArray = ["hasFilter", "hasTracker", "hasCatridge", "workPiece"];
     const [additionalInputs, setAdditionalInputs] = useState<{ [key: string]: number }>({});
     const [relations, setRelations] = useState([]);
+    const {inputValue, setFocused} = useFactoryShopFloor();
 
 
 
@@ -60,7 +62,7 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
                         relations.map((relation, index) => (
                             <div key={index} className="flex mb-4">
                                 <label htmlFor="" style={{ flex: "0 20%" }}>{relation}</label>
-                                {(relation === "hasCatridge" || relation === "workPiece") ? (
+                                {(relation === "hasCatridge" || relation === "hasWorkpiece") ? (
                                     <>
                                         <div style={{ flex: "0 70%" }}>
                                             <div className="flex justify-content-between">
@@ -79,6 +81,9 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
                                         style={{ flex: "0 70%" }}
                                         className="input-content"
                                         placeholder=""
+                                        value={inputValue}
+                                        onFocus={() => setFocused(true)}
+                                        onBlur={() => setFocused(false)}
                                     />
                                 )}
                             </div>

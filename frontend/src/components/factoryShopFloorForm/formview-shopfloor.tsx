@@ -5,6 +5,7 @@ import "../../styles/factory-shopfloor.css"
 import { useEffect, useState } from "react";
 import { fetchAssetById } from "@/utility/factory-site-utility";
 import Relations from "./relations-card";
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 interface FactoryShopFloorProps {
     shopfloorProp: { [key: string]: any; };
@@ -14,13 +15,11 @@ interface FactoryShopFloorProps {
 
 const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, assetProp }) => {
 
-    // console.log(additionalInputs, "additionalInputs Prop");
-    // console.log(handleAddInput, "handleAddInput Prop");
-
+    const {listItem} = useFactoryShopFloor();
 
     return (
         <>
-            <Card className="px-5 " style={{ height: "18vh" }}>
+            <Card className="px-5 " style={{ height: "18vh" }}>           
                 <form>
                     <div className="input-container gap-6">
                         <label htmlFor="">ShopFloor</label>
