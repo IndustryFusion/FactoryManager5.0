@@ -74,25 +74,18 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     }
   }
 
-  const deleteAssetData =async(assetId:string)=>{
-    console.log("assetId", assetId);
-    
-    try{
-        const response = await axios.delete( API_URL + '/asset/delete-asset' ,{
-            params:{
-                id: assetId
-            },
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            withCredentials: true,
-        })
-        console.log("delted asset", response);
-        
-
-    }catch(error){
-        console.error(error)
+  const deleteAssetData = async (assetId: string) => {
+    try {
+      const response = await axios.delete(API_URL + `/asset/delete-asset/${assetId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      })
+      console.log("delted asset", response);
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -125,34 +118,33 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   }
   const actionItemsTemplate = (rowData: Asset): React.ReactNode => {
     return (
-        <>
-      <button className="action-items-btn"
-      onClick={()=>setDeleteAsset(true)}
-      >
-        <i className="pi pi-trash"></i>
-      </button>
-      {deleteAsset && 
-    <Dialog
-  
-      visible={deleteAsset}  onHide={() => setDeleteAsset(false)}
-    >
-     <p>Are you sure you want to delete this asset</p>
-     <div className="flex justify-content-end gap-3">
-        <Button 
-        label="OK"
-        onClick={()=>deleteAssetData(rowData?.id)}
+      <>
+        <button className="action-items-btn"
+          onClick={() => setDeleteAsset(true)}
+        >
+          <i className="pi pi-trash"></i>
+        </button>
+        {deleteAsset &&
+          <Dialog
+            visible={deleteAsset} onHide={() => setDeleteAsset(false)}
+          >
+            <p>Are you sure you want to delete this asset</p>
+            <div className="flex justify-content-end gap-3">
+              <Button
+                label="OK"
+                onClick={() => deleteAssetData(rowData?.id)}
 
-        ></Button>
-        <Button
-        label="Cancel"
-        severity="danger" outlined
-        className="mr-2"
-        type="button"
-        onClick={() => setDeleteAsset(false)}
-        ></Button>
-     </div>
-    </Dialog>
-    }
+              ></Button>
+              <Button
+                label="Cancel"
+                severity="danger" outlined
+                className="mr-2"
+                type="button"
+                onClick={() => setDeleteAsset(false)}
+              ></Button>
+            </div>
+          </Dialog>
+        }
       </>
     )
   }
@@ -185,7 +177,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   const header = renderHeader();
 
 
-  
+
 
 
   useEffect(() => {
@@ -200,69 +192,69 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 
   return (
     <>
-    <Dialog
-      header={headerElement}
-      visible={assetManageDialogProp} style={{ width: '50vw' }} onHide={() => setAssetManageDialogProp(false)}>
-      <div className="px-4"
-        style={{ borderRadius: "10px" }}
-      >
-        {
-          isLoading ?
-            <div className="flex flex-column justify-content-center align-items-center"
-              style={{}}
-            >
-              <p> Loading... Assets</p>
-              <img src="/table.png" alt="" width="12%" height="12%" />
-            </div>
-            :
-            <>
-              <DataTable
-                rows={5}
-                paginator
-                value={assetData}
-                style={{ zoom: "73%" }}
-                scrollable={true}
-                scrollHeight="750px"
-                className="assets-table"
-                selectionMode="single"
-                selection={selectedProduct}
-                onSelectionChange={(e) => setSelectedProduct(e.value)}
-                header={header}
-                filters={filters}
-                globalFilterFields={['product_name', 'asset_type', 'asset_manufacturer_name']}
+      <Dialog
+        header={headerElement}
+        visible={assetManageDialogProp} style={{ width: '50vw' }} onHide={() => setAssetManageDialogProp(false)}>
+        <div className="px-4"
+          style={{ borderRadius: "10px" }}
+        >
+          {
+            isLoading ?
+              <div className="flex flex-column justify-content-center align-items-center"
+                style={{}}
               >
-                <Column
-                  header="Product Image"
-                  field="product_icon"
-                  body={productIconTemplate}
+                <p> Loading... Assets</p>
+                <img src="/table.png" alt="" width="12%" height="12%" />
+              </div>
+              :
+              <>
+                <DataTable
+                  rows={5}
+                  paginator
+                  value={assetData}
+                  style={{ zoom: "73%" }}
+                  scrollable={true}
+                  scrollHeight="750px"
+                  className="assets-table"
+                  selectionMode="single"
+                  selection={selectedProduct}
+                  onSelectionChange={(e) => setSelectedProduct(e.value)}
+                  header={header}
+                  filters={filters}
+                  globalFilterFields={['product_name', 'asset_type', 'asset_manufacturer_name']}
+                >
+                  <Column
+                    header="Product Image"
+                    field="product_icon"
+                    body={productIconTemplate}
 
-                />
-                <Column
-                  header="Product Name"
-                  field="product_name"
-                  body={productNameBodyTemplate}
-                />
-                <Column
-                  header="AssetType"
-                  field="asset_type"
-                  body={assetTypeBodyTemplate}
-                />
-                <Column
-                  field="asset_manufacturer_name"
-                  header="Manufacturer"
-                  body={manufacturerDataTemplate}
-                />
-                <Column
-                  body={actionItemsTemplate}
-                ></Column>
-              </DataTable>
-              <AllocatedAsset />
-            </>
-        }
-      </div>
+                  />
+                  <Column
+                    header="Product Name"
+                    field="product_name"
+                    body={productNameBodyTemplate}
+                  />
+                  <Column
+                    header="AssetType"
+                    field="asset_type"
+                    body={assetTypeBodyTemplate}
+                  />
+                  <Column
+                    field="asset_manufacturer_name"
+                    header="Manufacturer"
+                    body={manufacturerDataTemplate}
+                  />
+                  <Column
+                    body={actionItemsTemplate}
+                  ></Column>
+                </DataTable>
+                <AllocatedAsset />
+              </>
+          }
+        </div>
 
-    </Dialog>
-    
+      </Dialog>
+
     </>
   )
 }
