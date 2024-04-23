@@ -14,6 +14,7 @@ import { Asset } from "@/interfaces/asset-types";
 import { types } from 'util';
 import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
+import { Button } from "primereact/button";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -52,10 +53,10 @@ const PowerCo2Chart = () => {
     const [selectedMonthSubInterval, setSelectedMonthSubInterval] = useState<string>("all");
     const [noChartData, setNoChartData] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [startDate, setStartDate] = useState<Date | null>(moment().toDate());
+    const [startDate, setStartDate] = useState<Date | null>(moment().subtract(5, 'days').toDate());
     const [endDate, setEndDate] = useState<Date | null>(moment().toDate());
     const [startMonth, setStartMonth] = useState<Date | null>(moment().startOf('month').toDate());
-    const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate())
+    const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate());
     const toast = useRef<any>(null);
 
     useEffect(() => {
@@ -144,20 +145,16 @@ const PowerCo2Chart = () => {
             labels: obj?.labels,
             datasets: [
                 {
-                    type: 'bar',
                     label: 'Power Consumption (kw/h)',
                     backgroundColor: documentStyle.getPropertyValue('--green-400'),
-                    yAxisID: 'y',
                     borderWidth: 2,
                     fill: false,
                     tension: 0.4,
                     data: obj?.powerConsumption,
                 },
                 {
-                    type: 'bar',
                     label: 'CO2 Emission (kg)',
                     backgroundColor: documentStyle.getPropertyValue('--blue-500'),
-                    yAxisID: 'y1',
                     borderWidth: 2,
                     fill: false,
                     tension: 0.4,
@@ -178,7 +175,15 @@ const PowerCo2Chart = () => {
                 datalabels: {
                     color: 'black',
                     align: 'end',
-                    anchor: 'center'
+                    anchor: 'center',
+                    formatter: function(value: any, context: any) {
+                        const datasetIndex = context.datasetIndex;
+                        if (datasetIndex === 0) {
+                            return `${value} kw/h`;
+                        } else if (datasetIndex === 1) {
+                            return `${value} kg`;
+                        }
+                    }
                 }
             },
             scales: {
@@ -191,27 +196,12 @@ const PowerCo2Chart = () => {
                     }
                 },
                 y: {
-                    type: 'linear',
                     display: true,
-                    position: 'left',
                     ticks: {
-                        stepSize: 25,
+                        stepSize: 5,
                         color: documentStyle.getPropertyValue('--text-color-secondary')
                     },
                     grid: {
-                        color: documentStyle.getPropertyValue('--surface-border')
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    ticks: {
-                        stepSize: 10,
-                        color: documentStyle.getPropertyValue('--text-color-secondary')
-                    },
-                    grid: {
-                        drawOnChartArea: false,
                         color: documentStyle.getPropertyValue('--surface-border')
                     }
                 }
@@ -266,28 +256,8 @@ const PowerCo2Chart = () => {
             console.error("Error fetching asset data:", error);
         }
     };
-  
-    useEffect(() => {
-        setStartDate(moment().toDate());
-        setEndDate(moment().toDate());
-        setStartMonth(moment().startOf('month').toDate());
-        setStartYear(moment().startOf('year').toDate());
-        if(selectedInterval == 'days'){
-            let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
-            let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
-            fetchDataAndAssign(startTime, endTime);
-        }else if(selectedInterval == 'weeks'){
-            let startTime = moment(startMonth).startOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
-            let endTime = moment(startMonth).endOf('month').format('YYYY-MM-DD[T]HH:mm:ss');
-            fetchDataAndAssign(startTime, endTime);
-        }else{
-            let startTime = moment(startYear).startOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
-            let endTime = moment(startYear).endOf('year').format('YYYY-MM-DD[T]HH:mm:ss');
-            fetchDataAndAssign(startTime, endTime);
-        }
-    }, [entityIdValue, selectedInterval]);
 
-    useEffect(() => {
+    const onButtonSelect = () => {
         console.log('start date ',startDate);
         console.log('end date ',endDate);
         console.log('start month ',startMonth);
@@ -321,7 +291,31 @@ const PowerCo2Chart = () => {
                 fetchDataAndAssign(startTime, endTime);
             }
         }
-    }, [startDate, endDate, startMonth, startYear, selectedWeekSubInterval, selectedMonthSubInterval]);
+    }
+  
+    //Set to default value when interval changes 
+    useEffect(() => {
+        setStartDate(moment().subtract(5, 'days').toDate());
+        setEndDate(moment().toDate());
+        setStartMonth(moment().startOf('month').toDate());
+        setStartYear(moment().startOf('year').toDate());
+    }, [selectedInterval]);
+
+    useEffect(() => {
+        let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+        let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
+        fetchDataAndAssign(startTime, endTime);
+    },[])
+
+    useEffect(() => {
+        const containerBody = document.querySelector('.containerBody');
+        if (containerBody && chartData.labels.length > 7) {
+            const newWidth = 1000 + ((chartData.labels.length - 7) * 100);
+            console.log('newWidth ',newWidth);
+            containerBody.style.width = `${newWidth}px`;
+        }
+        console.log('containerBody ',containerBody);
+    }, [chartData]);
 
     return (
         <div className="card h-auto" style={{ width: "100%" }}>
@@ -330,8 +324,8 @@ const PowerCo2Chart = () => {
             <div className="interval-filter-container">
                 <p>Filter Interval</p>
             </div>
-            <div className="flex">
-                <div className="dropdown-container custom-button" style={{ marginLeft: "250px", marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+            <div className="flex align-items-center justify-content-center" >
+                <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
                     <p>Type</p>
                     <Dropdown
                         value={selectedInterval}
@@ -356,18 +350,19 @@ const PowerCo2Chart = () => {
                             />
                         </div>
                         
-                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <p>End Time</p>
                             <Calendar
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                minDate={moment(startDate).toDate()}
                                 maxDate={moment().toDate()}
                             />
                         </div>
                     </>
                     : selectedInterval == 'weeks' ? (
                         <>
-                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
                                 <p>Interval</p>
                                 <Dropdown
                                     value={selectedWeekSubInterval}
@@ -416,11 +411,12 @@ const PowerCo2Chart = () => {
                                             />
                                         </div>
                                         
-                                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                                             <p>End Time</p>
                                             <Calendar
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                                minDate={moment(startDate).toDate()}
                                                 maxDate={moment().toDate()}
                                             />
                                         </div>
@@ -430,7 +426,7 @@ const PowerCo2Chart = () => {
                         </>
                     ) : (
                         <>
-                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", marginTop: "-10px", flexDirection: "column", alignItems: "center" }}>
+                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
                                 <p>Interval</p>
                                 <Dropdown
                                     value={selectedMonthSubInterval}
@@ -468,11 +464,12 @@ const PowerCo2Chart = () => {
                                             />
                                         </div>
                                         
-                                        <div className="end-time-calendar" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                                             <p>End Time</p>
                                             <Calendar
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
+                                                minDate={moment(startDate).toDate()}
                                                 maxDate={moment().toDate()}
                                             />
                                         </div>
@@ -481,7 +478,8 @@ const PowerCo2Chart = () => {
                             }
                         </>
                     )
-                }   
+                }
+                <Button label="Submit" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
             </div>
             {
                 noChartData ?
@@ -504,7 +502,11 @@ const PowerCo2Chart = () => {
                         <ProgressSpinner />
                     </div>
                 ) : (
-                    <Chart type="bar" data={chartData} options={chartOptions} />
+                    <div style={{ overflowX: 'scroll', overflowY: 'hidden', maxWidth: '100%', width: '100%' }}>
+                        <div className='containerBody'>
+                            <Chart type="bar" data={chartData} options={chartOptions} />
+                        </div>
+                    </div>
                 )
             }
         </div>
