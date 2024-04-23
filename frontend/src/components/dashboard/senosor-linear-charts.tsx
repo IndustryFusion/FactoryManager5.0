@@ -647,38 +647,52 @@ useEffect(() => {
               </div>
           </div>
         <div>
-          {loading ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '60vh',
-            }}>
-              <ProgressSpinner />
-            </div>
-          ) : (
-            data.datasets && data.datasets.length > 0 && !noChartData ? (
-              <Chart
-                key={JSON.stringify(data)}
-                type="line"
-                data={{
-                  ...data,
-                  datasets: data.datasets.filter(dataset => dataset.label === selectedAttribute)
-                }}
-                options={chartOptionsWithZoomPan}
-                style={{ height: "60vh" }}
-              />
-            ) : (
+         {!entityIdValue ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '60vh',
+              }}>
+                <p><b>No Asset Selected !! Please Select an asset ...</b></p>
+                <img src="/noDataFound.png" alt="" width="8%" height="25%" />
+              </div>
+            ) : loading ? (
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: '60vh',
               }}>
-                <span>No data available</span>
+                <ProgressSpinner />
               </div>
-            )
-          )}
+            ) : (
+              data.datasets && data.datasets.length > 0 && !noChartData ? (
+                <Chart
+                  key={JSON.stringify(data)}
+                  type="line"
+                  data={{
+                    ...data,
+                    datasets: data.datasets.filter(dataset => dataset.label === selectedAttribute)
+                  }}
+                  options={chartOptionsWithZoomPan}
+                  style={{ height: "60vh" }}
+                />
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '60vh',
+                }}>
+                  <p>No data available</p>
+                  <img src="/noDataFound.png" alt="" width="10%" height="25%" />
+                </div>
+              )
+            )}
+
         </div>
         </div>
       </div>

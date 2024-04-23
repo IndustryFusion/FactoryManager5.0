@@ -35,9 +35,6 @@ export class PgRestService {
             .join('&').replace('#','%23');
 
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
-
-      console.log("url from pgrest ", url)
-      
       const response = await axios.get(url, {headers});
       
      if (response.data != null) {
@@ -46,14 +43,11 @@ export class PgRestService {
      }
 
     } catch(err) {
-      // console.log("Testing purpose : PGREST SERVICE ERROR FOUND")
+      console.log("PGREST SERVICE ERROR FOUND")
     }
   }
 
-  
 
-
-  
 async findAll(token, queryParams) {
 
   await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId,queryParams.attributeId);
@@ -71,8 +65,6 @@ async findAll(token, queryParams) {
   const headers = {
     Authorization: `Bearer ${token}`
   };
-
-  // Initialize default time settings to the start and end of the current day
 
     let startTime;
     let endTime = moment().seconds(0).milliseconds(0); // Round down to the nearest minute
@@ -120,7 +112,6 @@ async findAll(token, queryParams) {
 
   const queryString = [attributeId, entityId, observedAt, order, value].join('&');
   const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
-  console.log("Constructed URL:", url);
 
   try {
    const response = await axios.get(url, { headers });
