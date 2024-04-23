@@ -15,7 +15,7 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
     // const relationsArray = ["hasFilter", "hasTracker", "hasCatridge", "workPiece"];
     const [additionalInputs, setAdditionalInputs] = useState<{ [key: string]: number }>({});
     const [relations, setRelations] = useState([]);
-    const {inputValue, setFocused} = useFactoryShopFloor();
+    const {inputValue, setFocused, inputValues} = useFactoryShopFloor();
 
 
 
@@ -51,7 +51,7 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
         />
     ));
 
-
+    console.log("inputValues", inputValues);
 
 
     return (
@@ -81,7 +81,8 @@ const Relations: React.FC<RelationsProp> = ({ assetId }) => {
                                         style={{ flex: "0 70%" }}
                                         className="input-content"
                                         placeholder=""
-                                        value={inputValue}
+                                        value={inputValues[relation] || ""}
+                                        //value={inputValue}
                                         onFocus={() => setFocused(true)}
                                         onBlur={() => setFocused(false)}
                                     />

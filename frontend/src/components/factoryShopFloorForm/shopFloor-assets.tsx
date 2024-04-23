@@ -36,13 +36,13 @@ interface ShopFloorAssetsProps {
 
 const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAssetProp }) => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
-    const [source, setSource] = useState(shopfloorAssetLists);
+    const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItem } = useFactoryShopFloor();
+    const { selectItem, selectItems } = useFactoryShopFloor();
 
 
     const fetchShopFloorAssets = async () => {
@@ -59,7 +59,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
             console.error(error)
         }
     }
-    
+
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
@@ -130,10 +130,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
         // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
         const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
         const targetProductName = item.product_name;
+
+        console.log(item, "item here");
+        
         return (
             <>
                 <li className="list-items"
-                    onClick={() => selectItem(targetProductName)}
+                    onClick={() => selectItems(targetProductName, item.asset_category)}
                 >{targetProductName}</li>
                 <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>
                 {/* <li   onClick={()=>selectItem(item.pr_name)}>{item.pr_name}</li> */}

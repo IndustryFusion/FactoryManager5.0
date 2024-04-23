@@ -15,11 +15,12 @@ interface FactoryShopFloorProps {
 
 const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, assetProp }) => {
 
-    const {listItem} = useFactoryShopFloor();
+    const { listItem } = useFactoryShopFloor();
+    const shopfloorAsset = assetProp["http://www.industry-fusion.org/schema#product_name"]?.value;
 
     return (
         <>
-            <Card className="px-5 " style={{ height: "18vh" }}>           
+            <Card className="px-5 " style={{ height: "18vh" }}>
                 <form>
                     <div className="input-container gap-6">
                         <label htmlFor="">ShopFloor</label>
@@ -36,9 +37,13 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, 
                                 style={{ width: "100%" }}
                                 className="input-content"
                                 placeholder=""
-                                value={assetProp["http://www.industry-fusion.org/schema#product_name"]?.value || ""}
+                                value={shopfloorAsset || ""}
                             />
-                            {/* <p style={{ fontSize: "10px" }}>Select asset from shopfloor assets</p> */}
+                            {/* {
+                                shopfloorProp?.floorName.length > 0 &&
+                                <p style={{ fontSize: "10px" }}>Select asset from shopfloor assets</p> : null
+                            } */}
+
                         </div>
                     </div>
                 </form>
