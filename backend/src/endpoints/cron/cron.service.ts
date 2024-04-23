@@ -45,36 +45,58 @@ private emitDataChangeToClient(data: any) {
   this.pgrestGatway.sendUpdate(data);
 }
 
-@Cron(CronExpression.EVERY_SECOND)
+@Cron(CronExpression.EVERY_5_SECONDS)
 async handleFindAllEverySecond() {
+  // Retrieve token and query parameters from Redis
   const credentials = await this.redisService.getTokenAndEntityId();
 
-  if (!credentials) {
+
+
+  const { token, queryParams } = credentials;
+
+  // Store token and query parameters for current session
+  await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId);
+
+  // Retrieve stored data and query parameters from Redis
+  let storedData = await this.redisService.getData('storedData');
+  let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
+  
+  console.log("Stored Data:", storedData);
+  console.log("Stored Query Params:", storedQueryParams);
+
+  if (storedQueryParams && storedQueryParams.intervalType !== 'live' || storedQueryParams==null) {
+    console.log("Interval type is not 'live', skipping emission...");
+    return; // Only proceed if the interval type is 'live'
+  }
+
+  if (!storedData || storedData.length === 0) {
+    console.log("No data to process, exiting...");
     return;
   }
 
-  const { token, queryParams } = credentials;
-    await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId); 
+  // Assuming storedData is an array with at least one item
+  const { entityId, attributeId } = storedData[0];
 
-    let storedData = await this.redisService.getData('storedData');
-    console.log("storedData", storedData)
+  const modifiedQueryParams = {
+    limit: 1,
+    order: 'observedAt.desc',
+    entityId: `eq.${entityId}`,
+    attributeId: `eq.${attributeId.replace('#', '%23')}` // Properly encode URI component if necessary
+  };
 
-    const { entityId, attributeId } = storedData[0];
-   
-    const modifiedQueryParams = {
-      limit: 1,
-      order: 'observedAt.desc',
-      entityId: `eq.${entityId}`,
-      attributeId: `eq.${attributeId.replace('#', '%23')}` 
-    };
-    const newData = await this.pgRestService.findAll(token, modifiedQueryParams);
-      if(newData!=null){
-        this.emitDataChangeToClient(newData)
-      }
+  try {
+    // Fetch new data based on modified parameters
+    const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
+    if (newData && newData.length > 0) {
+      console.log("Emitting new data to client...");
+      this.emitDataChangeToClient(newData);
+    } else {
+      console.log("No new data available to emit.");
+    }
+  } catch (error) {
+    console.error("Error during data fetch:", error);
+  }
 }
-
-
-
 
 @Cron('* * * * *')
 async handleChartDataUpdate() {
