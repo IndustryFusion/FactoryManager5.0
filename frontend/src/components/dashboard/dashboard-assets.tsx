@@ -44,7 +44,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const { entityIdValue, setEntityIdValue,
+  const {
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
@@ -114,7 +114,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
     setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
-    setEntityIdValue(selectedAsset?.id);
     dispatch(update(selectedAsset?.id));
 
     setSelectedAssetData(selectedAsset);
@@ -163,7 +162,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             // console.log("is coming here");
             // console.log("first object value", newRowData[0]);
             setSelectedRow(assetData[0]);
-            setEntityIdValue(assetData[0].id);
             dispatch(create(assetData[0].id));
           }
         }
