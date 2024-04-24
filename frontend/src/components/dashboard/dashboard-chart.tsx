@@ -14,8 +14,9 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Dropdown } from "primereact/dropdown";
 import socketIOClient from "socket.io-client";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
+import { create } from "@/state/machineState/machineStateSlice";
 
 export interface Datasets {
     label?: string;
@@ -48,6 +49,7 @@ const DashboardChart = () => {
     const router = useRouter();
     const { setMachineStateData,  setAllOnlineTime } = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
+    const machineStateData = useSelector((state: RootState) => state.machineState);
     const toast = useRef<any>(null);
     const intervalId: any = useRef(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -55,7 +57,7 @@ const DashboardChart = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
-
+    const dispatch = useDispatch();
     const intervalButtons = [
         { label: "days", interval: "days" },
         { label: "weeks", interval: "weeks" },
@@ -77,41 +79,16 @@ const DashboardChart = () => {
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
             console.log('entityId ',entityId);
-            if(entityId.includes('eq.eq.')){
-                entityId = entityId.replace('eq.', '');
-            }
             type DataType = any;
             const finalData: { [key: string]: DataType[] } = {};
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
-            
-            let response = await axios.get(API_URL + `/value-change-state/chart`, {
-                params: {
-                    'asset-id': entityId,
-                    'type': selectedInterval
-                },
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            });
-
-            console.log('response ', response);
-            let checkEmpty = true;
-            for (const value of Object.values(response.data)) {
-                if (value.length !== 0) {
-                    checkEmpty = false;
-                }
-            }
-            if (checkEmpty) {
-                let lastDataResponse = await axios.get(API_URL + `/value-change-state`, {
+            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (Object.keys(machineStateData.weeks).length == 0 || Object.keys(machineStateData.months).length == 0)){
+                let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
-                        attributeId: attributeId,
-                        entityId: entityId,     
-                        order: "observedAt.desc",
-                        limit: '1'
+                        'asset-id': entityId,
+                        'type': selectedInterval
                     },
                     headers: {
                         "Content-Type": "application/json",
@@ -119,14 +96,56 @@ const DashboardChart = () => {
                     },
                     withCredentials: true,
                 });
-                //conditions
-                console.log('response from else', lastDataResponse.data);
-                setLastData(lastDataResponse.data);
+                console.log('response ', response);
+                let checkEmpty = true;
+                for (const value of Object.values(response.data)) {
+                    if (value.length !== 0) {
+                        checkEmpty = false;
+                    }
+                }
+                if (checkEmpty) {
+                    let lastDataResponse = await axios.get(API_URL + `/value-change-state`, {
+                        params: {
+                            attributeId: attributeId,
+                            entityId: entityId,     
+                            order: "observedAt.desc",
+                            limit: '1'
+                        },
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        withCredentials: true,
+                    });
+                    //conditions
+                    console.log('response from else', lastDataResponse.data);
+                    setLastData(lastDataResponse.data);
+                }
+                setFactoryData(response.data);
+                setMachineStateData(response.data);
+                
+                //set redux values for weeks and months
+                if(selectedInterval == 'weeks'){
+                    dispatch(create({
+                        id: entityIdValue,
+                        weeks: response.data,
+                        months: machineStateData.months
+                    }));
+                }else if(selectedInterval == 'months'){
+                    dispatch(create({
+                        id: entityIdValue,
+                        weeks: machineStateData.weeks,
+                        months: response.data
+                    }));
+                }
+            }else{
+                if(selectedInterval == 'weeks'){
+                    setFactoryData(machineStateData.weeks);
+                }else if(selectedInterval == 'months'){
+                    setFactoryData(machineStateData.months);
+                }
             }
             setIsLoading(false);
-            // setNoChartData(false);
-            setFactoryData(response.data);
-            setMachineStateData(response.data)
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
