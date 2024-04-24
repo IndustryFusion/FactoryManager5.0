@@ -123,8 +123,8 @@ async findAll(token, queryParams) {
     }
     return response.data || {};
   } catch (err) {
-    console.error("Error fetching data from TimescaleDB:", err);
-    throw err;
+    console.log("Error fetching data from TimescaleDB:");
+   
   }
 }
 
