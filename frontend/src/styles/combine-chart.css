@@ -92,16 +92,46 @@
   margin-bottom: 20px;
 }
 
+.control-container {
+  display: flex;
+  align-items: center;  /* Align vertically in the center */
+  justify-content: space-between; /* Space between elements, adjust if necessary */
+  padding: 10px 0; /* Optional: Add some vertical padding */
+}
+
+.h3-container {
+  margin-left: 30px; /* Keeping your original left margin for the h3 */
+  flex-grow: 1; /* Allows h3 to take up necessary space, pushing the button to the edge */
+}
+
 .custom-button-container {
-  flex: 1; /* Allows the children to grow and take equal space */
-  padding: 0 10px; /* Adds some spacing between the elements */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  width: 100%; /* Take the full width of its parent to center content in the middle */
+}
+.custom-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.button-text {
+  font-size: 16px; /* Adjust the font size as needed */
+  font-weight: bold; /* Makes the text bold */
 }
 
 .interval-dropdown-container{
   position: block;
+  
 }
-.attribute-dropdown-container {
-position: "block";
+
+.date-time-container{
+  margin-right: 200px;
+}
+.attribute-dropdown-container,
+.interval-dropdown-container {
+  margin-left:100px; /* Adjust the spacing between the attribute icon and the dropdown */
 }
 .custom-button {
   display: flex;
@@ -121,3 +151,29 @@ position: "block";
     padding: 5px 0; /* Adjust padding for small screens */
   }
 }
+.date-time-flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;  /* Space between items */
+}
+/* Custom CSS to adjust the dropdown positioning */
+/* .p-calendar .p-inputtext {
+    width: 100%;  
+}
+
+.p-calendar .p-datepicker {
+    width: auto;  
+    top: 100%;   
+    left: 0;     
+    position: absolute;  
+} */
+
+
+ .p-timepicker {
+  margin-left: "-150%";
+
+ }
+
+ .custom-time-dropdown{
+  margin-left: "-990%";
+ }
