@@ -254,7 +254,11 @@ export const getShopFloors = async (factoryId: string) => {
   return mappedData;
 };
 
+
 export const getshopFloorById = async (factoryId: string) => {
+
+  // console.log("is getshopfloor calling");
+  
   const response = await axios.get(`${API_URL}/shop-floor/`, {
     headers: {
       "Content-Type": "application/json",
@@ -264,8 +268,11 @@ export const getshopFloorById = async (factoryId: string) => {
 
     params: { id: factoryId },
   });
-
+  // console.log("respoonse here", response.data);
+  
   const mappedData1 = flattenData(response.data);
+
+  
 
   return response.data;
 };
@@ -573,7 +580,7 @@ export const fetchAllocatedAssets = async (factoryId: string) => {
       },
       withCredentials: true,
     });
-    console.log(response, "allocated asset data");
+    // console.log(response, "allocated asset data");
     return response.data;
   } catch (error) {
     console.error("Error fetching allocated assets:", error);

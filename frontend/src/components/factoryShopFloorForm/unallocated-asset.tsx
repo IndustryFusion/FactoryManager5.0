@@ -42,7 +42,7 @@ const UnallocatedAsset = () => {
     const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
     const [assetCategories, setAssetCategories] = useState<string[]>([]);
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-    console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
+    // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
