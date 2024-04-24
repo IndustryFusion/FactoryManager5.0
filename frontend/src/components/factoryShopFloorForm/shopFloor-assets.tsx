@@ -46,15 +46,11 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
 
 
     const fetchShopFloorAssets = async () => {
-        // console.log("is calling");
         try {
             const response = await getShopFloorAssets(shopFloorProp?.id);
-            // console.log("response from shopfloor ", response);
-
             const { assetsData } = response;
             setShopFloorAssets(assetsData);
             setSource(assetsData)
-            // console.log("all shopfloor assets",  assetsData);
         } catch (error) {
             console.error(error)
         }
@@ -119,14 +115,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 // combined asset catagories from both allocated asset and un allocated asset
                 const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
 
-                ;
-
             } catch (err) {
-
-                // setError("Failed to fetch assets");
-                // setLoading(false);
                 allocatedAssetsArray = null;
-
             }
         };
 
@@ -163,8 +153,6 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                     setAssetProp(item)
 
                 }}>{sourceProductName}</li>
-                {/* <li   onClick={()=>selectItem(item.pr_name)}>{item.pr_name}</li> */}
-
             </>
         )
     };

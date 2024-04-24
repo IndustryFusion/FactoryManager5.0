@@ -74,5 +74,10 @@ display: none !important;
 .p-chips .p-chips-multiple-container .p-chips-token{
     font-size: 12px;
     padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: transparent;
 }
-
+.p-chips .p-component .p-inputwrapper{
+width: 100%;
+}

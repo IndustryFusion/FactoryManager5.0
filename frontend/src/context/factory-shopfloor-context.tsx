@@ -10,66 +10,55 @@ const FactoryShopFloorContext = createContext(undefined);
 
 export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     children,
-}) => {
-    // const relations = {
-    //     "hasTracker": "Air tracker",
-    //     "hasFilter": "Air filter",
-    //     "hasCatridge": "Filter Catridge",
-    //     "hasSource": "",
-    //     "hasWorkpiece":""   
-    // }
-
-    const [inputValue, setInputValue] = useState("");
+}) => {  
     const [focused, setFocused] = useState(false);
     const [inputValues, setInputValues] = useState({});
     const [getRelation, setGetRelation] = useState("");
-    const [workPieceRelations, setWorkPieceRelations] =  useState<string[]>([]);
-    const [catridgeRelations, setCatridgeRelations] =  useState<string[]>([]);
+    const [workPieceRelations, setWorkPieceRelations] = useState<string[]>([]);
+    const [catridgeRelations, setCatridgeRelations] = useState<string[]>([]);
+    const [workPieceAssetIds, setWorkPieceAssetIds] = useState<string[]>([]);
+    const [catridgeAssetIds, setCatridgeAssetIds] = useState<string[]>([]);
 
 
-    const selectItem = (item: string) => {
-        setInputValue(item);
-        setFocused(false);
-    };
 
+    // setting values in input
     const selectItems = (item: string, assetCategory: string) => {
         console.log(getRelation, "getRelation");
-        
+
         const relation = getRelation.replace("has", "").toLowerCase();
         const formattedAssetCategory = assetCategory.replace(/\s+/g, '').toLowerCase();
         if (formattedAssetCategory.includes(relation)) {
-            if(getRelation === "hasWorkpiece"){
+            if (getRelation === "hasWorkpiece") {
                 setWorkPieceRelations(prevRelations => [...prevRelations, item]);
+                //setWorkPieceAssetIds(prevRelations => [...prevRelations, id])
+                //setIds
             }
-            if(getRelation === "hasCatridge"){
+            if (getRelation === "hasCatridge") {
                 setCatridgeRelations(prevRelations => [...prevRelations, item]);
+                //setCatridgeAssetIds(prevRelations => [...prevRelations, id])
+                //setIds
             }
-            
-            else{
+            else {
                 setInputValues(prevValues => ({
                     ...prevValues,
                     [getRelation]: item
-                }));        
+                    //setIds
+                }));
                 setFocused(false);
             }
-           
+
         }
     };
 
-    console.log("workPieceRelations",workPieceRelations );
-    
-     
-
     return (
         <FactoryShopFloorContext.Provider
-            value={{
-                inputValue, setInputValue,
+            value={{             
                 focused, setFocused,
-                selectItem,
                 selectItems,
                 inputValues, setInputValues,
                 getRelation, setGetRelation,
-                workPieceRelations, setWorkPieceRelations
+                workPieceRelations, setWorkPieceRelations,
+                catridgeRelations, setCatridgeRelations
             }}
         >
             {children}
