@@ -237,7 +237,12 @@ const chartOptions: ChartOptions<"line"> = {
     }
   },
 };
-
+const formatAttributeName = (attributeName:string) => {
+  // Convert attribute name to camel case
+  const camelCaseName = attributeName.replace(/-([a-z])/g, (match, letter) => ` ${letter.toUpperCase()}`);
+  // Capitalize the first letter
+  return camelCaseName.charAt(0).toUpperCase() + camelCaseName.slice(1);
+};
 function formatLabel(date:Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
@@ -566,7 +571,7 @@ useEffect(() => {
           <div className="custom-button">
               <img src="/data-transfer.png" style={{ width: "15%", marginRight: "15px" }} alt="Field Icon" />
               <span className="button-text">
-                  {selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
+                 {formatAttributeName(selectedAttribute) || 'Select an Attribute'}
               </span>
           </div>
        </div>
@@ -576,8 +581,8 @@ useEffect(() => {
               <div className="attribute-dropdown-container">
                 <p className="font-bold">Select Attributes</p>
                     <Dropdown
-                      value={selectedAttribute.replace('http://www.industry-fusion.org/fields#', '') || 'Select an Attribute'}
-                      options={attributes.map(attr => ({ label: attr.label, value: attr.value.replace('http://www.industry-fusion.org/fields#', '') }))}
+                      value={selectedAttribute || 'Select an Attribute'}
+                      options={attributes}
                       onChange={(e) => handleAttributeChange(e.value)}
                       placeholder="Select an Attribute"
                       filter
