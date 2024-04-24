@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 
 interface AssetProperty {
     type: "Property";
@@ -23,7 +24,7 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    [key: string]: AssetProperty | AssetRelationship | string | undefined;
+    relation: any[]
 }
 
 
@@ -41,51 +42,67 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
+    const { selectItem, selectItems } = useFactoryShopFloor();
+
 
     const fetchShopFloorAssets = async () => {
-        console.log("is calling");
         try {
             const response = await getShopFloorAssets(shopFloorProp?.id);
-            console.log("response from shopfloor ", response);
-
             const { assetsData } = response;
             setShopFloorAssets(assetsData);
             setSource(assetsData)
-            // console.log("all shopfloor assets",  assetsData);
         } catch (error) {
             console.error(error)
         }
     }
+
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
 
+
+
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
-            console.log("is calling here in allocated asst");
 
             try {
                 if (unAllocatedAssetData.length === 0) {
                     const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-                    console.log("fetchedAssetIds", fetchedAssetIds);
+                    // console.log("fetchedAssetIds", fetchedAssetIds);
                     dispatch(create(fetchedAssetIds));
                 }
                 const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
                 if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                     allocatedAssetsArray = fetchedAllocatedAssets;
                 }
                 // setAllocatedAssets(allocatedAssetsArray);
 
                 // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
-                    id: unAllocatedAssetData[key].id,
-                    product_name: unAllocatedAssetData[key].product_name?.value,
-                    asset_category: unAllocatedAssetData[key].asset_category?.value,
-                }));
+                console.log("unAllocatedAssetData", unAllocatedAssetData);
+                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
+                    const relationsArr = [];
+                    console.log(unAllocatedAssetData[key], "its object here");
+                    const checkHas = 'http://www.industry-fusion.org/schema#has';
+
+                    Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
+                        // Check if the innerKey starts with the specified string
+                        if (innerKey.startsWith(checkHas)) {
+                            const modifiedKey = innerKey.replace('http://www.industry-fusion.org/schema#', '');
+                            relationsArr.push(modifiedKey);
+                        }
+                    });
+
+                    return ({
+                        id: unAllocatedAssetData[key].id,
+                        product_name: unAllocatedAssetData[key].product_name?.value,
+                        asset_category: unAllocatedAssetData[key].asset_category?.value,
+                        relation: relationsArr
+                    })
+                }
+
+                );
                 console.log("fetchedAssets", fetchedAssets);
-
-
                 setTarget(fetchedAssets)
 
                 // destructuring the asset id, product_name, asset_catagory for allocated Asset
@@ -98,14 +115,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 // combined asset catagories from both allocated asset and un allocated asset
                 const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
 
-                ;
-
             } catch (err) {
-
-                // setError("Failed to fetch assets");
-                // setLoading(false);
                 allocatedAssetsArray = null;
-
             }
         };
 
@@ -127,41 +138,40 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     };
 
     const itemTemplate = (item) => {
-        console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value);
-    
-        // Check if source and target both have lengths
-        const hasSource = source.length > 0;
-        const hasTarget = target.length > 0;
-    
-        // Determine the product name based on the item data
-        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value ;
-        const targetProductName=  item.product_name;
-    
-        // Only one <li> should be displayed based on whether target has a length
-        if (hasTarget) {
-            return <li className="list-items">{targetProductName}</li>;
-        } else if (hasSource) {
-            return <li className="list-items" onClick={() => setAssetProp(item)}>{sourceProductName}</li>;
-        }
-    
-        // Return null if neither source nor target have lengths
-        return null;
+        // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
+        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
+        const sourceAssetCategory = item["http://www.industry-fusion.org/schema#asset_category"]?.value;
+        const targetProductName = item.product_name;
+
+        return (
+            <>
+                <li className="list-items"
+                    onClick={() => selectItems(targetProductName, item.asset_category)}
+                >{targetProductName}</li>
+                <li className="list-items" onClick={() => {
+                    selectItems(sourceProductName, sourceAssetCategory)
+                    setAssetProp(item)
+
+                }}>{sourceProductName}</li>
+            </>
+        )
     };
-    
-const headerSource =(
-    <div className="flex">
-        <h3>ShopFloor Assets</h3>
-        <Button>Save</Button>
-    </div>
-)
+
+    const headerSource = (
+        <div className="flex justify-content-between align-items-center gap-3">
+            <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
+            <Button>Save</Button>
+        </div>
+    )
 
     return (
         <>
             <PickList dataKey="id" source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"
-                sourceHeader={ headerSource} targetHeader="Unallocated Assets"
-                itemTemplate={itemTemplate} sourceStyle={{ height: '14rem' }} targetStyle={{ height: '14rem' }} />
+                sourceHeader={headerSource} targetHeader="Unallocated Assets"
+                itemTemplate={itemTemplate} sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
+
         </>
     )
 }

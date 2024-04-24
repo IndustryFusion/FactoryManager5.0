@@ -25,12 +25,14 @@ import {
 } from "@/utility/factory-site-utility";
 import { any } from "prop-types";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
+import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
   const router = useRouter();
   const elementRef = useRef(null);
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
+  const [shopfloor, setShopfloor] = useState({});
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -57,12 +59,15 @@ const ShopFloorManager: React.FC = () => {
       }
     }
   }, [factoryId, router.isReady]);
+  
   const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
     console.log(`Shop floor ${deletedShopFloorId} deleted`);
     setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
   }, []);
+
   return (
     <>
+    <FactoryShopFloorProvider>
       <HorizontalNavbar />
         <div
           style={{
@@ -87,6 +92,7 @@ const ShopFloorManager: React.FC = () => {
             <ShopFloorList
               factoryId={factoryId}
               onShopFloorDeleted={handleShopFloorDeleted}
+              setShopfloorProp={setShopfloor}
             />
           </div>
           <div
@@ -126,6 +132,7 @@ const ShopFloorManager: React.FC = () => {
         </ShopFloorProvider>
         </div>
       <Footer />
+      </FactoryShopFloorProvider>
     </>
   );
 };

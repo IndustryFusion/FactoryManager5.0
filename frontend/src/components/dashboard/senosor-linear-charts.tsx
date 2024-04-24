@@ -32,6 +32,10 @@ import { skip } from 'node:test';
 import { Calendar } from 'primereact/calendar';
 import moment from 'moment';
 import { Button } from 'primereact/button';
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
+
+
 // Register the zoom plugin
 ChartJS.register(zoomPlugin);
 
@@ -102,7 +106,8 @@ const [data, setChartData] = useState<ChartDataState>({
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const [noChartData, setNoChartData] = useState(false)
-  const { entityIdValue, setEntityIdValue, selectedAssetData } = useDashboard();
+  const { setEntityIdValue, selectedAssetData } = useDashboard();
+  const entityIdValue = useSelector((state: RootState) => state.entityId.id);
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
