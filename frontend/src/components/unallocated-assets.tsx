@@ -82,7 +82,9 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
           allocatedAssetsArray = fetchedAllocatedAssets;
+          setAllocatedAssets(fetchedAllocatedAssets);
         }
+      
         // setAllocatedAssets(allocatedAssetsArray);
 
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
@@ -104,7 +106,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
         setAssetCategories(categories);
         setAssets(fetchedAssets);
-        setAllocatedAssets(fetchedAllocatedAssets);
+      
         setLoading(false);
 
       } catch (err) {

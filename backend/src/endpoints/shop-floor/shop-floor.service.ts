@@ -295,7 +295,6 @@ export class ShopFloorService {
                 updateData[key] = {
                   type: 'Relationship',
                   object: '',
-                  class: assetData[key].class
                 }
               }
             }

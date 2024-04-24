@@ -232,7 +232,7 @@ const fetchShopFloors = async (factoryId: string) => {
                   onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                   onClick={() =>{
                     setSelectedShopFloorId(floor.id);
-                    setShopfloorProp(floor)
+                    
                   } }
                   style={{
                   cursor: "pointer",

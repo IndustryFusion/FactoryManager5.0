@@ -55,17 +55,20 @@ async handleFindAllEverySecond() {
   // Retrieve stored data and query parameters from Redis
   let storedData = await this.redisService.getData('storedData');
   let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
+
+  //console.log("storedQueryParams", storedQueryParams)
   
-  if (storedQueryParams && storedQueryParams.intervalType !== 'live' || storedQueryParams==null) {
+  if (storedQueryParams && storedQueryParams.intervalType !== 'live') {
     return; // Only proceed if the interval type is 'live'
   }
 
-  if (!storedData || storedData.length === 0) {
+  if (!storedData || storedData.length == 0) {
     // console.log("No data to process, exiting...");
     return;
   }
 
   const { entityId, attributeId } = storedData[0];
+  //console.log(storedData, "storeddata")
   const modifiedQueryParams = {
     limit: 1,
     order: 'observedAt.desc',
@@ -76,7 +79,7 @@ async handleFindAllEverySecond() {
   try {
 
     const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
-    if (newData && newData.length > 0) {
+    if (newData) {
       this.emitDataChangeToClient(newData);
     } else {
     }
