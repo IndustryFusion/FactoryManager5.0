@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import Cookies from 'js-cookie';
 import Alerts from "./alert/alerts";
 import { LuLayoutDashboard } from "react-icons/lu";
-import AssetManagementDialog from "./asset-management";
+import AssetManagementDialog from "./assetManagement/asset-management";
 
 
 const HorizontalNavbar: React.FC = () => {

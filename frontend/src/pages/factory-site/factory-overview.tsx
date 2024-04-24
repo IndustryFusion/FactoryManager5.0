@@ -19,7 +19,7 @@ import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
 import AssetManagement from "@/components/asset-management";
-import AssetManagementDialog from "@/components/asset-management";
+import AssetManagementDialog from "@/components/assetManagement/asset-management";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
