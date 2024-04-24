@@ -211,18 +211,20 @@ export class AssetService {
         for (let relationKey in relationData) {
           let finalKey = 'http://www.industry-fusion.org/schema#' + relationKey;
           let relationArray = relationData[relationKey];
+          assetData[finalKey] = [];
           if(relationArray.length > 1){
-            let classValue = assetData[finalKey].class;
-            assetData[finalKey] = [];
             for (let i = 0; i < relationArray.length; i++) {
               assetData[finalKey].push({
                 type: 'Relationship',
                 object: relationArray[i],
-                class: classValue
               });
             }
           }else{
             assetData[finalKey].object = relationArray[0];
+            assetData[finalKey].push({
+                type: 'Relationship',
+                object: relationArray[0]
+            });
           }
         }
         console.log('assetData ', assetData);

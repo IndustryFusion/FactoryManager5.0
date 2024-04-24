@@ -15,6 +15,7 @@ import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
+import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
   factoryId: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -40,71 +41,75 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [isTyped, setIsTyped] = useState(false);
+  const { listItem } = useFactoryShopFloor();
 
 
-useEffect(() => {
-  
-  const filterShopFloors = () => {
-    if (searchValue.trim()) {
-      const filteredFloors = shopFloors.filter((floor) =>
-        floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-      );     
-      setFilteredShopFloors(filteredFloors);
-    } else {   
-      setFilteredShopFloors(shopFloors);
-    }
-  };
-
-  filterShopFloors();
-}, [searchValue, shopFloors]);
+  console.log("setShopfloorProp", setShopfloorProp);
 
 
+  useEffect(() => {
 
-const fetchShopFloors = async (factoryId: string) => {
-    
-      try {
-        
-        const factoryDetails = await getshopFloorById(factoryId);
-        setShopFloors(
-          factoryDetails.map((floor:ShopFloor) => ({
-            id: floor.id,
-            floorName:
-              floor["http://www.industry-fusion.org/schema#floor_name"].value,
-          }))
+    const filterShopFloors = () => {
+      if (searchValue.trim()) {
+        const filteredFloors = shopFloors.filter((floor) =>
+          floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
         );
+        setFilteredShopFloors(filteredFloors);
+      } else {
+        setFilteredShopFloors(shopFloors);
+      }
+    };
 
-     
-      } catch (error) {
+    filterShopFloors();
+  }, [searchValue, shopFloors]);
 
-       if (error instanceof Error) {
+
+
+  const fetchShopFloors = async (factoryId: string) => {
+
+    try {
+
+      const factoryDetails = await getshopFloorById(factoryId);
+      setShopFloors(
+        factoryDetails.map((floor: ShopFloor) => ({
+          id: floor.id,
+          floorName:
+            floor["http://www.industry-fusion.org/schema#floor_name"].value,
+        }))
+      );
+
+
+    } catch (error) {
+
+      if (error instanceof Error) {
         console.error("Failed to fetch shop floors:", error);
         setError(error.message);
       } else {
         console.error("Failed to fetch shop floors:", error);
         setError("An error occurred");
       }
-       
-      }
-     
-    };
+
+    }
+
+  };
 
 
   useEffect(() => {
-   
+
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } 
+    }
     else {
-     if (router.isReady) {
-      const factoryId = router.query.factoryId;
-      if (typeof factoryId === 'string') {
-        fetchShopFloors(factoryId);
-      } else {
-        console.error("factoryId is not a string or is undefined.");
+      if (router.isReady) {
+        const factoryId = router.query.factoryId;
+        if (typeof factoryId === 'string') {
+          fetchShopFloors(factoryId);
+        } else {
+          console.error("factoryId is not a string or is undefined.");
+        }
       }
     }
-    }
-   
+
 
   }, [factoryId, isVisible, isEdit]);
 
@@ -120,7 +125,7 @@ const fetchShopFloors = async (factoryId: string) => {
     }
 
     try {
-       await deleteShopFloorById(
+      await deleteShopFloorById(
         selectedShopFloorId,
         factoryId
       );
@@ -171,7 +176,7 @@ const fetchShopFloors = async (factoryId: string) => {
 
   return (
     <>
-      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor:""}}>
+      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
         <Toast ref={toast} />
 
         <div>
@@ -196,8 +201,8 @@ const fetchShopFloors = async (factoryId: string) => {
             </InputText>
           </div>
           <div className="form-btn-container mb-2 flex  ml-2 mt-4">
-          
-           <Button
+
+            <Button
               label="New"
               severity="success"
               outlined
@@ -232,7 +237,7 @@ const fetchShopFloors = async (factoryId: string) => {
                   onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                   onClick={() =>{
                     setSelectedShopFloorId(floor.id);
-                    setShopfloorProp(floor)
+                    
                   } }
                   style={{
                   cursor: "pointer",
@@ -243,7 +248,7 @@ const fetchShopFloors = async (factoryId: string) => {
                 }}
                 className="ml-4 mb-3"
               >
-            
+
                 {floor.floorName}
               </li>
             ))}

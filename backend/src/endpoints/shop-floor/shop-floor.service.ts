@@ -97,9 +97,13 @@ export class ShopFloorService {
   }
 
   async findAll(id: string, token: string) {
+    console.log("gettimg id here", id)
     try {
       const factoryData = await this.factorySiteService.findOne(id, token);
+      console.log("factoryData", factoryData);
+      
       const shopFloorIds = factoryData['http://www.industry-fusion.org/schema#hasShopFloor'];
+      console.log("shopFloorIds", shopFloorIds);
       const shopFloorData = [];
       if (Array.isArray(shopFloorIds) && shopFloorIds.length > 0) {
         for (let i = 0; i < shopFloorIds.length; i++) {
@@ -117,6 +121,8 @@ export class ShopFloorService {
           shopFloorData.push(data);
         }
       }
+      console.log("shopFloorData", shopFloorData);
+      
       return shopFloorData;
     } catch (err) {
       throw new NotFoundException(
@@ -295,7 +301,6 @@ export class ShopFloorService {
                 updateData[key] = {
                   type: 'Relationship',
                   object: '',
-                  class: assetData[key].class
                 }
               }
             }

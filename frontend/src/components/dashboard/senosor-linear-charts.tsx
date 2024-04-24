@@ -303,6 +303,10 @@ function formatLabel(date:Date) {
   };
 
 const handleAttributeChange = (selectedValue: string) => {
+ setChartData({
+        labels: [],
+        datasets: []
+    });
     setSelectedAttribute(selectedValue);  // Set the attribute then fetch
 };
 
@@ -354,6 +358,8 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
       withCredentials: true,
     });
 
+    console.log(response.data, "kkk")
+
     if (!response.data || response.data.length === 0) {
       setNoChartData(true);
       console.error("No data returned from the API.");
@@ -387,7 +393,7 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
         datasets: [newDataset]
       });
       }
-     
+      console.log("chartData", data)
     setSelectedAttributeId(`eq.${attributeId}`);
     setLoading(false)
     setNoChartData(false);
@@ -506,11 +512,15 @@ useEffect(() => {
         if (!startTime || !endTime) {
             return; 
         } 
+        
     }
-    fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
-    
-}, [selectedInterval, selectedAttribute, entityIdValue]); 
 
+      console.log("called mania")
+      fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
+    
+    
+    
+}, [,router.isReady, selectedInterval, entityIdValue, selectedAttribute]); 
 
 useEffect(() => {
  
@@ -590,8 +600,6 @@ useEffect(() => {
                       options={attributes}
                       onChange={(e) => handleAttributeChange(e.value)}
                       placeholder="Select an Attribute"
-                      filter
-                      showClear
                       style={{ width: '100%' }}
                     />
               </div>

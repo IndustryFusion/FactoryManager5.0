@@ -15,23 +15,26 @@ import { fetchFactoryDetails, getShopFloorAssets } from "@/utility/factory-site-
 import { PickList } from 'primereact/picklist';
 import { Card } from "primereact/card";
 import ShopFloorAssets from "@/components/factoryShopFloorForm/shopFloor-assets";
+import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 
 const FactoryShopFloor = () => {
 
-    const factoryId = "urn:ngsi-ld:factories:2:64";
+
     const [shopfloor, setShopfloor] = useState({});
     const [asset, setAsset] = useState({});
     const [switchView, setSwitchView] = useState(false);
     const [factoryName, setFactoryName] = useState("");
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
+    const [factoryIdValue, setfactoryIdvalue] = useState("");
     const router = useRouter();
     const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
+
     const shopFloorAsset = [{ id: 1, name: "X1176" }, { id: 2, name: "rtret" }, { id: 3, name: "Q800" }];
     const targetAssets = [{ id: 4, name: "Q000" }, { id: 5, name: "X8176" }, { id: 6, name: "rkket" }];
 
 
-    const getFactoryDetails = async (factoryId) => {
+    const getFactoryDetails = async (factoryId: string) => {
         try {
             const response = await fetchFactoryDetails(factoryId);
             const factoryname = response["http://www.industry-fusion.org/schema#factory_name"]?.value
@@ -40,23 +43,26 @@ const FactoryShopFloor = () => {
             console.error(error);
         }
     }
+
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
-            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
-                router.query.factoryId;
+            // Use TypeScript's non-null assertion operator to assert that `id` is not undefined
+            const id: string = Array.isArray(router.query.factoryId) ? router.query.factoryId[0]! : router.query.factoryId!;
             getFactoryDetails(id);
+            setfactoryIdvalue(id);
         }
 
     }, [router.isReady]);
 
 
-   
+
 
     return (
         <>
             {/* <HorizontalNavbar /> */}
+            <FactoryShopFloorProvider>
             <div style={{
                 height: "96vh",
                 overflow: "hidden",
@@ -67,54 +73,38 @@ const FactoryShopFloor = () => {
                         <span>Switch View</span>
                         <InputSwitch checked={switchView} onChange={(e) => {
                             setSwitchView(e.value);
-                            router.push(`/factory-site/shop-floor/${factoryId}`)
+                            router.push(`/factory-site/shop-floor/${factoryIdValue}`)
                         }} />
                     </div>
 
                 </div>
                 <div className="factory-shopfloor-container">
-                    <ShopFloorProvider>
-                        <div className="shopfloor-list-container">
-                            <ShopFloorList
-                                factoryId={factoryId}
-                                setShopfloorProp={setShopfloor}
-                            />
-                            <div>
-                                <AllocatedAsset />
-                            </div>
+                    <div className="shopfloor-list-container">
+                        <ShopFloorList
+                            factoryId={factoryIdValue}
+                            setShopfloorProp={setShopfloor}
+                        />
+                        <div>
+                            <AllocatedAsset />
                         </div>
-                        <div className="form-container">
-                            < FactoryShopFloorForm
-                                shopfloorProp={shopfloor}
-                                assetProp={asset}
-                            />
-                        </div>
-                        <div className="allocated-list-container" >
-                            {/* <div className=" asset-lists">
-                                <div>
-                                    <h3
-                                        className="font-medium  ml-4"
-                                        style={{ marginTop: "2%", marginLeft: "5%", fontSize: "18px" }}
-                                    >
-                                        ShopFloor Assets
-                                    </h3>
-                                    {shopFloorAssets.map(assetData =>
-                                        <li onClick={() => setAsset(assetData)}>{assetData["http://www.industry-fusion.org/schema#product_name"]?.value}</li>
-                                    )}
-                                </div>
-                                <div>
-                                    <UnallocatedAsset />
-                                </div>
-                            </div> */}
-                            <ShopFloorAssets
+                    </div>
+                    <div className="form-container">
+                        < FactoryShopFloorForm
+                            shopfloorProp={shopfloor}
+                            assetProp={asset}
+
+                        />
+                    </div>
+                    <div className="allocated-list-container" >
+                        <ShopFloorAssets
                             shopFloorProp={shopfloor}
                             setAssetProp={setAsset}
-                            />
-                        </div>
-                    </ShopFloorProvider>
+                        />
+                    </div>
+
                 </div>
             </div>
-
+            </FactoryShopFloorProvider>
         </>
     )
 }
