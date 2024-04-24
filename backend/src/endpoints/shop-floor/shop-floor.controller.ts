@@ -154,6 +154,31 @@ export class ShopFloorController {
     }
   }
 
+  @Patch('/update-asset')
+  async updateAssets(@Body() data, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      const response = await this.shopFloorService.updateAssets(data, token);
+      if(response['status'] == 200 || response['status'] == 204) {
+        return {
+          success: true,
+          status: response['status'],
+          message: 'Updated Successfully',
+        }
+      } else {
+        return response;
+      }
+    } catch (err) {
+      console.log('err ',err);
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      };
+    }
+  }
+
+
   @Delete('/delete-react')
   async deleteReact(@Body() data, @Req() req: Request) {
     try {
