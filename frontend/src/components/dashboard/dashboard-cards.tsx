@@ -5,14 +5,14 @@ import RelationDialog from "./relation-card-popup";
 import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
 import { getAlerts } from "../alert/alert-service";
 import axios from "axios";
-
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
 
 
 const DashboardCards: React.FC = () => {
 
     // const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const { machineStateValue,
-        entityIdValue,
         setMachineStateValue,
         selectedAssetData,
         machineStateData,
@@ -23,6 +23,7 @@ const DashboardCards: React.FC = () => {
         setRelationsCount,
         assetCount
     } = useDashboard();
+    const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [notification, setNotification] = useState(false);
     const [relations, setRelations] = useState(false);
     const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
@@ -31,7 +32,6 @@ const DashboardCards: React.FC = () => {
     const [childCount, setChildCount] = useState(0);
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
     const moment = require('moment');
     const getNotifications = () => {
         const fetchAllAlerts = async () => {
