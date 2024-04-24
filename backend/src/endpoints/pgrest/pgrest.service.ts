@@ -116,7 +116,6 @@ async findAll(token, queryParams) {
    const response = await axios.get(url, { headers });
      await this.redisService.saveData("storedDataQueryParams", queryParams);
 
-     console.log("storedDataQueryParams, ", queryParams)
     if (queryParams.intervalType == "live" ) {
       // Store data in Redis only if the intervalType is 'live'
       await this.redisService.saveData("storedData", response.data);

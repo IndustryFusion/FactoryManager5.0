@@ -97,13 +97,10 @@ export class ShopFloorService {
   }
 
   async findAll(id: string, token: string) {
-    console.log("gettimg id here", id)
     try {
       const factoryData = await this.factorySiteService.findOne(id, token);
-      console.log("factoryData", factoryData);
       
       const shopFloorIds = factoryData['http://www.industry-fusion.org/schema#hasShopFloor'];
-      console.log("shopFloorIds", shopFloorIds);
       const shopFloorData = [];
       if (Array.isArray(shopFloorIds) && shopFloorIds.length > 0) {
         for (let i = 0; i < shopFloorIds.length; i++) {
@@ -121,7 +118,6 @@ export class ShopFloorService {
           shopFloorData.push(data);
         }
       }
-      console.log("shopFloorData", shopFloorData);
       
       return shopFloorData;
     } catch (err) {
@@ -171,7 +167,6 @@ export class ShopFloorService {
             object: assetIds[i]
           })
         }
-        console.log('shopFloorData ',shopFloorData);
         const deleteResponse = await this.remove(key, token);
         if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
           const response = await axios.post(this.scorpioUrl, shopFloorData, { headers });
@@ -327,8 +322,6 @@ export class ShopFloorService {
           }
         }
       }
-      console.log('shopFloorobj ',shopFloorobj);
-      console.log('assetObj ',assetObj);
       if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
         let response = await this.updateAssets(shopFloorobj, token);
         if(response.success){
