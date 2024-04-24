@@ -15,6 +15,8 @@ import { types } from 'util';
 import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
 import { Button } from "primereact/button";
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -46,7 +48,8 @@ const initialChartData = {
 };
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const { entityIdValue , autorefresh} = useDashboard();
+    const {autorefresh} = useDashboard();
+    const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [chartOptions, setChartOptions] = useState({});
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const [selectedWeekSubInterval, setSelectedWeekSubInterval] = useState<string>("months");
@@ -305,7 +308,7 @@ const PowerCo2Chart = () => {
         let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
         let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
         fetchDataAndAssign(startTime, endTime);
-    },[])
+    },[entityIdValue])
 
     useEffect(() => {
         const containerBody = document.querySelector('.containerBody');
