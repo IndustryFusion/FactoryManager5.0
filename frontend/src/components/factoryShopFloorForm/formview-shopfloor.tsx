@@ -6,21 +6,34 @@ import { useEffect, useState } from "react";
 import { fetchAssetById } from "@/utility/factory-site-utility";
 import Relations from "./relations-card";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import { MultiStateCheckbox } from "primereact/multistatecheckbox";
 
 interface FactoryShopFloorProps {
     shopfloorProp: { [key: string]: any; };
-    assetProp: { [key: string]: any; };
+
 
 }
 
-const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, assetProp }) => {
+const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp }) => {
 
-    const { listItem } = useFactoryShopFloor();
-    const shopfloorAsset = assetProp["http://www.industry-fusion.org/schema#product_name"]?.value;
+    const { asset, setAssetId } = useFactoryShopFloor();
+    const [checkBoxvalue, setCheckBoxValue] = useState('unlock');
+    const options = [
+        { value: 'unlock', icon: 'pi pi-lock-open' },
+        { value: 'lock', icon: 'pi pi-lock' }
+    ];
+    const [assetValue, setAssetValue] = useState('');
+
+    useEffect(() => {
+        if (checkBoxvalue !== 'lock') {
+            setAssetValue(asset?.product_name || '');
+            setAssetId(asset?.id)
+        }
+    }, [asset, checkBoxvalue]);
 
     return (
         <>
-            <Card className="px-5 " style={{ height: "18vh" }}>
+            <Card className="px-5 " style={{ height: "25vh" }}>
                 <form>
                     <div className="input-container gap-6">
                         <label htmlFor="">ShopFloor</label>
@@ -37,7 +50,8 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, 
                                 style={{ width: "100%" }}
                                 className="input-content"
                                 placeholder=""
-                                value={shopfloorAsset || ""}
+                                value={assetValue || ""} // Use assetValue state here
+                                disabled={checkBoxvalue === 'lock'}
                             />
                             {/* {
                                 shopfloorProp?.floorName.length > 0 &&
@@ -45,15 +59,18 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp, 
                             } */}
 
                         </div>
+
+                    </div>
+                    <div className=" flex flex-column align-items-center gap-3">
+                        <MultiStateCheckbox value={checkBoxvalue} onChange={(e) => setCheckBoxValue(e.value)} options={options} optionValue="value" />
+                        {/* <span>{value}</span> */}
                     </div>
                 </form>
             </Card>
 
             <div className="mt-4">
                 <p style={{ fontWeight: "bold" }}>Relations</p>
-                <Relations
-                    assetId={assetProp?.id}
-                />
+                <Relations />
             </div>
         </>
     )

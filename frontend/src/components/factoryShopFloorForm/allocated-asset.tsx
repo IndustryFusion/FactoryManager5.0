@@ -231,7 +231,7 @@ const AllocatedAsset = () => {
                 <ul>
                     {filteredAllocatedAssets.map((asset, index) => (
                         <li key={index} className="mb-2 ml-3"
-                            onClick={() => selectItems(asset?.product_name, asset?.asset_category)}
+                            onClick={() => selectItems(asset?.product_name, asset?.asset_category, asset?.id)}
                         >
                             {typeof asset === 'string' ? asset : asset.product_name}
                         </li>

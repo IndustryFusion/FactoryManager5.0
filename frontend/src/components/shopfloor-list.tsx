@@ -44,11 +44,10 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const { listItem } = useFactoryShopFloor();
 
 
-  console.log("setShopfloorProp", setShopfloorProp);
+  // console.log("setShopfloorProp", setShopfloorProp);
 
 
   useEffect(() => {
-
     const filterShopFloors = () => {
       if (searchValue.trim()) {
         const filteredFloors = shopFloors.filter((floor) =>

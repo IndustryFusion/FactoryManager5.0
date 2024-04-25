@@ -30,11 +30,10 @@ interface Asset {
 
 interface ShopFloorAssetsProps {
     shopFloorProp: { [key: string]: any; };
-    setAssetProp: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>
 
 }
 
-const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAssetProp }) => {
+const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
@@ -42,19 +41,24 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItem, selectItems } = useFactoryShopFloor();
+    const { selectItems, setAssetId,setAsset } = useFactoryShopFloor();
 
 
     const fetchShopFloorAssets = async () => {
         try {
             const response = await getShopFloorAssets(shopFloorProp?.id);
             const { assetsData } = response;
+            console.log(response, 'response from shopfloor');
+            if (assetsData.length === 0) {
+                setAsset("")
+            }
             setShopFloorAssets(assetsData);
             setSource(assetsData)
         } catch (error) {
             console.error(error)
         }
     }
+
 
     useEffect(() => {
         fetchShopFloorAssets();
@@ -82,7 +86,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 console.log("unAllocatedAssetData", unAllocatedAssetData);
                 const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                     const relationsArr = [];
-                    console.log(unAllocatedAssetData[key], "its object here");
+                    // console.log(unAllocatedAssetData[key], "its object here");
                     const checkHas = 'http://www.industry-fusion.org/schema#has';
 
                     Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
@@ -137,22 +141,15 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
         setTarget(event.target);
     };
 
-    const itemTemplate = (item) => {
-        // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
-        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
-        const sourceAssetCategory = item["http://www.industry-fusion.org/schema#asset_category"]?.value;
-        const targetProductName = item.product_name;
 
+    const itemTemplate = (item) => {
         return (
             <>
-                <li className="list-items"
-                    onClick={() => selectItems(targetProductName, item.asset_category)}
-                >{targetProductName}</li>
                 <li className="list-items" onClick={() => {
-                    selectItems(sourceProductName, sourceAssetCategory)
-                    setAssetProp(item)
-
-                }}>{sourceProductName}</li>
+                    selectItems(item.product_name, item.asset_category, item?.id)//relation
+                    setAsset(item)
+                    
+                }}>{item.product_name}</li>
             </>
         )
     };
@@ -170,7 +167,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 onChange={onChange}
                 breakpoint="1280px"
                 sourceHeader={headerSource} targetHeader="Unallocated Assets"
-                itemTemplate={itemTemplate} sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
+                itemTemplate={itemTemplate}
+                sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
 
         </>
     )
