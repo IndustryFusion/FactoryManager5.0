@@ -2,8 +2,26 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { FactorySiteDescriptionDto } from './dto/factorySiteDescription.dto';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import axios from 'axios';
+import { FactorySite } from '../schemas/factory-site.schema';
+import { Model, ObjectId } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+
+interface FactoryData {
+  nodes: any[]; 
+  edges: any[]
+}
+
+interface FactoryReactData {
+  factoryId: string;
+  factoryData: FactoryData;
+}
+
 @Injectable()
 export class FactorySiteService {
+  constructor(
+    @InjectModel(FactorySite.name)
+    private factoryModel: Model<FactorySite>,
+  ){}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   async create(data: FactorySiteDescriptionDto, token: string) {
     try {
@@ -167,11 +185,16 @@ export class FactorySiteService {
         'Accept': 'application/ld+json'
       };
       const url = this.scorpioUrl + '/' + id;
+      // Delete Factory 
       const response = await axios.delete(url, {headers});
       if(response['status'] == 200 || response['status'] == 204) {
-        let deleteResponse = await shopFloorService.deleteScript(id, token);
-        return {
-          status: deleteResponse.status
+        // Delete shopFloor and the asset relations
+        let factoryReactData = await this.factoryModel.find({factoryId: id}) as FactoryReactData[];
+        let deleteResponse = await shopFloorService.deleteScript(factoryReactData[0].factoryData.nodes, token);
+        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204){
+          // Delete react flow for that factory
+          let deleteReactResponse = await this.factoryModel.deleteOne({factoryId: id});
+          return deleteReactResponse;
         }
       }
     } catch (err) {

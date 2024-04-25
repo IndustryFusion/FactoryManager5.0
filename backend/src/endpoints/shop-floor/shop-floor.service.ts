@@ -96,6 +96,23 @@ export class ShopFloorService {
     }
   }
 
+  async createShopFloor(data: any, token: string){
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        Accept: 'application/ld+json',
+      };
+      const response = await axios.post(this.scorpioUrl, data, { headers });
+      return {
+        status: response.status,
+        statusText: response.statusText,
+      }
+    }catch(err){
+      throw err;
+    }
+  }
+
   async findAll(id: string, token: string) {
     try {
       const factoryData = await this.factorySiteService.findOne(id, token);
@@ -261,17 +278,20 @@ export class ShopFloorService {
             }
           }
           if(!check){
-            let updateData = {
-              'http://www.industry-fusion.org/schema#hasAsset': {
-                type: 'Relationship',
-                object: ''
-              }
+            let shopFloorData = await this.findOne(node[i].target.split('_').pop(), token);
+            shopFloorData['http://www.industry-fusion.org/schema#hasAsset'] = {
+              type: 'Relationship',
+              object: ''
             }
-            let response = await this.update(node[i].target.split('_').pop(), updateData, token);
-            if(response['status'] == 200 || response['status'] == 204){
-              continue;
-            } else {
-              return response;
+
+            let deleteResponse = await this.remove(node[i].target.split('_').pop(), token);
+            if(deleteResponse.status == 200 || deleteResponse.status == 204){
+              let response = await this.createShopFloor(shopFloorData, token);
+              if(response['status'] == 200 || response['status'] == 201){
+                continue;
+              } else {
+                return response;
+              }
             }
           }
         }
@@ -289,25 +309,23 @@ export class ShopFloorService {
             }
           }
           if(!check){
-            let updateData = {};
             let assetData = await this.assetService.getAssetDataById(node[i].target.split('_')[1], token);
             for (const key in assetData){
               if (key.includes('has')){
-                updateData[key] = {
+                assetData[key] = {
                   type: 'Relationship',
                   object: '',
                 }
               }
             }
-            if(Object.keys(updateData).length > 0){
-              let response = await this.assetService.updateAssetById(node[i].target.split('_')[1], updateData, token);
-              if(response['status'] == 200 || response['status'] == 204){
+            let deleteResponse = await this.assetService.deleteAssetById(node[i].target.split('_')[1], token);
+            if(deleteResponse.status == 200 || deleteResponse.status == 204){
+              let response = await this.assetService.setAssetData(assetData, token);
+              if(response['status'] == 200 || response['status'] == 201){
                 continue;
               } else {
                 return response;
               }
-            } else {
-              continue;
             }
           }
         }
@@ -354,13 +372,7 @@ export class ShopFloorService {
       for(let i = 0; i < node.length; i++){
         let id = node[i].id;
         if(id.includes('shopFloor')){
-          let updateData = {
-            'http://www.industry-fusion.org/schema#hasAsset': {
-              type: 'Relationship',
-              object: ''
-            }
-          }
-          let response = await this.update(id.split('_').pop(), updateData, token);
+          let response = await this.remove(id.split('_').pop(), token);
           if(response['status'] == 200 || response['status'] == 204){
             continue;
           } else {
@@ -390,6 +402,10 @@ export class ShopFloorService {
             continue;
           }
         }
+      }
+      return {
+        status: 204,
+        message: 'Delete Successfully'
       }
     } catch(err){
       throw err;

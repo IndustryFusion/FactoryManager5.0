@@ -158,8 +158,16 @@ export class AssetService {
       // sending multiple requests to scorpio to save the asset array
       let response;
       try{
-        for (let i = 0; i < data.length; i++) {
-          response = await axios.post(this.scorpioUrl, data[i], {headers});
+        if(Array.isArray(data)){
+          for (let i = 0; i < data.length; i++) {
+            response = await axios.post(this.scorpioUrl, data[i], {headers});
+          }
+        } else {
+          response = await axios.post(this.scorpioUrl, data, {headers});
+        }
+        return {
+          status: response.status,
+          statusText: response.statusText,
         }
       }
       catch(err){
