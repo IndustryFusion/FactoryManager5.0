@@ -72,6 +72,13 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         setFactory({ ...factory, [key]: e.target.value });
         setValidateFactory(false)
     };
+    
+    const onKeyDownHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    //  Prevent entering non-numeric characters in an InputNumber field
+    if (!/[0-9]/.test(event.key) && event.key !== "Backspace") {
+        event.preventDefault();
+     }
+   };
 
 
     const changeHandler = (e: any, key: keyof Factory) => {
@@ -286,6 +293,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             placeholder={property?.description}
                             onChange={(e: any) => setFactory({ ...factory, zip: e.value })}                           
                             useGrouping={false}
+                            onKeyDown={onKeyDownHandler}
                         />
                     </div>
                 )}
