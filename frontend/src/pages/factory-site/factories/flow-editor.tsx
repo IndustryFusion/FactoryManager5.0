@@ -618,13 +618,18 @@ const FlowEditor: React.FC<
     // Update the state to only include preserved nodes and edges
     setNodes(preservedNodes);
     setEdges(preservedEdges);
-    console.log(preservedNodeIds, preservedEdges, "Nodes edges preserved");
-
+    const payLoad = {
+      factoryId: factoryId,
+      factoryData: {
+      nodes:preservedNodes,
+      edges:preservedEdges
+      },
+    };
 
     try {
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
-        edges,
+        payLoad,
         {
           headers: {
             "Content-Type": "application/json",
@@ -634,31 +639,25 @@ const FlowEditor: React.FC<
         }
       );
 
-      const reactFlowScorpioUpdate = await axios.delete(
-        `${API_URL}/shop-floor/delete-react`,
-
+      const reactFlowScorpioUpdate =  await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
         {
-          data: nodes,
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { "factory-id": factoryId },
         }
       );
-
-      if (
-        reactFlowUpdateMongo.status == 200 ||
-        (reactFlowUpdateMongo.status == 204 && reactFlowScorpioUpdate.status == 204) ||
-        reactFlowScorpioUpdate.status == 201
-      ) {
-        setToastMessage(
-          "Selected elements and related data deleted successfully."
-        );
-      } else {
-        setToastMessage("Partial deletion: Please check the data.");
+      if (reactFlowUpdateMongo.status == 200 ||  reactFlowUpdateMongo.status == 204) {
+        setToastMessage("Flowchart saved successfully");
       }
+
+      if (reactFlowScorpioUpdate.status == 200 ||  reactFlowScorpioUpdate.status == 204) {
+        setToastMessage( "Scorpio updated successfully.");
+      }
+      setNodesInitialized(true);
       onRestore();
     } catch (error) {
       console.error("Error deleting elements:", error);
