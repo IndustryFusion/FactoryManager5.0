@@ -52,41 +52,44 @@ const Relations = () => {
     console.log("assetid in relation", assetId);
 
     const handleReset = () => {
-      setInputValue([])
+        setInputValue([])
     }
 
     console.log("inputValue in relations", inputValue);
 
-  const getPayload =()=>{
-    const payload={
-        [assetId] :{}
-    };
-    const obj={};
-    inputValue.forEach(item => {
-        Object.keys(item).forEach(key => {
-            // Check if the key ends with '_asset', if so, ignore it
-            if (!key.endsWith('_asset')) {
-                console.log(key, "key here");
-          
-              if(Array.isArray(item[key])){
-                item[key].forEach(value => {
-                    obj[key]=[...value]
-              });
-              
-            }else{
-                obj[key] =[item[key]]
-            }
-        }
+    const getPayload = () => {
+
+        const obj = {};
+        inputValue.forEach(item => {
+            Object.keys(item).forEach(key => {
+                // Check if the key ends with '_asset', if so, ignore it
+                if (key !== "" && !key.endsWith('_asset')) {
+                    console.log(key, "key here");
+
+                    if (Array.isArray(item[key])) {
+                        const newArr = [];
+                        item[key].forEach(value => {
+                            newArr.push(value);
+                            obj[key] = newArr;
+                        }
+                        )
+
+                    } else {
+                        obj[key] = [item[key]]
+                    }
+                }
+            });
         });
-    });
-    console.log(obj, "obj here");
-    
-    
-    
-   
-    console.log("payload here", payload);
-    
-  }
+        console.log(obj, "obj here");
+        const payload = {
+            [assetId]: obj
+        };
+
+
+
+        console.log("payload here", payload);
+
+    }
 
 
     const handleSave = async () => {
@@ -175,17 +178,15 @@ const Relations = () => {
                             )
                         )}
                     </div>
-                  
-                    
                 </form>
                 {relations.length > 0 &&
                     <div className="form-btns">
                         <Button
-                        onClick={() => getPayload()}
+                            onClick={() => handleSave()}
                         >Save
                         </Button>
                         <Button
-                         onClick={() => handleReset()}
+                            onClick={() => handleReset()}
                             severity="secondary" text raised
                             label="Reset"
                             className="mr-2"
@@ -200,7 +201,7 @@ const Relations = () => {
                         />
                     </div>
                 }
-                 {relations.length === 0 && <p>No relations exist</p>}
+                {relations.length === 0 && <p>No relations exist</p>}
             </Card>
         </>
     );
