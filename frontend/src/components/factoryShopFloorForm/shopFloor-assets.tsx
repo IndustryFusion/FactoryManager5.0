@@ -9,6 +9,8 @@ import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import axios from "axios";
+import { Toast, ToastMessage } from "primereact/toast";
 
 interface AssetProperty {
     type: "Property";
@@ -33,6 +35,8 @@ interface ShopFloorAssetsProps {
 
 }
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
 const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const [source, setSource] = useState([]);
@@ -41,8 +45,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItems, setAssetId,setAsset } = useFactoryShopFloor();
-
+    const { selectItems, setAssetId, setAsset } = useFactoryShopFloor();
+    const toast = useRef<any>(null);
 
     const fetchShopFloorAssets = async () => {
         try {
@@ -59,10 +63,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         }
     }
 
-
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
+
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    };
 
 
 
@@ -135,12 +142,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
 
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
+    console.log(source, "source here")
+
 
     const onChange = (event) => {
         setSource(event.source);
         setTarget(event.target);
     };
-
 
     const itemTemplate = (item) => {
         return (
@@ -148,21 +156,54 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
                 <li className="list-items" onClick={() => {
                     selectItems(item.product_name, item.asset_category, item?.id)//relation
                     setAsset(item)
-                    
+
                 }}>{item.product_name}</li>
             </>
         )
     };
 
+    const getPayload = () => {
+        const shopfloorAssetIds = source.map(asset => asset?.id)
+        console.log("shopfloorAssetIds", shopfloorAssetIds);
+        const shopfloorObj = {
+            [shopFloorProp?.id]: shopfloorAssetIds
+        };
+        console.log("shopfloorObj", shopfloorObj);
+        return shopfloorObj;
+    }
+
+    const handleSaveShopFloors = async () => {
+        const payload = getPayload();
+        const url = `${API_URL}/shop-floor/update-asset`;
+        try {
+            const response = await axios.patch(url, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log("response from shopfloors", response.data)
+            if (response.data?.status === 204 && response.data?.success === true) {
+                showToast("success", "success", "Shopfloor assets saved successfully")              
+              }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
     const headerSource = (
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
-            <Button>Save</Button>
+            <Button onClick={() => handleSaveShopFloors()}>Save</Button>
         </div>
     )
 
     return (
         <>
+        <Toast ref={toast} />
             <PickList dataKey="id" source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"

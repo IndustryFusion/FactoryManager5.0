@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -6,6 +6,7 @@ import { fetchAssetById } from "@/utility/factory-site-utility";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { Chips } from "primereact/chips";
 import axios from "axios";
+import { Toast, ToastMessage } from "primereact/toast";
 
 interface RelationObject {
     type: string;
@@ -18,7 +19,6 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
     const [relations, setRelations] = useState<string[]>([]);
-
     const {
         focused, setFocused,
         setGetRelation,
@@ -26,6 +26,7 @@ const Relations = () => {
         setInputValue,
         assetId,
     } = useFactoryShopFloor();
+    const toast = useRef<any>(null);
 
 
     useEffect(() => {
@@ -48,17 +49,37 @@ const Relations = () => {
         getRelations();
     }, [assetId]);
 
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    };
 
-    console.log("assetid in relation", assetId);
 
     const handleReset = () => {
-        setInputValue([])
+        setInputValue([]);
+        showToast("success", "success", "Relations reseted successfully")
     }
 
-    console.log("inputValue in relations", inputValue);
+    const handleUpdateRelations =async(payload)=>{
+        const url = `${API_URL}/asset/update-relation`;
+        try {
+            const response = await axios.patch(url, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log("resposne of relations", response);
+          
+            if (response.data?.status === 204 && response.data?.success === true) {
+                showToast("success", "success", "Relations saved successfully")              
+              }
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
-    const getPayload = () => {
-
+    const handleSave = ()=> {
         const obj = {};
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
@@ -73,7 +94,6 @@ const Relations = () => {
                             obj[key] = newArr;
                         }
                         )
-
                     } else {
                         obj[key] = [item[key]]
                     }
@@ -84,41 +104,31 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
-
-
-
-        console.log("payload here", payload);
-
+        handleUpdateRelations(payload)
     }
 
-
-    const handleSave = async () => {
-        const payload = getPayload();
-        console.log("payload here", payload);
-
-        const url = `${API_URL}/asset/${assetId}`;
-        try {
-            const response = await axios.patch(url, payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            })
-            console.log("resposne of relations", response);
-
-
-        } catch (error) {
-            console.error(error)
-        }
-    }
     console.log(relations, "all relations here");
+
+
+    const handleDelete =()=>{
+     console.log("inputValue", inputValue)
+     inputValue.forEach(item => {
+        Object.keys(item).forEach(key => {
+            if (key !== "" && !key.endsWith('_asset')){
+                console.log(key, "key here")
+            }
+        })
+    })
+    }
+
+
 
 
 
     return (
         <>
             <Card className="p-4">
+            <Toast ref={toast} />
                 <form >
                     <div>
                         {Array.isArray(relations) && relations.length > 0 && (
@@ -193,6 +203,7 @@ const Relations = () => {
                             type="button"
                         ></Button>
                         <Button
+                        onClick={()=>handleDelete()}
                             label="Delete"
                             severity="danger"
                             outlined

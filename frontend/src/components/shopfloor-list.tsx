@@ -236,7 +236,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                   onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                   onClick={() =>{
                     setSelectedShopFloorId(floor.id);
-                    
+                    setShopfloorProp(floor)
                   } }
                   style={{
                   cursor: "pointer",
