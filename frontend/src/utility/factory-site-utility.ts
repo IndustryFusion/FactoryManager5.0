@@ -641,16 +641,6 @@ export async function getShopFloorAssets(shopFloorId: string) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
 type ConsoleMethod = (message?: any, ...optionalParams: any[]) => void;
 
 const filterPatterns: RegExp[] = [/^\[React Flow\]: Node type/]; // Add more patterns here as needed
