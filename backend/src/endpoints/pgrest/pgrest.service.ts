@@ -36,13 +36,12 @@ export class PgRestService {
 
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
       const response = await axios.get(url, {headers});
-      
-   
       return response.data;
      
 
     } catch(err) {
       console.log("PGREST SERVICE ERROR FOUND")
+      return [];
     }
   }
 
@@ -114,18 +113,18 @@ async findAll(token, queryParams) {
 
   try {
    const response = await axios.get(url, { headers });
-     await this.redisService.saveData("storedDataQueryParams", queryParams);
+    await this.redisService.saveData("storedDataQueryParams", queryParams);
+    await this.redisService.saveData("storedData", null);
 
     if (queryParams.intervalType == "live" ) {
       // Store data in Redis only if the intervalType is 'live'
       await this.redisService.saveData("storedData", response.data);
       return response.data ;
-   
-    
     }
-    return response.data ;
+   return response.data ;
   } catch (err) {
     console.log("Error fetching data from TimescaleDB:");
+    return [];
    
   }
 }

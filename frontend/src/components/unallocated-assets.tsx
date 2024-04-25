@@ -176,7 +176,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   };
 return (
     <>
-   <div className="flex flex-column align-items-center mt-3 mb-3">
+   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '95%', overflowY: 'auto' }}>
       <div className="flex align-items-center justify-content-center gap-2 mb-4">
         <InputText
           value={searchTerm}
@@ -200,15 +200,15 @@ return (
         ]} popup ref={menu} style={{marginLeft:"-20%"}} />
       </div>
 
-      <TabView className="ml-1 ">
-        <TabPanel header="Unallocated Assets" >
-          <Card className="-ml-1" style={{ height: '93%', overflowY: 'scroll' }}>
+      <TabView className="ml-1 "  >
+        <TabPanel header="Unallocated Assets" style={{ height: '93%', overflowY: 'auto' }}>
+          <Card className="-ml-1" >
             <ul>
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li key={index} className="mb-2 ml-4 " draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
                   {asset.product_name}
                 </li>
               ))}
@@ -216,13 +216,13 @@ return (
           </Card>
         </TabPanel>
         <TabPanel header="Allocated Assets" className="-ml-2">
-          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'scroll' }}>
+          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'auto' }}>
             <ul>
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li key={index} className="mb-2 ml-4" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
                   {asset.product_name}
                 </li>
               ))}
