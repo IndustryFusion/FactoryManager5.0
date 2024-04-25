@@ -121,7 +121,7 @@ const ShopFloorManager: React.FC = () => {
             style={{
               borderRight: "1px solid #ccc",
               padding: "10px",
-              width: "400px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
+              width: "450px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
               maxHeight: "100%",
               flexShrink: 0, // Prevents the component from shrinking
             }}
