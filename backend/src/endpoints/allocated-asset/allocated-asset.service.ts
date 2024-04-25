@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
-import { FactorySiteService } from '../factory-site/factory-site.service';
-import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 
 @Injectable()
 export class AllocatedAssetService {
   constructor(
-    private readonly factorySiteService: FactorySiteService,
     private readonly assetService: AssetService,
-    private readonly shopFloorService: ShopFloorService,
     private readonly reactFlowService: ReactFlowService
   ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
