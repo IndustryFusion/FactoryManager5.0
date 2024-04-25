@@ -43,8 +43,6 @@ export const handleUpload = async (file: File): Promise<string> => {
       withCredentials: true,
     });
 
-    console.log("The util upload  : ", response);
-
     if (response.status === 201) {
       return response.data;
     } else {
@@ -119,7 +117,7 @@ export async function updateFactoryData(
       },
       withCredentials: true,
     });
-    console.log("Factory updated successfully");
+  
   } catch (error) {
     console.error("Error updating factory:", error);
     throw error; // Rethrow to handle in component
@@ -132,7 +130,6 @@ export async function updateFactoryData(
  * @throws {Error} Throws an error if the deletion fails.
  */
 export const deleteFactory = async (factoryToDelete: Factory) => {
-  console.log(factoryToDelete);
   try {
     await axios.delete(API_URL + `/factory-site/${factoryToDelete.id}`, {
       headers: {
@@ -141,7 +138,6 @@ export const deleteFactory = async (factoryToDelete: Factory) => {
       },
       withCredentials: true,
     });
-    console.log("Factory deleted:", factoryToDelete);
   } catch (error) {
     console.error("Error deleting factory", error);
   }
@@ -181,10 +177,6 @@ export const transformDataForBackend = (factoryData: Factory) => {
  * @throws {Error} Throws an error if the update fails.
  */
 export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
-  console.log("data bfore sending patch ", factoryToUpdate);
-
-  console.log("the id is ", id);
-
   const response = await axios.patch(
     `${API_URL}/factory-site/${id}`,
 
@@ -200,7 +192,6 @@ export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
   );
 
   if (response.status == 200 || response.status == 204) {
-    console.log("Factory updated successfully", response.data);
     return response.data;
   } else {
     console.error("Unexpected response status:", response.status);
@@ -289,7 +280,6 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
         withCredentials: true,
       }
     );
-    console.log(response.data, "the before filter data");
 
     return response.data;
   } catch (error) {
@@ -309,7 +299,6 @@ export const getNonShopFloorAssetDetails = async (assetId: string) => {
       withCredentials: true,
     });
 
-    console.log(response.data, "  non shop floor items ");
     return response.data;
   } catch (error) {
     console.error("Error fetching non-shop-floor assets", error);
@@ -377,7 +366,6 @@ export const exportElementToJPEG = async (
     link.click();
     document.body.removeChild(link);
 
-    console.log("Export successful");
   } catch (error) {
     console.error("Error exporting element to JPEG:", error);
   }
@@ -563,8 +551,6 @@ export const fetchAssetById = async (assetId: string) => {
     });
     const responseData = response.data;
     const mappedData = extractHasRelations(responseData);
-    console.log(mappedData, "The asset Node data");
-    console.log(responseData, "1111");
     return mappedData;
   } catch (error) {
     console.error("Error:", error);
@@ -580,7 +566,6 @@ export const fetchAllocatedAssets = async (factoryId: string) => {
       },
       withCredentials: true,
     });
-    // console.log(response, "allocated asset data");
     return response.data;
   } catch (error) {
     console.error("Error fetching allocated assets:", error);
@@ -597,7 +582,6 @@ export const fetchAllAllocatedAssets = async () => {
       },
       withCredentials: true,
     });
-    console.log(response, " all allocated asset data");
     return response.data;
   } catch (error) {
     console.error("Error fetching all allocated assets:", error);
@@ -619,7 +603,6 @@ export async function getShopFloorAssets(shopFloorId: string) {
       }
     );
     const shopFloorData = shopFloorDataResponse.data;
-    console.log("shopFloorData", shopFloorData);
 
     // Normalize the assetId to always be an array
     const hasAsset = shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]
@@ -627,17 +610,10 @@ export async function getShopFloorAssets(shopFloorId: string) {
     Array.isArray(hasAsset)?
       hasAsset.map((elem:{type:string, object:string})=> elem?.object) :
       hasAsset?.object ;
-
-      console.log("assetIds", assetIds);
-
       // console.log(  shopFloorData["http://www.industry-fusion.org/schema#hasAsset"],"hasAsset");
-      
-      
     assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
     assetIds = assetIds.filter(id => id !== "json-ld-1.1");
-    console.log(assetIds, "asset Ids");
-
-
+   
     let assetsData = [];
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
@@ -652,10 +628,7 @@ export async function getShopFloorAssets(shopFloorId: string) {
       }   
       );
 
-      console.log(assetDataPromises, "assetData in shopfloor");
-      
       const assetsResponses = await Promise.all(assetDataPromises);
-      console.log("assetsResponses", assetsResponses);
       
       assetsData = assetsResponses.map((response) => response.data);
     }
