@@ -1,6 +1,6 @@
 
 import dynamic from 'next/dynamic';
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState ,useCallback} from "react";
 import { ChartData, ChartOptions, registerables ,TooltipItem, ChartType, ScriptableContext} from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
@@ -166,20 +166,20 @@ const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    tooltip: {
-      enabled: true, // Enable tooltips for interactivity
-      mode: 'index',
-      intersect: false,
-      callbacks: {
-        label: function(context: TooltipItem<"line">) {
-          return `${context.dataset.label}: ${context.parsed.y}`;
-        },
-        title: function(context: TooltipItem<"line">[]) {
+    // tooltip: {
+    //   enabled: true, // Enable tooltips for interactivity
+    //   mode: 'index',
+    //   intersect: false,
+    //   callbacks: {
+    //     label: function(context: TooltipItem<"line">) {
+    //       return `${context.dataset.label}: ${context.parsed.y}`;
+    //     },
+    //     title: function(context: TooltipItem<"line">[]) {
         
-          return format(new Date(context[0].parsed.x), 'PPpp'); 
-        }
-      }
-    },
+    //       return format(new Date(context[0].parsed.x), 'PPpp'); 
+    //     }
+    //   }
+    // },
     datalabels: {
       display: false,
     },
@@ -283,14 +283,17 @@ function formatLabel(date:Date) {
       })
       .filter(attribute => attribute.value !== "machine-state"); 
 
-    setAttributes(attributeLabels);
-    const existingAttribute = attributeLabels.find(attr => attr.value === selectedAttribute);
+       setAttributes(attributeLabels);
+     const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 
-    if (existingAttribute) {
-      setSelectedAttribute(existingAttribute.value);
-    } else {
-      setSelectedAttribute(attributeLabels.length > 0 ? attributeLabels[0].value : "");
-    }
+    if (selectedAttribute== '' || selectedAttribute== undefined || selectedAttribute ==null ) {
+      setSelectedAttribute(attributeLabels[0].value);
+    } 
+    // else {
+
+    //   console.log("called reset")
+    //   setSelectedAttribute(attributeLabels.length > 0 ? attributeLabels[0].value : "");
+    // }
     return Object.keys(assetData)
       .filter(key => key.includes("fields"  ))
       .map(key => "eq." + key);
@@ -303,10 +306,6 @@ function formatLabel(date:Date) {
   };
 
 const handleAttributeChange = (selectedValue: string) => {
- setChartData({
-        labels: [],
-        datasets: []
-    });
     setSelectedAttribute(selectedValue);  // Set the attribute then fetch
 };
 
@@ -319,7 +318,8 @@ const handleIntervalChange = (e: any) => {
         datasets: []
     });
 };
-const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, selectedInterval:string) => {
+const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdValue:string, selectedInterval:string) => {
+
   setChartData({
         labels:[],
         datasets: []
@@ -330,7 +330,6 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
     return;
   }
 
-  await fetchAsset(entityIdValue)
   const params = {
     intervalType: selectedInterval,
     order: "observedAt.desc",
@@ -358,14 +357,6 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
       withCredentials: true,
     });
 
-    console.log(response.data, "kkk")
-
-    if (!response.data || response.data.length === 0) {
-      setNoChartData(true);
-      console.error("No data returned from the API.");
-      return;
-    }
-
     const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
     const labels = factoryData.map(data => formatLabel(new Date(data.observedAt)));
     const dataPoints = factoryData.map(data => data.value ? Number(data.value) : null);
@@ -378,8 +369,7 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
       backgroundColor: 'rgba(122, 162, 227, 0.2)',
       tension: 0.4,
     };
-
-    console.log("selectedInterval", selectedInterval)
+    
       if( selectedInterval !="custom" ){
         setChartData(prevData => ({
         ...prevData,
@@ -393,7 +383,6 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
         datasets: [newDataset]
       });
       }
-      console.log("chartData", data)
     setSelectedAttributeId(`eq.${attributeId}`);
     setLoading(false)
     setNoChartData(false);
@@ -401,8 +390,7 @@ const fetchDataForAttribute = async (attributeId:string, entityIdValue:string, s
     console.error("Error fetching data for attribute:", error);
     setNoChartData(true);
   }
-};
-
+},[])
 
 const handleDateChange = async(e:any) => {
     setSelectedDate(e.value as Date);
@@ -508,19 +496,23 @@ function updateChartDataWithSocketData(currentChartData:ChartDataState, newData:
   }, [ router.isReady]);
 
 useEffect(() => {
-    if (selectedInterval === 'custom') {
-        if (!startTime || !endTime) {
-            return; 
-        } 
-        
+    let isMounted = true; // Flag to track mount status
+    if (selectedInterval === 'custom' && (!startTime || !endTime)) {
+        return; 
     }
+  
+    fetchAsset(entityIdValue)
+    fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval)
+        .catch(console.error)
+        .then(() => {
+            if (!isMounted) return; // Prevent state updates if component is unmounted
+            
+        });
+    
 
-      console.log("called mania")
-      fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
-    
-    
-    
-}, [,router.isReady, selectedInterval, entityIdValue, selectedAttribute]); 
+    return () => { isMounted = false; }; // Cleanup function to set mount flag false
+}, [selectedAttribute, entityIdValue, selectedInterval]);
+
 
 useEffect(() => {
  
@@ -563,7 +555,7 @@ const handleLoad = async () => {
   }
 
   setLoading(true); 
-  await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
+     await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
 };
 useEffect(() => {
   if (chartRef.current && zoomLevel.min && zoomLevel.max) {
@@ -584,7 +576,6 @@ useEffect(() => {
     <div style={{ zoom: "80%" }}>
       <div className="custom-button-container">
           <div className="custom-button">
-              <img src="/data-transfer.png" style={{ width: "15%", marginRight: "15px" }} alt="Field Icon" />
               <span className="button-text">
                  {formatAttributeName(selectedAttribute) || 'Select an Attribute'}
               </span>

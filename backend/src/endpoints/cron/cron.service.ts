@@ -228,7 +228,7 @@ async handleMachineStateRefresh(){
               for(let key in assetData[j]) {
                 if(key.includes('has')){
                   let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
-                  if(Array.isArray(assetData[j][key]) && assetData[j][key][0].class == 'material'){
+                  if(Array.isArray(assetData[j][key]) ){
                     let materialArr = assetData[j][key];
                     let count = 0;
                     for(let idx = 0; idx < materialArr.length; idx++){
@@ -249,7 +249,7 @@ async handleMachineStateRefresh(){
                       let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
                       return response;
                     }
-                  } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn') && assetData[j][key].class == 'material'){
+                  } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn')){
                     let flag = false;
                     let target = assetData[j][key].object;
                     console.log('target ',target);
