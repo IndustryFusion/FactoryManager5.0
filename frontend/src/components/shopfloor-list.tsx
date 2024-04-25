@@ -232,14 +232,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           <ul className="list-disc" style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
-                key={floor.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                onClick={() => {
-                  setSelectedShopFloorId(floor.id);
-                  setShopfloorProp(floor)
-                }}
-                style={{
+                  key={floor.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
+                  onClick={() =>{
+                    setSelectedShopFloorId(floor.id);
+                    
+                  } }
+                  style={{
                   cursor: "pointer",
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
                   position: "relative",
