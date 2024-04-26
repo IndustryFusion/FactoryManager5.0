@@ -369,7 +369,7 @@ export class AssetService {
           console.log('relationData ',relationData);
           if(Array.isArray(relationData)){
             const newArray = relationData.filter(item => item.object !== assetId);
-            response.data[i][relationKey].object = newArray;
+            response.data[i][relationKey] = newArray;
           }else{
             response.data[i][relationKey] = {
               type: 'Relationship',
