@@ -79,5 +79,8 @@ display: none !important;
     background-color: transparent;
 }
 .p-chips .p-component .p-inputwrapper{
-width: 100%;
+width: 90%;
+}
+.p-inputtext .p-chips-multiple-container{
+    width:95% !important;
 }

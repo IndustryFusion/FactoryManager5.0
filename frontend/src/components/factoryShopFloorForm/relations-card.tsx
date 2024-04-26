@@ -69,7 +69,7 @@ const Relations = () => {
                 },
                 withCredentials: true,
             })
-            console.log("resposne of relations", response);
+            console.log("resposne of update relations", response);
 
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Relations saved successfully")
@@ -154,9 +154,10 @@ const Relations = () => {
 
                                 return (
                                     <div key={index} className="flex mb-4">
-                                        <label htmlFor="" style={{ flex: "0 20%", marginRight: "18px" }}>{relation}</label>
+                                        <label htmlFor="" style={{ flex: "0 20%", marginRight: "1.2rem" }}>{relation}</label>
                                         {(relation === "hasWorkpiece" || relation === "hasCatridge") ? (
                                             <Chips
+                                                style={{ flex: "0 70%" }}
                                                 value={getAssetValues()}
                                                 onFocus={() => {
                                                     setGetRelation(relation);
@@ -179,17 +180,20 @@ const Relations = () => {
                                                 }}
                                             />
                                         ) : (
-                                            <InputText
-                                                style={{ flex: "0 70%" }}
-                                                className="input-content"
-                                                placeholder=""
-                                                value={value}
-                                                onFocus={() => {
-                                                    setGetRelation(relation)
-                                                    setFocused(true)
-                                                }}
-                                                onBlur={() => setFocused(false)}
-                                            />
+                                            <>
+
+                                                <InputText
+                                                    style={{ flex: "0 70%" }}
+                                                    className="input-content"
+                                                    placeholder=""
+                                                    value={value}
+                                                    onFocus={() => {
+                                                        setGetRelation(relation)
+                                                        setFocused(true)
+                                                    }}
+                                                    onBlur={() => setFocused(false)}
+                                                />
+                                            </>
                                         )}
                                     </div>
                                 )

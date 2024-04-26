@@ -68,12 +68,6 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
 
-    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
-    };
-
-
-
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
 
@@ -146,19 +140,32 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
     console.log(source, "source here")
-
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    };
 
     const onChange = (event) => {
         setSource(event.source);
         setTarget(event.target);
     };
 
+    console.log(source, "source list here")
+
     const itemTemplate = (item) => {
+        let toastShown = false; 
         return (
             <>
                 <li className="list-items" onClick={() => {
                     selectItems(item.product_name, item.asset_category, item?.id)//relation
-                    setAsset(item)
+                    source.forEach(sourceItem =>{                       
+                        if(sourceItem?.product_name === item.product_name ){                          
+                            setAsset(item)
+                            toastShown = true;
+                        }
+                    })
+                    if (!toastShown) { // Check if toast has not been shown
+                        showToast("warn", "Warning", "move asset to shopfloor assets");
+                    }                
 
                 }}>{item.product_name}</li>
             </>
@@ -196,12 +203,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         }
     }
 
+    //factoryId and all assets urn  send
     const handleAllocatedAssets = async () => {
         const url = `${API_URL}/allocated-asset`;
         try {
-            const response = await axios.patch(url, {
+            const response = await axios.post(url, {
                 params: {
-                    factoryId: factoryId
+                    "factory-id": factoryId
                 },
                 headers: {
                     "Content-Type": "application/json",
