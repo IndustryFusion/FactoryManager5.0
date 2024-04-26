@@ -177,12 +177,19 @@ export class ShopFloorService {
         const shopFloorData = await this.findOne(key, token);
         let assetIds = data[key];
         let assetKey = 'http://www.industry-fusion.org/schema#hasAsset';
-        shopFloorData[assetKey] = [];
-        for(let i=0; i < assetIds.length; i++) {
-          shopFloorData[assetKey].push({
+        if(assetIds.length > 0){
+          shopFloorData[assetKey] = [];
+          for(let i=0; i < assetIds.length; i++) {
+            shopFloorData[assetKey].push({
+              type: 'Relationship',
+              object: assetIds[i]
+            })
+          }
+        }else{
+          shopFloorData[assetKey] = {
             type: 'Relationship',
-            object: assetIds[i]
-          })
+            object: ''
+          }
         }
         const deleteResponse = await this.remove(key, token);
         if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
