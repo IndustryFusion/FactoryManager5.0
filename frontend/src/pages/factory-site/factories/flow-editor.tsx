@@ -650,12 +650,25 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
+
+      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset/${factoryId}:allocated-assets`,{
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+
       if (reactFlowUpdateMongo.status == 200 ||  reactFlowUpdateMongo.status == 204) {
         setToastMessage("Flowchart saved successfully");
       }
 
       if (reactFlowScorpioUpdate.status == 200 ||  reactFlowScorpioUpdate.status == 204) {
         setToastMessage( "Scorpio updated successfully.");
+      }
+
+      if (allocatedAssetDeletion.status == 200 ||  allocatedAssetDeletion.status == 204) {
+        setToastMessage( "Allocated Asset Deleted successfully.");
       }
       setNodesInitialized(true);
       onRestore();

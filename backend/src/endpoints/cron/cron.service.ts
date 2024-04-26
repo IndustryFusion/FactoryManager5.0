@@ -49,9 +49,12 @@ private emitDataChangeToClient(data: any) {
 async handleFindAllEverySecond() {
   // Retrieve token and query parameters from Redis
   const credentials = await this.redisService.getTokenAndEntityId();
+
+  if(!credentials){
+    return;
+  }
   const { token, queryParams } = credentials;
   await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId);
-
   // Retrieve stored data and query parameters from Redis
   let storedData = await this.redisService.getData('storedData');
   let storedQueryParams = await this.redisService.getData('storedDataQueryParams');

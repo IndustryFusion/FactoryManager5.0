@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
-import { FactorySiteService } from '../factory-site/factory-site.service';
-import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 
 @Injectable()
 export class AllocatedAssetService {
   constructor(
-    private readonly factorySiteService: FactorySiteService,
     private readonly assetService: AssetService,
-    private readonly shopFloorService: ShopFloorService,
     private readonly reactFlowService: ReactFlowService
   ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -63,17 +59,14 @@ export class AllocatedAssetService {
   
   async createGlobal(token: string) {
     try{
-      let reactData = await this.reactFlowService.findAll();
+      let allocatedAssetData = await this.findAll(token);
       let assetArr = [];
-      for(let i = 0; i < reactData.length; i++){
-        if(reactData[i].factoryData){
-          let factoryData = reactData[i].factoryData['nodes'];
-          factoryData.forEach(data => {
-            if(data.id.startsWith('asset')){
-              let assetId = data.id.split('_')[1];
-              assetArr.push(assetId);
-            }
-          })
+      for(let i = 0; i < allocatedAssetData.length; i++){    
+        const factorySpecificData = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object; 
+        if(Array.isArray(factorySpecificData)){
+          assetArr = [...assetArr, ...factorySpecificData];
+        } else {
+          assetArr.push(factorySpecificData);
         }
       }
       assetArr = [...new Set(assetArr)];
@@ -164,30 +157,6 @@ export class AllocatedAssetService {
       });
     
       return response.data;
-      
-      // let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
-      // let finalArray = [];
-      // if (Array.isArray(assetIds) && assetIds.length > 0) {
-      //   for (let i = 0; i < assetIds.length; i++) {
-      //     let id = assetIds[i];
-      //     const assetData = await this.assetService.getAssetDataById(id, token);
-      //     const finalData = {
-      //       id,
-      //       product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-      //       asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-      //     };
-      //     finalArray.push(finalData);
-      //   }
-      // } else if(assetIds && assetIds.includes('urn')){
-      //   const assetData = await this.assetService.getAssetDataById(assetIds, token);
-      //   const finalData = {
-      //     id: assetIds,
-      //     product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-      //     asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-      //   };
-      //   finalArray.push(finalData);
-      // }
-      // return finalArray;
     } catch(err) {
       return err;
     }
@@ -240,6 +209,31 @@ export class AllocatedAssetService {
     } catch(err) {
       return err;
     }
+  }
+
+  async updateFormAllocatedAsset(data: any, token: string){
+    const headers = {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/ld+json',
+      'Accept': 'application/ld+json'
+    };
+    for(let key in data){
+      let id = `${key}:allocated-assets`;
+      const finalData = {
+        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+        "id": id,
+        "type": "urn-holder",
+        "http://www.industry-fusion.org/schema#last-data": {
+          type: 'Property',
+          object: data[key]
+        }
+      };
+      await axios.post(this.scorpioUrl, finalData, {headers});
+    }
+    return {
+      status: 201,
+      message: 'Factory Allocated Assets Created successful',
+    };
   }
 
   async updateGlobal(token: string) {

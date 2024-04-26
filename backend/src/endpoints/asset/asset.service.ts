@@ -158,8 +158,16 @@ export class AssetService {
       // sending multiple requests to scorpio to save the asset array
       let response;
       try{
-        for (let i = 0; i < data.length; i++) {
-          response = await axios.post(this.scorpioUrl, data[i], {headers});
+        if(Array.isArray(data)){
+          for (let i = 0; i < data.length; i++) {
+            response = await axios.post(this.scorpioUrl, data[i], {headers});
+          }
+        } else {
+          response = await axios.post(this.scorpioUrl, data, {headers});
+        }
+        return {
+          status: response.status,
+          statusText: response.statusText,
         }
       }
       catch(err){
@@ -211,8 +219,8 @@ export class AssetService {
         for (let relationKey in relationData) {
           let finalKey = 'http://www.industry-fusion.org/schema#' + relationKey;
           let relationArray = relationData[relationKey];
-          assetData[finalKey] = [];
-          if(relationArray.length > 1){
+          if(relationArray.length > 0){
+            assetData[finalKey] = [];
             for (let i = 0; i < relationArray.length; i++) {
               assetData[finalKey].push({
                 type: 'Relationship',
@@ -220,11 +228,10 @@ export class AssetService {
               });
             }
           }else{
-            assetData[finalKey].object = relationArray[0];
-            assetData[finalKey].push({
-                type: 'Relationship',
-                object: relationArray[0]
-            });
+            assetData[finalKey] = {
+              type: 'Relationship',
+              object: ''
+            }
           }
         }
         console.log('assetData ', assetData);

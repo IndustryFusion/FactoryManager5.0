@@ -4,12 +4,14 @@ import * as jsonData from './factory-schema.json';
 import { getSessionToken } from '../session/session.service';
 import { Request, Response } from 'express';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
+import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 
 @Controller('factory-site')
 export class FactorySiteController {
   constructor(
     private readonly factorySiteService: FactorySiteService,
-    private readonly shopFloorService: ShopFloorService
+    private readonly shopFloorService: ShopFloorService,
+    private readonly allocatedAssetService: AllocatedAssetService
     ) {}
 
   @Post()
@@ -90,10 +92,16 @@ export class FactorySiteController {
     try {
       const token = await getSessionToken(req);
       const response = await this.factorySiteService.remove(id, token, this.shopFloorService);
-      if(response['status'] == 200 || response['status'] == 204) {
+      console.log('response from controller ',response);
+      if(response['acknowledged']) {
+        // Delete factory specific allocated assets
+        let allocatedAssetId = `${id}:allocated-assets`;
+        let deleteAllocatedAssetsResponse = await this.allocatedAssetService.remove(allocatedAssetId, token);
+        // Update Global Allocated Assets
+        await this.allocatedAssetService.updateGlobal(token);
         return {
           success: true,
-          status: response['status'],
+          status: deleteAllocatedAssetsResponse['status'],
           message: 'Deleted Successfully',
         }
       } else {

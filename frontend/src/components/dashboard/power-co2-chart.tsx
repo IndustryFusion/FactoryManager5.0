@@ -65,11 +65,9 @@ const PowerCo2Chart = () => {
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
         socket.on("connect", () => {
-            console.log('WebSocket Connected');
         });
 
         socket.on("powerConsumptionUpdate", (newData) => {
-        console.log("power data update ",newData)
         setChartData((currentData) => {
                 const updatedChartData:any = { ...currentData };
                 const lastIndex = updatedChartData.chartData.labels.length - 1;
@@ -81,7 +79,6 @@ const PowerCo2Chart = () => {
                 } else {
                     console.error("Datasets are not properly initialized");
                 }
-                console.log(updatedChartData, "lllll")
                 return updatedChartData;
             });
         });
@@ -128,7 +125,6 @@ const PowerCo2Chart = () => {
                 },
                 withCredentials: true,
             });
-            console.log('response of powerconsumption chart ', response, selectedInterval);
             setIsLoading(false);
             return response.data;
         } catch (error: any) {
@@ -216,14 +212,10 @@ const PowerCo2Chart = () => {
     }
 
     const fetchDataAndAssign = async (startTime: string, endTime: string) => {
-        console.log('start time ',startTime);
-        console.log('end time ',endTime);
-        console.log('type of start time ',typeof startTime);
         let attributeIds = await fetchAssets(entityIdValue);
         setNoChartData(false);
         if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
             const obj = await fetchData(entityIdValue, selectedInterval, startTime, endTime);
-            console.log('Fetching data for power consumption ',obj);
             // check if there is data or not 
             if(obj.labels.length > 0){
                 await setGraphData(obj);
@@ -231,7 +223,6 @@ const PowerCo2Chart = () => {
                 setNoChartData(true);
             }
         } else {
-            console.log('No attribute set available for power consumption');
             setNoChartData(true);
         }
     };
@@ -261,10 +252,6 @@ const PowerCo2Chart = () => {
     };
 
     const onButtonSelect = () => {
-        console.log('start date ',startDate);
-        console.log('end date ',endDate);
-        console.log('start month ',startMonth);
-        console.log('start year ',startYear);
         if(selectedInterval == 'days'){
             let startTime = moment(startDate).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
             let endTime = moment(endDate).endOf('day').format('YYYY-MM-DD[T]HH:mm:ss');
@@ -314,10 +301,8 @@ const PowerCo2Chart = () => {
         const containerBody = document.querySelector('.containerBody');
         if (containerBody && chartData.labels.length > 7) {
             const newWidth = 1000 + ((chartData.labels.length - 7) * 100);
-            console.log('newWidth ',newWidth);
             containerBody.style.width = `${newWidth}px`;
         }
-        console.log('containerBody ',containerBody);
     }, [chartData]);
 
     return (
