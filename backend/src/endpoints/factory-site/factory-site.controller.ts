@@ -94,11 +94,11 @@ export class FactorySiteController {
       const response = await this.factorySiteService.remove(id, token, this.shopFloorService);
       console.log('response from controller ',response);
       if(response['acknowledged']) {
-        // Update Global Allocated Assets
-        await this.allocatedAssetService.updateGlobal(token);
         // Delete factory specific allocated assets
         let allocatedAssetId = `${id}:allocated-assets`;
         let deleteAllocatedAssetsResponse = await this.allocatedAssetService.remove(allocatedAssetId, token);
+        // Update Global Allocated Assets
+        await this.allocatedAssetService.updateGlobal(token);
         return {
           success: true,
           status: deleteAllocatedAssetsResponse['status'],
