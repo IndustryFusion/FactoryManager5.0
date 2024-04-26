@@ -326,7 +326,6 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
       });
   setLoading(true); // Start loading
   if (!entityIdValue) {
-    console.error("Entity ID is missing");
     return;
   }
 

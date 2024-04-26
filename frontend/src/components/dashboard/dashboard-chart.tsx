@@ -67,18 +67,15 @@ const DashboardChart = () => {
     const fetchDataAndAssign = async () => {
         let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
         setNoChartData(false);
-        console.log('entityIdValue ',entityIdValue);
         if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#machine-state")) {
             await fetchData("eq.http://www.industry-fusion.org/fields#machine-state", `eq.${entityIdValue}`);
         } else {
             setNoChartData(true);
-            console.log('No attribute set available');
         }
     }
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            console.log('entityId ',entityId);
             type DataType = any;
             const finalData: { [key: string]: DataType[] } = {};
             setLastData({});
@@ -96,7 +93,6 @@ const DashboardChart = () => {
                     },
                     withCredentials: true,
                 });
-                console.log('response ', response);
                 let checkEmpty = true;
                 for (const value of Object.values(response.data)) {
                     if (value.length !== 0) {
@@ -118,7 +114,6 @@ const DashboardChart = () => {
                         withCredentials: true,
                     });
                     //conditions
-                    console.log('response from else', lastDataResponse.data);
                     setLastData(lastDataResponse.data);
                 }
                 setFactoryData(response.data);
@@ -217,7 +212,6 @@ const DashboardChart = () => {
     };
 
     const groupData = (data: any) => {
-        console.log('data for groupData func ',data);
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
@@ -342,8 +336,6 @@ const DashboardChart = () => {
             const key = keys[i];
             groupedByDate[key] = [];
             if (data[key].length > 0) {
-                console.log('when length > 0 ',data[key]);
-                console.log('key ',key);
                 let startTime;
                 if(selectedInterval == 'weeks'){
                     startTime = moment(moment(key.split(' ').pop()).startOf('day').format().split('+')[0]);
@@ -351,17 +343,13 @@ const DashboardChart = () => {
                     startTime = moment(key, 'MMMM YYYY').startOf('month').format('YYYY-MM-DDTHH:mm:ss');
                 }
                 let endTime = moment(data[key][0].observedAt.split('.')[0]);
-                console.log('startTime ',startTime);
-                console.log('endTime ',endTime);
                 const differenceInSeconds = endTime.diff(startTime, 'seconds');
-                console.log('differenceInSeconds ',differenceInSeconds);
                 if(data[key][0].prev_value){
                     groupedByDate[key].push({
                         time: differenceInSeconds,
                         type: data[key][0].prev_value == '0' ? 'offline' : 'online'
                     })
                 }
-                console.log('groupedByDate ',groupedByDate);
                 if (data[key].length > 1) {
                     for (let idx = 1; idx < data[key].length; idx++) {
                         let startTime = moment(data[key][idx - 1].observedAt.split('.')[0]);
@@ -422,13 +410,7 @@ const DashboardChart = () => {
                         let currentTime = moment().format('YYYY-MM-DDTHH:mm:ss');
                         let startTime = moment(data[key][0].observedAt.split('.')[0]);
                         let endTime = moment(currentTime).isBetween(startOfWeek, endOfWeek, undefined, '[]') ? moment().format('YYYY-MM-DDTHH:mm:ss') : moment(weekStart).endOf('week').format('YYYY-MM-DDTHH:mm:ss');
-                        console.log('startOfWeek ',startOfWeek);
-                        console.log('current week ',currentTime);
-                        console.log('endOfWeek ',endOfWeek);
-                        console.log('check ',moment(currentTime).isBetween(startOfWeek, endOfWeek, undefined, '[]'));
-                        console.log('end time from else ',endTime);
                         differenceInSeconds = moment(endTime).diff(startTime, 'seconds');
-                        console.log('differenceInSeconds ',differenceInSeconds);
                     } else{
                         const startOfMonth = moment(key, 'MMMM YYYY').startOf('month').format('YYYY-MM-DDTHH:mm:ss');
                         let endOfMonth  = moment(key, 'MMMM YYYY').endOf('month').format('YYYY-MM-DDTHH:mm:ss');
@@ -540,7 +522,6 @@ const DashboardChart = () => {
             let result = groupData(finalData);
             return result;
         }else{
-            console.log('data for weeks/months ',data);
             let result = groupByDays(data); 
             return result;
         }
@@ -816,8 +797,6 @@ const DashboardChart = () => {
         }
     },[factoryData])
     
-    console.log("chartData in machine", chartData);
-
     return (
         <div className="card h-auto" style={{ width: "37%" }}>
             <Toast ref={toast} />
