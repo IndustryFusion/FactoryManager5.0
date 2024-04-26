@@ -46,6 +46,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     let allocatedAssetsArray = null;
     const router = useRouter();
     const { selectItems, setAssetId, setAsset } = useFactoryShopFloor();
+    const [factoryId, setFactoryId] = useState("")
     const toast = useRef<any>(null);
 
     const fetchShopFloorAssets = async () => {
@@ -134,9 +135,11 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
-            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
+            const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+                router.query.factoryId;
             if (typeof id === 'string') {
                 fetchNonShopFloorAssets(id);
+                setFactoryId(id);
             }
         }
 
@@ -185,25 +188,48 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
             })
             console.log("response from shopfloors", response.data)
             if (response.data?.status === 204 && response.data?.success === true) {
-                showToast("success", "success", "Shopfloor assets saved successfully")              
-              }
+                showToast("success", "success", "Shopfloor assets saved successfully")
+            }
 
         } catch (error) {
             console.error(error);
         }
     }
 
+    const handleAllocatedAssets = async () => {
+        const url = `${API_URL}/allocated-asset`;
+        try {
+            const response = await axios.patch(url, {
+                params: {
+                    factoryId: factoryId
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log("response from allocated asset", response.data)
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     const headerSource = (
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
-            <Button onClick={() => handleSaveShopFloors()}>Save</Button>
+            <Button onClick={() => {
+                handleSaveShopFloors()
+                handleAllocatedAssets()
+            }
+            }>Save</Button>
         </div>
     )
 
     return (
         <>
-        <Toast ref={toast} />
+            <Toast ref={toast} />
             <PickList dataKey="id" source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"

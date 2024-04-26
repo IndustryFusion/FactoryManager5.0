@@ -72,6 +72,7 @@ const FactoryShopFloor = () => {
                         </div>
 
                     </div>
+                    <ShopFloorProvider>
                     <div className="factory-shopfloor-container">
                         <div className="shopfloor-list-container">
                             <ShopFloorList
@@ -95,8 +96,9 @@ const FactoryShopFloor = () => {
                                
                             />
                         </div>
-
+                       
                     </div>
+                    </ShopFloorProvider>
                 </div>
             </FactoryShopFloorProvider>
         </>

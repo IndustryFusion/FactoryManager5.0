@@ -56,10 +56,10 @@ const Relations = () => {
 
     const handleReset = () => {
         setInputValue([]);
-        showToast("success", "success", "Relations reseted successfully")
+        // showToast("success", "success", "Relations reseted successfully")
     }
 
-    const handleUpdateRelations =async(payload)=>{
+    const handleUpdateRelations = async (payload) => {
         const url = `${API_URL}/asset/update-relation`;
         try {
             const response = await axios.patch(url, payload, {
@@ -70,16 +70,16 @@ const Relations = () => {
                 withCredentials: true,
             })
             console.log("resposne of relations", response);
-          
+
             if (response.data?.status === 204 && response.data?.success === true) {
-                showToast("success", "success", "Relations saved successfully")              
-              }
+                showToast("success", "success", "Relations saved successfully")
+            }
         } catch (error) {
             console.error(error)
         }
     }
 
-    const handleSave = ()=> {
+    const handleSave = () => {
         const obj = {};
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
@@ -110,15 +110,24 @@ const Relations = () => {
     console.log(relations, "all relations here");
 
 
-    const handleDelete =()=>{
-     console.log("inputValue", inputValue)
-     inputValue.forEach(item => {
-        Object.keys(item).forEach(key => {
-            if (key !== "" && !key.endsWith('_asset')){
-                console.log(key, "key here")
-            }
+    const handleDelete = () => {
+        handleReset();
+        const obj = {};
+
+        inputValue.forEach(item => {
+            Object.keys(item).forEach(key => {
+                if (key !== "" && !key.endsWith('_asset')) {
+                    console.log(key, "key here")
+                    obj[key] = ""
+                }
+            })
         })
-    })
+        const payload = {
+            [assetId]: obj
+        };
+        console.log(" here payload", payload);
+
+        handleUpdateRelations(payload)
     }
 
 
@@ -128,7 +137,7 @@ const Relations = () => {
     return (
         <>
             <Card className="p-4">
-            <Toast ref={toast} />
+                <Toast ref={toast} />
                 <form >
                     <div>
                         {Array.isArray(relations) && relations.length > 0 && (
@@ -203,7 +212,7 @@ const Relations = () => {
                             type="button"
                         ></Button>
                         <Button
-                        onClick={()=>handleDelete()}
+                            onClick={() => handleDelete()}
                             label="Delete"
                             severity="danger"
                             outlined
