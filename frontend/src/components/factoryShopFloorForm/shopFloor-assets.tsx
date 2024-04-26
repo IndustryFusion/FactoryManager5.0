@@ -9,6 +9,8 @@ import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import axios from "axios";
+import { Toast, ToastMessage } from "primereact/toast";
 
 interface AssetProperty {
     type: "Property";
@@ -30,11 +32,12 @@ interface Asset {
 
 interface ShopFloorAssetsProps {
     shopFloorProp: { [key: string]: any; };
-    setAssetProp: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>
 
 }
 
-const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAssetProp }) => {
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
@@ -42,13 +45,17 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItem, selectItems } = useFactoryShopFloor();
-
+    const { selectItems, setAssetId, setAsset } = useFactoryShopFloor();
+    const toast = useRef<any>(null);
 
     const fetchShopFloorAssets = async () => {
         try {
             const response = await getShopFloorAssets(shopFloorProp?.id);
             const { assetsData } = response;
+            console.log(response, 'response from shopfloor');
+            if (assetsData.length === 0) {
+                setAsset("")
+            }
             setShopFloorAssets(assetsData);
             setSource(assetsData)
         } catch (error) {
@@ -59,6 +66,10 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorProp?.id]);
+
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    };
 
 
 
@@ -82,7 +93,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
                 console.log("unAllocatedAssetData", unAllocatedAssetData);
                 const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                     const relationsArr = [];
-                    console.log(unAllocatedAssetData[key], "its object here");
+                    // console.log(unAllocatedAssetData[key], "its object here");
                     const checkHas = 'http://www.industry-fusion.org/schema#has';
 
                     Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
@@ -131,6 +142,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
 
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
+    console.log(source, "source here")
+
 
     const onChange = (event) => {
         setSource(event.source);
@@ -138,39 +151,65 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, setAss
     };
 
     const itemTemplate = (item) => {
-        // console.log("item template value", item["http://www.industry-fusion.org/schema#product_name"]?.value); 
-        const sourceProductName = item["http://www.industry-fusion.org/schema#product_name"]?.value;
-        const sourceAssetCategory = item["http://www.industry-fusion.org/schema#asset_category"]?.value;
-        const targetProductName = item.product_name;
-
         return (
             <>
-                <li className="list-items"
-                    onClick={() => selectItems(targetProductName, item.asset_category)}
-                >{targetProductName}</li>
                 <li className="list-items" onClick={() => {
-                    selectItems(sourceProductName, sourceAssetCategory)
-                    setAssetProp(item)
+                    selectItems(item.product_name, item.asset_category, item?.id)//relation
+                    setAsset(item)
 
-                }}>{sourceProductName}</li>
+                }}>{item.product_name}</li>
             </>
         )
     };
 
+    const getPayload = () => {
+        const shopfloorAssetIds = source.map(asset => asset?.id)
+        console.log("shopfloorAssetIds", shopfloorAssetIds);
+        const shopfloorObj = {
+            [shopFloorProp?.id]: shopfloorAssetIds
+        };
+        console.log("shopfloorObj", shopfloorObj);
+        return shopfloorObj;
+    }
+
+    const handleSaveShopFloors = async () => {
+        const payload = getPayload();
+        const url = `${API_URL}/shop-floor/update-asset`;
+        try {
+            const response = await axios.patch(url, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log("response from shopfloors", response.data)
+            if (response.data?.status === 204 && response.data?.success === true) {
+                showToast("success", "success", "Shopfloor assets saved successfully")              
+              }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
     const headerSource = (
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
-            <Button>Save</Button>
+            <Button onClick={() => handleSaveShopFloors()}>Save</Button>
         </div>
     )
 
     return (
         <>
+        <Toast ref={toast} />
             <PickList dataKey="id" source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"
                 sourceHeader={headerSource} targetHeader="Unallocated Assets"
-                itemTemplate={itemTemplate} sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
+                itemTemplate={itemTemplate}
+                sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
 
         </>
     )

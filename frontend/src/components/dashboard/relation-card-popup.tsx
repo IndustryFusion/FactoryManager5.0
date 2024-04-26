@@ -58,6 +58,9 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         getHasProperties();
     }, [selectedAssetData])
 
+    console.log(hasPropertiesArray, "hasPropertiesArray ");
+    
+
     return (
         <>
             <Dialog header={Header} 
