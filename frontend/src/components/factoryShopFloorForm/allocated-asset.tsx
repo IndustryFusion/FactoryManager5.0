@@ -69,7 +69,7 @@ const AllocatedAsset = () => {
                     dispatch(create(fetchedAssetIds));
                 }
                 const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+                 console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
                 if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                     allocatedAssetsArray = fetchedAllocatedAssets;
                 }
@@ -115,7 +115,7 @@ const AllocatedAsset = () => {
             }
         }
 
-    }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
+    }, [router.query.factoryId, router.isReady, unAllocatedAssetData,allocatedAssets]);
 
     useEffect(() => {
         const results = assets.filter(asset => {

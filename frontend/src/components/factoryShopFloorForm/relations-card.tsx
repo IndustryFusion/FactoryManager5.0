@@ -108,8 +108,7 @@ const Relations = () => {
         handleUpdateRelations(payload)
     }
 
-    console.log(relations, "all relations here");
-
+    // console.log(relations, "all relations here");
 
     const handleDelete = () => {
         handleReset();
@@ -130,6 +129,7 @@ const Relations = () => {
 
         handleUpdateRelations(payload)
     }
+    console.log(inputValue, "inputValue in relations outside");
 
     return (
         <>
@@ -143,12 +143,15 @@ const Relations = () => {
                                 const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
                                 const value = relatedObject ? relatedObject[`${relation}_asset`] : "";
 
+                                console.log(inputValue, "inputValue in relations");
+                                
+
                                 const getAssetValues = () => {
                                     const entry = inputValue.find(entry => entry[relation]);
                                     console.log(entry, "what's the entry here")
                                     return entry ? entry[`${relation}_asset`] : [];
                                 }
-
+                                console.log("what assets here", getAssetValues())
                                 return (
                                     <div key={index} className="flex mb-4">
                                         <label htmlFor="" style={{ flex: "0 20%", marginRight: "1.2rem" }}>{relation}</label>
@@ -157,7 +160,7 @@ const Relations = () => {
                                                 style={{ flex: "0 70%" }}
                                                 value={getAssetValues()}
                                                 onFocus={() => {
-                                                    //setGetRelation(relation);
+                                                   
                                                     setFocused(true);
                                                 }}
                                                 onBlur={() => setFocused(false)}

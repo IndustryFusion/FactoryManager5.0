@@ -41,54 +41,59 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
         console.log(item, "item here");
-     
-       for(let getRelation of relations){
-        const relation = getRelation.replace("has", "").toLowerCase();
-        console.log(relation, "in select items")
-        const formattedAssetCategory = assetCategory.replace(/\s+/g, '').toLowerCase();
-        if (formattedAssetCategory.includes(relation)) {
-
-            if (getRelation === "hasCatridge" || getRelation === "hasWorkpiece") {
+    
+        for(let getRelation of relations){
+            const relation = getRelation.replace("has", "").toLowerCase();
+            console.log(relation, "in select items");
+            const formattedAssetCategory = assetCategory.replace(/\s+/g, '').toLowerCase();
+            if (formattedAssetCategory.includes(relation)) {
+    
                 setInputValue(prevValue => {
-                    // Find the existing entry for the relation or create a new one
-                    const existingEntry = prevValue.find(entry => entry[getRelation]);
-                    console.log("existing", existingEntry);
-                    console.log("wkp item", item)
-                    if (existingEntry) {
-                        // If the entry exists, append to the arrays
-                        existingEntry[getRelation].push(id);
-                        existingEntry[`${getRelation}_asset`].push(item);
+                    // Create a new array to hold the updated state
+                    const updatedValue = [...prevValue];
+    
+                    if (getRelation === "hasCatridge" || getRelation === "hasWorkpiece") {
+                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+                        if (existingEntryIndex !== -1) {
+                            // If the entry exists, create a new object with the updated arrays
+                            const existingEntry = updatedValue[existingEntryIndex];
+                            const updatedEntry = {
+                                ...existingEntry,
+                                [getRelation]: [...existingEntry[getRelation], id],
+                                [`${getRelation}_asset`]: [...existingEntry[`${getRelation}_asset`], item]
+                            };
+                            updatedValue[existingEntryIndex] = updatedEntry;
+                        } else {
+                            // If the entry doesn't exist, create a new one
+                            updatedValue.push({
+                                [getRelation]: [id],
+                                [`${getRelation}_asset`]: [item]
+                            });
+                        }
                     } else {
-                        // If the entry doesn't exist, create a new one
-                        prevValue.push({
-                            [getRelation]: [id],
-                            [`${getRelation}_asset`]: [item]
+                        // For other relations, simply add a new object to the array
+                        updatedValue.push({
+                            [getRelation]: id,
+                            [`${getRelation}_asset`]: item
                         });
                     }
-                    return prevValue
+    
+                    return updatedValue;
                 });
-
-                setFocused(false);
-            } else {
-                setInputValue(prevValue => [...prevValue, {
-                    [getRelation]: id,
-                    [`${getRelation}_asset`]: item
-                }
-                ]);
+    
                 setFocused(false);
             }
         }
-       }
-       
+        console.log("inputValues here on workpiece", inputValue);
     }
+    
 
 
     return (
         <FactoryShopFloorContext.Provider
             value={{
                 focused, setFocused,
-                selectItems,
-               
+                selectItems,             
                 relations, setRelations,
                 inputValue, setInputValue,
                 assetId, setAssetId,

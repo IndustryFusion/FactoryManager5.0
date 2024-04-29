@@ -74,7 +74,12 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     }
   }
 
+  console.log("assetData here", assetData);
+
   const deleteAssetData = async (assetId: string) => {
+    console.log("assetId here", assetId)
+ 
+    
     try {
       const response = await axios.delete(API_URL + `/asset/delete-asset/${assetId}`, {
         headers: {
@@ -84,6 +89,15 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
         withCredentials: true,
       })
       console.log("delted asset", response);
+      if (response.data?.status === 204 && response.data?.success === true) {
+        //showToast("success", "success", "Shopfloor assets saved successfully");
+        console.log(assetData,"all assets here");
+        
+        const updateAssets = assetData.filter(asset => asset?.id !== assetId);
+        console.log(updateAssets,"after delete here");
+        
+        setAssetData(updateAssets)
+    }
     } catch (error) {
       console.error(error)
     }
@@ -120,7 +134,10 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     return (
       <>
         <button className="action-items-btn"
-          onClick={() => setDeleteAsset(true)}
+          onClick={() => {
+            console.log("rowData",rowData?.id)
+            setDeleteAsset(true)
+          }}
         >
           <i className="pi pi-trash"></i>
         </button>
@@ -132,7 +149,12 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
             <div className="flex justify-content-end gap-3">
               <Button
                 label="OK"
-                onClick={() => deleteAssetData(rowData?.id)}
+                onClick={() =>{
+                  console.log(rowData?.id, "id here in ok")
+                  deleteAssetData(rowData?.id);
+                  console.log(rowData?.id, "rowData?.id")
+                  setDeleteAsset(false);
+                }}
 
               ></Button>
               <Button
@@ -175,9 +197,6 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     );
   };
   const header = renderHeader();
-
-
-
 
 
   useEffect(() => {

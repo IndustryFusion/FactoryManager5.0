@@ -153,23 +153,23 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     console.log(source, "source list here")
 
     const itemTemplate = (item) => {
-        if(relations?.length > 0){
+        if (relations?.length > 0) {
             toastShown = true;
         }
-     
+
         return (
             <>
                 <li className="list-items" onClick={() => {
                     selectItems(item.product_name, item.asset_category, item?.id)//relation
-                    source.forEach(sourceItem =>{                       
-                        if(sourceItem?.product_name === item.product_name ){                          
+                    source.forEach(sourceItem => {
+                        if (sourceItem?.product_name === item.product_name) {
                             setAsset(item)
                             toastShown = true;
                         }
                     })
                     if (!toastShown) { // Check if toast has not been shown
                         showToast("warn", "Warning", "move asset to shopfloor assets");
-                    }                
+                    }
 
                 }}>{item.product_name}</li>
             </>
@@ -185,13 +185,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         return shopfloorObj;
     }
 
-    const getAllocatedPayload =()=>{
-     const allocatedObj ={
-        [factoryId]:shopfloorAssetIds
-     }
-     console.log("allocatedObj", allocatedObj);
-     
-     return allocatedObj;
+    const getAllocatedPayload = () => {
+        const allocatedObj = {
+            [factoryId]: shopfloorAssetIds
+        }
+        console.log("allocatedObj", allocatedObj);
+
+        return allocatedObj;
     }
 
     const handleSaveShopFloors = async () => {
@@ -220,7 +220,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         const payload = getAllocatedPayload();
         const url = `${API_URL}/allocated-asset/form`;
         try {
-            const response = await axios.post(url, payload,{             
+            const response = await axios.post(url, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
