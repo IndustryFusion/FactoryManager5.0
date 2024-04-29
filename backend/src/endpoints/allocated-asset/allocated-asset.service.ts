@@ -246,6 +246,7 @@ export class AllocatedAssetService {
         };
         await axios.post(this.scorpioUrl, finalData, {headers});
       }
+      await this.updateGlobal(token);
       return {
         status: 201,
         message: 'Factory Allocated Assets Created successful',
