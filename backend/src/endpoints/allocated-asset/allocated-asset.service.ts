@@ -212,28 +212,48 @@ export class AllocatedAssetService {
   }
 
   async updateFormAllocatedAsset(data: any, token: string){
-    const headers = {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/ld+json',
-      'Accept': 'application/ld+json'
-    };
-    for(let key in data){
-      let id = `${key}:allocated-assets`;
-      const finalData = {
-        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-        "id": id,
-        "type": "urn-holder",
-        "http://www.industry-fusion.org/schema#last-data": {
-          type: 'Property',
-          object: data[key]
-        }
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
       };
-      await axios.post(this.scorpioUrl, finalData, {headers});
+      for(let key in data){
+        let id = `${key}:allocated-assets`;
+        let finalAssetData = data[key];
+        let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+        let response = await axios.get(checkUrl, {
+          headers
+        });
+        if(response.data.length > 0){
+          let assetData =  response.data[0];
+          let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"].object;
+          if(Array.isArray(getAllocatedAssets)){
+            finalAssetData = [...finalAssetData, ...getAllocatedAssets];
+          }else{
+            finalAssetData = [...finalAssetData, getAllocatedAssets];
+          }
+          await this.remove(id, token);
+        }
+        const finalData = {
+          "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+          "id": id,
+          "type": "urn-holder",
+          "http://www.industry-fusion.org/schema#last-data": {
+            type: 'Property',
+            object: finalAssetData
+          }
+        };
+        await axios.post(this.scorpioUrl, finalData, {headers});
+      }
+      await this.updateGlobal(token);
+      return {
+        status: 201,
+        message: 'Factory Allocated Assets Created successful',
+      };
+    }catch(err){
+      return err;
     }
-    return {
-      status: 201,
-      message: 'Factory Allocated Assets Created successful',
-    };
   }
 
   async updateGlobal(token: string) {
