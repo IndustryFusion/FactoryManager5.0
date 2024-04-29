@@ -8,6 +8,8 @@ import { Chips } from "primereact/chips";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 
+import { useRouter } from "next/router";
+
 interface RelationObject {
     type: string;
     object: string | string[];
@@ -18,6 +20,7 @@ interface Payload {
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
+    const router = useRouter();
     const [relations, setRelations] = useState<string[]>([]);
     const {
         focused, setFocused,
@@ -79,7 +82,7 @@ const Relations = () => {
         }
     }
 
-    const handleSave = ()=> {
+    const handleSave = async ()=> {
         const obj = {};
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
@@ -105,6 +108,19 @@ const Relations = () => {
             [assetId]: obj
         };
         handleUpdateRelations(payload)
+
+        const factoryId = router.query.factoryId;  
+        const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`
+        await axios.get(reactFlowUpdate, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+          
+
+        
     }
 
     console.log(relations, "all relations here");

@@ -133,6 +133,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           style={{ width: "100%" }}
           onClick={handleDropdownClick}
           className="w-full sm:w-10rem"
+          appendTo="self" 
         />
       </div>
       <Handle type="source" position={Position.Bottom} />
