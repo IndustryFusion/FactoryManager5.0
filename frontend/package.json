@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^1.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
@@ -37,7 +38,6 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18",
     "react-feather": "^2.0.10",
-    "react-flow-renderer": "^10.3.17",
     "react-hook-form": "^7.51.0",
     "react-hotkeys-hook": "^4.5.0",
     "react-icons": "^5.0.1",
@@ -45,7 +45,7 @@
     "react-router-dom": "^6.21.0",
     "react-select": "^5.8.0",
     "react-select-country-list": "^2.2.3",
-    "reactflow": "^11.10.3",
+    "reactflow": "^11.11.2",
     "redux": "^5.0.1",
     "socket.io-client": "^4.7.5"
   },

@@ -173,6 +173,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     }
 
     const handleSaveShopFloors = async () => {
+        const factoryId = router.query.factoryId;  
         const payload = getPayload();
         const url = `${API_URL}/shop-floor/update-asset`;
         try {
@@ -183,11 +184,20 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
                 },
                 withCredentials: true,
             })
+            const factoryId = router.query.factoryId;  
+            const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`
+            await axios.get(reactFlowUpdate, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+            })
             console.log("response from shopfloors", response.data)
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Shopfloor assets saved successfully")              
               }
-
+     
         } catch (error) {
             console.error(error);
         }
