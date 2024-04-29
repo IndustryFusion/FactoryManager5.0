@@ -6,6 +6,9 @@
     gap: 1rem;
     padding: 0 1rem;
 }
+ul{
+    width: 100%;
+}
 
 .form-container {
     width: 90%;

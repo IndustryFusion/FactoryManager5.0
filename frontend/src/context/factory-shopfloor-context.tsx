@@ -14,13 +14,13 @@ interface FactoryShopFloorContextValue {
     focused: boolean;
     setFocused: React.Dispatch<React.SetStateAction<boolean>>;
     selectItems: (item: string, assetCategory: string, id: string) => void;
-    getRelation: string;
-    setGetRelation: React.Dispatch<React.SetStateAction<string>>;
+    relations: string[];
+    setRelations: React.Dispatch<React.SetStateAction<string[]>>;
     inputValue: InputValue[];
     setInputValue: React.Dispatch<React.SetStateAction<InputValue[]>>;
     assetId: string;
     setAssetId: React.Dispatch<React.SetStateAction<string>>;
-    asset:string;
+    asset: string;
     setAsset: React.Dispatch<React.SetStateAction<string>>;
 }
 
@@ -30,26 +30,29 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
 
-    const [getRelation, setGetRelation] = useState("");
+    //const [getRelation, setGetRelation] = useState("");
     const [focused, setFocused] = useState(false);
     const [inputValue, setInputValue] = useState<InputValue[]>([]);
+    const [relations, setRelations] = useState<string[]>([]);
     const [assetId, setAssetId] = useState("");
     const [asset, setAsset] = useState({});
-
-
+    const [shownToast, setShownToast] = useState(false);
 
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
         console.log(item, "item here");
+     
+       for(let getRelation of relations){
         const relation = getRelation.replace("has", "").toLowerCase();
+        console.log(relation, "in select items")
         const formattedAssetCategory = assetCategory.replace(/\s+/g, '').toLowerCase();
         if (formattedAssetCategory.includes(relation)) {
-            
+
             if (getRelation === "hasCatridge" || getRelation === "hasWorkpiece") {
                 setInputValue(prevValue => {
                     // Find the existing entry for the relation or create a new one
                     const existingEntry = prevValue.find(entry => entry[getRelation]);
-                    console.log("existing" ,existingEntry );
+                    console.log("existing", existingEntry);
                     console.log("wkp item", item)
                     if (existingEntry) {
                         // If the entry exists, append to the arrays
@@ -75,6 +78,8 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                 setFocused(false);
             }
         }
+       }
+       
     }
 
 
@@ -83,10 +88,12 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
             value={{
                 focused, setFocused,
                 selectItems,
-                getRelation, setGetRelation,
+               
+                relations, setRelations,
                 inputValue, setInputValue,
                 assetId, setAssetId,
-                asset, setAsset
+                asset, setAsset,
+                shownToast, setShownToast
             }}
         >
             {children}

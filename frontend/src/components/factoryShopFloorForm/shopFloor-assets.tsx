@@ -45,9 +45,10 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     const dispatch = useDispatch();
     let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItems, setAssetId, setAsset } = useFactoryShopFloor();
+    const { selectItems, setAssetId, setAsset, relations } = useFactoryShopFloor();
     const [factoryId, setFactoryId] = useState("")
     const toast = useRef<any>(null);
+    let toastShown = false;
 
     const fetchShopFloorAssets = async () => {
         try {
@@ -152,7 +153,10 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     console.log(source, "source list here")
 
     const itemTemplate = (item) => {
-        let toastShown = false; 
+        if(relations?.length > 0){
+            toastShown = true;
+        }
+     
         return (
             <>
                 <li className="list-items" onClick={() => {
@@ -172,14 +176,22 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         )
     };
 
+    const shopfloorAssetIds = source.map(asset => asset?.id)
     const getPayload = () => {
-        const shopfloorAssetIds = source.map(asset => asset?.id)
-        console.log("shopfloorAssetIds", shopfloorAssetIds);
         const shopfloorObj = {
             [shopFloorProp?.id]: shopfloorAssetIds
         };
         console.log("shopfloorObj", shopfloorObj);
         return shopfloorObj;
+    }
+
+    const getAllocatedPayload =()=>{
+     const allocatedObj ={
+        [factoryId]:shopfloorAssetIds
+     }
+     console.log("allocatedObj", allocatedObj);
+     
+     return allocatedObj;
     }
 
     const handleSaveShopFloors = async () => {
@@ -205,18 +217,19 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
 
     //factoryId and all assets urn  send
     const handleAllocatedAssets = async () => {
-        const url = `${API_URL}/allocated-asset`;
+        const payload = getAllocatedPayload();
+        const url = `${API_URL}/allocated-asset/form`;
         try {
-            const response = await axios.post(url, {
-                params: {
-                    "factory-id": factoryId
-                },
+            const response = await axios.post(url, payload,{             
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
                 },
                 withCredentials: true,
             })
+            if (response.data?.status === 201 && response.data?.success === true) {
+                showToast("success", "success", "saved to allocated assets successfully")
+            }
             console.log("response from allocated asset", response.data)
 
         } catch (error) {

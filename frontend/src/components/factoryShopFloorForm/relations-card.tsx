@@ -18,13 +18,14 @@ interface Payload {
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
-    const [relations, setRelations] = useState<string[]>([]);
+   
     const {
         focused, setFocused,
         setGetRelation,
         inputValue,
         setInputValue,
         assetId,
+        relations, setRelations
     } = useFactoryShopFloor();
     const toast = useRef<any>(null);
 
@@ -118,7 +119,7 @@ const Relations = () => {
             Object.keys(item).forEach(key => {
                 if (key !== "" && !key.endsWith('_asset')) {
                     console.log(key, "key here")
-                    obj[key] = ""
+                    obj[key] = []
                 }
             })
         })
@@ -129,10 +130,6 @@ const Relations = () => {
 
         handleUpdateRelations(payload)
     }
-
-
-
-
 
     return (
         <>
@@ -160,7 +157,7 @@ const Relations = () => {
                                                 style={{ flex: "0 70%" }}
                                                 value={getAssetValues()}
                                                 onFocus={() => {
-                                                    setGetRelation(relation);
+                                                    //setGetRelation(relation);
                                                     setFocused(true);
                                                 }}
                                                 onBlur={() => setFocused(false)}
@@ -188,7 +185,7 @@ const Relations = () => {
                                                     placeholder=""
                                                     value={value}
                                                     onFocus={() => {
-                                                        setGetRelation(relation)
+                                                       // setGetRelation(relation)
                                                         setFocused(true)
                                                     }}
                                                     onBlur={() => setFocused(false)}
