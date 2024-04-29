@@ -21,17 +21,11 @@ const FactoryShopFloor = () => {
 
 
     const [shopfloor, setShopfloor] = useState({});
-    const [asset, setAsset] = useState({});
+    const [asset, setAsset] = useState("");
     const [switchView, setSwitchView] = useState(false);
     const [factoryName, setFactoryName] = useState("");
-    const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const [factoryIdValue, setfactoryIdvalue] = useState("");
     const router = useRouter();
-    const [source, setSource] = useState([]);
-    const [target, setTarget] = useState([]);
-
-    const shopFloorAsset = [{ id: 1, name: "X1176" }, { id: 2, name: "rtret" }, { id: 3, name: "Q800" }];
-    const targetAssets = [{ id: 4, name: "Q000" }, { id: 5, name: "X8176" }, { id: 6, name: "rkket" }];
 
 
     const getFactoryDetails = async (factoryId: string) => {
@@ -63,47 +57,47 @@ const FactoryShopFloor = () => {
         <>
             {/* <HorizontalNavbar /> */}
             <FactoryShopFloorProvider>
-            <div style={{
-                height: "96vh",
-                overflow: "hidden",
-            }}>
-                <div className="flex justify-content-between px-5 factory-header">
-                    <h3 className="factory-heading">{factoryName}</h3>
-                    <div className=" flex align-items-center gap-2">
-                        <span>Switch View</span>
-                        <InputSwitch checked={switchView} onChange={(e) => {
-                            setSwitchView(e.value);
-                            router.push(`/factory-site/shop-floor/${factoryIdValue}`)
-                        }} />
-                    </div>
-
-                </div>
-                <div className="factory-shopfloor-container">
-                    <div className="shopfloor-list-container">
-                        <ShopFloorList
-                            factoryId={factoryIdValue}
-                            setShopfloorProp={setShopfloor}
-                        />
-                        <div>
-                            <AllocatedAsset />
+                <div style={{
+                    height: "96vh",
+                    overflow: "hidden",
+                }}>
+                    <div className="flex justify-content-between px-5 factory-header">
+                        <h3 className="factory-heading">{factoryName}</h3>
+                        <div className=" flex align-items-center gap-2">
+                            <span>Switch View</span>
+                            <InputSwitch checked={switchView} onChange={(e) => {
+                                setSwitchView(e.value);
+                                router.push(`/factory-site/shop-floor/${factoryIdValue}`)
+                            }} />
                         </div>
-                    </div>
-                    <div className="form-container">
-                        < FactoryShopFloorForm
-                            shopfloorProp={shopfloor}
-                            assetProp={asset}
 
-                        />
                     </div>
-                    <div className="allocated-list-container" >
-                        <ShopFloorAssets
-                            shopFloorProp={shopfloor}
-                            setAssetProp={setAsset}
-                        />
-                    </div>
+                    <div className="factory-shopfloor-container">
+                        <div className="shopfloor-list-container">
+                            <ShopFloorList
+                                factoryId={factoryIdValue}
+                                setShopfloorProp={setShopfloor}
+                            />
+                            <div>
+                                <AllocatedAsset />
+                            </div>
+                        </div>
+                        <div className="form-container">
+                            < FactoryShopFloorForm
+                                shopfloorProp={shopfloor}
+                              
 
+                            />
+                        </div>
+                        <div className="allocated-list-container" >
+                            <ShopFloorAssets
+                                shopFloorProp={shopfloor}
+                               
+                            />
+                        </div>
+
+                    </div>
                 </div>
-            </div>
             </FactoryShopFloorProvider>
         </>
     )

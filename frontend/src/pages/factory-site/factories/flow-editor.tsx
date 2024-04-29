@@ -23,7 +23,7 @@ import { Toast } from "primereact/toast";
 import {
   fetchAndDetermineSaveState,
   exportElementToJPEG,
-  fetchAssetById, customLogger
+  fetchAssetById, customLogger,getShopFloorAndAssetData
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -37,6 +37,7 @@ import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
 import "../../../styles/asset-list.css"
+import dagre from '@dagrejs/dagre';
 
 interface FlowEditorProps {
   factory: Factory;
@@ -52,6 +53,11 @@ interface ExtendedNodeData {
   label: string;
   id: string;
   asset_category?:string
+}
+interface Edge {
+  source: string;
+  target: string;
+  // include other properties that edges might have
 }
 
 interface ExtendedNode extends Node<ExtendedNodeData> {
@@ -225,8 +231,8 @@ const FlowEditor: React.FC<
 
       if (factoryNode && !nodeExists) {
         // Calculate positions based on existing shopFloor nodes
-        const gapX = 250; // Horizontal gap between shopFloor nodes
-        const startY = factoryNode.position.y + 90; // Y position below the factory node
+        const gapX = 200; // Horizontal gap between shopFloor nodes
+        const startY = factoryNode.position.y + 127; // Y position below the factory node
 
         // Calculate X position based on the number of existing shopFloor nodes
         const existingShopFloors = nodes.filter(
@@ -355,72 +361,93 @@ const FlowEditor: React.FC<
     }
   }, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
 
-  const onRestore = useCallback(async () => {
+const onRestore = useCallback(async () => {
+  if (factoryId) {
+    try {
+      setIsOperationInProgress(true);
+      const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
 
-    if (factoryId) {
-      try {
-        setIsOperationInProgress(true);
-        const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
+      if (
+        getReactFlowMongo.data &&
+        getReactFlowMongo.data.factoryData.nodes &&
+        getReactFlowMongo.data.factoryData.edges
+      ) {
+        const dagreGraph = new dagre.graphlib.Graph();
+        dagreGraph.setGraph({
+          ranksep: 30,    // vertical spacing between nodes
+          nodesep: 90      // horizontal spacing between nodes
+        });
+        dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+        // Add nodes to the dagre graph
+        getReactFlowMongo.data.factoryData.nodes.forEach((node:Node) => {
+          dagreGraph.setNode(node.id, { width: 100, height: 100 });
         });
 
-        if (
-          getReactFlowMongo.data &&
-          getReactFlowMongo.data.factoryData.nodes &&
-          getReactFlowMongo.data.factoryData.edges
-        ) {
-          // First, set the nodes and edges as usual
-          setNodes(getReactFlowMongo.data.factoryData.nodes);
-          setEdges(getReactFlowMongo.data.factoryData.edges);
+        // Add edges to the dagre graph
+        getReactFlowMongo.data.factoryData.edges.forEach((edge:Edge) => {
+          dagreGraph.setEdge(edge.source, edge.target);
+        });
 
-          // Set original nodes and edges right after restoration
-          setOriginalNodes(getReactFlowMongo.data.factoryData.nodes);
-          setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+        // Auto layout the nodes using dagre
+        dagre.layout(dagreGraph);
 
-          setIsRestored(true);
-          // Then, analyze the relation nodes to update relationCounts
-          const updatedRelationCounts: RelationCounts = {};
+        const layoutedNodes = getReactFlowMongo.data.factoryData.nodes.map((node:Node) => {
+          const nodeWithPosition = dagreGraph.node(node.id);
+          return {
+            ...node,
+            position: { x: nodeWithPosition.x, y: nodeWithPosition.y }
+          };
+        });
 
-          getReactFlowMongo.data.factoryData.nodes.forEach((node: Node) => {
-            if (node.data.type === "relation") {
-              // node IDs follow the format "relation-relationName_count"
-              const match = node.id.match(/relation-(.+)_([0-9]+)/);
-              if (match) {
-                const [, relationName, count] = match;
-                const numericCount = parseInt(count, 10);
-                // Update the relationCounts state with the highest count for each relation
-                if (
-                  !updatedRelationCounts[relationName] ||
-                  updatedRelationCounts[relationName] < numericCount
-                ) {
-                  updatedRelationCounts[relationName] = numericCount;
-                }
+     
+        setNodes(layoutedNodes);
+        setEdges(getReactFlowMongo.data.factoryData.edges);
+
+        setOriginalNodes(layoutedNodes);
+        setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+
+        setIsRestored(true);
+        const updatedRelationCounts: RelationCounts = {};
+
+        layoutedNodes.forEach((node: Node) => {
+          if (node.data.type === "relation") {
+            // node IDs follow the format "relation-relationName_count"
+            const match = node.id.match(/relation-(.+)_([0-9]+)/);
+            if (match) {
+              const [, relationName, count] = match;
+              const numericCount = parseInt(count, 10);
+              // Update the relationCounts state with the highest count for each relation
+              if (
+                !updatedRelationCounts[relationName] ||
+                updatedRelationCounts[relationName] < numericCount
+              ) {
+                updatedRelationCounts[relationName] = numericCount;
               }
             }
-          });
+          }
+        });
 
-          // Update the relationCounts state to reflect the highest counts found
-          setRelationCounts(updatedRelationCounts);
-        } else {
-          console.log("Invalid data received from backend");
-        }
-      } catch (error) {
-        console.error("Error fetching flowchart data:", error);
+        setRelationCounts(updatedRelationCounts);
+      } else {
+        console.log("Invalid data received from backend");
       }
-
-      finally {
-        setIsOperationInProgress(false);
-      }
+    } catch (error) {
+      console.error("Error fetching flowchart data:", error);
+    } finally {
+      setIsOperationInProgress(false);
     }
-
-  }, [setNodes, setEdges, factoryId, setRelationCounts]);
+  }
+}, [setNodes, setEdges, factoryId, setRelationCounts]);
 
   const onUpdate = useCallback(async () => {
-
+ 
     const payLoad = {
       factoryId: factoryId,
 
@@ -550,7 +577,7 @@ const FlowEditor: React.FC<
       } else {
         setToastMessage("Flowchart already exist");
       }
-
+  
       const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
         payLoad.factoryData.edges, {
         params: {
@@ -650,12 +677,25 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
+
+      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset/${factoryId}:allocated-assets`,{
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+
       if (reactFlowUpdateMongo.status == 200 ||  reactFlowUpdateMongo.status == 204) {
         setToastMessage("Flowchart saved successfully");
       }
 
       if (reactFlowScorpioUpdate.status == 200 ||  reactFlowScorpioUpdate.status == 204) {
         setToastMessage( "Scorpio updated successfully.");
+      }
+
+      if (allocatedAssetDeletion.status == 200 ||  allocatedAssetDeletion.status == 204) {
+        setToastMessage( "Allocated Asset Deleted successfully.");
       }
       setNodesInitialized(true);
       onRestore();
@@ -664,7 +704,7 @@ const FlowEditor: React.FC<
       setToastMessage("Error deleting elements.");
     } finally {
       // Regardless of the result, try to refresh the state to reflect the current backend state
-      setIsSaveDisabled(false);
+      setIsSaveDisabled(true);
       setIsOperationInProgress(false);
     }
   };

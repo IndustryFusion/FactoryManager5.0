@@ -630,7 +630,18 @@ export async function getShopFloorAssets(shopFloorId: string) {
 
       const assetsResponses = await Promise.all(assetDataPromises);
       
-      assetsData = assetsResponses.map((response) => response.data);
+      assetsData = assetsResponses.map((response) =>{
+        
+         const filteredObject = {
+        id: response.data.id,
+        product_name: response.data['http://www.industry-fusion.org/schema#product_name']?.value,
+        asset_category: response.data['http://www.industry-fusion.org/schema#asset_category']?.value,
+      
+      };
+      return filteredObject;
+
+      } );
+      
     }
 
     return { shopFloorId, assetIds, assetsData };

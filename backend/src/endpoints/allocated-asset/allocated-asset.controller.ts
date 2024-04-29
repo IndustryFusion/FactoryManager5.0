@@ -10,9 +10,29 @@ export class AllocatedAssetController {
   @Post('/global')
   async createGlobal(@Req() req: Request) {
     try {
-      console.log('inside create global');
       const token = await getSessionToken(req);
       let response = await this.allocatedAssetService.createGlobal(token);
+      if(response['status'] == 200 || response['status'] == 201) {
+        return {
+          success: true,
+          status: response['status'],
+          message: response['statusText']
+        }
+      }
+    } catch(err) {
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      }
+    }
+  }
+
+  @Post('/form')
+  async updateFormAllocatedAsset(@Body() data, @Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      let response = await this.allocatedAssetService.updateFormAllocatedAsset(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
