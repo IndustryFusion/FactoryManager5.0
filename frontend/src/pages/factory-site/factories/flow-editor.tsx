@@ -708,7 +708,36 @@ const onRestore = useCallback(async () => {
       setIsOperationInProgress(false);
     }
   };
+const saveOrUpdate = useCallback(async () => {
+  try {
+    setIsOperationInProgress(true);
 
+    // Fetch the current state from the server to determine if it's a new or existing flowchart
+    const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+
+    // Check if the data is empty or not
+    const isEmpty = !getReactFlowMongo.data || Object.keys(getReactFlowMongo.data).length === 0;
+
+    if (isEmpty) {
+      // If data is empty, save the new flowchart
+      await onSave();
+    } else {
+      // If data exists, update the existing flowchart
+      await onUpdate();
+    }
+  } catch (error) {
+    console.error("Error during save or update operation:", error);
+    setToastMessage("Error during operation, check the logs for details");
+  } finally {
+    setIsOperationInProgress(false);
+  }
+}, [factoryId, onSave, onUpdate]);
   const handleExportClick = () => {
     if (elementRef.current) {
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
@@ -1088,7 +1117,6 @@ const onRestore = useCallback(async () => {
     }
     setIsDialogVisible(false);
 
-
   };
 
 
@@ -1135,22 +1163,15 @@ const onRestore = useCallback(async () => {
           <div className="flex justify-content-between">
             <div>
               <Button
-                label="Save"
-                onClick={handleSave}
+                label="Save / Update"
+                onClick={saveOrUpdate}
                 className="m-2"
                 raised
-                disabled={isSaveDisabled}
               />
               <Button
                 label="Undo"
                 onClick={onRestore}
                 className="p-button-secondary m-2"
-                raised
-              />
-              <Button
-                label="Update"
-                onClick={handleUpdate}
-                className="p-button-success m-2"
                 raised
               />
               <Button
