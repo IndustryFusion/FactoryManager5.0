@@ -59,17 +59,14 @@ export class AllocatedAssetService {
   
   async createGlobal(token: string) {
     try{
-      let reactData = await this.reactFlowService.findAll();
+      let allocatedAssetData = await this.findAll(token);
       let assetArr = [];
-      for(let i = 0; i < reactData.length; i++){
-        if(reactData[i].factoryData){
-          let factoryData = reactData[i].factoryData['nodes'];
-          factoryData.forEach(data => {
-            if(data.id.startsWith('asset')){
-              let assetId = data.id.split('_')[1];
-              assetArr.push(assetId);
-            }
-          })
+      for(let i = 0; i < allocatedAssetData.length; i++){    
+        const factorySpecificData = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object; 
+        if(Array.isArray(factorySpecificData)){
+          assetArr = [...assetArr, ...factorySpecificData];
+        } else {
+          assetArr.push(factorySpecificData);
         }
       }
       assetArr = [...new Set(assetArr)];
@@ -160,30 +157,6 @@ export class AllocatedAssetService {
       });
     
       return response.data;
-      
-      // let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
-      // let finalArray = [];
-      // if (Array.isArray(assetIds) && assetIds.length > 0) {
-      //   for (let i = 0; i < assetIds.length; i++) {
-      //     let id = assetIds[i];
-      //     const assetData = await this.assetService.getAssetDataById(id, token);
-      //     const finalData = {
-      //       id,
-      //       product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-      //       asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-      //     };
-      //     finalArray.push(finalData);
-      //   }
-      // } else if(assetIds && assetIds.includes('urn')){
-      //   const assetData = await this.assetService.getAssetDataById(assetIds, token);
-      //   const finalData = {
-      //     id: assetIds,
-      //     product_name: assetData['http://www.industry-fusion.org/schema#product_name'].value,
-      //     asset_category: assetData['http://www.industry-fusion.org/schema#asset_category'].value
-      //   };
-      //   finalArray.push(finalData);
-      // }
-      // return finalArray;
     } catch(err) {
       return err;
     }
@@ -234,6 +207,51 @@ export class AllocatedAssetService {
         }
       }
     } catch(err) {
+      return err;
+    }
+  }
+
+  async updateFormAllocatedAsset(data: any, token: string){
+    try{
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      for(let key in data){
+        let id = `${key}:allocated-assets`;
+        let finalAssetData = data[key];
+        let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+        let response = await axios.get(checkUrl, {
+          headers
+        });
+        if(response.data.length > 0){
+          let assetData =  response.data[0];
+          let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"].object;
+          if(Array.isArray(getAllocatedAssets)){
+            finalAssetData = [...finalAssetData, ...getAllocatedAssets];
+          }else{
+            finalAssetData = [...finalAssetData, getAllocatedAssets];
+          }
+          await this.remove(id, token);
+        }
+        const finalData = {
+          "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+          "id": id,
+          "type": "urn-holder",
+          "http://www.industry-fusion.org/schema#last-data": {
+            type: 'Property',
+            object: finalAssetData
+          }
+        };
+        await axios.post(this.scorpioUrl, finalData, {headers});
+      }
+      await this.updateGlobal(token);
+      return {
+        status: 201,
+        message: 'Factory Allocated Assets Created successful',
+      };
+    }catch(err){
       return err;
     }
   }
