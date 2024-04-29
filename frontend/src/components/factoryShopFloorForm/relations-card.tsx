@@ -7,6 +7,8 @@ import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { Chips } from "primereact/chips";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
+import { useRouter } from "next/router";
+import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
 
 interface RelationObject {
     type: string;
@@ -18,17 +20,18 @@ interface Payload {
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
-   
     const {
         focused, setFocused,
-        setGetRelation,
         inputValue,
         setInputValue,
         assetId,
         relations, setRelations
     } = useFactoryShopFloor();
+    // const [allRelationAssetIds, setAllRelationAssetIds] = useState<string[]>([]);
+    const [factoryId, setFactoryId] = useState("");
     const toast = useRef<any>(null);
-
+    const router = useRouter();
+    const allRelationAssetIds = [];
 
     useEffect(() => {
         const getRelations = async () => {
@@ -50,16 +53,32 @@ const Relations = () => {
         getRelations();
     }, [assetId]);
 
+    useEffect(() => {
+        const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+            router.query.factoryId;
+        if (typeof id === 'string') {
+            setFactoryId(id)
+        }
+    }, [router.query.factoryId, router.isReady])
+
+
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
+    // console.log(relations, "all relations here");
 
+    const getAllocatedPayload = () => {
+        const allocatedObj = {
+            [factoryId]: allRelationAssetIds
+        }
+        console.log("allocatedObj", allocatedObj);
+        return allocatedObj;
+    }
 
     const handleReset = () => {
         setInputValue([]);
         // showToast("success", "success", "Relations reseted successfully")
     }
-
     const handleUpdateRelations = async (payload) => {
         const url = `${API_URL}/asset/update-relation`;
         try {
@@ -79,7 +98,6 @@ const Relations = () => {
             console.error(error)
         }
     }
-
     const handleSave = () => {
         const obj = {};
         inputValue.forEach(item => {
@@ -107,9 +125,6 @@ const Relations = () => {
         };
         handleUpdateRelations(payload)
     }
-
-    // console.log(relations, "all relations here");
-
     const handleDelete = () => {
         handleReset();
         const obj = {};
@@ -125,11 +140,26 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
-        console.log(" here payload", payload);
+        console.log(" here payload in delete", payload);
 
         handleUpdateRelations(payload)
     }
-    console.log(inputValue, "inputValue in relations outside");
+    //factoryId and all assets urn  send
+    const handleAllocatedAssets = async () => {
+        const payloadObj = getAllocatedPayload();
+        try {
+            const response = await fetchFormAllocatedAsset(payloadObj);
+            if (response?.data?.status === 201 && response?.data?.success === true) {
+                showToast("success", "success", "saved to allocated assets successfully")
+            }
+            console.log("response from allocated asset", response?.data)
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
 
     return (
         <>
@@ -142,16 +172,21 @@ const Relations = () => {
 
                                 const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
                                 const value = relatedObject ? relatedObject[`${relation}_asset`] : "";
+                                const relationAssetId = relatedObject ? relatedObject[`${relation}`] : "";
+                                allRelationAssetIds.push(relationAssetId);
 
-                                console.log(inputValue, "inputValue in relations");
-                                
 
                                 const getAssetValues = () => {
                                     const entry = inputValue.find(entry => entry[relation]);
                                     console.log(entry, "what's the entry here")
+                                    if (entry && entry.hasOwnProperty(relation) && Array.isArray(entry[`${relation}`])) {
+                                        console.log(entry[`${relation}`], "wht's here in entry asstes");
+                                        allRelationAssetIds.push(...entry[`${relation}`]);
+                                    }
                                     return entry ? entry[`${relation}_asset`] : [];
                                 }
-                                console.log("what assets here", getAssetValues())
+
+
                                 return (
                                     <div key={index} className="flex mb-4">
                                         <label htmlFor="" style={{ flex: "0 20%", marginRight: "1.2rem" }}>{relation}</label>
@@ -160,7 +195,7 @@ const Relations = () => {
                                                 style={{ flex: "0 70%" }}
                                                 value={getAssetValues()}
                                                 onFocus={() => {
-                                                   
+
                                                     setFocused(true);
                                                 }}
                                                 onBlur={() => setFocused(false)}
@@ -188,7 +223,7 @@ const Relations = () => {
                                                     placeholder=""
                                                     value={value}
                                                     onFocus={() => {
-                                                       // setGetRelation(relation)
+                                                        // setGetRelation(relation)
                                                         setFocused(true)
                                                     }}
                                                     onBlur={() => setFocused(false)}
@@ -205,7 +240,10 @@ const Relations = () => {
                 {relations.length > 0 &&
                     <div className="form-btns">
                         <Button
-                            onClick={() => handleSave()}
+                            onClick={() => {
+                                handleSave();
+                                handleAllocatedAssets();
+                            }}
                         >Save
                         </Button>
                         <Button
