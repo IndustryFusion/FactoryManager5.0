@@ -591,6 +591,7 @@ useEffect(() => {
                       onChange={(e) => handleAttributeChange(e.value)}
                       placeholder="Select an Attribute"
                       style={{ width: '100%' }}
+                      appendTo="self" 
                     />
               </div>
             <div className="interval-dropdown-container">
@@ -603,7 +604,7 @@ useEffect(() => {
                 }))}
                 onChange={handleIntervalChange}
                 placeholder="Select an Interval"
-                
+                appendTo="self" 
                 className="w-full sm:w-14rem" 
               />
             </div>
@@ -621,6 +622,7 @@ useEffect(() => {
                     minDate={minDate} 
                     maxDate={new Date()}
                     disabled={selectedInterval !== 'custom'}
+                    appendTo="self" 
                   />
                   <Calendar 
                     value={startTime}
@@ -632,6 +634,7 @@ useEffect(() => {
                     className="w-full sm:w-6rem"
                     disabled={selectedInterval !== 'custom'}
                     maxDate={endTime ? new Date(endTime.getTime() - 60000) : null}
+                    appendTo="self" 
                   />
                   <Calendar 
                     value={endTime}
@@ -643,7 +646,8 @@ useEffect(() => {
                     className="w-full sm:w-6rem"
                     disabled={selectedInterval !== 'custom'}
                     minDate={startTime ? new Date(startTime.getTime() + 60000) : null}
-                      />
+                    appendTo="self" 
+                    />
                   <Button 
                     label="Load" 
                     severity="info" 

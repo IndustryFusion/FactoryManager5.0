@@ -6,6 +6,7 @@ import { FactorySite } from '../schemas/factory-site.schema';
 import { ShopFloorAssetsService } from '../shop-floor-assets/shop-floor-assets.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AssetService } from '../asset/asset.service';
+import { FactorySiteService } from '../factory-site/factory-site.service';
 import { error } from 'console';
 
 
@@ -16,6 +17,7 @@ export class ReactFlowService {
     private factoryModel: Model<FactorySite>,
     private readonly shopFloorAssetService : ShopFloorAssetsService,  private readonly shopFloorService : ShopFloorService,
     private readonly assetService : AssetService,
+    private readonly factorySiteService : FactorySiteService,
 
   ) {}
 
@@ -78,54 +80,65 @@ export class ReactFlowService {
    
  async findFactoryAndShopFloors(factoryId: string, token: string): Promise<any> {
     try {
-      const factoryData = await this.shopFloorService.findOne(factoryId, token);
-      if (!factoryData) {
-        throw new NotFoundException(`Factory with ID ${factoryId} not found`);
-      }
-
-      const result = {
-        nodes: [],
-        edges: [],
-      };
-
-      // Construct the factory node
-      const factoryNode = {
-        id: `factory-${factoryId}`,
-        type: "factory",
-        position: { x: 250, y: 70 },
-        data: { label: "Factory", type: "factory", undeletable: true },
-      };
-      result.nodes.push(factoryNode);
-
-      const shopFloorData = await this.shopFloorService.findAll(factoryId, token);
-      console.log(" shopFloorData 111", shopFloorData)
-      for (const shopFloor of shopFloorData) {
-        const shopFloorNode = {
-          id: `shopFloor_${shopFloor.id}`,
-          type: "shopFloor",
-          position: { x: 150 + result.nodes.length * 250, y: 160 },
-          data: { label: shopFloor["http://www.industry-fusion.org/schema#floor_name"]?.value, type: "shopFloor" },
-          style: { backgroundColor: "#faedc4", border: "none" },
-        };
-        result.nodes.push(shopFloorNode);
-
-        const edge = {
-          id: `reactflow__edge-factory-${factoryId}-${shopFloorNode.id}`,
-          source: `factory-${factoryId}`,
-          metadata: `${shopFloorNode.id}`,
-          target: `${shopFloorNode.id}`,
-        };
-        result.edges.push(edge);
-
-        const assets = await this.shopFloorAssetService.findAll(shopFloor.id, token);
-        for (const asset of assets) {
-          await this.processAsset(asset, token, result, shopFloorNode.id); 
+        const shopfloor = await this.shopFloorService.findAll(factoryId, token);
+        const factoryData = await this.factorySiteService.findOne(factoryId, token);
+        if (!shopfloor) {
+            throw new NotFoundException(`Factory with ID ${factoryId} not found`);
         }
-       
-      }
-    
-      const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
-      const reactFlowData: ReactFlowDto = {
+
+        const factoryName = factoryData['http://www.industry-fusion.org/schema#factory_name']?.value || "Factory";
+
+        const result = {
+            nodes: [],
+            edges: [],
+        };
+
+        // Construct the factory node
+        const factoryNode = {
+            id: `factory_${factoryId}`,
+            type: "factory",
+            position: { x: 250, y: 70 },
+            data: { label: factoryName, type: "factory", undeletable: true },
+        };
+        result.nodes.push(factoryNode);
+
+        const shopFloorData = await this.shopFloorService.findAll(factoryId, token);
+        let xOffset = 0; // Initial offset from the first shop floor node
+        let yOffset = 0; // Vertical offset for assets, to move to the next row when needed
+        const horizontalSpacing = 200; // Horizontal spacing between assets
+        const verticalSpacing = 100; // Vertical s
+        for (const shopFloor of shopFloorData) {
+            const xPosition = 90 + xOffset; // Calculate x position with offset
+            const shopFloorNode = {
+                id: `shopFloor_${shopFloor.id}`,
+                type: "shopFloor",
+                position: { x: xPosition, y: 160 },
+                data: { label: shopFloor["http://www.industry-fusion.org/schema#floor_name"]?.value, type: "shopFloor" },
+                style: { backgroundColor: "#faedc4", border: "none" },
+            };
+            result.nodes.push(shopFloorNode);
+            xOffset += 350; // Increment xOffset for next shop floor
+
+            const edge = {
+                id: `reactflow__edge-factory-${factoryId}-${shopFloorNode.id}`,
+                source: `factory_${factoryId}`,
+                target: `${shopFloorNode.id}`,
+            };
+            result.edges.push(edge);
+            const assets = await this.shopFloorAssetService.findAll(shopFloor.id, token);
+            let assetOffset = 0; // This offset will increment for each asset in the shop floor
+            let assetCount = 0; // Counter to track the number of assets
+
+            for (const asset of assets) {
+                await this.processAsset(asset, token, result, shopFloorNode.id, 0, assetOffset);
+                assetOffset += horizontalSpacing; // Increment the horizontal offset for the next asset
+            }
+
+            xOffset += 350; // Increment xOffset for next shop floor
+         }
+        
+        const existingFactoryData = await this.factoryModel.findOne({ factoryId }).exec();
+        const reactFlowData: ReactFlowDto = {
             factoryId: factoryId,
             factoryData: {
                 nodes: result.nodes,
@@ -133,30 +146,34 @@ export class ReactFlowService {
             }
         };
 
-    if (existingFactoryData) {
-    
-      await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
-      return {
-          success: true,
-          message: "Factory updated successfully with nodes and edges.",
-          factoryId
-      };
-  } else {
-
-      return await this.create(reactFlowData); 
-  }   
+        if (existingFactoryData) {
+            await this.factoryModel.updateOne({ factoryId }, { $set: { 'factoryData.nodes': result.nodes, 'factoryData.edges': result.edges }}).exec();
+            return {
+                success: true,
+                message: "Factory updated successfully with nodes and edges.",
+                factoryId
+            };
+        } else {
+            return await this.create(reactFlowData); 
+        }   
     } catch (err) {
-      throw new HttpException(err.message, 500);
+        throw new HttpException(err.message, 500);
     }
-  }
+}
 
- async processAsset(asset, token, result, parentNodeId = null) {
+async processAsset(asset, token, result, parentNodeId = null, depth = 0, siblingOffset = 0, yOffset = 0) {
     const assetData = await this.assetService.getAssetDataById(asset.id, token);
+    const xOffsetStart = 40; // Starting X offset for assets
+    const horizontalSpacing = 200; // Space between assets horizontally
+    const verticalSpacing = 150; // Increased space between assets and relations vertically
 
+    // Calculate the X and Y position for the asset node
+    const xPos = xOffsetStart + (depth * horizontalSpacing) + siblingOffset ;
+    const yPos = parentNodeId ? 280 + (depth * verticalSpacing) : 280 + yOffset;
     const assetNode = {
         id: `asset_${asset.id}_${new Date().getTime()}`,
         type: "asset",
-        position: { x: 100 + result.nodes.length * 100, y: 220 },
+        position: { x: xPos, y: yPos },
         data: {
             label: assetData['http://www.industry-fusion.org/schema#product_name']?.value || "Asset",
             type: "asset",
@@ -171,47 +188,46 @@ export class ReactFlowService {
             id: `reactflow__edge-${parentNodeId}-${assetNode.id}`,
             source: parentNodeId,
             target: assetNode.id,
-            metadata:assetNode.id,
         };
         result.edges.push(edgeToAsset);
     }
+    let newYPos = yPos + verticalSpacing; // Y position for relations is fixed below the asset
 
+    // Determine horizontal start position for relations
+    let relationXPos = xPos - (Object.keys(assetData).filter(key => key.includes('#has')).length - 1) * horizontalSpacing / 2;
     for (const [key, value] of Object.entries(assetData)) {
         if (key.startsWith("http://www.industry-fusion.org/schema#has")) {
+
+      
             let relationValues = Array.isArray(value) ? value : [value];
             relationValues = relationValues.filter(rv => rv.object && rv.object.startsWith("urn:"));
 
-            if (relationValues.length > 0) {
+            for (let i = 0; i < relationValues.length; i++) {
                 const relationType = key.split("#").pop();
                 const relationId = `relation_${relationType}_${Math.floor(100 + Math.random() * 900)}`;
+                
+                // For same assets, place relation nodes in the same x-axis
+                const relationNode = {
+                    id: relationId,
+                    type: "relation",
+                    position: { x: xPos+ relationXPos , y: newYPos }, // Keep same y-axis for relations of the same asset
+                    data: { label: relationType, type: "relation" },
+                    style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
+                };
+                result.nodes.push(relationNode);
 
-                if (!result.nodes.some(node => node.id === relationId)) {
-                    const relationNode = {
-                        id: relationId,
-                        type: "relation",
-                        position: { x: 100 + result.nodes.length * 100, y: 320 },
-                        data: { label: relationType, type: "relation" },
-                        style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
-                    };
-                    result.nodes.push(relationNode);
-                }
+                const edgeToRelation = {
+                    id: `reactflow__edge-${assetNode.id}-${relationId}`,
+                    source: assetNode.id,
+                    target: relationId,
+                };
+                result.edges.push(edgeToRelation);
 
-                for (const rv of relationValues) {
-                    const relatedAssetId = `asset_${rv.object}_${new Date().getTime()}`;
-                    const edgeId = `reactflow__edge-${assetNode.id}_${relationId}`;
-                    if (!result.edges.some(edge => edge.source === assetNode.id && edge.target === relationId)) {
-                        const edgeToRelation = {
-                            id: edgeId,
-                            source: assetNode.id,
-                            target: relationId,
-                            metadata:  `${relationId}_${relatedAssetId}`
-                        };
-                        result.edges.push(edgeToRelation);
-                    }
-
-                    const relatedAsset = { id: rv.object };
-                    await this.processAsset(relatedAsset, token, result, relationId);
-                }
+                const rv = relationValues[i];
+                const relatedAsset = { id: rv.object }
+                await this.processAsset(relatedAsset, token, result, relationId, depth + 1.5, xPos+ relationXPos, yPos + 2 * verticalSpacing);
+                relationXPos += horizontalSpacing ;
+            
             }
         }
     }
