@@ -135,7 +135,7 @@ export class AllocatedAssetController {
   }
 
   @Delete()
-  async remove(@Param('id') id: string, @Req() req: Request) {
+  async remove(@Query('id') id: string, @Req() req: Request) {
     try {
       const token = await getSessionToken(req);
       let response = await this.allocatedAssetService.remove(id, token);
