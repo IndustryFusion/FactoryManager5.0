@@ -3,12 +3,17 @@ import React, {
     useContext,
     useState,
     ReactNode,
+    useEffect,
 } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
 
 interface InputValue {
     [key: string]: string | string[];
 }
-
+interface Obj{
+   [key: string]: string | string[];
+}
 // Define the type for the context value
 interface FactoryShopFloorContextValue {
     focused: boolean;
@@ -22,6 +27,10 @@ interface FactoryShopFloorContextValue {
     setAssetId: React.Dispatch<React.SetStateAction<string>>;
     asset: string;
     setAsset: React.Dispatch<React.SetStateAction<string>>;
+    saveAllocatedAssets:boolean;
+    setSaveAllocatedAssets:React.Dispatch<React.SetStateAction<boolean>>;
+    shopFloorValue:Obj;
+    setShopFloorValue: React.Dispatch<React.SetStateAction<Obj>>;
 }
 
 const FactoryShopFloorContext = createContext<FactoryShopFloorContextValue | undefined>(undefined);
@@ -30,17 +39,23 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
 
-    //const [getRelation, setGetRelation] = useState("");
-    const [focused, setFocused] = useState(false);
     const [inputValue, setInputValue] = useState<InputValue[]>([]);
-    const [relations, setRelations] = useState<string[]>([]);
     const [assetId, setAssetId] = useState("");
     const [asset, setAsset] = useState({});
     const [shownToast, setShownToast] = useState(false);
+    const [saveAllocatedAssets, setSaveAllocatedAssets]=useState(false);
+    const [shopFloorValue, setShopFloorValue]=useState({});
+    
 
+    const relations = useSelector((state: RootState) => state.relations.values);
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
         console.log(item, "item here");
+        //[hasCatridge :filtercatridge]
+        //hasGasco: category
+     
+       
+        console.log(relations, "relations here iniside func ");
     
         for(let getRelation of relations){
             const relation = getRelation.replace("has", "").toLowerCase();
@@ -72,33 +87,45 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                         }
                     } else {
                         // For other relations, simply add a new object to the array
-                        updatedValue.push({
-                            [getRelation]: id,
-                            [`${getRelation}_asset`]: item
-                        });
+                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+                        if (existingEntryIndex !== -1) {
+                            // If the entry exists, update it
+                            const existingEntry = updatedValue[existingEntryIndex];
+                            const updatedEntry = {
+                                ...existingEntry,
+                                [getRelation]: id,
+                                [`${getRelation}_asset`]: item
+                            };
+                            updatedValue[existingEntryIndex] = updatedEntry;
+                        } else {
+                            // If the entry doesn't exist, create a new one
+                            updatedValue.push({
+                                [getRelation]: id,
+                                [`${getRelation}_asset`]: item
+                            });
+                        }
                     }
     
                     return updatedValue;
-                });
-    
-                setFocused(false);
+                });       
             }
         }
-        console.log("inputValues here on workpiece", inputValue);
+        // console.log("inputValues here ", inputValue);
     }
     
+  
 
 
     return (
         <FactoryShopFloorContext.Provider
             value={{
-                focused, setFocused,
-                selectItems,             
-                relations, setRelations,
+                selectItems,                       
                 inputValue, setInputValue,
                 assetId, setAssetId,
                 asset, setAsset,
-                shownToast, setShownToast
+                shownToast, setShownToast,
+                shopFloorValue, setShopFloorValue,
+                saveAllocatedAssets, setSaveAllocatedAssets
             }}
         >
             {children}

@@ -11,6 +11,7 @@ import { Button } from "primereact/button";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
+import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
 
 interface AssetProperty {
     type: "Property";
@@ -30,29 +31,28 @@ interface Asset {
 }
 
 
-interface ShopFloorAssetsProps {
-    shopFloorProp: { [key: string]: any; };
 
-}
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => {
+const PicklistAssets = () => {
     const [shopFloorAssets, setShopFloorAssets] = useState([]);
     const [source, setSource] = useState([]);
     const [target, setTarget] = useState([]);
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     const dispatch = useDispatch();
-    let allocatedAssetsArray = null;
     const router = useRouter();
-    const { selectItems, setAssetId, setAsset, relations } = useFactoryShopFloor();
+    const { selectItems, setAsset, relations, setSaveAllocatedAssets, shopFloorValue } = useFactoryShopFloor();
     const [factoryId, setFactoryId] = useState("")
     const toast = useRef<any>(null);
     let toastShown = false;
+    let allocatedAssetsArray = null;
+
+
 
     const fetchShopFloorAssets = async () => {
         try {
-            const response = await getShopFloorAssets(shopFloorProp?.id);
+            const response = await getShopFloorAssets(shopFloorValue?.id);
             const { assetsData } = response;
             console.log(response, 'response from shopfloor');
             if (assetsData.length === 0) {
@@ -67,7 +67,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
 
     useEffect(() => {
         fetchShopFloorAssets();
-    }, [shopFloorProp?.id]);
+    }, [shopFloorValue?.id]);
 
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
@@ -123,7 +123,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
                 const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
 
             } catch (err) {
-                allocatedAssetsArray = null;
+               console.error(err)
             }
         };
 
@@ -140,7 +140,6 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
 
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
-    console.log(source, "source here")
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
@@ -149,8 +148,6 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
         setSource(event.source);
         setTarget(event.target);
     };
-
-    console.log(source, "source list here")
 
     const itemTemplate = (item) => {
         if (relations?.length > 0) {
@@ -179,7 +176,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
     const shopfloorAssetIds = source.map(asset => asset?.id)
     const getPayload = () => {
         const shopfloorObj = {
-            [shopFloorProp?.id]: shopfloorAssetIds
+            [shopFloorValue?.id]: shopfloorAssetIds
         };
         console.log("shopfloorObj", shopfloorObj);
         return shopfloorObj;
@@ -190,7 +187,6 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
             [factoryId]: shopfloorAssetIds
         }
         console.log("allocatedObj", allocatedObj);
-
         return allocatedObj;
     }
 
@@ -217,20 +213,13 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
 
     //factoryId and all assets urn  send
     const handleAllocatedAssets = async () => {
-        const payload = getAllocatedPayload();
-        const url = `${API_URL}/allocated-asset/form`;
+        const payloadObj = getAllocatedPayload();
         try {
-            const response = await axios.post(url, payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            })
-            if (response.data?.status === 201 && response.data?.success === true) {
+            const response = await fetchFormAllocatedAsset(payloadObj);
+            if (response?.data?.status === 201 && response?.data?.success === true) {
                 showToast("success", "success", "saved to allocated assets successfully")
             }
-            console.log("response from allocated asset", response.data)
+            console.log("response from allocated asset", response?.data)
 
         } catch (error) {
             console.error(error);
@@ -243,6 +232,7 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
             <Button onClick={() => {
                 handleSaveShopFloors()
                 handleAllocatedAssets()
+                setSaveAllocatedAssets(true)
             }
             }>Save</Button>
         </div>
@@ -257,9 +247,8 @@ const ShopFloorAssets: React.FC<ShopFloorAssetsProps> = ({ shopFloorProp, }) => 
                 sourceHeader={headerSource} targetHeader="Unallocated Assets"
                 itemTemplate={itemTemplate}
                 sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
-
         </>
     )
 }
 
-export default ShopFloorAssets;
+export default PicklistAssets;

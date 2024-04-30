@@ -8,21 +8,17 @@ import Relations from "./relations-card";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { MultiStateCheckbox } from "primereact/multistatecheckbox";
 
-interface FactoryShopFloorProps {
-    shopfloorProp: { [key: string]: any; };
 
 
-}
-
-const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp }) => {
-
-    const { asset, setAssetId } = useFactoryShopFloor();
+const FactoryShopFloorForm = () => {
+    const { asset, setAssetId, shopFloorValue } = useFactoryShopFloor();
     const [checkBoxvalue, setCheckBoxValue] = useState('unlock');
     const options = [
         { value: 'unlock', icon: 'pi pi-lock-open' },
         { value: 'lock', icon: 'pi pi-lock' }
     ];
     const [assetValue, setAssetValue] = useState('');
+
 
     useEffect(() => {
         if (checkBoxvalue !== 'lock') {
@@ -40,7 +36,7 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp }
                         <InputText
                             className="input-content"
                             placeholder=""
-                            value={shopfloorProp?.floorName || ""}
+                            value={shopFloorValue?.floorName || ""}
                         />
                     </div>
                     <div className="input-container" style={{ gap: "5.2rem" }} >
@@ -54,7 +50,7 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp }
                                 disabled={checkBoxvalue === 'lock'}
                             />
                             {/* {
-                                shopfloorProp?.floorName.length > 0 &&
+                               shopFloorValue?.floorName.length > 0 &&
                                 <p style={{ fontSize: "10px" }}>Select asset from shopfloor assets</p> : null
                             } */}
 
@@ -63,7 +59,6 @@ const FactoryShopFloorForm: React.FC<FactoryShopFloorProps> = ({ shopfloorProp }
                     </div>
                     <div className=" flex flex-column align-items-center gap-3">
                         <MultiStateCheckbox value={checkBoxvalue} onChange={(e) => setCheckBoxValue(e.value)} options={options} optionValue="value" />
-                        {/* <span>{value}</span> */}
                     </div>
                 </form>
             </Card>

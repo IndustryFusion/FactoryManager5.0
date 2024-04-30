@@ -16,23 +16,18 @@ import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
-interface ShopfloorListProps {
-  factoryId: string;
-  onShopFloorDeleted?: (shopFloorId: string) => void;
-  setShopfloorProp?: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
-}
-const ShopFloorList: React.FC<ShopfloorListProps> = ({
-  factoryId,
-  onShopFloorDeleted,
-  setShopfloorProp
-}) => {
-  const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [selectedShopFloorId, setSelectedShopFloorId] = useState<string | null>(
-    null
-  );
+
+interface ShopfloorListProps {
+  onShopFloorDeleted?: (shopFloorId: string) => void;
+}
+
+
+const ShopFloorList: React.FC<ShopfloorListProps> = ({ onShopFloorDeleted}) => {
+
+  const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedShopFloorId, setSelectedShopFloorId] = useState<string | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [editShopFloor, setEditShopFloor] = useState<string | undefined>("");
   const [isVisible, setIsVisible] = useState(false);
@@ -40,34 +35,23 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const toast = useRef<Toast>(null);
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [isTyped, setIsTyped] = useState(false);
-  const { listItem } = useFactoryShopFloor();
+  const {setShopFloorValue} =useFactoryShopFloor();
+  const [factoryIdValue, setFactoryIdvalue] = useState("");
 
 
-  // console.log("setShopfloorProp", setShopfloorProp);
-
-
-  useEffect(() => {
-    const filterShopFloors = () => {
-      if (searchValue.trim()) {
-        const filteredFloors = shopFloors.filter((floor) =>
-          floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-        );
-        setFilteredShopFloors(filteredFloors);
-      } else {
-        setFilteredShopFloors(shopFloors);
-      }
-    };
-
-    filterShopFloors();
-  }, [searchValue, shopFloors]);
-
-
+  const filterShopFloors = () => {
+    if (searchValue.trim()) {
+      const filteredFloors = shopFloors.filter((floor) =>
+        floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredShopFloors(filteredFloors);
+    } else {
+      setFilteredShopFloors(shopFloors);
+    }
+  };
 
   const fetchShopFloors = async (factoryId: string) => {
-
     try {
-
       const factoryDetails = await getshopFloorById(factoryId);
       setShopFloors(
         factoryDetails.map((floor: ShopFloor) => ({
@@ -76,10 +60,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             floor["http://www.industry-fusion.org/schema#floor_name"].value,
         }))
       );
-
-
     } catch (error) {
-
       if (error instanceof Error) {
         console.error("Failed to fetch shop floors:", error);
         setError(error.message);
@@ -87,30 +68,33 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         console.error("Failed to fetch shop floors:", error);
         setError("An error occurred");
       }
-
     }
 
   };
 
 
   useEffect(() => {
+    filterShopFloors();
+  }, [searchValue, shopFloors]);
 
+  useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    }
-    else {
+    } else {
       if (router.isReady) {
-        const factoryId = router.query.factoryId;
-        if (typeof factoryId === 'string') {
-          fetchShopFloors(factoryId);
+        const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+          router.query.factoryId;
+        if (typeof id === 'string') {
+          fetchShopFloors(id);
+          setFactoryIdvalue(id);
         } else {
           console.error("factoryId is not a string or is undefined.");
         }
       }
     }
 
+  }, [router.query.factoryId, router.isReady, isEdit, isVisible])
 
-  }, [factoryId, isVisible, isEdit]);
 
   async function handleDelete() {
     if (!selectedShopFloorId) {
@@ -173,18 +157,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
+
+
   return (
     <>
       <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
         <Toast ref={toast} />
-
         <div>
-          <h3
-            className="font-medium text-xl ml-5"
-            style={{ marginTop: "2%", marginLeft: "5%" }}
-          >
-            Shop Floors
-          </h3>
+          <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="p-input-icon-left flex align-items-center ml-4">
             <i className="pi pi-search" />
             <InputText
@@ -200,7 +180,6 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             </InputText>
           </div>
           <div className="form-btn-container mb-2 flex  ml-2 mt-4">
-
             <Button
               label="New"
               severity="success"
@@ -231,23 +210,21 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           <ul className="list-disc" style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
-                  key={floor.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                  onClick={() =>{
-                    setSelectedShopFloorId(floor.id);
-                    setShopfloorProp(floor)
-                  } }
-                  style={{
+                key={floor.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
+                onClick={() => {
+                  setSelectedShopFloorId(floor.id);
+                  setShopFloorValue(floor)
+                }}
+                style={{
                   cursor: "pointer",
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
                   position: "relative",
                   paddingLeft: "20px",
-
                 }}
                 className="ml-4 mb-3"
               >
-
                 {floor.floorName}
               </li>
             ))}
@@ -265,7 +242,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         <CreateShopFloor
           isVisibleProp={isVisible}
           setIsVisibleProp={setIsVisible}
-          factoryId={factoryId}
+          factoryId={factoryIdValue}
         />
       )}
     </>

@@ -90,9 +90,7 @@ const ShopFloorManager: React.FC = () => {
             }}
           >
             <ShopFloorList
-              factoryId={factoryId}
-              onShopFloorDeleted={handleShopFloorDeleted}
-              setShopfloorProp={setShopfloor}
+              onShopFloorDeleted={handleShopFloorDeleted}             
             />
           </div>
           <div

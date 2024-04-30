@@ -29,6 +29,14 @@ ul{
     width: 90%;
 }
 
+.factory-shopfloor-container{
+    height: 90vh;
+    overflow: hidden;
+    /* zoom: 96%; */
+    position: absolute;
+    top: 5rem;
+   width: 100%;
+}
 .shopfloor-list-container {
     border-right: 1px solid #ccc;
     /* padding: 0 1.3rem; */

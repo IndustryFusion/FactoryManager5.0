@@ -2,14 +2,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
-import { fetchAssetById } from "@/utility/factory-site-utility";
+import { fetchAssetById, fetchAssetDetailById } from "@/utility/factory-site-utility";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { Chips } from "primereact/chips";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 import { useRouter } from "next/router";
 import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
-
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/state/store";
+import { create, reset } from '@/state/relations/relationsSlice';
 interface RelationObject {
     type: string;
     object: string | string[];
@@ -21,37 +23,92 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
     const {
-        focused, setFocused,
         inputValue,
         setInputValue,
         assetId,
-        relations, setRelations
+        setRelations,
+        selectItems
     } = useFactoryShopFloor();
-    // const [allRelationAssetIds, setAllRelationAssetIds] = useState<string[]>([]);
+
     const [factoryId, setFactoryId] = useState("");
+    const [deleteRelation, setDeleteRelation] = useState(false);
     const toast = useRef<any>(null);
     const router = useRouter();
-    const allRelationAssetIds = [];
+    const allRelationAssetIds: string[] = [];
+    const dispatch = useDispatch();
+    const relations = useSelector((state: RootState) => state.relations.values);
+    const reduxAssetId = useSelector((state: RootState) => state.relations.id);
+    console.log("relations at first ", relations);
+    console.log("redux asset at first ", reduxAssetId);
+
+   console.log();
+   
+
+
+    const getRelations = async () => {
+        try {
+            const response = await fetchAssetById(assetId);
+            console.log("all response in relations", response);
+            //res
+
+            if (Object.keys(response).length > 0) {
+                console.log("response here", Object.keys(response));
+                const relationsValues = Object.keys(response);
+                console.log('reduxAssetId ',reduxAssetId);
+                console.log('assetId ',assetId);
+                if(relations.length == 0 || assetId !== reduxAssetId){
+                    dispatch(reset());
+                    dispatch(create({
+                        id: assetId,
+                        values: relationsValues
+                    }));
+                }
+                
+                const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects])
+                );
+                console.log(allRelationsData, "what's here as empty");
+                //
+                //{hasFilter:[""],
+                //{hasTracker:[]}
+                //
+
+
+                for (const [key, values] of Object.entries(allRelationsData)) {
+                    for (const value of values) {
+                        if (value === 'json-ld-1.1') {
+                          
+                        } else {
+                            console.log("relations else", relations);
+                            const response = await fetchAssetDetailById(value);
+                            console.log(`Response for ${key}:`, response);
+                            const { product_name, id, asset_category } = response ?? {};
+                            
+                                selectItems(product_name, asset_category, id)
+                        
+                           
+                            //setInputValue([]);
+                        }
+
+                    }
+                }
+
+                
+
+            } else {
+                console.error("Response is undefined");
+                dispatch(reset());
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
 
     useEffect(() => {
-        const getRelations = async () => {
-            try {
-                const response = await fetchAssetById(assetId);
-                if (response) {
-                    console.log("response here", Object.keys(response));
-                    const relationsValues = Object.keys(response);
-                    setRelations(relationsValues);
-
-                } else {
-                    console.error("Response is undefined");
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
         getRelations();
-    }, [assetId]);
+    }, [assetId, relations]);
+
+
 
     useEffect(() => {
         const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
@@ -66,20 +123,28 @@ const Relations = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
     // console.log(relations, "all relations here");
+console.log(inputValue, "here inputValue in relation");
+
 
     const getAllocatedPayload = () => {
-        const allocatedObj = {
-            [factoryId]: allRelationAssetIds
+        let allocatedObj;
+        if (deleteRelation) {
+            allocatedObj = {
+                [factoryId]: []
+            }
+        } else {
+            allocatedObj = {
+                [factoryId]: allRelationAssetIds
+            }
         }
         console.log("allocatedObj", allocatedObj);
         return allocatedObj;
     }
-
     const handleReset = () => {
         setInputValue([]);
-        // showToast("success", "success", "Relations reseted successfully")
+        showToast("success", "success", "Relations reseted successfully")
     }
-    const handleUpdateRelations = async (payload) => {
+    const handleUpdateRelations = async (payload:Payload) => {
         const url = `${API_URL}/asset/update-relation`;
         try {
             const response = await axios.patch(url, payload, {
@@ -100,6 +165,7 @@ const Relations = () => {
     }
     const handleSave = () => {
         const obj = {};
+        console.log(inputValue,"here inputValue state")
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
                 // Check if the key ends with '_asset', if so, ignore it
@@ -107,7 +173,7 @@ const Relations = () => {
                     console.log(key, "key here");
 
                     if (Array.isArray(item[key])) {
-                        const newArr = [];
+                        const newArr: string[] = [];
                         item[key].forEach(value => {
                             newArr.push(value);
                             obj[key] = newArr;
@@ -123,7 +189,8 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
-        handleUpdateRelations(payload)
+        console.log("payload for update relation", payload)
+      handleUpdateRelations(payload)
     }
     const handleDelete = () => {
         handleReset();
@@ -140,9 +207,11 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
+        console.log(obj, "obj here");    
         console.log(" here payload in delete", payload);
 
-        handleUpdateRelations(payload)
+        handleUpdateRelations(payload);
+        handleAllocatedAssets();
     }
     //factoryId and all assets urn  send
     const handleAllocatedAssets = async () => {
@@ -152,13 +221,12 @@ const Relations = () => {
             if (response?.data?.status === 201 && response?.data?.success === true) {
                 showToast("success", "success", "saved to allocated assets successfully")
             }
-            console.log("response from allocated asset", response?.data)
+
 
         } catch (error) {
             console.error(error);
         }
     }
-
 
 
     return (
@@ -194,11 +262,6 @@ const Relations = () => {
                                             <Chips
                                                 style={{ flex: "0 70%" }}
                                                 value={getAssetValues()}
-                                                onFocus={() => {
-
-                                                    setFocused(true);
-                                                }}
-                                                onBlur={() => setFocused(false)}
                                                 onRemove={(e) => {
                                                     const [value] = e.value;
                                                     console.log(value, "on remove value here")
@@ -222,11 +285,6 @@ const Relations = () => {
                                                     className="input-content"
                                                     placeholder=""
                                                     value={value}
-                                                    onFocus={() => {
-                                                        // setGetRelation(relation)
-                                                        setFocused(true)
-                                                    }}
-                                                    onBlur={() => setFocused(false)}
                                                 />
                                             </>
                                         )}
@@ -241,6 +299,7 @@ const Relations = () => {
                     <div className="form-btns">
                         <Button
                             onClick={() => {
+                                setDeleteRelation(false);
                                 handleSave();
                                 handleAllocatedAssets();
                             }}
@@ -254,7 +313,11 @@ const Relations = () => {
                             type="button"
                         ></Button>
                         <Button
-                            onClick={() => handleDelete()}
+                            onClick={() => {
+                                setDeleteRelation(true);
+                                handleDelete();
+                            }
+                            }
                             label="Delete"
                             severity="danger"
                             outlined

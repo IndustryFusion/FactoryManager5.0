@@ -557,6 +557,29 @@ export const fetchAssetById = async (assetId: string) => {
   }
 };
 
+export const fetchAssetDetailById = async(assetId:string)=>{
+  try {
+    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    const responseData = response.data;
+    const mappedData = {
+      id: responseData.id,
+      product_name: responseData['http://www.industry-fusion.org/schema#product_name']?.value,
+      asset_category: responseData['http://www.industry-fusion.org/schema#asset_category']?.value,
+    
+    };
+    return mappedData;
+  
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
 export const fetchAllocatedAssets = async (factoryId: string) => {
   try {
     const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {

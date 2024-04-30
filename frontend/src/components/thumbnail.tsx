@@ -48,8 +48,7 @@ const Thumbnail: React.FC<ThumbnailProps> = (
 ) => {
     const [fileName, setFileName] = useState(fileProp)
 
-    console.log("edit prop", isEditProp);
-    console.log("file name", fileName);
+  
 
     useEffect(() => {
         setFileName(fileProp);

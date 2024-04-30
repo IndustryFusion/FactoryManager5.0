@@ -58,7 +58,8 @@ const AllocatedAsset = () => {
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
-    const { selectItem, selectItems } = useFactoryShopFloor();
+    const { selectItem, selectItems, saveAllocatedAssets } = useFactoryShopFloor();
+    const [factoryIdValue, setFactoryIdValue] = useState("")
 
     useEffect(() => {
         const fetchNonShopFloorAssets = async (factoryId: string) => {
@@ -69,7 +70,7 @@ const AllocatedAsset = () => {
                     dispatch(create(fetchedAssetIds));
                 }
                 const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                 console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+                console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
                 if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                     allocatedAssetsArray = fetchedAllocatedAssets;
                 }
@@ -98,7 +99,6 @@ const AllocatedAsset = () => {
                 setLoading(false);
 
             } catch (err) {
-
                 setError("Failed to fetch assets");
                 setLoading(false);
                 allocatedAssetsArray = null;
@@ -112,10 +112,12 @@ const AllocatedAsset = () => {
             const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
             if (typeof id === 'string') {
                 fetchNonShopFloorAssets(id);
+                //getAllocatedAssets();
+                setFactoryIdValue(id);
             }
         }
 
-    }, [router.query.factoryId, router.isReady, unAllocatedAssetData,allocatedAssets]);
+    }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
     useEffect(() => {
         const results = assets.filter(asset => {
@@ -127,7 +129,6 @@ const AllocatedAsset = () => {
         });
         setFilteredAssets(results);
     }, [searchTerm, selectedCategories, assets]);
-
 
     const filteredAllocatedAssets = useMemo(() => {
         if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
@@ -191,10 +192,6 @@ const AllocatedAsset = () => {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
-
-
-    console.log("allocated assets", filteredAllocatedAssets);
-    
     return (
         <>
             <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>

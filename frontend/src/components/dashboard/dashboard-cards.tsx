@@ -32,101 +32,91 @@ const DashboardCards: React.FC = () => {
     const [childCount, setChildCount] = useState(0);
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    const moment = require('moment');
+
     const getNotifications = () => {
         const fetchAllAlerts = async () => {
             try {
                 const response = await getAlerts();
-                // console.log(response, "akert");
-                // console.log(response.alerts, "alerts response");
                 const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
-
                 setNotificationData(filteredNotifications)
             } catch (error) {
-                // console.error(error)
+                console.error(error)
             }
         }
         fetchAllAlerts();
     }
 
 
-    const fetchPgRest =async ()=>{    
-     try{
-        const  response = await axios.get(API_URL + `/pgrest`, {
-            params: {
-                attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",        
-                entityId: entityIdValue,
-                order: "observedAt.asc",
-                limit: '1'
-            },
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            withCredentials: true,
-        });
-        console.log(response.data ,"pgrest data")
+    // const fetchPgRest =async ()=>{    
+    //  try{
+    //     const  response = await axios.get(API_URL + `/pgrest`, {
+    //         params: {
+    //             attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",        
+    //             entityId: entityIdValue,
+    //             order: "observedAt.asc",
+    //             limit: '1'
+    //         },
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             Accept: "application/json",
+    //         },
+    //         withCredentials: true,
+    //     });
+    //  }catch(error){
+    //     console.log(error);      
+    //  }
+    // }
 
-     }catch(error){
-        console.log(error);
-        
-     }
-    }
-
-    const fetchData = async () => {
-        try {
-            let response = await axios.get(API_URL + '/value-change-state', {
-                params: {
-                    attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
-                    entityId: 'eq.'+ entityIdValue,
-                    order: "observedAt.desc",
-                    limit: '1'
-                },
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,       
-            }
-            )
+    // const fetchData = async () => {
+    //     try {
+    //         let response = await axios.get(API_URL + '/value-change-state', {
+    //             params: {
+    //                 attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
+    //                 entityId: 'eq.'+ entityIdValue,
+    //                 order: "observedAt.desc",
+    //                 limit: '1'
+    //             },
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 Accept: "application/json",
+    //             },
+    //             withCredentials: true,       
+    //         }
+    //         )
             
-            console.log(response.data[0].value, "value chnage response");
-            const responseArr = response.data;
-            if(response.data[0].value === "2"){
-                console.log(response.data[0].observedAt , "what's the value");
+    //         console.log(response.data[0].value, "value chnage response");
+    //         const responseArr = response.data;
+    //         if(response.data[0].value === "2"){
+    //             console.log(response.data[0].observedAt , "what's the value");
 
-                const timeValue = response.data[0].observedAt.split('T')[1].split('.')[0];
-                const dateTime = moment(response.data[0].observedAt);
-                const dateOnly = dateTime.format("YYYY-MM-DD");
-                console.log(dateOnly, "timeValue here");
-                const timeValueReceived  = findDifference(response.data[0].observedAt);
-                console.log(timeValueReceived , "timeValueReceived ");
+    //             const timeValue = response.data[0].observedAt.split('T')[1].split('.')[0];
+    //             const dateTime = moment(response.data[0].observedAt);
+    //             const dateOnly = dateTime.format("YYYY-MM-DD");
+    //             console.log(dateOnly, "timeValue here");
+    //             const timeValueReceived  = findDifference(response.data[0].observedAt);
+    //             console.log(timeValueReceived , "timeValueReceived ");
                 
-                console.log( setDifference(findDifference(response.data[0].observedAt)),"difference here" );
-                
-               
-            }
+    //             console.log( setDifference(findDifference(response.data[0].observedAt)),"difference here" );             
+    //         }
 
 
-            if (!(response.data.length > 0)) {
-                fetchPgRest()
-            }
+    //         if (!(response.data.length > 0)) {
+    //             fetchPgRest()
+    //         }
             
-        } catch (error:any) {
-            console.error(error)
-        }
-    }
+    //     } catch (error:any) {
+    //         console.error(error)
+    //     }
+    // }
 
 
 
     useEffect(() => {
         let intervalId: any;
 
-        fetchData();
+       
         const runningSince = () => {
-            // Reverse the keys of the object
-            // console.log("is coming here");
-
+         
 
             for (const date in machineStateData) {
                 if (machineStateData[date].length > 0) {
@@ -163,16 +153,7 @@ const DashboardCards: React.FC = () => {
                         const foundElement = dataArray.find((item: any) => item.prev_value === "2");
                         console.log("foundElement", foundElement);
 
-                        // if (foundElement) {
-                        //     const matchResult = foundElement.observedAt.match(/\d{2}:\d{2}:\d{2}/);
-
-                        //     if (matchResult) {
-                        //         const time = matchResult[0];
-                        //         // console.log("time", time);
-                        //         setDifference(findDifference(time));
-                        //         break; // Exit the loop once the condition is met
-                        //     }
-                        // }
+                       
                     }
                 }
             }
@@ -206,8 +187,7 @@ const DashboardCards: React.FC = () => {
 
         }
 
-        if (machineStateValue === "2") {
-            fetchData();
+        if (machineStateValue === "2") {         
             runningSince();
         } else {
             setDifference("00:00:00")
@@ -229,6 +209,8 @@ const DashboardCards: React.FC = () => {
         return () => clearInterval(intervalId)
 
     }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
+
+
 
 
     const getHasProperties = () => {

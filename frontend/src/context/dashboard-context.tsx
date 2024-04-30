@@ -42,7 +42,6 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [entityIdValue, setEntityIdValue] = useState("");
   const [machineStateValue, setMachineStateValue] = useState("0");
   const [blocker, setBlocker] = useState(false);
-  const [autorefresh, setAutorefresh] = useState(false);
   const [selectedAssetData, setSelectedAssetData] = useState<{ [key: string]: any; }>({});
   const [machineStateData, setMachineStateData] = useState({});
   const [notificationData, setNotificationData] = useState([]);
@@ -59,8 +58,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
         setMachineStateValue,
         blocker, setBlocker,
         selectedAssetData, setSelectedAssetData,
-        machineStateData, setMachineStateData,
-        autorefresh, setAutorefresh,
+        machineStateData, setMachineStateData,     
         notificationData, setNotificationData,
         allOnlineTime, setAllOnlineTime,
         relationsCount, setRelationsCount,

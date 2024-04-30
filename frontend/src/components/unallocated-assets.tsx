@@ -103,12 +103,9 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
         // combined asset catagories from both allocated asset and un allocated asset
         const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
         setAssetCategories(categories);
-        setAssets(fetchedAssets);
-      
+        setAssets(fetchedAssets);   
         setLoading(false);
-
       } catch (err) {
 
         setError("Failed to fetch assets");
@@ -133,9 +130,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     const results = assets.filter(asset => {
       const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
-
       return matchesSearchTerm && matchesCategories;
-
     });
     setFilteredAssets(results);
   }, [searchTerm, selectedCategories, assets]);
@@ -216,7 +211,7 @@ return (
           </Card>
         </TabPanel>
         <TabPanel header="Allocated Assets" className="-ml-2">
-          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'auto' }}>
+          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'auto' }}>         
             <ul>
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 

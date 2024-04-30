@@ -52,13 +52,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
               class:value.class
               
             }));
-          console.log(" options ", options)
-          console.log("Formatted options for MultiSelect:", options);
+          // console.log(" options ", options)
+          // console.log("Formatted options for MultiSelect:", options);
           setRelationOptions(options);
-          console.log(
-            relationOptions,
-            "The relation options list after setRelation"
-          );
+          // console.log(
+          //   relationOptions,
+          //   "The relation options list after setRelation"
+          // );
         } catch (error) {
           console.error("Failed to fetch asset details:", error);
         }

@@ -44,6 +44,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
+  
   const {
     machineStateValue, setMachineStateValue,
     selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
