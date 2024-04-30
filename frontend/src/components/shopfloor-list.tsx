@@ -19,7 +19,7 @@ import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
   factoryId: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
-  setShopfloorProp?: React.Dispatch<React.SetStateAction<{ [key: string]: any; }>>;
+  setShopfloorProp?: any;
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
@@ -27,9 +27,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   setShopfloorProp
 }) => {
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedShopFloorId, setSelectedShopFloorId] = useState<string | null>(
     null
   );
@@ -40,13 +38,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const toast = useRef<Toast>(null);
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
-  const [isTyped, setIsTyped] = useState(false);
-  const { listItem } = useFactoryShopFloor();
-
-
-  // console.log("setShopfloorProp", setShopfloorProp);
-
-
+ 
   useEffect(() => {
     const filterShopFloors = () => {
       if (searchValue.trim()) {
@@ -111,10 +103,10 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
 
   }, [factoryId, isVisible, isEdit]);
-
+  
   async function handleDelete() {
     if (!selectedShopFloorId) {
-      console.error("No shop floor selected for deletion");
+      console.log("No shop floor selected for deletion");
       toast.current?.show({
         severity: "warn",
         summary: "Warning",
@@ -137,7 +129,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
-      onShopFloorDeleted(selectedShopFloorId);
+     if (onShopFloorDeleted) {
+        onShopFloorDeleted(selectedShopFloorId);
+      }
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({
