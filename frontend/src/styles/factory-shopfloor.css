@@ -6,7 +6,8 @@
     gap: 1rem;
     padding: 0 1rem;
 }
-ul{
+
+ul {
     width: 100%;
 }
 
@@ -29,14 +30,15 @@ ul{
     width: 90%;
 }
 
-.factory-shopfloor-container{
+.factory-shopfloor-container {
     height: 90vh;
     overflow: hidden;
-    /* zoom: 96%; */
+    zoom: 96%;
     position: absolute;
-    top: 5rem;
-   width: 100%;
+    top: 3rem;
+    width: 100%;
 }
+
 .shopfloor-list-container {
     border-right: 1px solid #ccc;
     /* padding: 0 1.3rem; */
@@ -62,36 +64,44 @@ ul{
 .factory-header {
     border-bottom: 1px solid #ccc;
 }
-.asset-lists{
-   height: 100vh;
-   display: flex;
+
+.asset-lists {
+    height: 100vh;
+    display: flex;
 }
-.asset-lists div{
+
+.asset-lists div {
     zoom: 86%;
     /* flex: 0 0 44%; */
 }
+
 .asset-lists .p-picklist-source-controls .p-picklist-buttons,
-.p-picklist-target-controls .p-picklist-buttons{
-display: none !important;
+.p-picklist-target-controls .p-picklist-buttons {
+    display: none !important;
 }
+
 .p-picklist-buttons {
     justify-content: normal;
     margin-top: 30px;
 }
-.list-items{
+
+.list-items {
     padding: 0;
     font-size: 17px;
 }
-.p-chips .p-chips-multiple-container .p-chips-token{
+
+.p-chips .p-chips-multiple-container .p-chips-token {
     font-size: 12px;
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ccc;
     background-color: transparent;
 }
-.p-chips .p-component .p-inputwrapper{
-width: 90%;
+
+.p-chips .p-component .p-inputwrapper {
+    width: 90%;
 }
-.p-inputtext .p-chips-multiple-container{
-    width:95% !important;
+
+.p-inputtext .p-chips-multiple-container {
+    width: 95% !important;
 }
