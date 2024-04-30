@@ -488,6 +488,11 @@ function updateChartDataWithSocketData(currentChartData:ChartDataState, newData:
   }
 }
 
+useEffect(() => {
+    // Reset attributes when entityIdValue changes
+    setAttributes([]);
+    setSelectedAttribute("");
+}, [entityIdValue]);  
 
 
 useEffect(() => {
@@ -511,6 +516,7 @@ useEffect(() => {
   //     }
   //   }
   // }
+  
     fetchAsset(entityIdValue)
     fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime)
         .catch(console.error)
