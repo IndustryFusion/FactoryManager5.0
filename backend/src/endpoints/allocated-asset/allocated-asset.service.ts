@@ -235,6 +235,7 @@ export class AllocatedAssetService {
           }
           await this.remove(id, token);
         }
+        finalAssetData = [...new Set(finalAssetData)];
         const finalData = {
           "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
           "id": id,

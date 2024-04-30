@@ -61,15 +61,16 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     return <>{assetType}</>;
   };
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
-    return rowData?.product_icon ? (
-      <img
-        src={rowData?.product_icon}
-        alt={rowData?.product_name}
-        style={{ width: "70px", height: "auto" }}
-      />
-    ) : (
-      <span>No Image</span>
-    );
+    if (rowData && rowData.product_icon && rowData.product_icon !== 'NULL') {
+      return (
+          <img
+            src={rowData.product_icon}
+            style={{ width: "70px", height: "auto" }}
+          />
+      );
+    } else {
+        return <span>No Image</span>;
+    }
   };
   const viewBodyTemplate = (rowData: Asset): React.ReactNode => {
     return (
@@ -95,6 +96,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     try {
       const response = await fetchAsset();
       if (response !== undefined) {
+        setSelectedRow(response[0]);
         setAssetData(response);
         setAllAssets(response);
         setAssetCount(response.length)
@@ -157,14 +159,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       if (router.isReady) {
         const { } = router.query;
         handleAsset();
-        if (dataTableRef.current) {
-          if (assetData?.length > 0 && assetFlag) {
-            // console.log("is coming here");
-            // console.log("first object value", newRowData[0]);
-            setSelectedRow(assetData[0]);
-            dispatch(create(assetData[0].id));
-          }
-        }
         if (editOnboardAsset.successToast) {
           showToast("success", "success", "onboard updated successfully")
         }
