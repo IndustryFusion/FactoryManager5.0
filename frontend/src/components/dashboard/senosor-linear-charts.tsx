@@ -4,7 +4,6 @@ import React, { useContext, useEffect, useRef, useState ,useCallback} from "reac
 import { ChartData, ChartOptions, registerables ,TooltipItem, ChartType, ScriptableContext} from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { LayoutContext } from "../../pages/factory-site/layout/layout-context";
 import { Asset } from "@/interfaces/asset-types";
 import { Dropdown   } from "primereact/dropdown";
 import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
@@ -82,6 +81,14 @@ interface ChartDataSets {
   backgroundColor: string;
   tension: number;
 }
+
+interface FetchDataParams {
+  intervalType: string;
+  order: string;
+  entityId: string;
+  attributeId: string;
+  observedAt?: string; 
+}
 const iconMapping: any = {
   dustiness: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
    dustiness1: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
@@ -111,18 +118,18 @@ const [data, setChartData] = useState<ChartDataState>({
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState("");
   const [productName, setProductName] = useState<string>("");
-  const chartRef = useRef<ChartJS>(null);
+  const chartRef = useRef(null);
   const [zoomLevel, setZoomLevel] = useState({min: null, max: null});
   const [zoomState, setZoomState] = useState({
     x: {min: undefined, max: undefined},
     y: {min: undefined, max: undefined}
   });
   const [selectedAttributeId, setSelectedAttributeId] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date | Date[] | undefined>(undefined);
-  const [startTime, setStartTime] = useState<Date | Date[] | undefined>(undefined);
-  const [endTime, setEndTime] = useState<Date | Date[] | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date  | undefined>(undefined);
+  const [startTime, setStartTime] = useState<Date | undefined>(undefined);
+  const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
-
+  const [chartInstance, setChartInstance] = useState(null);
   const intervalButtons = [
     { label: "Live", interval: "live" },
     { label: "10 Min", interval: "10min" },
@@ -311,14 +318,13 @@ const handleAttributeChange = (selectedValue: string) => {
 
 const handleIntervalChange = (e: any) => {
     const newInterval = e.value;
-    console.log(`Interval changed to: ${newInterval}`);
     setSelectedInterval(newInterval);
     setChartData({
         labels: [],
         datasets: []
     });
 };
-const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdValue:string, selectedInterval:string) => {
+const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdValue:string, selectedInterval:string, selectedDate?:Date, startTime?:Date,endTime?:Date) => {
 
   setChartData({
         labels:[],
@@ -329,20 +335,21 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
     return;
   }
 
-  const params = {
+  const params:FetchDataParams = {
     intervalType: selectedInterval,
     order: "observedAt.desc",
     entityId: `eq.${entityIdValue}`,
     attributeId: `eq.${attributeId}`,
+    
   };
 
   // Customize parameters for custom intervals
-  if (selectedInterval === 'custom' && selectedDate && startTime instanceof Date && endTime instanceof Date) {
+  if (selectedInterval == 'custom' && selectedDate && startTime  && endTime ) {
   
     const startDate = new Date(selectedDate);
-    startDate.setHours(startTime.getHours(), startTime.getMinutes(), startTime.getSeconds());
+    startDate.setHours(startTime.getHours(), startTime.getMinutes());
     const endDate = new Date(selectedDate);
-    endDate.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds());
+    endDate.setHours(endTime.getHours(), endTime.getMinutes());
     params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
   }
 
@@ -355,10 +362,9 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
       },
       withCredentials: true,
     });
-
     const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
-    const labels = factoryData.map(data => formatLabel(new Date(data.observedAt)));
-    const dataPoints = factoryData.map(data => data.value ? Number(data.value) : null);
+    const labels = factoryData.map((data:DataItem) => formatLabel(new Date(data.observedAt)));
+    const dataPoints = factoryData.map((data:DataItem) => data.value ? Number(data.value) : null);
 
     const newDataset = {
       label: attributeId.replace('eq.', ''),
@@ -393,34 +399,30 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
 
 const handleDateChange = async(e:any) => {
     setSelectedDate(e.value as Date);
-    console.log("Selected date changed to:", e.value);
 };
 
-const handleStartTimeChange = async (e) => {
-    const timeValue = Array.isArray(e.value) ? e.value[0] : e.value;
-    if (selectedDate && timeValue) {
-        const updatedDate = new Date(selectedDate);
-        updatedDate.setHours(timeValue.getHours(), timeValue.getMinutes(), timeValue.getSeconds());
-        setStartTime(updatedDate);
-       
-    } else {
-        setStartTime(timeValue);
-    }
+const handleStartTimeChange = (e: any) => {
+  const newTime = e.value instanceof Date ? e.value : e.value[0]; // Assuming `e.value` could be Date | Date[]
+  if (selectedDate && newTime) {
+    const updatedDate = new Date(selectedDate);
+    updatedDate.setHours(newTime.getHours(), newTime.getMinutes(), newTime.getSeconds());
+    setStartTime(updatedDate);
+  } else {
+    setStartTime(newTime);
+  }
 };
 
-const handleEndTimeChange = async (e) => {
-  
-    const timeValue = Array.isArray(e.value) ? e.value[0] : e.value;
-    if (selectedDate && timeValue) {
-        const updatedDate = new Date(selectedDate);
-        updatedDate.setHours(timeValue.getHours(), timeValue.getMinutes(), timeValue.getSeconds());
-        setEndTime(updatedDate);
-       
-    } else {
-        setEndTime(timeValue);
-       
-    }
+const handleEndTimeChange = (e: any) => {
+  const newTime = e.value instanceof Date ? e.value : e.value[0]; // Same assumption as above
+  if (selectedDate && newTime) {
+    const updatedDate = new Date(selectedDate);
+    updatedDate.setHours(newTime.getHours(), newTime.getMinutes(), newTime.getSeconds());
+    setEndTime(updatedDate);
+  } else {
+    setEndTime(newTime);
+  }
 };
+
 
 function updateChartDataWithSocketData(currentChartData:ChartDataState, newData: DataItem[]) {
   let dataChanged = false;  // A flag to detect if data actually changed
@@ -439,14 +441,12 @@ function updateChartDataWithSocketData(currentChartData:ChartDataState, newData:
 
     // Skip updates for the machine-state attribute
     if (cleanAttributeId === 'machine-state') {
-      console.log("Skipping machine-state attribute update");
       return;
     }
 
     // Attempt to find the dataset with the cleaned attributeId
     const datasetIndex = newChartData.datasets.findIndex(ds => ds.label === cleanAttributeId);
     if (datasetIndex === -1) {
-      console.log(`Dataset not found for attribute ${cleanAttributeId}, skipping data item`);
       return; // If no dataset matches, skip this data item
     }
 
@@ -488,20 +488,37 @@ function updateChartDataWithSocketData(currentChartData:ChartDataState, newData:
   }
 }
 
-  useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } 
-  }, [ router.isReady]);
+useEffect(() => {
+    // Reset attributes when entityIdValue changes
+    setAttributes([]);
+    setSelectedAttribute("");
+}, [entityIdValue]);  
+
 
 useEffect(() => {
+   if (Cookies.get("login_flag") === "false") {
+      router.push("/login");
+    } 
     let isMounted = true; // Flag to track mount status
-    if (selectedInterval === 'custom' && (!startTime || !endTime)) {
+    if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
         return; 
     }
+
+  //   if (chartRef.current && zoomLevel.min && zoomLevel.max) {
+  //   console.log("chartRef", chartRef)
+  //   const chartInstance = chartRef.current.chart;
+  //   if (chartInstance) {
+  //     const xAxis = chartInstance.scales['x-axis-0']; 
+  //     if (xAxis) {
+  //       xAxis.options.ticks.min = zoomLevel.min;
+  //       xAxis.options.ticks.max = zoomLevel.max;
+  //       chartInstance.update();
+  //     }
+  //   }
+  // }
   
     fetchAsset(entityIdValue)
-    fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval)
+    fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime)
         .catch(console.error)
         .then(() => {
             if (!isMounted) return; // Prevent state updates if component is unmounted
@@ -510,7 +527,7 @@ useEffect(() => {
     
 
     return () => { isMounted = false; }; // Cleanup function to set mount flag false
-}, [selectedAttribute, entityIdValue, selectedInterval]);
+}, [selectedAttribute, entityIdValue, selectedInterval, router.isReady,zoomLevel]);
 
 
 useEffect(() => {
@@ -519,8 +536,6 @@ useEffect(() => {
   socketRef.current = socket;
 
     socketRef.current.on("dataUpdate", (updatedData:any) => {
-      console.log("dataUpdate", updatedData)
-       
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
         
     });
@@ -548,28 +563,8 @@ const chartOptionsWithZoomPan = {
   }
 };
 const handleLoad = async () => {
-  if (!selectedDate || !startTime || !endTime) {
-    console.error("Selected date, start time, or end time is missing.");
-    return;
-  }
-
-  setLoading(true); 
-     await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval);
+     await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime);
 };
-useEffect(() => {
-  if (chartRef.current && zoomLevel.min && zoomLevel.max) {
- 
-    const chartInstance = chartRef.current.chart;
-    if (chartInstance) {
-      const xAxis = chartInstance.scales['x-axis-0']; 
-      if (xAxis) {
-        xAxis.options.ticks.min = zoomLevel.min;
-        xAxis.options.ticks.max = zoomLevel.max;
-        chartInstance.update();
-      }
-    }
-  }
-}, [data, zoomLevel]);
 
   return (
     <div style={{ zoom: "80%" }}>
@@ -633,7 +628,7 @@ useEffect(() => {
                     placeholder="Start Time"
                     className="w-full sm:w-6rem"
                     disabled={selectedInterval !== 'custom'}
-                    maxDate={endTime ? new Date(endTime.getTime() - 60000) : null}
+                    maxDate={endTime ? new Date(endTime.getTime() - 60000) : undefined}
                     appendTo="self" 
                   />
                   <Calendar 
@@ -645,7 +640,8 @@ useEffect(() => {
                     placeholder="End Time"
                     className="w-full sm:w-6rem"
                     disabled={selectedInterval !== 'custom'}
-                    minDate={startTime ? new Date(startTime.getTime() + 60000) : null}
+                    minDate={startTime ? new Date(startTime.getTime() + 60000) : undefined}
+                    maxDate={new Date()}
                     appendTo="self" 
                     />
                   <Button 

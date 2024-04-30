@@ -3,8 +3,12 @@ import { string } from 'prop-types';
 
 interface unAllocatedAssetState {
     id: string;
-    product_name: string;
-    asset_category: string;
+    product_name:{
+        value:string
+    } ;
+    asset_category:{
+        value:string
+    } ;
 };
 
 const initialState: unAllocatedAssetState[]  = [];
