@@ -524,7 +524,6 @@ const onRestore = useCallback(async () => {
       } else {
         setToastMessage("Scorpio already has these data");
       }
-      onRestore();
       dispatch(reset());
 
     } catch (error) {
@@ -571,7 +570,7 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-
+     console.log("payload ", payLoad)
       if (reactFlowUpdateMongo.status == 201) {
         setToastMessage("Flowchart saved successfully");
       } else {
@@ -617,8 +616,8 @@ const onRestore = useCallback(async () => {
 
 
 
-      setNodesInitialized(true);
-      onRestore();
+      // setNodesInitialized(true);
+      // onRestore();
       dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -685,7 +684,7 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-
+       console.log("allocatedAssetDeletion ", allocatedAssetDeletion)
       if (reactFlowUpdateMongo.status == 200 ||  reactFlowUpdateMongo.status == 204) {
         setToastMessage("Flowchart saved successfully");
       }
@@ -697,23 +696,22 @@ const onRestore = useCallback(async () => {
       if (allocatedAssetDeletion.status == 200 ||  allocatedAssetDeletion.status == 204) {
         setToastMessage( "Allocated Asset Deleted successfully.");
       }
-      setNodesInitialized(true);
-      onRestore();
+      
     } catch (error) {
       console.error("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
     } finally {
-      // Regardless of the result, try to refresh the state to reflect the current backend state
-      setIsSaveDisabled(true);
       setIsOperationInProgress(false);
+      dispatch(reset());
     }
   };
-const saveOrUpdate = useCallback(async () => {
+
+  const saveOrUpdate = useCallback(async () => {
   try {
     setIsOperationInProgress(true);
 
-    // Fetch the current state from the server to determine if it's a new or existing flowchart
-    const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+    // Fetch the current state from the server to determine the nature of the flowchart
+    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -721,23 +719,105 @@ const saveOrUpdate = useCallback(async () => {
       withCredentials: true,
     });
 
-    // Check if the data is empty or not
-    const isEmpty = !getReactFlowMongo.data || Object.keys(getReactFlowMongo.data).length === 0;
+    // Check if the response data exists and has the necessary elements
+    const data = response.data;
+    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData || !data.factoryData.edges;
+    console.log("Fetched flowchart data: ", response.data);
 
     if (isEmpty) {
-      // If data is empty, save the new flowchart
+      console.log("No existing data found, calling onSave.");
       await onSave();
     } else {
-      // If data exists, update the existing flowchart
-      await onUpdate();
+      // Check if edges only connect factory to shopFloor
+      const onlyFactoryToShopFloor = data.factoryData.edges.every(edge => 
+        edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_")
+      );
+
+      if (onlyFactoryToShopFloor) {
+        console.log("Only factory to shopFloor edges detected, calling PATCH on /react-flow.");
+        // Use PATCH method to update the flowchart when only simple connections exist
+      const payLoad = {
+      factoryId: factoryId,
+
+      factoryData: {
+        nodes: nodes.map(({ id, type, position, data, style }) => ({
+          id,
+          type,
+          position,
+          data,
+          style,
+        })),
+        edges: edges.map(({ id, source, target, type, data }) => ({
+          id,
+          source,
+          target,
+
+          type,
+          data,
+        })),
+      },
+    };
+        await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        });
+        setToastMessage("Flowchart updated successfully.");
+
+        const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+        payLoad.factoryData.edges, {
+        params: {
+          "factory-id": factoryId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
+      }
+
+      const reactFlowScorpioUpdate = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+    
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
+        setToastMessage("Scorpio updated successfully");
+      } else {
+        setToastMessage("Data Already Exist in Scorpio");
+      }
+      dispatch(reset());
+      } else {
+        await onUpdate();
+      }
     }
+    dispatch(reset());
   } catch (error) {
     console.error("Error during save or update operation:", error);
     setToastMessage("Error during operation, check the logs for details");
   } finally {
     setIsOperationInProgress(false);
   }
-}, [factoryId, onSave, onUpdate]);
+}, [factoryId, onSave]);
+
+
+
   const handleExportClick = () => {
     if (elementRef.current) {
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
