@@ -628,6 +628,7 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
+
       const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
         headers: {
           "Content-Type": "application/json",
