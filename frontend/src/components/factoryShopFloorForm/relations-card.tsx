@@ -26,8 +26,8 @@ const Relations = () => {
         inputValue,
         setInputValue,
         assetId,
-        setRelations,
-        selectItems
+        selectItems,
+        asset
     } = useFactoryShopFloor();
 
     const [factoryId, setFactoryId] = useState("");
@@ -38,41 +38,23 @@ const Relations = () => {
     const dispatch = useDispatch();
     const relations = useSelector((state: RootState) => state.relations.values);
     const reduxAssetId = useSelector((state: RootState) => state.relations.id);
-    console.log("relations at first ", relations);
-    console.log("redux asset at first ", reduxAssetId);
-
-   console.log();
-   
-
 
     const getRelations = async () => {
         try {
             const response = await fetchAssetById(assetId);
-            console.log("all response in relations", response);
-            //res
-
+            //console.log("all response in relations", response);
             if (Object.keys(response).length > 0) {
-                console.log("response here", Object.keys(response));
-                const relationsValues = Object.keys(response);
-                console.log('reduxAssetId ',reduxAssetId);
-                console.log('assetId ',assetId);
+                const relationsValues = Object.keys(response);               
                 if(relations.length == 0 || assetId !== reduxAssetId){
                     dispatch(reset());
                     dispatch(create({
                         id: assetId,
                         values: relationsValues
                     }));
-                }
-                
+                }               
                 const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects])
                 );
-                console.log(allRelationsData, "what's here as empty");
-                //
-                //{hasFilter:[""],
-                //{hasTracker:[]}
-                //
-
-
+       
                 for (const [key, values] of Object.entries(allRelationsData)) {
                     for (const value of values) {
                         if (value === 'json-ld-1.1') {
@@ -81,19 +63,11 @@ const Relations = () => {
                             console.log("relations else", relations);
                             const response = await fetchAssetDetailById(value);
                             console.log(`Response for ${key}:`, response);
-                            const { product_name, id, asset_category } = response ?? {};
-                            
+                            const { product_name, id, asset_category } = response ?? {};                           
                                 selectItems(product_name, asset_category, id)
-                        
-                           
-                            //setInputValue([]);
                         }
-
                     }
                 }
-
-                
-
             } else {
                 console.error("Response is undefined");
                 dispatch(reset());
@@ -103,12 +77,9 @@ const Relations = () => {
         }
     }
 
-
     useEffect(() => {
         getRelations();
     }, [assetId, relations]);
-
-
 
     useEffect(() => {
         const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
@@ -122,24 +93,8 @@ const Relations = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-    // console.log(relations, "all relations here");
-console.log(inputValue, "here inputValue in relation");
+    console.log(deleteRelation, "deleteRelation here outside");
 
-
-    const getAllocatedPayload = () => {
-        let allocatedObj;
-        if (deleteRelation) {
-            allocatedObj = {
-                [factoryId]: []
-            }
-        } else {
-            allocatedObj = {
-                [factoryId]: allRelationAssetIds
-            }
-        }
-        console.log("allocatedObj", allocatedObj);
-        return allocatedObj;
-    }
     const handleReset = () => {
         setInputValue([]);
         showToast("success", "success", "Relations reseted successfully")
@@ -157,7 +112,13 @@ console.log(inputValue, "here inputValue in relation");
             console.log("resposne of update relations", response);
 
             if (response.data?.status === 204 && response.data?.success === true) {
-                showToast("success", "success", "Relations saved successfully")
+                if(deleteRelation){
+                    console.log(deleteRelation, "deleteRelation here");
+                    showToast("success", "success", "Relation deleted successfully");
+                } else {
+                    showToast("success", "success", "Relations saved successfully");
+                }
+              
             }
         } catch (error) {
             console.error(error)
@@ -165,37 +126,42 @@ console.log(inputValue, "here inputValue in relation");
     }
     const handleSave = () => {
         const obj = {};
-        console.log(inputValue,"here inputValue state")
+        const allocatedAssetIds:string[] = [];
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
                 // Check if the key ends with '_asset', if so, ignore it
                 if (key !== "" && !key.endsWith('_asset')) {
                     console.log(key, "key here");
-
-                    if (Array.isArray(item[key])) {
-                        const newArr: string[] = [];
-                        item[key].forEach(value => {
-                            newArr.push(value);
-                            obj[key] = newArr;
+                  for(let relation of relations){
+                    if(relation === key){
+                        if (Array.isArray(item[key])) {
+                            const newArr: string[] = [];
+                            item[key].forEach(value => {
+                                newArr.push(value);
+                                obj[key] = newArr;
+                                allocatedAssetIds.push(value)
+                            }
+                            )
+                        } else {
+                            obj[key] = [item[key]];
+                            allocatedAssetIds.push(...[item[key]])                         
                         }
-                        )
-                    } else {
-                        obj[key] = [item[key]]
                     }
+                  }
+                    
                 }
             });
         });
-        console.log(obj, "obj here");
         const payload = {
             [assetId]: obj
-        };
-        console.log("payload for update relation", payload)
-      handleUpdateRelations(payload)
+        };  
+        handleUpdateRelations(payload);
+        setDeleteRelation(false);
     }
     const handleDelete = () => {
+        
         handleReset();
         const obj = {};
-
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
                 if (key !== "" && !key.endsWith('_asset')) {
@@ -206,36 +172,19 @@ console.log(inputValue, "here inputValue in relation");
         })
         const payload = {
             [assetId]: obj
-        };
-        console.log(obj, "obj here");    
-        console.log(" here payload in delete", payload);
-
-        handleUpdateRelations(payload);
-        handleAllocatedAssets();
+        };      
+        handleUpdateRelations(payload); 
+        setDeleteRelation(true);   
     }
-    //factoryId and all assets urn  send
-    const handleAllocatedAssets = async () => {
-        const payloadObj = getAllocatedPayload();
-        try {
-            const response = await fetchFormAllocatedAsset(payloadObj);
-            if (response?.data?.status === 201 && response?.data?.success === true) {
-                showToast("success", "success", "saved to allocated assets successfully")
-            }
-
-
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-
+ 
     return (
         <>
             <Card className="p-4">
                 <Toast ref={toast} />
+                {Array.isArray(relations) && relations.length > 0 && (
                 <form >
                     <div>
-                        {Array.isArray(relations) && relations.length > 0 && (
+                      {
                             relations.map((relation, index) => {
 
                                 const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
@@ -292,17 +241,15 @@ console.log(inputValue, "here inputValue in relation");
                                 )
                             }
                             )
-                        )}
+                        }
                     </div>
+                    
                 </form>
+                   )}
                 {relations.length > 0 &&
                     <div className="form-btns">
                         <Button
-                            onClick={() => {
-                                setDeleteRelation(false);
-                                handleSave();
-                                handleAllocatedAssets();
-                            }}
+                            onClick={() => handleSave()}
                         >Save
                         </Button>
                         <Button
@@ -313,11 +260,7 @@ console.log(inputValue, "here inputValue in relation");
                             type="button"
                         ></Button>
                         <Button
-                            onClick={() => {
-                                setDeleteRelation(true);
-                                handleDelete();
-                            }
-                            }
+                            onClick={() => handleDelete() }
                             label="Delete"
                             severity="danger"
                             outlined
@@ -326,7 +269,7 @@ console.log(inputValue, "here inputValue in relation");
                         />
                     </div>
                 }
-                {relations.length === 0 && <p>No relations exist</p>}
+                {relations.length === 0  && <p>No relations exist</p>}
             </Card>
         </>
     );

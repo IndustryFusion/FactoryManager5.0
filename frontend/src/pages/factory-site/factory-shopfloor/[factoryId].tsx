@@ -12,12 +12,13 @@ const FactoryShopFloor = () => {
  
     return (
         <>
-            <HorizontalNavbar />
-            <FactoryShopFloorProvider>
-                <div className="factory-shopfloor-container">
+        <div style={{overflow:"hidden",height:"95vh"}}>
+        <HorizontalNavbar />
+        <FactoryShopFloorProvider>          
                    <Header />
+                   <div className="factory-shopfloor-container">
                     <ShopFloorProvider>
-                        <div className="factory-shopfloor-container">
+                       
                             <div className="shopfloor-list-container">
                                 <ShopFloorList />
                                 <div>
@@ -30,10 +31,13 @@ const FactoryShopFloor = () => {
                             <div className="allocated-list-container" >
                                 <PicklistAssets />
                             </div>
-                        </div>
+                       
                     </ShopFloorProvider>
-                </div>
+                    </div>
             </FactoryShopFloorProvider>
+        </div>
+          
+           
         </>
     )
 }

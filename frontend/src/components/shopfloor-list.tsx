@@ -161,7 +161,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({ onShopFloorDeleted}) => {
 
   return (
     <>
-      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
+      <Card style={{ fontSize: "15px", overflowY: "scroll",height:"400px"}}>
         <Toast ref={toast} />
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>

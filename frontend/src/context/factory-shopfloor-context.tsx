@@ -50,13 +50,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     const relations = useSelector((state: RootState) => state.relations.values);
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
-        console.log(item, "item here");
-        //[hasCatridge :filtercatridge]
-        //hasGasco: category
-     
-       
-        console.log(relations, "relations here iniside func ");
-    
+ 
         for(let getRelation of relations){
             const relation = getRelation.replace("has", "").toLowerCase();
             console.log(relation, "in select items");
@@ -110,7 +104,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                 });       
             }
         }
-        // console.log("inputValues here ", inputValue);
+
     }
     
   

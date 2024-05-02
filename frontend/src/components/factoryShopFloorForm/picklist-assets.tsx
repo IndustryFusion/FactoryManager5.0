@@ -42,11 +42,12 @@ const PicklistAssets = () => {
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     const dispatch = useDispatch();
     const router = useRouter();
-    const { selectItems, setAsset, relations, setSaveAllocatedAssets, shopFloorValue } = useFactoryShopFloor();
+    const { selectItems, setAsset, setSaveAllocatedAssets, shopFloorValue,saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryId, setFactoryId] = useState("")
     const toast = useRef<any>(null);
     let toastShown = false;
     let allocatedAssetsArray = null;
+    const relations = useSelector((state: RootState) => state.relations.values);
 
 
 
@@ -55,78 +56,61 @@ const PicklistAssets = () => {
             const response = await getShopFloorAssets(shopFloorValue?.id);
             const { assetsData } = response;
             console.log(response, 'response from shopfloor');
-            if (assetsData.length === 0) {
-                setAsset("")
-            }
+            
+            setAsset({})
             setShopFloorAssets(assetsData);
             setSource(assetsData)
         } catch (error) {
             console.error(error)
         }
     }
-
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorValue?.id]);
 
-    useEffect(() => {
-        const fetchNonShopFloorAssets = async (factoryId: string) => {
-
-            try {
-                if (unAllocatedAssetData.length === 0) {
-                    const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-                    // console.log("fetchedAssetIds", fetchedAssetIds);
-                    dispatch(create(fetchedAssetIds));
-                }
-                const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
-                if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
-                    allocatedAssetsArray = fetchedAllocatedAssets;
-                }
-                // setAllocatedAssets(allocatedAssetsArray);
-
-                // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-                console.log("unAllocatedAssetData", unAllocatedAssetData);
-                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
-                    const relationsArr = [];
-                    // console.log(unAllocatedAssetData[key], "its object here");
-                    const checkHas = 'http://www.industry-fusion.org/schema#has';
-
-                    Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
-                        // Check if the innerKey starts with the specified string
-                        if (innerKey.startsWith(checkHas)) {
-                            const modifiedKey = innerKey.replace('http://www.industry-fusion.org/schema#', '');
-                            relationsArr.push(modifiedKey);
-                        }
-                    });
-
-                    return ({
-                        id: unAllocatedAssetData[key].id,
-                        product_name: unAllocatedAssetData[key].product_name?.value,
-                        asset_category: unAllocatedAssetData[key].asset_category?.value,
-                        relation: relationsArr
-                    })
-                }
-
-                );
-                console.log("fetchedAssets", fetchedAssets);
-                setTarget(fetchedAssets)
-
-                // destructuring the asset id, product_name, asset_catagory for allocated Asset
-                const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
-                    id: fetchedAllocatedAssets[key].id,
-                    product_name: fetchedAllocatedAssets[key]?.product_name,
-                    asset_category: fetchedAllocatedAssets[key]?.asset_category,
-                }));
-
-                // combined asset catagories from both allocated asset and un allocated asset
-                const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
-            } catch (err) {
-               console.error(err)
+    const fetchNonShopFloorAssets = async (factoryId: string) => {
+        try {
+            if (unAllocatedAssetData.length === 0) {
+                const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
+                // console.log("fetchedAssetIds", fetchedAssetIds);
+                dispatch(create(fetchedAssetIds));
             }
-        };
 
+            // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
+            const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
+                const relationsArr: string[] = [];
+                // console.log(unAllocatedAssetData[key], "its object here");
+                const checkHas = 'http://www.industry-fusion.org/schema#has';
+
+                Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
+                    // Check if the innerKey starts with the specified string
+                    if (innerKey.startsWith(checkHas)) {
+                        const modifiedKey = innerKey.replace('http://www.industry-fusion.org/schema#', '');
+                        relationsArr.push(modifiedKey);
+                    }
+                });
+
+                return ({
+                    id: unAllocatedAssetData[key].id,
+                    product_name: unAllocatedAssetData[key].product_name?.value,
+                    asset_category: unAllocatedAssetData[key].asset_category?.value,
+                    relation: relationsArr
+                })
+            }
+
+            );
+            console.log("fetchedAssets", fetchedAssets);
+            setTarget(fetchedAssets);
+
+            // combined asset catagories from both allocated asset and un allocated asset
+            const categories = Array.from(new Set([...fetchedAssets].map(asset => asset.asset_category))).filter(Boolean);
+
+        } catch (err) {
+            console.error(err)
+        }
+    };
+
+    useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
@@ -137,7 +121,6 @@ const PicklistAssets = () => {
                 setFactoryId(id);
             }
         }
-
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -156,7 +139,7 @@ const PicklistAssets = () => {
 
         return (
             <>
-                <li className="list-items" onClick={() => {
+                <span className="list-items" onClick={() => {
                     selectItems(item.product_name, item.asset_category, item?.id)//relation
                     source.forEach(sourceItem => {
                         if (sourceItem?.product_name === item.product_name) {
@@ -168,7 +151,7 @@ const PicklistAssets = () => {
                         showToast("warn", "Warning", "move asset to shopfloor assets");
                     }
 
-                }}>{item.product_name}</li>
+                }}>{item.product_name}</span>
             </>
         )
     };
@@ -217,6 +200,7 @@ const PicklistAssets = () => {
         try {
             const response = await fetchFormAllocatedAsset(payloadObj);
             if (response?.data?.status === 201 && response?.data?.success === true) {
+                setSaveAllocatedAssets(!saveAllocatedAssets)
                 showToast("success", "success", "saved to allocated assets successfully")
             }
             console.log("response from allocated asset", response?.data)
@@ -231,8 +215,7 @@ const PicklistAssets = () => {
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
                 handleSaveShopFloors()
-                handleAllocatedAssets()
-                setSaveAllocatedAssets(true)
+                handleAllocatedAssets()              
             }
             }>Save</Button>
         </div>
@@ -242,6 +225,7 @@ const PicklistAssets = () => {
         <>
             <Toast ref={toast} />
             <PickList dataKey="id" source={source} target={target}
+                filter filterBy="product_name "
                 onChange={onChange}
                 breakpoint="1280px"
                 sourceHeader={headerSource} targetHeader="Unallocated Assets"
