@@ -182,7 +182,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       <div style={{ zoom: "80%" }}>
         <div className="dashboard-assets" style={{ width: "100%" }}>
           <div className="card h-auto " style={{ width: "100%" }}>
+            <div className=" flex justify-content-between">
             <h5 className="heading-text">Assets</h5>
+            <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
+            </div>
+            
             <div className="mb-5">
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
