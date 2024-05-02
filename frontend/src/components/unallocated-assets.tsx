@@ -202,7 +202,7 @@ return (
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
         </TabPanel>
         <TabPanel header="Allocated Assets" className="-ml-2">
           <Card className="card-full-height" >
@@ -216,7 +216,7 @@ return (
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
         </TabPanel>
       </TabView>
     </div>
