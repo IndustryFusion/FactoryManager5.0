@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   getNonShopFloorAsset,
-  getNonShopFloorAssetDetails,
   fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
 // import { Asset } from "../interfaces/assetTypes";
@@ -19,28 +18,17 @@ import { RootState } from "@/state/store";
 import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { TabView, TabPanel } from 'primereact/tabview';
 
-interface AssetProperty {
-  type: "Property";
-  value: string;
-  observedAt?: string;
-}
 
 interface AssetListProps {
   factoryId: string;
   product_name: string;
 }
 
-interface AssetRelationship {
-  type: "Relationship";
-  class?: AssetProperty;
-  object: string;
-}
-
 interface Asset {
   id: string;
   product_name: string;
   asset_category: string;
-  [key: string]: AssetProperty | AssetRelationship | string | undefined;
+ [key: string]:any,
 }
 
 const UnallocatedAssets: React.FC<AssetListProps> = ({
@@ -69,9 +57,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
   const dispatch = useDispatch();
 
-
-  useEffect(() => {
-    const fetchNonShopFloorAssets = async (factoryId: string) => {
+ const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
         if (unAllocatedAssetData.length === 0) {
           const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
@@ -84,30 +70,29 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           allocatedAssetsArray = fetchedAllocatedAssets;
           setAllocatedAssets(fetchedAllocatedAssets);
         }
-      
-        // setAllocatedAssets(allocatedAssetsArray);
-
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-        const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
-          id: unAllocatedAssetData[key].id,
-          product_name: unAllocatedAssetData[key].product_name?.value,
-          asset_category: unAllocatedAssetData[key].asset_category?.value,
-        }));
-
+      const fetchedUnallocatedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key:any) => {
+      const asset = unAllocatedAssetData[key];
+      return {
+        id: asset.id,
+        product_name: asset.product_name?.value ,
+        asset_category: asset.asset_category?.value 
+       };
+      });
         // destructuring the asset id, product_name, asset_catagory for allocated Asset
-        const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
-          id: fetchedAllocatedAssets[key].id,
-          product_name: fetchedAllocatedAssets[key]?.product_name,
-          asset_category: fetchedAllocatedAssets[key]?.asset_category,
-        }));
+      const unifiedAllocatedAssets = fetchedAllocatedAssets.map((asset:Asset) => ({
+      id: asset.id,
+      product_name: asset.product_name , 
+      asset_category: asset.asset_category
+    }));
 
         // combined asset catagories from both allocated asset and un allocated asset
-        const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+      const categories = Array.from(new Set([...fetchedUnallocatedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
 
-        setAssetCategories(categories);
-        setAssets(fetchedAssets);
-      
-        setLoading(false);
+      setAssetCategories(categories);
+      setAssets(fetchedUnallocatedAssets);
+    
+      setLoading(false);
 
       } catch (err) {
 
@@ -118,6 +103,10 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       }
     };
 
+  useEffect(() => {
+    if(factoryId){
+      fetchNonShopFloorAssets(factoryId)
+    }
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else if (router.isReady) {
@@ -208,7 +197,7 @@ return (
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-2 ml-4 " draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li key={index} className="mb-2 ml-4 -mt-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
                   {asset.product_name}
                 </li>
               ))}

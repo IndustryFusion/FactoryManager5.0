@@ -21,17 +21,13 @@ import { Button } from "primereact/button";
 import axios from "axios";
 import { Toast } from "primereact/toast";
 import {
-  fetchAndDetermineSaveState,
   exportElementToJPEG,
-  fetchAssetById, customLogger,getShopFloorAndAssetData
+  fetchAssetById,
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
-import { RelationsModal } from "@/components/reactflow-relation-modal";
 import CustomAssetNode from "@/components/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
-import ShopFloorList from "@/components/shopfloor-list";
-import { Dialog } from "primereact/dialog";
 import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
@@ -90,7 +86,6 @@ const nodeTypes = {
   asset: CustomAssetNode,
 };
 
-
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
@@ -98,35 +93,25 @@ const FlowEditor: React.FC<
   const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
   const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
-  const [factoryRelationships, setFactoryRelationships] = useState<object>({});
   const onSelectionChange = useCallback(
     (params: OnSelectionChangeParams | null) => {
       setSelectedElements(params);
     },
     []
   );
-  const [nodeUpdateTracker, setNodeUpdateTracker] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toast = useRef<Toast>(null);
-  const [droppedShopFloors, setDroppedShopFloors] = useState<object[]>([]);
-  const [assetRelations, setAssetRelations] = useState({});
   const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-  const [shopFloorAssets, setShopFloorAssets] = useState({});
-  const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const elementRef = useRef(null);
-  const [nodesInitialized, setNodesInitialized] = useState(false);
-  const [currentNodeRelations, setCurrentNodeRelations] = useState([]);
+
   const [loadedFlowEditor, setLoadedFlowEditor] = useState(false);
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
   );
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const { latestShopFloor } = useShopFloor();
-
-  const [isDialogVisible, setIsDialogVisible] = useState(false);
-  const [nextUrl, setNextUrl] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [isRestored, setIsRestored] = useState(false);
   const [originalNodes, setOriginalNodes] = useState([]);
@@ -274,21 +259,6 @@ const FlowEditor: React.FC<
         );
       });
     }
-    if (nodesInitialized) {
-
-      const fetchDataAndDetermineSaveState = async () => {
-        await fetchAndDetermineSaveState(
-          factoryId,
-          nodes,
-          setIsSaveDisabled,
-          API_URL
-        );
-      };
-
-      fetchDataAndDetermineSaveState().catch(console.error);
-      setNodesInitialized(false);
-
-    }
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -303,7 +273,6 @@ const FlowEditor: React.FC<
       };
 
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
-      setNodesInitialized(true);
       onRestore();
       setLoadedFlowEditor(true)
     }
@@ -320,23 +289,9 @@ const FlowEditor: React.FC<
       console.warn = originalWarn;
     };
 
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors, nodesInitialized, factoryId, API_URL, toastMessage]);
+  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors, factoryId, API_URL, toastMessage]);
 
 
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (hasChanges && !isDialogVisible) {
-        setNextUrl(url);
-        setIsDialogVisible(true);
-        return false;
-      }
-      return true;
-    };
-
-    router.beforePopState(({ url }) => handleRouteChange(url));
-
-    return () => router.beforePopState(() => true);
-  }, [hasChanges, isDialogVisible, router]);
 
 
   const checkForNewAdditions = useCallback(() => {
@@ -502,7 +457,9 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-      if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201) {
+
+      console.log("reactAllocatedAssetScorpio", reactAllocatedAssetScorpio)
+      if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.data.status == 404) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
         setToastMessage("Allocated Asset Scorpio Not Updated");
@@ -518,14 +475,12 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
-      console.log(payLoad.factoryData.edges, "edges update");
       if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Scorpio already has these data");
       }
-      onRestore();
-      dispatch(reset());
+   
 
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -533,6 +488,7 @@ const onRestore = useCallback(async () => {
     }
     finally {
       setIsOperationInProgress(false);
+      dispatch(reset());
 
     }
   }, [nodes, edges, factoryId]);
@@ -571,7 +527,6 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-
       if (reactFlowUpdateMongo.status == 201) {
         setToastMessage("Flowchart saved successfully");
       } else {
@@ -615,10 +570,6 @@ const onRestore = useCallback(async () => {
         setToastMessage("Data Already Exist in Scorpio");
       }
 
-
-
-      setNodesInitialized(true);
-      onRestore();
       dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
@@ -679,8 +630,101 @@ const onRestore = useCallback(async () => {
       );
 
       const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+        params:{
+          "id": `${factoryId}:allocated-assets`
+        }
+        
+      });
+      console.log("reactFlowScorpioUpdate ", reactFlowScorpioUpdate)
+      if (reactFlowUpdateMongo.data.status == 200 ||  reactFlowUpdateMongo.data.status == 204) {
+        setToastMessage("Flowchart saved successfully");
+      }
+
+      if (reactFlowScorpioUpdate.data.status == 200 ||  reactFlowScorpioUpdate.data.status == 204) {
+        setToastMessage( "Scorpio updated successfully.");
+      }
+
+      if (allocatedAssetDeletion.data.status == 200 ||  allocatedAssetDeletion.data.status == 204) {
+        setToastMessage( "Allocated Asset Deleted successfully.");
+      }
+      dispatch(reset());
+    } catch (error) {
+      console.error("Error deleting elements:", error);
+      setToastMessage("Error deleting elements.");
+     
+    } finally {
+      setIsOperationInProgress(false);
+     
+   
+    }
+  };
+
+  const saveOrUpdate = useCallback(async () => {
+  try {
+    setIsOperationInProgress(true);
+
+    // Fetch the current state from the server to determine the nature of the flowchart
+    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+
+    // Check if the response data exists and has the necessary elements
+    const data = response.data;
+    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData || !data.factoryData.edges;
+    console.log("Fetched flowchart data: ", response.data);
+
+    if (isEmpty) {
+      await onSave();
+    } else {
+      // Check if edges only connect factory to shopFloor\\
+      const onlyFactoryToShopFloor = data.factoryData.edges.every((edge:Edge) => 
+        edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_")
+      );
+
+      if (onlyFactoryToShopFloor) {
+      const payLoad = {
+      factoryId: factoryId,
+
+      factoryData: {
+        nodes: nodes.map(({ id, type, position, data, style }) => ({
+          id,
+          type,
+          position,
+          data,
+          style,
+        })),
+        edges: edges.map(({ id, source, target, type, data }) => ({
+          id,
+          source,
+          target,
+
+          type,
+          data,
+        })),
+      },
+    };
+        await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        });
+        setToastMessage("Flowchart updated successfully.");
+
+        const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+        payLoad.factoryData.edges, {
         params: {
-          "id": `${factoryId}:allocated-assets`,
+          "factory-id": factoryId,
         },
         headers: {
           "Content-Type": "application/json",
@@ -689,59 +733,64 @@ const onRestore = useCallback(async () => {
         withCredentials: true,
       });
 
-      if (reactFlowUpdateMongo.status == 200 ||  reactFlowUpdateMongo.status == 204) {
-        setToastMessage("Flowchart saved successfully");
+      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+        setToastMessage("Allocated Asset Scorpio Updated");
+      } else {
+        setToastMessage("Allocated Asset Scorpio Not Updated");
       }
 
-      if (reactFlowScorpioUpdate.status == 200 ||  reactFlowScorpioUpdate.status == 204) {
-        setToastMessage( "Scorpio updated successfully.");
+      const reactFlowScorpioUpdate = await axios.patch(
+        `${API_URL}/shop-floor/update-react`,
+        payLoad.factoryData.edges,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          params: { id: factoryId },
+        }
+      );
+    
+      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
+        setToastMessage("Scorpio updated successfully");
+      } else {
+        setToastMessage("Data Already Exist in Scorpio");
       }
-
-      if (allocatedAssetDeletion.status == 200 ||  allocatedAssetDeletion.status == 204) {
-        setToastMessage( "Allocated Asset Deleted successfully.");
+      } else {
+        await onUpdate();
       }
-      setNodesInitialized(true);
-      onRestore();
-    } catch (error) {
-      console.error("Error deleting elements:", error);
-      setToastMessage("Error deleting elements.");
-    } finally {
-      // Regardless of the result, try to refresh the state to reflect the current backend state
-      setIsSaveDisabled(true);
-      setIsOperationInProgress(false);
     }
-  };
-const saveOrUpdate = useCallback(async () => {
-  try {
-    setIsOperationInProgress(true);
-
-    // Fetch the current state from the server to determine if it's a new or existing flowchart
-    const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
-
-    // Check if the data is empty or not
-    const isEmpty = !getReactFlowMongo.data || Object.keys(getReactFlowMongo.data).length === 0;
-
-    if (isEmpty) {
-      // If data is empty, save the new flowchart
-      await onSave();
-    } else {
-      // If data exists, update the existing flowchart
-      await onUpdate();
-    }
+    dispatch(reset());
   } catch (error) {
     console.error("Error during save or update operation:", error);
     setToastMessage("Error during operation, check the logs for details");
   } finally {
     setIsOperationInProgress(false);
   }
-}, [factoryId, onSave, onUpdate]);
-  const handleExportClick = () => {
+}, [factoryId, onSave]);
+
+
+useEffect(() => {
+  const handleRouteChange = (url: string) => {
+    if (hasChanges) {
+      saveOrUpdate().then(() => {
+        router.push(url); // Navigate after save
+      });
+      return false; // Block navigation until save is complete
+    }
+    return true; // Allow navigation if no changes
+  };
+
+  router.beforePopState(({ url }) => handleRouteChange(url));
+
+  return () => {
+    router.beforePopState(() => true); // Cleanup
+  };
+}, [hasChanges, saveOrUpdate, router]);
+
+
+const handleExportClick = () => {
     if (elementRef.current) {
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
     }
@@ -893,7 +942,7 @@ const saveOrUpdate = useCallback(async () => {
         }
       }
     },
-    [nodes, setNodes, setAssetRelations, setShopFloorAssets, setEdges, toast]
+    [nodes, setNodes, setEdges, toast]
   );
 
 
@@ -944,21 +993,6 @@ const saveOrUpdate = useCallback(async () => {
     toast,
   ]);
 
-
-  const performNavigation = () => {
-    setIsDialogVisible(false);
-
-    console.log("nexturl", nextUrl)
-    if (nextUrl) {
-      setTimeout(async () => {
-        await saveChanges();
-        router.reload();
-      }, 3000);
-
-      router.push(nextUrl);
-    }
-  };
-
   useHotkeys(
     "backspace",
     (event) => {
@@ -967,25 +1001,20 @@ const saveOrUpdate = useCallback(async () => {
     },
     [handleBackspacePress]
   );
-
-  const onNodeDoubleClick: NodeMouseHandler = useCallback(
-    (event, node) => {
-      console.log(node, "JKB");
-      if (node.type === "shopFloor") {
-
-        if (checkForNewAdditions()) {
-
-          setNextUrl("/factory-site/dashboard");
-          setIsDialogVisible(true);
-
-        } else {
-
-          router.push("/factory-site/dashboard");
+const onNodeDoubleClick: NodeMouseHandler = useCallback(
+    async (event, node) => {
+        console.log(node, "Node double-clicked");
+        if (node.type === "shopFloor") {
+            if (hasChanges) {
+                // Save or update changes before navigating if there are any changes
+                await saveOrUpdate();
+            }
+            // Navigate to the dashboard after handling the save or update
+            router.push("/factory-site/dashboard");
         }
-      }
     },
-    [isSaveDisabled, performNavigation, router]
-  );
+    [hasChanges, saveOrUpdate, router] // Include all dependencies used in the callback
+);
 
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -1072,9 +1101,6 @@ const saveOrUpdate = useCallback(async () => {
     [
       reactFlowInstance,
       setNodes,
-      setShopFloorAssets,
-      setDroppedShopFloors,
-
     ]
   );
 
@@ -1087,78 +1113,8 @@ const saveOrUpdate = useCallback(async () => {
     setReactFlowInstance(instance);
   }, []);
 
-  const handleUpdate = useCallback(async () => {
-    onUpdate();
-  }, [factoryId, nodes, edges, shopFloorAssets, assetRelations]);
-
-  const handleSave = useCallback(async () => {
-    onSave();
-  }, [
-    factory,
-    shopFloorAssets,
-    assetRelations,
-    droppedShopFloors,
-    edges,
-    nodes,
-  ]);
-
-
-
-  const saveChanges = async () => {
-    if (isSaveDisabled) {
-      console.log(
-        "update called"
-      )
-      await onUpdate();
-
-    } else {
-      console.log(
-        "onSave  called"
-      )
-      await onSave();
-
-    }
-    setIsDialogVisible(false);
-
-  };
-
-
-  const handleConfirm = async () => {
-    setIsDialogVisible(false);
-    await saveChanges();
-    setHasChanges(false);
-
-    setTimeout(() => {
-      performNavigation();
-    }, 3000);
-  };
-
-
-
-  const handleCancel = () => {
-    setIsDialogVisible(false);
-    setTimeout(() => {
-      if (nextUrl) {
-        router.push(nextUrl);
-      } else {
-        router.reload();
-      }
-      setHasChanges(false);
-    }, 3000);
-  };
-
-  const dialogFooter = (
-    <div>
-      <Button label="No" icon="pi pi-times" onClick={handleCancel} className="p-button-text" />
-      <Button label="Yes" icon="pi pi-check" onClick={handleConfirm} autoFocus />
-    </div>
-  );
   return (
     <>
-      <Dialog header="Confirm" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} footer={dialogFooter}>
-        Do you want to save changes before leaving?
-      </Dialog>
-
       <ReactFlowProvider>
         <EdgeAddContext.Provider value={{ onEdgeAdd }}>
 
