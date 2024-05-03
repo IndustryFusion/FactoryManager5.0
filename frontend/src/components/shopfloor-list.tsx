@@ -10,7 +10,6 @@ import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
-
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
@@ -169,8 +168,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
-        <Toast ref={toast} />
+      <Card className="card-full-height" style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
+        <Toast ref={toast} style={{ top: '60px' }}/>
 
         <div>
           <h3

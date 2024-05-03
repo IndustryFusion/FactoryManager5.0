@@ -1,6 +1,7 @@
 import { Injectable,Logger  } from '@nestjs/common';
 import Redis from 'ioredis';
 import {isEqual} from 'lodash'
+import { Cluster } from 'ioredis';
 
 @Injectable()
 export class RedisService {
@@ -20,9 +21,8 @@ export class RedisService {
 
   private readonly REDIS_SERVER =  process.env.REDIS_SERVER;
   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
-
   constructor() {
-    this.redisClient = new Redis({host: this.REDIS_SERVER, port: this.REDIS_PORT});
+    this.redisClient = new Redis({ host:this.REDIS_SERVER, port: Number(this.REDIS_PORT)});
   }
   async credentialsChanged(token: string, queryParams: any, entityId: string, attributeId?: string): Promise<boolean> {
     const currentCredentials = await this.getTokenAndEntityId();
@@ -56,27 +56,36 @@ export class RedisService {
     }
     return null;
   }
-   async getData(key: string): Promise<any> {
-    
+ async getData(key: string, retryAttempts = 3): Promise<any> {
+  try {
     const result = await this.redisClient.get(key);
     if (result) {
-      const parsedResult = JSON.parse(result);
-     
-      return parsedResult;
+      return JSON.parse(result);
     }
     return null;
-  }
-  async saveData(key: string, data: any, ttl?: number): Promise<boolean> {
-    if (typeof ttl === 'number') {
-     const result = await this.redisClient.set(key, JSON.stringify(data), 'EX', ttl);
-        return result === "OK";
-      
-    } else {
-      const result = await this.redisClient.set(key, JSON.stringify(data));
-      return result === "OK";
+  } catch (error) {
+    if (error.code === 'MOVED' && retryAttempts > 0) {
+      return this.getData(key, retryAttempts - 1);
     }
+    console.log("Error fetching data from Redis:", error.message);
+    throw error;
   }
+}
 
+async saveData(key: string, data: any, ttl?: number, retryAttempts = 3): Promise<boolean> {
+  try {
+    const result = await (typeof ttl === 'number'
+      ? this.redisClient.set(key, JSON.stringify(data), 'EX', ttl)
+      : this.redisClient.set(key, JSON.stringify(data)));
+    return result === "OK";
+  } catch (error) {
+    if (error.code === 'MOVED' && retryAttempts > 0) {
+      return this.saveData(key, data, ttl, retryAttempts - 1);
+    }
+    console.log("Error saving data to Redis:", error.message);
+    throw error;
+  }
+}
   // Checks if the token has changed for the given key
   async tokenHasChanged(key: string, newToken: string): Promise<boolean> {
     const currentToken = await this.redisClient.get(`${this.TOKEN_PREFIX}${key}`);
