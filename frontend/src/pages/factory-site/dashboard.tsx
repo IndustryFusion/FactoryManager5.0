@@ -21,6 +21,7 @@ import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
+import Footer from '@/components/footer';
 
 
 
@@ -158,6 +159,7 @@ const Dashboard = () => {
           <DashboardChart/>
           </div>     
       </div>
+      <Footer />
     </DashboardProvider>
     </>
   )

@@ -16,6 +16,7 @@ import { PickList } from 'primereact/picklist';
 import { Card } from "primereact/card";
 import ShopFloorAssets from "@/components/factoryShopFloorForm/shopFloor-assets";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
+import Footer from "@/components/footer";
 
 const FactoryShopFloor = () => {
 
@@ -98,6 +99,7 @@ const FactoryShopFloor = () => {
 
                     </div>
                 </div>
+                <Footer />
             </FactoryShopFloorProvider>
         </>
     )
