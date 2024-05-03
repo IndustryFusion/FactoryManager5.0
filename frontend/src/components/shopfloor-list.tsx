@@ -239,7 +239,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                   paddingLeft: "20px",
 
                 }}
-                className="ml-4 mb-3"
+                className="ml-4 mb-3 list-item"
               >
 
                 {floor.floorName}

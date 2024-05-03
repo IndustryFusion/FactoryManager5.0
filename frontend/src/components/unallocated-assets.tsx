@@ -191,32 +191,32 @@ return (
 
       <TabView className="ml-1 "  >
         <TabPanel header="Unallocated Assets" style={{ height: '93%', overflowY: 'auto' }}>
-          <Card className="-ml-1" >
+          <div  >
             <ul>
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-2 ml-4 -mt-2" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li key={index} className="mb-4 ml-4  list-item" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
                   {asset.product_name}
                 </li>
               ))}
             </ul>
-          </Card>
+          </div>
         </TabPanel>
         <TabPanel header="Allocated Assets" className="-ml-2">
-          <Card className="-ml-1"  style={{ height: '93%', overflowY: 'auto' }}>
+          <div className="ml-1"  style={{ height: '93%', overflowY: 'auto' }}>
             <ul>
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-2 ml-4" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li key={index} className="mb-4 ml-4 list-item" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
                   {asset.product_name}
                 </li>
               ))}
             </ul>
-          </Card>
+          </div>
         </TabPanel>
       </TabView>
     </div>
