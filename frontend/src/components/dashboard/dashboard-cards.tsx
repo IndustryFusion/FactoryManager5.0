@@ -13,7 +13,6 @@ const DashboardCards: React.FC = () => {
 
     // const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const { machineStateValue,
-        setMachineStateValue,
         selectedAssetData,
         machineStateData,
         notificationData,
@@ -30,115 +29,81 @@ const DashboardCards: React.FC = () => {
     const [onlineAverage, setOnlineAverage] = useState(0);
     const [hasRelations, setHasRelations] = useState<any>([]);
     const [childCount, setChildCount] = useState(0);
+    const [prevTimer, setPrevTimer] = useState('00:00:00');
+    let intervalId: any;
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    const moment = require('moment');
-    const getNotifications = () => {
-        const fetchAllAlerts = async () => {
-            try {
-                const response = await getAlerts();
-                // console.log(response, "akert");
-                // console.log(response.alerts, "alerts response");
-                const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
 
-                setNotificationData(filteredNotifications)
-            } catch (error) {
-                // console.error(error)
-            }
+
+
+
+    const fetchAllAlerts = async () => {
+        try {
+            const response = await getAlerts();
+            const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
+            setNotificationData(filteredNotifications)
+        } catch (error) {
+            console.error(error)
         }
-        fetchAllAlerts();
     }
 
-    useEffect(() => {
-        let intervalId: any;
+   
 
-        const runningSince = () => {
-            // Reverse the keys of the object
-            for (const date in machineStateData) {
-                if (machineStateData[date].length > 0) {
-                    machineStateData[date].reverse();
+    const fetchData = async () => {
+        try {
+            let response = await axios.get(API_URL + '/value-change-state', {
+                params: {
+                    attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
+                    entityId: 'eq.' + entityIdValue,
+                    order: "observedAt.desc",
+                    limit: '1'
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            }
+            )
+
+            console.log("value change resposne", response.data);
+            if (Array.isArray(response.data) && response.data.length > 0) {
+                if (response.data[0]?.value === "2") {
+                    const timeValueReceived = findDifference(response.data[0]?.observedAt);
+                    console.log(timeValueReceived, "timeValueReceived ");
+                    setDifference(timeValueReceived);
+                    setPrevTimer(timeValueReceived); //set intial timer value
                 }
-            }
-            const reversedData = Object.fromEntries(Object.entries(machineStateData).reverse());
-            console.log("reversedData", reversedData);
+            } 
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
 
-            function hasKeysWithNoValues(obj: any) {
-                return Object.keys(obj).some(key => !obj[key]);
-            }
-
-            // Iterate over the reversed keys
-            if (hasKeysWithNoValues(reversedData)) {
-                for (const key in reversedData) {
-                    const dataArray: any = reversedData[key];
-
-                    if (dataArray.length > 0) {
-                        // Find the first element with prev_value === "2"
-                        const allOnlineValues = [];
-                        for (let i = 0; i <= dataArray.length - 1; i++) {
-                            if (dataArray[i].prev_value === "2") {
-                                const matchResult = dataArray[i].observedAt.match(/\d{2}:\d{2}:\d{2}/);
-                                if (matchResult) {
-                                    allOnlineValues.push(matchResult[0]);
-                                }
-                            }
-                        }
-                        setOnlineAverage(findOnlineAverage(allOnlineValues))
-                    }
+    const runningSince = () => {
+        fetchData();
+        intervalId = setInterval(() => {
+            setDifference(prevTimer => {
+                const [hours, minutes, seconds] = prevTimer.split(':').map(Number);
+                let newSeconds = seconds + 1;
+                let newMinutes = minutes;
+                let newHours = hours;
+                if (newSeconds >= 60) {
+                    newSeconds = 0;
+                    newMinutes += 1;
                 }
-            }
-            else {
-                // console.log("no values here");
-                intervalId = setInterval(() => {
-                    setDifference(prevTimer => {
-                        // Parse the current time
-                        const [hours, minutes, seconds] = prevTimer.split(':').map(Number);
-                        // Increment the time
-                        let newSeconds = seconds + 1;
-                        let newMinutes = minutes;
-                        let newHours = hours;
-                        if (newSeconds >= 60) {
-                            newSeconds = 0;
-                            newMinutes += 1;
-                        }
-                        if (newMinutes >= 60) {
-                            newMinutes = 0;
-                            newHours += 1;
-                        }
-                        const timerValue = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
-                        localStorage.setItem("runningTime", timerValue)
-                        // Format the updated time
-                        return timerValue
-                    });
-
-                }, 1000)
-                setOnlineAverage(findOnlineAverage(allOnlineTime))
-            }
-
-        }
-
-        if (machineStateValue === "2") {
-            runningSince();
-        } else {
-            setDifference("00:00:00")
-        }
-        const hasPropertiesArray = [];
-
-        if (Object.keys(selectedAssetData).length > 0) {
-            for (const key in selectedAssetData) {
-                if (key.startsWith("has")) {
-                    const propertyName = key.substring(3); // Remove the "has" prefix
-                    const propertyValue = selectedAssetData[key];
-                    hasPropertiesArray.push({ [propertyName]: propertyValue });
+                if (newMinutes >= 60) {
+                    newMinutes = 0;
+                    newHours += 1;
                 }
-            }
-        }
-        setHasRelations(hasPropertiesArray);
-        getNotifications();
-
-        return () => clearInterval(intervalId)
-
-    }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
-
+                const timerValue = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+                localStorage.setItem("runningTime", timerValue);
+                return timerValue;
+            });
+        }, 1000);
+        setOnlineAverage(findOnlineAverage(allOnlineTime))
+    }
 
     const getHasProperties = () => {
         const propertiesArray = [];
@@ -168,10 +133,9 @@ const DashboardCards: React.FC = () => {
         })
 
     }
-
     const relationParent = async () => {
         try {
-            if(Object.keys(selectedAssetData).length > 0){
+            if (Object.keys(selectedAssetData).length > 0) {
                 const response = await axios.get(API_URL + "/asset/parent-ids", {
                     params: {
                         "asset-id": selectedAssetData?.id,
@@ -184,7 +148,7 @@ const DashboardCards: React.FC = () => {
                     withCredentials: true,
                 });
                 // console.log("parent relation response", response);
-    
+
                 response?.data.forEach(item => {
                     if (item.id !== "json-ld-1.1") {
                         setRelationsCount((prev: any) => prev + 1);
@@ -197,12 +161,38 @@ const DashboardCards: React.FC = () => {
     }
 
 
+
+    useEffect(() => {
+        if (machineStateValue === "2") {
+            runningSince();
+        } else {
+            setDifference("00:00:00")
+        }
+
+        const hasPropertiesArray = [];
+        if (Object.keys(selectedAssetData).length > 0) {
+            for (const key in selectedAssetData) {
+                if (key.startsWith("has")) {
+                    const propertyName = key.substring(3); // Remove the "has" prefix
+                    const propertyValue = selectedAssetData[key];
+                    hasPropertiesArray.push({ [propertyName]: propertyValue });
+                }
+            }
+        }
+        setHasRelations(hasPropertiesArray);
+        return () => clearInterval(intervalId);
+
+    }, [machineStateValue, entityIdValue, selectedAssetData, allOnlineTime])
+
     useEffect(() => {
         setRelationsCount(0);
         getHasProperties();
         relationParent();
-
+        fetchAllAlerts();
     }, [entityIdValue])
+
+
+
 
     return (
         <>
@@ -219,21 +209,17 @@ const DashboardCards: React.FC = () => {
                                 style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className={` ${machineStateValue === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
                             </div>
-
                         </div>
                         <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
                         <span className="text-500"> registered</span>
-
                     </div>
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
                     <div className="card mb-0 d">
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">Running Since</span>
-                                {/* <div className="text-900 font-medium text-xl">{machineStateValue == "2" && runningMachineTimer()}</div> */}
+                                <span className="block text-500 font-medium mb-3">Running Since</span>                              
                                 <div className="text-900 font-medium text-xl">{difference}</div>
-
                             </div>
                             <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
                                 <i className="pi pi-map-marker text-orange-500 text-xl" />
