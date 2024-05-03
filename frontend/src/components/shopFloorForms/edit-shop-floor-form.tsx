@@ -303,7 +303,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             <Button
                 severity="secondary" text raised
                 label="Reset"
-                className="mr-2"
+                className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
@@ -318,8 +318,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
     return (
         <>
-            <div className="card flex justify-content-center">
-                <Button label="Show" icon="pi pi-external-link" onClick={() => setIsEditProp(true)} />
+            <div className=" flex justify-content-center">
                 <Dialog visible={isEditProp} modal footer={footerContent} style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
                     <Toast ref={toast} />
                     <div className="p-fluid p-formgrid p-grid ">
@@ -333,7 +332,6 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                                 )
                             }
                         </Card>
-
                     </div>
                 </Dialog>
             </div>

@@ -9,8 +9,10 @@
   background-color: #00308f;
   border-color: #00308f;
   color: white;
-
   padding: 1%;
+}
+.reset-btn{
+  border: 1px solid #ccc;
 }
 
 /*login disabled button */

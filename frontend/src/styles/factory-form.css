@@ -20,9 +20,7 @@
   margin-bottom: 0.5rem;
   display: block;
 }
-.reset-btn{
-  border: 1px solid #ccc;
-}
+
 /* Adjust the margin or padding around form fields */
 .factory-form-container .p-inputtext,
 .factory-form-container .p-dropdown,

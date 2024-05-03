@@ -399,7 +399,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             <Button
                 severity="secondary" text raised
                 label="Reset"
-                className="mr-2"
+                className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
