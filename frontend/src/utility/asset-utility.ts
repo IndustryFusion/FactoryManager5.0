@@ -39,3 +39,20 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
         console.error("Error:", error)
     }
   }
+
+  export const fetchFormAllocatedAsset =async(payload)=>{
+    const url = `${API_URL}/allocated-asset/form`;
+    try{
+      const response = await axios.post(url, payload, {
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        withCredentials: true,
+    })
+    return response;
+
+    }catch(error){
+        console.error("Error:", error)
+    }
+  }
