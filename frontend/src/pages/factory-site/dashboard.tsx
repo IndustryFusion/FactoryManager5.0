@@ -137,7 +137,7 @@ const Dashboard = () => {
         </div>
       </div>
       }
-      <div className="dashboard-container" style={{ zoom: "95%" }}>
+      <div className="dashboard-container">
         <HorizontalNavbar />
        <AutoRefresh />
         <DashboardCards  />

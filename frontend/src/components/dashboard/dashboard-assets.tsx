@@ -97,7 +97,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       const response = await fetchAsset();
       if (response !== undefined) {
         setSelectedRow(response[0]);
-        setAssetData(response);
+        const data = response.slice(0,1);
+        setAssetData(data);
         setAllAssets(response);
         setAssetCount(response.length)
         // console.log(response.length, "allresponse");
@@ -108,6 +109,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       // console.error(error)
     }
   }
+
 
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
@@ -130,6 +132,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
     }
   };
+
+ console.log("all assets", assetData);
+ 
+
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
