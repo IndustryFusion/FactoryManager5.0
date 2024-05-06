@@ -176,20 +176,21 @@ export class AllocatedAssetService {
         let factoryData = await this.factorySiteService.findOne(factoryId, token);
         console.log('factoryData ',factoryData);
         let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
-        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object; 
+        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object;
         finalData[factoryName] = [];
         if(Array.isArray(factorySpecificAssets)){
-          factorySpecificAssets.forEach(assetId => {
-            let assetData = this.assetService.getAssetDataById(assetId, token);
+          for(let i = 0; i < factorySpecificAssets.length; i++){
+            let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i], token);
             let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
             finalData[factoryName].push(productName);
-          })
+          }
         } else if(factorySpecificAssets !== "json-ld-1.1") {
           let assetData = this.assetService.getAssetDataById(factorySpecificAssets, token);
           let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
           finalData[factoryName].push(productName);
         }
       }
+      console.log('finalData ',finalData);
       return finalData;
     }catch(err){
       return err;

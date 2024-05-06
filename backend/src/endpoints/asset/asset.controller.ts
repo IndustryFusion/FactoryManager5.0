@@ -3,10 +3,15 @@ import { AssetService } from './asset.service';
 import { Request, Response } from 'express';
 import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
 import { getSessionToken } from '../session/session.service';
-
+import { ReactFlowService } from '../react-flow/react-flow.service';
+import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 @Controller('asset')
 export class AssetController {
-  constructor(private readonly assetService: AssetService) {}
+  constructor(
+    private readonly assetService: AssetService,
+    private readonly reactFlowService: ReactFlowService,
+    private readonly allocatedAssetService: AllocatedAssetService,
+  ) {}
 
   @Get()
   async getAssetData(@Req() req: Request, @Query('type') type: string) {
@@ -129,7 +134,7 @@ export class AssetController {
   async deleteAssetRelation(@Param('id') id: string, @Req() req: Request){
     try {
       const token = await getSessionToken(req);
-      const response = await this.assetService.deleteAssetRelation(id, token);
+      const response = await this.assetService.deleteAssetRelation(id, token, this.reactFlowService, this.allocatedAssetService);
       if(response['status'] == 200 || response['status'] == 204 || response['status'] == 201) {
         return {
           success: true,

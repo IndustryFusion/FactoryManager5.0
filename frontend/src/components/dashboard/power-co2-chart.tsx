@@ -61,6 +61,7 @@ const PowerCo2Chart = () => {
     const [startMonth, setStartMonth] = useState<Date | null>(moment().startOf('month').toDate());
     const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate());
     const toast = useRef<any>(null);
+    const [mininumDate, setMinimumDate] = useState<Date | null>(null);
 
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
@@ -125,6 +126,24 @@ const PowerCo2Chart = () => {
                 },
                 withCredentials: true,
             });
+            console.log('response ',response.data);
+            const firstValueResponse = await axios.get(`${API_URL}/power-consumption`, {
+                params: {
+                    entityId: `eq.${entityIdValue}`,
+                    limit: '1'
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            })
+            console.log('firstValueResponse ',firstValueResponse.data);
+            if(firstValueResponse.data.label.length > 0){
+                let date = moment(firstValueResponse.data.label[0]).toDate();
+                console.log('min date ',date);
+                setMinimumDate(date);
+            }
             setIsLoading(false);
             return response.data;
         } catch (error: any) {
@@ -216,8 +235,9 @@ const PowerCo2Chart = () => {
         setNoChartData(false);
         if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
             const obj = await fetchData(entityIdValue, selectedInterval, startTime, endTime);
+            console.log('obj data ',obj);
             // check if there is data or not 
-            if(obj.labels.length > 0){
+            if(obj && obj.labels.length > 0){
                 await setGraphData(obj);
             }else {
                 setNoChartData(true);
@@ -334,6 +354,7 @@ const PowerCo2Chart = () => {
                             <Calendar
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                minDate= {mininumDate ? moment(mininumDate).toDate() : undefined}
                                 maxDate={moment().toDate()}
                             />
                         </div>
@@ -373,6 +394,7 @@ const PowerCo2Chart = () => {
                                             onChange={(e) => setStartMonth(e.value ? moment(e.value).toDate() : null)}
                                             view="month" 
                                             dateFormat="mm/yy"
+                                            minDate= {mininumDate ? moment(mininumDate).startOf('month').toDate() : undefined}
                                             maxDate={moment().startOf('month').toDate()}
                                         />
                                     </div>
@@ -385,6 +407,7 @@ const PowerCo2Chart = () => {
                                             onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
                                             view="year" 
                                             dateFormat="yy"
+                                            minDate= {mininumDate ? moment(mininumDate).startOf('year').toDate() : undefined}
                                             maxDate={moment().startOf('year').toDate()}
                                         />
                                     </div>
@@ -395,6 +418,7 @@ const PowerCo2Chart = () => {
                                             <Calendar
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                                minDate= {mininumDate ? moment(mininumDate).toDate() : undefined}
                                                 maxDate={moment().toDate()}
                                             />
                                         </div>
@@ -438,6 +462,7 @@ const PowerCo2Chart = () => {
                                             onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
                                             view="year" 
                                             dateFormat="yy"
+                                            minDate= {mininumDate ? moment(mininumDate).startOf('year').toDate() : undefined}
                                             maxDate={moment().startOf('year').toDate()}
                                         />
                                     </div>
@@ -448,6 +473,7 @@ const PowerCo2Chart = () => {
                                             <Calendar
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
+                                                minDate= {mininumDate ? moment(mininumDate).toDate() : undefined}
                                                 maxDate={moment().toDate()}
                                             />
                                         </div>
