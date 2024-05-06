@@ -112,8 +112,6 @@ async findAll(token, queryParams) {
   const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
 
   try {
-
-    console.log("url ", url)
    const response = await axios.get(url, { headers });
     await this.redisService.saveData("storedDataQueryParams", queryParams);
     await this.redisService.saveData("storedData", null);
