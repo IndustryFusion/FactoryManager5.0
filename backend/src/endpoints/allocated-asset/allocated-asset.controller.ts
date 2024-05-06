@@ -70,6 +70,16 @@ export class AllocatedAssetController {
     }
   } 
 
+  @Get('/product-names')
+  async findProductName(@Req() req: Request) {
+    try {
+      const token = await getSessionToken(req);
+      return this.allocatedAssetService.findProductName(token);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+  
   @Get()
   async findAll(@Req() req: Request) {
     try {

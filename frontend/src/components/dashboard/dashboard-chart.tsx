@@ -81,7 +81,7 @@ const DashboardChart = () => {
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
-            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (Object.keys(machineStateData.weeks).length == 0 || Object.keys(machineStateData.months).length == 0)){
+            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length == 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
                         'asset-id': entityId,
@@ -115,10 +115,11 @@ const DashboardChart = () => {
                     });
                     //conditions
                     setLastData(lastDataResponse.data);
+                    console.log('last data ',lastDataResponse.data);
                 }
                 setFactoryData(response.data);
                 setMachineStateData(response.data);
-                
+                console.log('final data ',response.data);
                 //set redux values for weeks and months
                 if(selectedInterval == 'weeks'){
                     dispatch(create({
@@ -178,7 +179,6 @@ const DashboardChart = () => {
 
     const formatChartData = (dataset: any) => {
         const documentStyle = getComputedStyle(document.documentElement);
-
         let labels = Object.keys(dataset);
         const finalData = [];
         for (let key in dataset) {
@@ -214,10 +214,12 @@ const DashboardChart = () => {
     const groupData = (data: any) => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
+        let lastValue = "", nextValue = "";
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             groupedByDate[key] = [];
             if (data[key].length > 0) {
+                lastValue = data[key][data[key].length - 1].value;
                 let startTime = data[key][0].observedAt.split('T')[1].split('.')[0];
                 if(data[key][0].prev_value){
                     groupedByDate[key].push({
@@ -278,44 +280,12 @@ const DashboardChart = () => {
                     })
                 }
             } else {
-                let check = false;
                 const dateToCheck = moment(key);
                 const currentDate = moment().startOf('day');
                 const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
                 let time = isCurrentDate ? moment().format('HH:mm:ss') : moment(key).endOf('day').format().split('T')[1].split('+')[0];
-                for (let j = i + 1; j < keys.length; j++) {
-                    let key2 = keys[j];
-                    if (data[key2].length > 0) {
-                        groupedByDate[key].push({
-                            time: convertToSecondsTime(time),
-                            type: data[key2][0].prev_value == '0' ? 'offline' : 'online'
-                        }, {
-                            time: 0,
-                            type: data[key2][0].prev_value == '0' ? 'online' : 'offline'
-                        });
-                        check = true;
-                        break;
-                    }
-                }
 
-                if (!check) {
-                    for (let j = i - 1; j >= 0; j--) {
-                        let key2 = keys[j];
-                        if (data[key2].length > 0) {
-                            groupedByDate[key].push({
-                                time: convertToSecondsTime(time),
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'offline' : 'online'
-                            }, {
-                                time: 0,
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'online' : 'offline'
-                            });
-                            check = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!check && Object.keys(lastData).length) {
+                if(Object.keys(lastData).length > 0){
                     groupedByDate[key].push({
                         time: convertToSecondsTime(time),
                         type: lastData['value'] == '0' ? 'offline' : 'online'
@@ -323,6 +293,45 @@ const DashboardChart = () => {
                         time: 0,
                         type: lastData['value'] == '0' ? 'online' : 'offline'
                     });
+                }else{
+                    if(lastValue.length > 0){
+                        groupedByDate[key].push({
+                            time: convertToSecondsTime(time),
+                            type: lastValue == '0' ? 'offline' : 'online'
+                        }, {
+                            time: 0,
+                            type: lastValue == '0' ? 'online' : 'offline'
+                        });
+                    } else {
+                        if(nextValue !== null){
+                            if(nextValue.length > 0){
+                                groupedByDate[key].push({
+                                    time: convertToSecondsTime(time),
+                                    type: nextValue == '0' ? 'offline' : 'online'
+                                }, {
+                                    time: 0,
+                                    type: nextValue == '0' ? 'online' : 'offline'
+                                });
+                            }else{
+                                for (let j = i + 1; j < keys.length; j++) {
+                                    let key2 = keys[j];
+                                    if (data[key2].length > 0) {
+                                        nextValue = data[key2][0].prev_value;
+                                        if(nextValue){
+                                            groupedByDate[key].push({
+                                                time: convertToSecondsTime(time),
+                                                type: data[key2][0].prev_value == '0' ? 'offline' : 'online'
+                                            }, {
+                                                time: 0,
+                                                type: data[key2][0].prev_value == '0' ? 'online' : 'offline'
+                                            });
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -332,10 +341,12 @@ const DashboardChart = () => {
     const groupByDays = (data: any) => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
+        let lastValue = "", nextValue = "";
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             groupedByDate[key] = [];
             if (data[key].length > 0) {
+                lastValue = data[key][data[key].length - 1].value;
                 let startTime;
                 if(selectedInterval == 'weeks'){
                     startTime = moment(moment(key.split(' ').pop()).startOf('day').format().split('+')[0]);
@@ -370,7 +381,7 @@ const DashboardChart = () => {
                             })
                         }
                     }
-
+    
                     let startTime = moment(data[key][data[key].length - 1].observedAt.split('.')[0]), differenceInSeconds: number;
                     if(selectedInterval == 'weeks'){
                         let weekStart = key.split(' ').pop();
@@ -435,7 +446,7 @@ const DashboardChart = () => {
                     }
                 }
             } else {
-                let differenceInSeconds: number, check = false;
+                let differenceInSeconds: number;
                 if(selectedInterval == 'weeks'){
                     let weekStart = key.split(' ').pop();
                     let startOfWeek  = moment(weekStart).startOf('week').format('YYYY-MM-DDTHH:mm:ss');
@@ -450,68 +461,62 @@ const DashboardChart = () => {
                     let endTime = moment(currentTime).isBetween(startOfMonth, endOfMonth, undefined, '[]') ? moment().format('YYYY-MM-DDTHH:mm:ss') : moment(key, 'MMMM YYYY').endOf('month').format('YYYY-MM-DDTHH:mm:ss');
                     differenceInSeconds = moment(endTime).diff(startOfMonth, 'seconds');
                 }
-
-                for (let j = i + 1; j < keys.length; j++) {
-                    let key2 = keys[j];
-                    if (data[key2].length > 0) {
+    
+                if(Object.keys(lastData).length > 0){
+                    groupedByDate[key].push({
+                        time: differenceInSeconds,
+                        type: lastData['value'] == '0' ? 'offline' : 'online'
+                    }, {
+                        time: 0,
+                        type: lastData['value'] == '0' ? 'online' : 'offline'
+                    });
+                } else {
+                    if(lastValue.length > 0){
                         groupedByDate[key].push({
                             time: differenceInSeconds,
-                            type: data[key2][0].prev_value == '0' ? 'offline' : 'online'
+                            type: lastValue == '0' ? 'offline' : 'online'
                         }, {
                             time: 0,
-                            type: data[key2][0].prev_value == '0' ? 'online' : 'offline'
+                            type: lastValue == '0' ? 'online' : 'offline'
                         });
-                        check = true;
-                        break;
-                    }
-                }
-
-                if (!check) {
-                    for (let j = i - 1; j >= 0; j--) {
-                        let key2 = keys[j];
-                        if (data[key2].length > 0) {
-                            groupedByDate[key].push({
-                                time: differenceInSeconds,
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'offline' : 'online'
-                            }, {
-                                time: 0,
-                                type: data[key2][data[key2].length - 1].value == '0' ? 'online' : 'offline'
-                            });
-                            check = true;
-                            break;
+                    }else{
+                        if(nextValue !== null){
+                            if(nextValue.length > 0){
+                                groupedByDate[key].push({
+                                    time: differenceInSeconds,
+                                    type: nextValue == '0' ? 'offline' : 'online'
+                                }, {
+                                    time: 0,
+                                    type: nextValue == '0' ? 'online' : 'offline'
+                                });
+                            }else{
+                                for (let j = i + 1; j < keys.length; j++) {
+                                    let key2 = keys[j];
+                                    if (data[key2].length > 0) {
+                                        nextValue = data[key2][0].prev_value;
+                                        if(nextValue){
+                                            groupedByDate[key].push({
+                                                time: differenceInSeconds,
+                                                type: data[key2][0].prev_value == '0' ? 'offline' : 'online'
+                                            }, {
+                                                time: 0,
+                                                type: data[key2][0].prev_value == '0' ? 'online' : 'offline'
+                                            });
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-
-                if (!check && Object.keys(lastData).length) {
-                    let type = lastData['value'] == '0' ? 'offline' : 'online';
-                    let flag = false;
-                    groupedByDate[key].forEach(obj => {
-                        if (obj.type == type) {
-                            obj.time = obj.time + differenceInSeconds;
-                            flag = true;
-                        }
-                    })
-                    if (!flag) {
-                        groupedByDate[key].push({
-                            time: differenceInSeconds,
-                            type
-                        })
-                    }
-                }
-            }
-
-            if(groupedByDate[key].length == 1){
-                groupedByDate[key].push({
-                    time: 0,
-                    type: groupedByDate[key][0].type == 'offline' ? 'online' : 'offline'
-                })
             }
         }
         return groupedByDate;
     };
 
     const alignData = (data: any) => {
+        setLastData({});
         if(selectedInterval == 'days'){
             const finalData = {};
             for(let key in data){
@@ -536,8 +541,10 @@ const DashboardChart = () => {
         });
  
         socket.on("valueChangeState", (newData) => {
-            console.log('web socket for machine state change')
-            setFactoryData(newData);
+            console.log('web socket for machine state change ',newData);
+            if(selectedInterval == 'days'){
+                setFactoryData(newData);
+            }
         });
         return () => {
             socket.disconnect();
@@ -550,7 +557,7 @@ const DashboardChart = () => {
             router.push("/login");
         } else {
             if (router.isReady) {              
-                    fetchDataAndAssign();                
+                fetchDataAndAssign();                
             }
         }
        
