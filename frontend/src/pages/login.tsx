@@ -125,7 +125,7 @@ const Login: React.FC = () => {
               ) : (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
-          <h1 style={{color:"white", marginTop:"5px"}}> Factory Manager 5.0 </h1>
+          <h1 style={{color:"#363535d1", marginTop:"5px"}}> Factory Manager 5.0 </h1>
         </Card> 
         <Card  className="flex"
         style={{color:"balck", marginTop:"50px", width:"500px", height:"600px"}}>
