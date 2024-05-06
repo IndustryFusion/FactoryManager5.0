@@ -9,12 +9,15 @@ import Alerts from "../alert/alerts";
 import { LuLayoutDashboard } from "react-icons/lu";
 import AssetManagementDialog from "../assetManagement/asset-management";
 import ProfileDialog from "./profile-dialog";
+import { useDispatch } from "react-redux";
+import { resetTimer, logout } from "@/state/auth/authSlice";
 
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
   const [assetManage, setAssetManage] = useState(false);
   const [profileDetail, setProfileDetail] = useState(false);
+  const dispatch = useDispatch();
 
   const navbarStyle: CSSProperties = {
     position: "fixed",
@@ -45,9 +48,11 @@ const HorizontalNavbar: React.FC = () => {
     router.push("https://industry-fusion.org/de");
   };
 
-  const logout = () => {
+  const handleLogout = () => {
     Cookies.set("login_flag", "false");
     router.push("/login");
+    dispatch(resetTimer());
+    dispatch(logout());
   };
 
 
@@ -88,7 +93,7 @@ const HorizontalNavbar: React.FC = () => {
           tooltipOptions={{ position: 'bottom' }}
           onClick={()=>setProfileDetail(true)}
           />
-        <Button onClick={logout} icon="pi pi-sign-out" link
+        <Button onClick={handleLogout} icon="pi pi-sign-out" link
           className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
           {assetManage && <AssetManagementDialog
           assetManageDialogProp={assetManage}

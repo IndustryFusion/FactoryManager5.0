@@ -2,11 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import unAllocatedAssetReducer from './unAllocatedAsset/unAllocatedAssetSlice';
 import machineStateReducer from "./machineState/machineStateSlice";
 import entityIdReducer from "./entityId/entityIdSlice";
+import authReducer from "./auth/authSlice"
+
 export const store = configureStore({
     reducer: {
         unAllocatedAsset: unAllocatedAssetReducer,
         machineState: machineStateReducer,
-        entityId: entityIdReducer
+        entityId: entityIdReducer,
+        auth: authReducer
     },
 });
 
