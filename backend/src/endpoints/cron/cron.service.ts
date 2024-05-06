@@ -49,7 +49,6 @@ private emitDataChangeToClient(data: any) {
 async handleFindAllEverySecond() {
   // Retrieve token and query parameters from Redis
   const credentials = await this.redisService.getTokenAndEntityId();
-
   if(!credentials){
     return;
   }
@@ -59,19 +58,15 @@ async handleFindAllEverySecond() {
   let storedData = await this.redisService.getData('storedData');
   let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
 
-  //console.log("storedQueryParams", storedQueryParams)
-  
   if (storedQueryParams && storedQueryParams.intervalType !== 'live') {
     return; // Only proceed if the interval type is 'live'
   }
 
   if (!storedData || storedData.length == 0) {
-    // console.log("No data to process, exiting...");
     return;
   }
 
   const { entityId, attributeId } = storedData[0];
-  //console.log(storedData, "storeddata")
   const modifiedQueryParams = {
     limit: 1,
     order: 'observedAt.desc',

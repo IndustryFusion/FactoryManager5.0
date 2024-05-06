@@ -246,19 +246,6 @@ const FlowEditor: React.FC<
         setEdges((eds) => [...eds, newEdge]);
       }
     }
-
-    if (deletedShopFloors) {
-      deletedShopFloors.forEach((deletedShopFloorId) => {
-        const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
-        setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
-        setEdges((edges) =>
-          edges.filter(
-            (edge) =>
-              edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
-          )
-        );
-      });
-    }
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -292,6 +279,27 @@ const FlowEditor: React.FC<
   }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors, factoryId, API_URL, toastMessage]);
 
 
+useEffect(() => {
+  if (deletedShopFloors && deletedShopFloors.length > 0) {
+    console.log("Processing deletions for: ", deletedShopFloors);
+
+    const newNodes = nodes.filter(node => 
+      !deletedShopFloors.includes(node.id.replace('shopFloor_', ''))
+    );
+    const newEdges = edges.filter(edge => 
+      !deletedShopFloors.includes(edge.source.replace('shopFloor_', '')) &&
+      !deletedShopFloors.includes(edge.target.replace('shopFloor_', ''))
+    );
+
+    if (newNodes.length !== nodes.length || newEdges.length !== edges.length) {
+      setNodes(newNodes);
+      setEdges(newEdges);
+    }
+
+   saveOrUpdate();
+  //  onRestore();
+  }
+}, [deletedShopFloors]); 
 
 
   const checkForNewAdditions = useCallback(() => {
@@ -663,6 +671,27 @@ const onRestore = useCallback(async () => {
    
     }
   };
+ const refreshFromScorpio = async () => {
+  const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+  try {
+    setIsOperationInProgress(true);  // Show a loading indicator or disable UI elements
+    const response = await axios.get(reactFlowUpdate, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+
+    setToastMessage('Refresh Completed');
+    await onRestore(); 
+  } catch (error) {
+    console.error('Failed to update flowchart:', error);
+    setToastMessage('Error updating flowchart.');
+  } finally {
+    setIsOperationInProgress(false);  // Hide loading indicator or enable UI elements
+  }
+};
 
   const saveOrUpdate = useCallback(async () => {
   try {
@@ -770,24 +799,49 @@ const onRestore = useCallback(async () => {
   }
 }, [factoryId, onSave]);
 
-
 useEffect(() => {
-  const handleRouteChange = (url: string) => {
-    if (hasChanges) {
-      saveOrUpdate().then(() => {
-        router.push(url); // Navigate after save
-      });
+  let isRouteChangeAllowed = true; // control navigation flow
+
+  const handleRouteChange = async (url:string) => {
+    if (hasChanges && isRouteChangeAllowed) {
+      isRouteChangeAllowed = false; // Prevent further navigation attempts while saving
+      try {
+        await saveOrUpdate(); 
+        // toast.current?.show({
+        //   severity: 'success',
+        //   summary: 'Save Successful',
+        //   detail: 'Changes have been saved successfully!'
+        // });
+        router.push(url); 
+      } catch (error) {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Save Failed',
+          detail: 'Failed to save changes!'
+        });
+        console.error('Failed to save changes:', error);
+      } finally {
+        isRouteChangeAllowed = true; // Reset the navigation flag
+      }
       return false; // Block navigation until save is complete
     }
-    return true; // Allow navigation if no changes
+    return true; // Allow navigation if no changes or after save
   };
 
-  router.beforePopState(({ url }) => handleRouteChange(url));
+  const routeChangeHandler = (url:string) => {
+    if (!handleRouteChange(url)) {
+      router.events.emit('routeChangeError');
+      throw new Error('Route change aborted due to pending changes.');
+    }
+  };
+
+  router.events.on('routeChangeStart', routeChangeHandler);
 
   return () => {
-    router.beforePopState(() => true); // Cleanup
+    router.events.off('routeChangeStart', routeChangeHandler);
   };
-}, [hasChanges, saveOrUpdate, router]);
+}, [hasChanges, saveOrUpdate, router, toast]);
+
 
 
 const handleExportClick = () => {
@@ -1133,8 +1187,15 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
                 className="p-button-secondary m-2"
                 raised
               />
+               <Button
+                label="Refresh"
+                onClick={refreshFromScorpio}
+                className="m-2"
+                severity="help"
+                raised
+              />
               <Button
-                label="Delete"
+                label="Reset"
                 onClick={handleDelete}
                 className="p-button-danger m-2"
                 raised
@@ -1143,12 +1204,14 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
                 label="Export as JPEG"
                 className="m-2"
                 onClick={handleExportClick}
+                  severity="info"
               />
             </div>
             <div className="flex align-items-center gap-2">
               <span>Switch View</span>
               <InputSwitch checked={switchView} onChange={(e) => {
                 setSwitchView(e.value);
+                saveOrUpdate();
                 router.push(`/factory-site/factory-shopfloor/${factoryId}`)
               }} />
             </div>

@@ -80,23 +80,15 @@
 }
 
 
-
-
-
-/* test css*/
-
 .control-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: center; /* Aligns items vertically in the center */
+  justify-content: space-between; /* Distributes space between items */
+  padding: 1rem; /* Adds some padding around the items */
 }
-
-.control-container {
-  display: flex;
-  align-items: center;  /* Align vertically in the center */
-  justify-content: space-between; /* Space between elements, adjust if necessary */
-  padding: 10px 0; /* Optional: Add some vertical padding */
+.attribute-dropdown-container, .interval-dropdown-container, .date-time-container {
+  flex-grow: 1; /* Allows each container to grow and take up equal space */
+  margin: 0 10px; /* Adds margin to the left and right for spacing */
 }
 
 .h3-container {
@@ -129,10 +121,7 @@
 .date-time-container{
   margin-right: 200px;
 }
-.attribute-dropdown-container,
-.interval-dropdown-container {
-  margin-left:100px; /* Adjust the spacing between the attribute icon and the dropdown */
-}
+
 .custom-button {
   display: flex;
   align-items: center;
@@ -146,34 +135,34 @@
     flex-direction: column;
   }
   
-  .attribute-dropdown-container, .custom-button-container, .interval-dropdown-container {
-    width: 100%; /* Full width on small screens */
-    padding: 5px 0; /* Adjust padding for small screens */
-  }
+}
+
+.control-container {
+  display: flex;
+  align-items: center; /* Aligns items vertically in the center */
+  justify-content: space-between; /* Distributes space between items */
+  padding: 1rem; /* Adds some padding around the items */
 }
 .date-time-flex {
     display: flex;
     align-items: center;
     gap: 10px;  /* Space between items */
 }
-/* Custom CSS to adjust the dropdown positioning */
-/* .p-calendar .p-inputtext {
-    width: 100%;  
-}
-
-.p-calendar .p-datepicker {
-    width: auto;  
-    top: 100%;   
-    left: 0;     
-    position: absolute;  
-} */
-
 
  .p-timepicker {
   margin-left: "-150%";
 
  }
 
- .custom-time-dropdown{
-  margin-left: "-990%";
- }
+ .input-with-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+ 
+}
+
+.input-label{
+
+  font-weight: bold;
+
+}
