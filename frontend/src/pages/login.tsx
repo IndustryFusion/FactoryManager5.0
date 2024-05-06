@@ -35,7 +35,12 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     // Always do navigations after the first render
-    isLoggedIn && router.push('/factory-site/factory-overview');
+    // isLoggedIn && router.push('/factory-site/factory-overview');
+    if (Cookies.get("login_flag") === "true") {
+      router.push("/factory-site/factory-overview");
+    } else {    
+        router.push("/login");    
+    }
   }, [])
 
   // validate username, it should be  Alpha Numeric includes underscore _
@@ -125,7 +130,7 @@ const Login: React.FC = () => {
               ) : (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
-          <h1 style={{color:"#363535d1", marginTop:"5px"}}> Factory Manager 5.0 </h1>
+          <h1 style={{color:"#363535d1",marginLeft:"1rem",marginTop:"-10px"}}> Factory Manager 5.0 </h1>
         </Card> 
         <Card  className="flex"
         style={{color:"balck", marginTop:"50px", width:"500px", height:"600px"}}>
@@ -181,7 +186,7 @@ const Login: React.FC = () => {
           
         </Card>
         </>
-      )}
+     )}
     </div>
   );
 };

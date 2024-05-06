@@ -1,14 +1,20 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function WelcomePage() {
   const router = useRouter();
   //const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken') || null);
   useEffect(() => {
     // Always do navigations after the first render
-    router.push('/login');
+    if (Cookies.get("login_flag") === "true") {
+      router.push("/factory-site/factory-overview");
+    } else {    
+        router.push("/login");    
+    }
+
   }, [])
   
   return (
