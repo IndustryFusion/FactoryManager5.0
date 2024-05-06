@@ -119,8 +119,6 @@ async findAll(token, queryParams) {
     if (queryParams.intervalType == "live" ) {
       // Store data in Redis only if the intervalType is 'live'
       await this.redisService.saveData("storedData", response.data);
-
-      console.log("pg rest data ",  response.data)
       return response.data ;
     }
    return response.data ;
