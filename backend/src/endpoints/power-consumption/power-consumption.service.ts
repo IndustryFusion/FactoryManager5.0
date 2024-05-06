@@ -58,10 +58,10 @@ export class PowerConsumptionService {
       const redisKey = `chartData:${queryParams.assetId}:${queryParams.type}`;
 
       // Check if credentials have changed and update Redis accordingly
-      const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.assetId);
-      if (credentialsChanged) {
-        await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.assetId);
-      }
+      // const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.assetId);
+      // if (credentialsChanged) {
+      //   await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.assetId);
+      // }
 
       if(queryParams.type == 'days'){
         const url = this.timescaleUrl + `/power_emission_entries_days?entityId=eq.${queryParams.assetId}&day=gte.${moment.utc(queryParams.startTime).toISOString()}&day=lte.${moment.utc(queryParams.endTime).toISOString()}`;
@@ -75,7 +75,7 @@ export class PowerConsumptionService {
             emission.push(Number(data.total_carbon_emission).toFixed(2));
           });
         }
-       await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
+       // await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
       } else if(queryParams.type == 'weeks'){
         const url = this.timescaleUrl + `/power_emission_entries_weeks?entityId=eq.${queryParams.assetId}&week=gte.${moment.utc(queryParams.startTime).toISOString()}&week=lte.${moment.utc(queryParams.endTime).toISOString()}`;
         const response = await axios.get(url, {headers});
