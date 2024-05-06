@@ -807,11 +807,6 @@ useEffect(() => {
       isRouteChangeAllowed = false; // Prevent further navigation attempts while saving
       try {
         await saveOrUpdate(); 
-        // toast.current?.show({
-        //   severity: 'success',
-        //   summary: 'Save Successful',
-        //   detail: 'Changes have been saved successfully!'
-        // });
         router.push(url); 
       } catch (error) {
         toast.current?.show({
