@@ -38,9 +38,14 @@ const HorizontalNavbar: React.FC = () => {
   };
 
   const logoStyle: CSSProperties = {
-    height: "45px",
     width: "45px",
     padding: "0.5rem 0"
+  }
+  const logoText: CSSProperties = {
+    fontWeight: "500",
+    color: "#615E5E",
+    fontFamily: "Segoe UI",
+    fontSize: "19px"
   }
    
 
@@ -62,7 +67,7 @@ const HorizontalNavbar: React.FC = () => {
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
-        <p style={{fontWeight: "bold"}}>Factory Manager</p>
+        <p style={logoText}>Factory Manager</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <Button label="About Us" link onClick={navigateToIndustryFusion}
