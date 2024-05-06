@@ -16,10 +16,14 @@ import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
+  factoryId: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
+  setShopfloorProp?: any;
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
+  factoryId,
   onShopFloorDeleted,
+  setShopfloorProp
 }) => {
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +130,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
-      onShopFloorDeleted(selectedShopFloorId);
+      if (onShopFloorDeleted) {
+        onShopFloorDeleted(selectedShopFloorId);
+      }
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({

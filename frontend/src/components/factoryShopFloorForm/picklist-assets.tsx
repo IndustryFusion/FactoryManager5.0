@@ -173,7 +173,22 @@ const PicklistAssets = () => {
         console.log("allocatedObj", allocatedObj);
         return allocatedObj;
     }
-
+ async function updateReactFlow(factoryId:string) {
+    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+    
+    try {
+         await axios.get(reactFlowUpdate, {
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            withCredentials: true,
+        });
+    
+    } catch (error) {
+        console.log("Error updating React Flow in relation card component", error);
+    }
+}
     const handleSaveShopFloors = async () => {
         const payload = getPayload();
         const url = `${API_URL}/shop-floor/update-asset`;
@@ -216,6 +231,7 @@ const PicklistAssets = () => {
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
                 handleSaveShopFloors()
+                updateReactFlow(factoryId);
                 handleAllocatedAssets()
             }
             }>Save</Button>

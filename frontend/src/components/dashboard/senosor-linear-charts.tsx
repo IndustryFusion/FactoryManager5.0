@@ -169,19 +169,18 @@ const [data, setChartData] = useState<ChartDataState>({
 
 const chartOptions: ChartOptions<"line"> = {
   animation: {
-    duration: 0, 
+    duration: 0,
   },
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    
-    decimation: selectedInterval == 'custom' ? {
+    decimation: selectedInterval === 'custom' ? {
       enabled: true,
       algorithm: 'lttb',
-      samples: 100,
+      samples: 300, // Set decimation to 300
     } : undefined,
     tooltip: {
-      enabled: true, // Enable tooltips for interactivity
+      enabled: true,
       mode: 'index',
       intersect: false,
       callbacks: {
@@ -189,12 +188,10 @@ const chartOptions: ChartOptions<"line"> = {
           return `${context.dataset.label}: ${context.parsed.y}`;
         },
         title: function(context: TooltipItem<"line">[]) {
-        
-          return format(new Date(context[0].parsed.x), 'PPpp'); 
+          return format(new Date(context[0].parsed.x), 'PPpp');
         }
       }
     },
-    
     datalabels: {
       display: false,
     },
@@ -218,7 +215,7 @@ const chartOptions: ChartOptions<"line"> = {
     x: {
       type: 'time',
       time: {
-        tooltipFormat: 'PPpp', // Full date with time
+        tooltipFormat: 'PPpp',
         displayFormats: {
           millisecond: 'MMM dd, yyyy HH:mm:ss',
           second: 'MMM dd, yyyy HH:mm:ss',
@@ -257,6 +254,7 @@ const chartOptions: ChartOptions<"line"> = {
     }
   },
 };
+
 const formatAttributeName = (attributeName:string) => {
   // Convert attribute name to camel case
   const camelCaseName = attributeName.replace(/-([a-z])/g, (match, letter) => ` ${letter.toUpperCase()}`);
@@ -635,26 +633,26 @@ const handleLoad = async () => {
                     appendTo="self" 
                   />
                  <div className="input-with-label mt-3">
-                    <label htmlFor="startTime" className="input-label -mt-6">Start Time</label>
+                    <label htmlFor="startTime" className="input-label -mt-6 -ml-5">Start Time</label>
                     <InputText
                       id="startTime"
                       type="time"
                       value={startTime ? format(startTime, 'HH:mm') : ''}
                       onChange={(e) => handleTimeInputChange(e, 'start')}
                       placeholder="Start Time"
-                      className="w-full sm:w-6rem mt-3"
+                      className="w-full lg:w-8rem mt-3"
                       disabled={selectedInterval !== 'custom'}
                     />
                   </div>
                   <div className="input-with-label mt-3">
-                    <label htmlFor="endTime" className="input-label -mt-6">End Time</label>
+                    <label htmlFor="endTime" className="input-label -mt-6 -ml-5">End Time</label>
                     <InputText
                       id="endTime"
                       type="time"
                       value={endTime ? format(endTime, 'HH:mm') : ''}
                       onChange={(e) => handleTimeInputChange(e, 'end')}
                       placeholder="End Time"
-                      className="w-full sm:w-6rem mt-3"
+                      className="w-full lg:w-8rem mt-3"
                       disabled={selectedInterval !== 'custom'}
                     />
                   </div>

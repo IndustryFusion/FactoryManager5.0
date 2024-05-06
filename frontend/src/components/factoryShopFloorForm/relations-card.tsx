@@ -38,7 +38,7 @@ const Relations = () => {
     const dispatch = useDispatch();
     const relations = useSelector((state: RootState) => state.relations.values);
     const reduxAssetId = useSelector((state: RootState) => state.relations.id);
-
+    
     const getRelations = async () => {
         try {
             const response = await fetchAssetById(assetId);
@@ -94,7 +94,23 @@ const Relations = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
     console.log(deleteRelation, "deleteRelation here outside");
-
+   
+async function updateReactFlow(factoryId:string) {
+    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+    
+    try {
+         await axios.get(reactFlowUpdate, {
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            withCredentials: true,
+        });
+    
+    } catch (error) {
+        console.log("Error updating React Flow in relation card component", error);
+    }
+}
     const handleReset = () => {
         setInputValue([]);
         showToast("success", "success", "Relations reseted successfully")
@@ -156,6 +172,7 @@ const Relations = () => {
             [assetId]: obj
         };  
         handleUpdateRelations(payload);
+        updateReactFlow(factoryId);
         setDeleteRelation(false);
     }
     const handleDelete = () => {

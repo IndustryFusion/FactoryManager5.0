@@ -158,11 +158,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
- 
 }
 
 .input-label{
-
   font-weight: bold;
-
 }

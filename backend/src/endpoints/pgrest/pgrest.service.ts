@@ -112,6 +112,8 @@ async findAll(token, queryParams) {
   const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
 
   try {
+
+    console.log("url ", url)
    const response = await axios.get(url, { headers });
     await this.redisService.saveData("storedDataQueryParams", queryParams);
     await this.redisService.saveData("storedData", null);
@@ -119,6 +121,8 @@ async findAll(token, queryParams) {
     if (queryParams.intervalType == "live" ) {
       // Store data in Redis only if the intervalType is 'live'
       await this.redisService.saveData("storedData", response.data);
+
+      console.log("pg rest data ",  response.data)
       return response.data ;
     }
    return response.data ;
