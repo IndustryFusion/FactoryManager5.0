@@ -322,8 +322,8 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 <Dialog visible={isEditProp} modal footer={footerContent} style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
                     <Toast ref={toast} />
                     <div className="p-fluid p-formgrid p-grid ">
-                        <Card className="factory-form-container  center-button-container p-0">
-                            <h2>Edit Shop Floor</h2>
+                        <h2 className="form-title mb-2">Edit Shop Floor</h2>
+                        <Card className="factory-form-container  center-button-container py-3">
                             {
                                 shopFloorTemplate &&
                                 shopFloorTemplate?.properties &&

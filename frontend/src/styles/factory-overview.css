@@ -25,7 +25,7 @@
  
 }
 
-.card {
+.factory-card {
   background: #ffffff;
   border: 1px solid #dfe7ef;
   border-radius: 12px !important;
@@ -34,7 +34,7 @@
   width: 100%;
 }
 
-.card:last-child {
+.factory-card:last-child {
   margin-bottom: 0
 }
 
@@ -68,7 +68,7 @@
   border-radius: 5px;
 }
 
-.card-title {
+.factory-card-title {
   font-size: 1.1rem;
   margin-bottom: 10px;
   letter-spacing: 0.4px;
@@ -87,7 +87,7 @@
   border: none;
 }
 
-/* .factory-card-content {
+/* .factory-factory-card-content {
   height: 180px;
   justify-content: space-between;
 } */
@@ -161,7 +161,7 @@ margin-top: 8px;
     height: 135px;
   } */
 
-  .card-title {
+  .factory-card-title {
     font-size: 1rem;
   }
   .address-text{
