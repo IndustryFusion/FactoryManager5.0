@@ -5,14 +5,16 @@ import { useState } from "react";
 import { CSSProperties } from "react";
 import { useRouter } from "next/router";
 import Cookies from 'js-cookie';
-import Alerts from "./alert/alerts";
+import Alerts from "../alert/alerts";
 import { LuLayoutDashboard } from "react-icons/lu";
-import AssetManagementDialog from "./assetManagement/asset-management";
+import AssetManagementDialog from "../assetManagement/asset-management";
+import ProfileDialog from "./profile-dialog";
 
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
   const [assetManage, setAssetManage] = useState(false);
+  const [profileDetail, setProfileDetail] = useState(false);
 
   const navbarStyle: CSSProperties = {
     position: "fixed",
@@ -33,11 +35,11 @@ const HorizontalNavbar: React.FC = () => {
   };
 
   const logoStyle: CSSProperties = {
-    height: "53px",
-    width: "9rem",
-    marginRight: "1rem",
-    paddingBottom: "1rem" // Spacing after the logo
-  };
+    height: "45px",
+    width: "45px",
+    padding: "0.5rem 0"
+  }
+   
 
   const navigateToIndustryFusion = () => {
     router.push("https://industry-fusion.org/de");
@@ -51,16 +53,17 @@ const HorizontalNavbar: React.FC = () => {
 
   return (
     <div style={navbarStyle}>
-      <div className="flex align-items-center logo-container cursor-pointer"
+      <div className="flex align-items-center gap-2 logo-container cursor-pointer"
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
+        <p style={{fontWeight: "bold"}}>Factory Manager</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <Button label="About Us" link onClick={navigateToIndustryFusion}
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
-        <Button label="Contact Us" link
+        <Button label="Contact Us" link onClick={navigateToIndustryFusion}
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button
@@ -82,13 +85,19 @@ const HorizontalNavbar: React.FC = () => {
         <Alerts />
         <Button icon="pi pi-user" link
           className="mr-2 " style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="Profile Details"
-          tooltipOptions={{ position: 'bottom' }} />
+          tooltipOptions={{ position: 'bottom' }}
+          onClick={()=>setProfileDetail(true)}
+          />
         <Button onClick={logout} icon="pi pi-sign-out" link
           className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
           {assetManage && <AssetManagementDialog
           assetManageDialogProp={assetManage}
           setAssetManageDialogProp={setAssetManage}
           />}
+          {profileDetail && <ProfileDialog
+          profileDetailProp={profileDetail}
+          setProfileDetailProp={setProfileDetail}
+        />}
       </div>
     </div>
   );

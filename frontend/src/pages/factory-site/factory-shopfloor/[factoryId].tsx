@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { InputSwitch } from "primereact/inputswitch";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
-import HorizontalNavbar from "@/components/horizontal-navbar";
+import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 import UnallocatedAsset from "@/components/factoryShopFloorForm/unallocated-asset";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
@@ -16,7 +16,7 @@ import { PickList } from 'primereact/picklist';
 import { Card } from "primereact/card";
 import ShopFloorAssets from "@/components/factoryShopFloorForm/shopFloor-assets";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
-import Footer from "@/components/footer";
+import Footer from "@/components/navBar/footer";
 
 const FactoryShopFloor = () => {
 
