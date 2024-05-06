@@ -3,13 +3,15 @@ import unAllocatedAssetReducer from './unAllocatedAsset/unAllocatedAssetSlice';
 import machineStateReducer from "./machineState/machineStateSlice";
 import entityIdReducer from "./entityId/entityIdSlice";
 import authReducer from "./auth/authSlice"
+import relationsReducer from "./relations/relationsSlice";
 
 export const store = configureStore({
     reducer: {
         unAllocatedAsset: unAllocatedAssetReducer,
         machineState: machineStateReducer,
         entityId: entityIdReducer,
-        auth: authReducer
+        auth: authReducer,
+        relations: relationsReducer
     },
 });
 

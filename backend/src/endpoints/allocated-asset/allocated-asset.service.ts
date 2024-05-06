@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
-
+import { FactorySiteService } from '../factory-site/factory-site.service';
 @Injectable()
 export class AllocatedAssetService {
   constructor(
     private readonly assetService: AssetService,
-    private readonly reactFlowService: ReactFlowService
+    private readonly reactFlowService: ReactFlowService,
+    private readonly factorySiteService: FactorySiteService
   ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
 
@@ -158,6 +159,39 @@ export class AllocatedAssetService {
     
       return response.data;
     } catch(err) {
+      return err;
+    }
+  }
+
+  async findProductName(token: string){
+    try{
+      console.log('inside findProductName')
+      let finalData = {};
+      let allocatedAssetData = await this.findAll(token);
+      console.log('allocatedAssetData ',allocatedAssetData);
+      for(let i = 0; i < allocatedAssetData.length; i++){  
+        let factoryId = allocatedAssetData[i].id;
+        factoryId = factoryId.split(':allocated-assets')[0];
+        console.log('factoryId ',factoryId);
+        let factoryData = await this.factorySiteService.findOne(factoryId, token);
+        console.log('factoryData ',factoryData);
+        let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
+        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object; 
+        finalData[factoryName] = [];
+        if(Array.isArray(factorySpecificAssets)){
+          factorySpecificAssets.forEach(assetId => {
+            let assetData = this.assetService.getAssetDataById(assetId, token);
+            let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
+            finalData[factoryName].push(productName);
+          })
+        } else if(factorySpecificAssets !== "json-ld-1.1") {
+          let assetData = this.assetService.getAssetDataById(factorySpecificAssets, token);
+          let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
+          finalData[factoryName].push(productName);
+        }
+      }
+      return finalData;
+    }catch(err){
       return err;
     }
   }

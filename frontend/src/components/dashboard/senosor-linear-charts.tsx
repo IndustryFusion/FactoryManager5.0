@@ -33,6 +33,7 @@ import moment from 'moment';
 import { Button } from 'primereact/button';
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
+import { InputText } from 'primereact/inputtext';
 
 
 // Register the zoom plugin
@@ -168,25 +169,29 @@ const [data, setChartData] = useState<ChartDataState>({
 
 const chartOptions: ChartOptions<"line"> = {
   animation: {
-    duration: 0, 
+    duration: 0,
   },
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    // tooltip: {
-    //   enabled: true, // Enable tooltips for interactivity
-    //   mode: 'index',
-    //   intersect: false,
-    //   callbacks: {
-    //     label: function(context: TooltipItem<"line">) {
-    //       return `${context.dataset.label}: ${context.parsed.y}`;
-    //     },
-    //     title: function(context: TooltipItem<"line">[]) {
-        
-    //       return format(new Date(context[0].parsed.x), 'PPpp'); 
-    //     }
-    //   }
-    // },
+    decimation: selectedInterval === 'custom' ? {
+      enabled: true,
+      algorithm: 'lttb',
+      samples: 300, // Set decimation to 300
+    } : undefined,
+    tooltip: {
+      enabled: true,
+      mode: 'index',
+      intersect: false,
+      callbacks: {
+        label: function(context: TooltipItem<"line">) {
+          return `${context.dataset.label}: ${context.parsed.y}`;
+        },
+        title: function(context: TooltipItem<"line">[]) {
+          return format(new Date(context[0].parsed.x), 'PPpp');
+        }
+      }
+    },
     datalabels: {
       display: false,
     },
@@ -210,7 +215,7 @@ const chartOptions: ChartOptions<"line"> = {
     x: {
       type: 'time',
       time: {
-        tooltipFormat: 'PPpp', // Full date with time
+        tooltipFormat: 'PPpp',
         displayFormats: {
           millisecond: 'MMM dd, yyyy HH:mm:ss',
           second: 'MMM dd, yyyy HH:mm:ss',
@@ -249,6 +254,7 @@ const chartOptions: ChartOptions<"line"> = {
     }
   },
 };
+
 const formatAttributeName = (attributeName:string) => {
   // Convert attribute name to camel case
   const camelCaseName = attributeName.replace(/-([a-z])/g, (match, letter) => ` ${letter.toUpperCase()}`);
@@ -401,25 +407,31 @@ const handleDateChange = async(e:any) => {
     setSelectedDate(e.value as Date);
 };
 
-const handleStartTimeChange = (e: any) => {
-  const newTime = e.value instanceof Date ? e.value : e.value[0]; // Assuming `e.value` could be Date | Date[]
-  if (selectedDate && newTime) {
-    const updatedDate = new Date(selectedDate);
-    updatedDate.setHours(newTime.getHours(), newTime.getMinutes(), newTime.getSeconds());
-    setStartTime(updatedDate);
-  } else {
-    setStartTime(newTime);
-  }
-};
+const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'start' | 'end') => {
+  const timeValue = e.target.value;
+  const [hours, minutes] = timeValue.split(':').map(Number);
+  const datePart = selectedDate ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()) : new Date();
+  const newTime = new Date(datePart.setHours(hours, minutes, 0, 0));
+  const currentDate = new Date();
 
-const handleEndTimeChange = (e: any) => {
-  const newTime = e.value instanceof Date ? e.value : e.value[0]; // Same assumption as above
-  if (selectedDate && newTime) {
-    const updatedDate = new Date(selectedDate);
-    updatedDate.setHours(newTime.getHours(), newTime.getMinutes(), newTime.getSeconds());
-    setEndTime(updatedDate);
-  } else {
-    setEndTime(newTime);
+  if (type === 'start') {
+    if (!endTime || newTime < endTime) {
+      setStartTime(newTime);
+    } else {
+      // If new start time is not earlier than end time, reset it
+      e.target.value = startTime ? format(startTime, 'HH:mm') : '';
+    }
+  } else if (type === 'end') {
+    // Ensure end time is not in the future
+    if (selectedDate && datePart.toDateString() === currentDate.toDateString() && newTime > currentDate) {
+      alert("End time cannot exceed the current time.");
+      e.target.value = endTime ? format(endTime, 'HH:mm') : format(new Date(), 'HH:mm');
+    } else if (!startTime || newTime > startTime) {
+      setEndTime(newTime);
+    } else {
+      // If new end time is not later than start time, reset it
+      e.target.value = endTime ? format(endTime, 'HH:mm') : '';
+    }
   }
 };
 
@@ -565,7 +577,8 @@ const chartOptionsWithZoomPan = {
 const handleLoad = async () => {
      await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime);
 };
-
+  const startTimeValue = startTime ? format(startTime, 'HH:mm') : '';
+  const endTimeValue = endTime ? format(endTime, 'HH:mm') : '';
   return (
     <div style={{ zoom: "80%" }}>
       <div className="custom-button-container">
@@ -604,8 +617,8 @@ const handleLoad = async () => {
               />
             </div>
             
-          <div className="date-time-container">
-                <p className="font-bold">Select Date and Time</p>
+            <div className="date-time-container">
+                <p className="font-bold">Select Date</p>
                 <div className="date-time-flex">
                   <Calendar 
                     value={selectedDate} 
@@ -619,31 +632,30 @@ const handleLoad = async () => {
                     disabled={selectedInterval !== 'custom'}
                     appendTo="self" 
                   />
-                  <Calendar 
-                    value={startTime}
-                    onChange={handleStartTimeChange}
-                    showTime={true} 
-                    timeOnly={true} 
-                    hourFormat="24" 
-                    placeholder="Start Time"
-                    className="w-full sm:w-6rem"
-                    disabled={selectedInterval !== 'custom'}
-                    maxDate={endTime ? new Date(endTime.getTime() - 60000) : undefined}
-                    appendTo="self" 
-                  />
-                  <Calendar 
-                    value={endTime}
-                    onChange={handleEndTimeChange}
-                    showTime={true} 
-                    timeOnly={true} 
-                    hourFormat="24" 
-                    placeholder="End Time"
-                    className="w-full sm:w-6rem"
-                    disabled={selectedInterval !== 'custom'}
-                    minDate={startTime ? new Date(startTime.getTime() + 60000) : undefined}
-                    maxDate={new Date()}
-                    appendTo="self" 
+                 <div className="input-with-label mt-3">
+                    <label htmlFor="startTime" className="input-label -mt-6 -ml-5">Start Time</label>
+                    <InputText
+                      id="startTime"
+                      type="time"
+                      value={startTime ? format(startTime, 'HH:mm') : ''}
+                      onChange={(e) => handleTimeInputChange(e, 'start')}
+                      placeholder="Start Time"
+                      className="w-full lg:w-8rem mt-3"
+                      disabled={selectedInterval !== 'custom'}
                     />
+                  </div>
+                  <div className="input-with-label mt-3">
+                    <label htmlFor="endTime" className="input-label -mt-6 -ml-5">End Time</label>
+                    <InputText
+                      id="endTime"
+                      type="time"
+                      value={endTime ? format(endTime, 'HH:mm') : ''}
+                      onChange={(e) => handleTimeInputChange(e, 'end')}
+                      placeholder="End Time"
+                      className="w-full lg:w-8rem mt-3"
+                      disabled={selectedInterval !== 'custom'}
+                    />
+                  </div>
                   <Button 
                     label="Load" 
                     severity="info" 

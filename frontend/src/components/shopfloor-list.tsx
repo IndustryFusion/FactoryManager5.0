@@ -10,7 +10,6 @@ import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
-
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
@@ -38,23 +37,20 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const toast = useRef<Toast>(null);
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
- 
-  useEffect(() => {
-    const filterShopFloors = () => {
-      if (searchValue.trim()) {
-        const filteredFloors = shopFloors.filter((floor) =>
-          floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
-        );
-        setFilteredShopFloors(filteredFloors);
-      } else {
-        setFilteredShopFloors(shopFloors);
-      }
-    };
-
-    filterShopFloors();
-  }, [searchValue, shopFloors]);
+  const { setShopFloorValue } = useFactoryShopFloor();
+  const [factoryIdValue, setFactoryIdvalue] = useState("");
 
 
+  const filterShopFloors = () => {
+    if (searchValue.trim()) {
+      const filteredFloors = shopFloors.filter((floor) =>
+        floor.floorName.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredShopFloors(filteredFloors);
+    } else {
+      setFilteredShopFloors(shopFloors);
+    }
+  };
 
   const fetchShopFloors = async (factoryId: string) => {
 
@@ -86,27 +82,32 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
 
   useEffect(() => {
+    filterShopFloors();
+  }, [searchValue, shopFloors]);
 
+  useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    }
-    else {
+    } else {
       if (router.isReady) {
-        const factoryId = router.query.factoryId;
-        if (typeof factoryId === 'string') {
-          fetchShopFloors(factoryId);
+        const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+          router.query.factoryId;
+        if (typeof id === 'string') {
+          fetchShopFloors(id);
+          setFactoryIdvalue(id);
         } else {
           console.error("factoryId is not a string or is undefined.");
         }
       }
     }
 
+  }, [router.query.factoryId, router.isReady, isEdit, isVisible])
 
-  }, [factoryId, isVisible, isEdit]);
-  
+
+
   async function handleDelete() {
     if (!selectedShopFloorId) {
-      console.log("No shop floor selected for deletion");
+      console.error("No shop floor selected for deletion");
       toast.current?.show({
         severity: "warn",
         summary: "Warning",
@@ -129,7 +130,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
-     if (onShopFloorDeleted) {
+      if (onShopFloorDeleted) {
         onShopFloorDeleted(selectedShopFloorId);
       }
     } catch (error) {
@@ -169,16 +170,11 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
-        <Toast ref={toast} />
+      <Card className="card-full-height" style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
+        <Toast ref={toast} style={{ top: '60px' }}/>
 
         <div>
-          <h3
-            className="font-medium text-xl ml-5"
-            style={{ marginTop: "2%", marginLeft: "5%" }}
-          >
-            Shop Floors
-          </h3>
+          <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="p-input-icon-left flex align-items-center ml-4">
             <i className="pi pi-search" />
             <InputText
@@ -225,23 +221,21 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           <ul className="list-disc" style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
-                  key={floor.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
-                  onClick={() =>{
-                    setSelectedShopFloorId(floor.id);
-                    setShopfloorProp(floor)
-                  } }
-                  style={{
+                key={floor.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
+                onClick={() => {
+                  setSelectedShopFloorId(floor.id);
+                  setShopFloorValue(floor)
+                }}
+                style={{
                   cursor: "pointer",
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
                   position: "relative",
                   paddingLeft: "20px",
-
                 }}
                 className="ml-4 mb-3 list-item"
               >
-
                 {floor.floorName}
               </li>
             ))}
@@ -259,7 +253,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         <CreateShopFloor
           isVisibleProp={isVisible}
           setIsVisibleProp={setIsVisible}
-          factoryId={factoryId}
+          factoryId={factoryIdValue}
         />
       )}
     </>

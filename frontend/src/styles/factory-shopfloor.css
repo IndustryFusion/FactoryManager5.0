@@ -1,18 +1,23 @@
 .factory-shopfloor-container {
-    /* display: grid;
-    grid-template-columns: 0.5fr 2fr 1.5fr;
-    grid-gap: 10px; */
     display: flex;
     gap: 1rem;
-    padding: 0 1rem;
+    /* height: 90vh; */
+    overflow: hidden;
+    zoom: 96%;
+    width: 100%;
+    /* padding: 0 1rem; */
+}
+
+ul {
+    width: 100%;
 }
 
 .form-container {
-    width: 90%;
+    width: 100%;
     /* margin: 1.5rem auto; */
-    flex: 0 0 35%;
+    flex: 0 0 38%;
     border-right: 1px solid #ccc;
-    padding: 10px;
+    padding: 10px 20px 10px 10px;
     height: 100vh;
 }
 
@@ -27,10 +32,16 @@
 }
 
 
+.checkbox-lock{
+    justify-content: center;
+    margin-top: 3rem;
+    flex: 0 0 5%; 
+}
+
 .shopfloor-list-container {
     border-right: 1px solid #ccc;
     /* padding: 0 1.3rem; */
-    width: 85%;
+    width: 100%;
     zoom: 80%;
     flex: 0 0 25%;
 }
@@ -52,33 +63,44 @@
 .factory-header {
     border-bottom: 1px solid #ccc;
 }
-.asset-lists{
-   height: 100vh;
-   display: flex;
+
+.asset-lists {
+    height: 100vh;
+    display: flex;
 }
-.asset-lists div{
+
+.asset-lists div {
     zoom: 86%;
     /* flex: 0 0 44%; */
 }
+
 .asset-lists .p-picklist-source-controls .p-picklist-buttons,
-.p-picklist-target-controls .p-picklist-buttons{
-display: none !important;
+.p-picklist-target-controls .p-picklist-buttons {
+    display: none !important;
 }
+
 .p-picklist-buttons {
     justify-content: normal;
     margin-top: 30px;
 }
-.list-items{
+
+.list-items {
     padding: 0;
     font-size: 17px;
 }
-.p-chips .p-chips-multiple-container .p-chips-token{
+
+.p-chips .p-chips-multiple-container .p-chips-token {
     font-size: 12px;
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ccc;
     background-color: transparent;
 }
-.p-chips .p-component .p-inputwrapper{
-width: 100%;
+
+.p-chips .p-component .p-inputwrapper {
+    width: 90%;
+}
+
+.p-inputtext .p-chips-multiple-container {
+    width: 95% !important;
 }

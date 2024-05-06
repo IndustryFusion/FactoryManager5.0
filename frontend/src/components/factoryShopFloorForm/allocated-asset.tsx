@@ -58,64 +58,73 @@ const AllocatedAsset = () => {
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
     // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
-    const { selectItem, selectItems } = useFactoryShopFloor();
+    const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
+    const [factoryIdValue, setFactoryIdValue] = useState("");
+
+
+    const fetchNonShopFloorAssets = async (factoryId: string) => {
+        try {
+            if (unAllocatedAssetData.length === 0) {
+                const fetchedAssetIds = await getNonShopFloorAsset(factoryId); // for unallocated assets
+                console.log("fetchedAssetIds", fetchedAssetIds);
+                dispatch(create(fetchedAssetIds));
+            }
+            const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
+            console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+            if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
+                allocatedAssetsArray = fetchedAllocatedAssets;
+            }
+            // setAllocatedAssets(allocatedAssetsArray);
+
+            // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
+            const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
+                id: unAllocatedAssetData[key].id,
+                product_name: unAllocatedAssetData[key].product_name?.value,
+                asset_category: unAllocatedAssetData[key].asset_category?.value,
+            }));
+
+            // destructuring the asset id, product_name, asset_catagory for allocated Asset
+            const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
+                id: fetchedAllocatedAssets[key].id,
+                product_name: fetchedAllocatedAssets[key]?.product_name,
+                asset_category: fetchedAllocatedAssets[key]?.asset_category,
+            }));
+
+            // combined asset catagories from both allocated asset and un allocated asset
+            const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+
+            setAssetCategories(categories);
+            setAssets(fetchedAssets);
+            setAllocatedAssets(fetchedAllocatedAssets);
+            setLoading(false);
+
+        } catch (err) {
+            setError("Failed to fetch assets");
+            setLoading(false);
+            allocatedAssetsArray = null;
+
+        }
+    };
 
     useEffect(() => {
-        const fetchNonShopFloorAssets = async (factoryId: string) => {
-            try {
-                if (unAllocatedAssetData.length === 0) {
-                    const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-                    console.log("fetchedAssetIds", fetchedAssetIds);
-                    dispatch(create(fetchedAssetIds));
-                }
-                const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-                // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
-                if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
-                    allocatedAssetsArray = fetchedAllocatedAssets;
-                }
-                // setAllocatedAssets(allocatedAssetsArray);
-
-                // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-                const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
-                    id: unAllocatedAssetData[key].id,
-                    product_name: unAllocatedAssetData[key].product_name?.value,
-                    asset_category: unAllocatedAssetData[key].asset_category?.value,
-                }));
-
-                // destructuring the asset id, product_name, asset_catagory for allocated Asset
-                const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
-                    id: fetchedAllocatedAssets[key].id,
-                    product_name: fetchedAllocatedAssets[key]?.product_name,
-                    asset_category: fetchedAllocatedAssets[key]?.asset_category,
-                }));
-
-                // combined asset catagories from both allocated asset and un allocated asset
-                const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
-                setAssetCategories(categories);
-                setAssets(fetchedAssets);
-                setAllocatedAssets(fetchedAllocatedAssets);
-                setLoading(false);
-
-            } catch (err) {
-
-                setError("Failed to fetch assets");
-                setLoading(false);
-                allocatedAssetsArray = null;
-
-            }
-        };
-
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
         } else if (router.isReady) {
+            console.log("is coming here");
+            
             const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
             if (typeof id === 'string') {
+                console.log("is coming another if");
+                
                 fetchNonShopFloorAssets(id);
+                //getAllocatedAssets();
+                setFactoryIdValue(id);
             }
         }
 
-    }, [router.query.factoryId, router.isReady, unAllocatedAssetData]);
+    }, [router.query.factoryId, router.isReady, unAllocatedAssetData,saveAllocatedAssets]);
+    console.log("saveAllocatedAssets",saveAllocatedAssets);
+    
 
     useEffect(() => {
         const results = assets.filter(asset => {
@@ -127,7 +136,6 @@ const AllocatedAsset = () => {
         });
         setFilteredAssets(results);
     }, [searchTerm, selectedCategories, assets]);
-
 
     const filteredAllocatedAssets = useMemo(() => {
         if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
@@ -191,23 +199,20 @@ const AllocatedAsset = () => {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
-
-
-    console.log("allocated assets", filteredAllocatedAssets);
-    
     return (
         <>
-            <Card style={{ height: "38%", marginTop: "10px", overflowY: "scroll" }}>
+            <Card style={{ height: "50%", marginTop: "10px", overflowY: "scroll" }}>
                 <h3
                     className="font-medium text-xl ml-4"
                     style={{ marginTop: "2%", marginLeft: "5%" }}
                 >
                     Allocated Asset
                 </h3>
-                <div className="flex ml-3 justify-content-between">
-                    <div className="p-input-icon-left">
+                <div className="flex ml-3" >
+                    <div className="p-input-icon-left" style={{ flex: "0 0 90%" }}>
                         <i className="pi pi-search" />
                         <InputText
+                            style={{ width: "100%" }}
                             value={searchTermAllocated}
                             onChange={(e) => setSearchTermAllocated(e.target.value)}
                             placeholder="Search by name..."
@@ -226,18 +231,20 @@ const AllocatedAsset = () => {
                         <Menu model={allocatedMenuItems} popup ref={allocatedMenu} style={{ marginLeft: "-20%", marginTop: "1" }} />
 
                     </div>
-
                 </div>
-                <ul>
-                    {filteredAllocatedAssets.map((asset, index) => (
-                        <li key={index} className="mb-2 ml-3"
-                            onClick={() => selectItems(asset?.product_name, asset?.asset_category, asset?.id)}
-                        >
-                            {typeof asset === 'string' ? asset : asset.product_name}
-                        </li>
-                    ))}
+                <div style={{ height: "220px" }}>
+                    <ul>
+                        {filteredAllocatedAssets.map((asset, index) => (
+                            <li key={index} className="mb-2 ml-3"
+                                onClick={() => selectItems(asset?.product_name, asset?.asset_category, asset?.id)}
+                            >
+                                {typeof asset === 'string' ? asset : asset.product_name}
+                            </li>
+                        ))}
 
-                </ul>
+                    </ul>
+                </div>
+
             </Card>
         </>
     )

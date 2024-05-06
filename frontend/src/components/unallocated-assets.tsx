@@ -189,9 +189,9 @@ return (
         ]} popup ref={menu} style={{marginLeft:"-20%"}} />
       </div>
 
-      <TabView className="ml-1 "  >
-        <TabPanel header="Unallocated Assets" style={{ height: '93%', overflowY: 'auto' }}>
-          <div  >
+      <TabView className="ml-1"  >
+        <TabPanel header="Unallocated Assets" className="" >
+          <Card className="card-full-height">
             <ul>
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
@@ -205,7 +205,7 @@ return (
           </div>
         </TabPanel>
         <TabPanel header="Allocated Assets" className="-ml-2">
-          <div className="ml-1"  style={{ height: '93%', overflowY: 'auto' }}>
+          <Card className="card-full-height" >
             <ul>
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
