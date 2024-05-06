@@ -1,7 +1,12 @@
 
-.card {
-  background-image: url("/LoginPagePhotoFree.jpg");
+.login-card {
+  background-image: url("/factory_bg1.jpg");
+   /* background-image: url("/factory_bg2.jpg"); */
+  /* background-size: contain; */
   background-size: cover;
   width: 100%;
   height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+ 
 }
