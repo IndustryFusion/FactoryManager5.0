@@ -76,6 +76,10 @@
     font-size: 14px;
     padding-top: 4px;
 }
+.onboard-btn{
+    background-color: transparent;
+    border: none;
+}
 
 .active-state {
     background-color: #9cfbbcf6;
