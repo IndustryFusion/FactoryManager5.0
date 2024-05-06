@@ -197,13 +197,15 @@ const FactoryOverview = () => {
 
   const dataViewHeader = (
     <div className="flex flex-column md:flex-row md:justify-content-between  gap-8 px-2 factory-overview">
+      <div>
       <Dropdown
         optionLabel="label"
         placeholder="Sort By Factory Name"
         options={sortOptions}
         onChange={onSortChange}
-        className="flex justify-content-center align-items-center"
+      
       />
+      </div>
       <div>
         <span className="p-input-icon-left">
           <i className="pi pi-search" />
@@ -215,8 +217,7 @@ const FactoryOverview = () => {
           />
         </span>
       </div>
-      <div className="p-3 flex justify-content-end align-items-center"
-        style={{ marginLeft: 'calc(100vw - 50%)' }}>
+      <div className=" flex justify-content-end align-items-center" >
         <div className="mr-3">
           <Button
             label="Import Assets"
@@ -348,7 +349,7 @@ const FactoryOverview = () => {
       <Toast ref={toast} />
       <HorizontalNavbar />
       <div className="grid py-1 px-2 factory-overview " style={{ zoom: "80%" }} >
-        <div className="col-12">
+        <div className="col-12" style={{ marginTop: "5rem" }}>
           <ConfirmDialog />
           <div className="">
             <h2 className="ml-4">Factory Overview</h2>
