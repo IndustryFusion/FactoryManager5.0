@@ -13,7 +13,7 @@ export class NonShopFloorAssetsService {
     try {
       let assetIds = await this.assetService.getAssetIds(token);
       let allocatedAssets = await this.allocatedAssetService.getGlobalAllocatedAssets(token);
-      if (allocatedAssets.length > 0) {
+      if (Array.isArray(allocatedAssets) && allocatedAssets.length > 0) {
         const filteredArray = [];
         for (let i = 0; i < assetIds.length; i++) {
           let id = assetIds[i];
@@ -37,6 +37,9 @@ export class NonShopFloorAssetsService {
         }
         return filteredArray;
       } else {
+        if(allocatedAssets.length > 0 && allocatedAssets !== "json-ld-1.1"){
+          assetIds = assetIds.filter(assetId => assetId !== allocatedAssets);
+        }
         const filteredArray = [];
         for (let i = 0; i < assetIds.length; i++) {
           let id = assetIds[i];

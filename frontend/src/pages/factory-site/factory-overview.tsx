@@ -20,6 +20,8 @@ import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
 import AssetManagement from "@/components/asset-management";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
+import { useDispatch } from "react-redux";
+import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -36,6 +38,7 @@ const FactoryOverview = () => {
   const [editFactory, setEditFactory] = useState<string | undefined>("");
   const [assetManageDialog, setAssetManageDialog] = useState(false);
   const toast = useRef<Toast | null>(null);
+  const dispatch = useDispatch();
 
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
@@ -263,6 +266,7 @@ const FactoryOverview = () => {
     console.log("inside handle delete");
     try {
       await deleteFactory(factoryToDelete);
+      dispatch(reset());
       await fetchFactoryLists();
       showToast("success", "success", "Factory deleted successfully")
 
