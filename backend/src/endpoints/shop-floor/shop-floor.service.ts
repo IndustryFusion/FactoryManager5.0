@@ -376,6 +376,11 @@ export class ShopFloorService {
 
   async deleteScript(node: any, token: string) {
     try {
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        Accept: 'application/ld+json',
+      };
       for(let i = 0; i < node.length; i++){
         let id = node[i].id;
         if(id.includes('shopFloor')){
@@ -387,25 +392,24 @@ export class ShopFloorService {
           }
         }
         if(id.includes('asset')){
-          let updateData = {};
           let assetData = await this.assetService.getAssetDataById(id.split('_')[1], token);
+          if(Object.keys(assetData).length > 0){
           for (const key in assetData){
             if (key.includes('has')){
-              updateData[key] = {
+              assetData[key] = {
                 type: 'Relationship',
-                object: '',
-                class: assetData[key].class
+                object: ''
               }
             }
           }
-          if(Object.keys(updateData).length > 0){
-            let response = await this.assetService.updateAssetById(id.split('_')[1], updateData, token);
-            if(response['status'] == 200 || response['status'] == 204){
-              continue;
-            } else {
-              return response;
-            }
-          } else {
+          const deleteResponse = await this.assetService.deleteAssetById(id.split('_')[1], token);
+          if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+            await axios.post(this.scorpioUrl, assetData, { headers });
+            continue;
+          }else{
+            return deleteResponse;
+          }
+          }else{
             continue;
           }
         }
