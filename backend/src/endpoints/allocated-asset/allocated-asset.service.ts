@@ -83,7 +83,7 @@ export class AllocatedAssetService {
         "type": "urn-holder",
         "http://www.industry-fusion.org/schema#last-data": {
           type: 'Property',
-          object: assetArr
+          object: assetArr.length > 0 ? assetArr : ""
         }
       };
       let response = await axios.post(this.scorpioUrl, data, {headers});

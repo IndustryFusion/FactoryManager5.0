@@ -291,12 +291,13 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-
+      let factoryId = '';
       // Delete AssetId From Factory Specific Allocated Asset
       let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`; 
       const factoryAssetsResponse = await axios.get(factoryAssetsUrl, {headers});
       console.log('factoryAssetsResponse ',factoryAssetsResponse.data)
       if(factoryAssetsResponse.data.length > 0){
+        factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
         let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
         console.log('lastData ',lastData)
         if(Array.isArray(lastData)){
@@ -309,10 +310,6 @@ export class AssetService {
         let deleteFactoryResponse = await this.deleteAssetById(factoryAssetsResponse.data[0].id, token);
         if(deleteFactoryResponse['status'] == 200 || deleteFactoryResponse['status'] == 204) {
           await axios.post(this.scorpioUrl, factoryAssetsResponse.data[0], { headers });
-
-          //Update React Flow for Allocated Factory
-          let factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
-          await reactFlowService.findFactoryAndShopFloors(factoryId, token);
         }
       }
 
@@ -372,9 +369,14 @@ export class AssetService {
         }
       }
 
+      if(factoryId.length > 0){
+        console.log('factory id ',factoryId);
+        await reactFlowService.findFactoryAndShopFloors(factoryId, token);
+      }
       // Delete AssetId From Scorpio
       const finalUrl = this.scorpioUrl + '/' + assetId; 
       let deleteResponse = await axios.delete(finalUrl, {headers});
+      console.log('deleteResponse ',deleteResponse.status);
       return {
         status: deleteResponse.status,
         data: deleteResponse.data
