@@ -49,7 +49,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [updateData, setUpdateData] = useState<Record<string, any>>({});
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<any>({});
-    const [ validateFactory, setValidateFactory] = useState(false);
+    const [validateFactory, setValidateFactory] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false);
     const [validateShopFloor, setValidateShopFloor] = useState(false);
 
@@ -66,10 +66,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             })
             const responseData = response.data;
             setSchema(responseData);
-        } catch (error:any) {
+        } catch (error: any) {
             if (error.response.status === 404) {
                 showError("getting factory template");
-              }
+            }
         }
     }
 
@@ -205,8 +205,8 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                                 }
                             />
                         }
-                            {key === "factory_name" && validateFactory &&
-                         <p className="input-invalid-text" >Factory Name is required</p>}
+                        {key === "factory_name" && validateFactory &&
+                            <p className="input-invalid-text" >Factory Name is required</p>}
                     </div>
                 )}
                 {property.type === "object" &&
@@ -270,7 +270,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     // Handle input change events to update state
     const handleChange = (key: string, value: any) => {
         console.log(value, "wt's the value");
-        if(key === "factory_name"){
+        if (key === "factory_name") {
             setValidateFactory(false)
         }
 
@@ -307,46 +307,46 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         event.preventDefault();
 
         console.log(updateData, "what's in this");
-        console.log(  Object.keys(updateData).length === 0 );
-        
-        if(updateData.factory_name === "" ){
+        console.log(Object.keys(updateData).length === 0);
+
+        if (updateData.factory_name === "") {
             setValidateFactory(true)
-        
-       }
+
+        }
 
         if (Object.values(updateData).every(value => value === '')) {
             showError("Please fill all required fields");
             return;  // Stop further execution
         }
 
-       
-            const dataToUpdate = {
-                ...updateData,
-            };
 
-            const transformedData: any = transformDataForBackend(dataToUpdate);
-            console.log(transformedData, "what's the transformeddata");
-            try {
-                const response = await updateFactory(transformedData, factory!);
-                console.log(response, "factory response");
+        const dataToUpdate = {
+            ...updateData,
+        };
 
-                if (response.success) {
-                    showSuccess();
-                } 
-                
-                else {
-                    if(response.message.detail === "Index 0 out of bounds for length 0"){
-                        showWaring("Browse and Upload the image");
-                    } else {
-                        showWaring(response.message.detail);
-                    } 
-                }
-                    
-            } catch (error) {
-                showError(error);
-                console.error("Error updating factory:", error);
+        const transformedData: any = transformDataForBackend(dataToUpdate);
+        console.log(transformedData, "what's the transformeddata");
+        try {
+            const response = await updateFactory(transformedData, factory!);
+            console.log(response, "factory response");
+
+            if (response.success) {
+                showSuccess();
             }
-        
+
+            else {
+                if (response.message.detail === "Index 0 out of bounds for length 0") {
+                    showWaring("Browse and Upload the image");
+                } else {
+                    showWaring(response.message.detail);
+                }
+            }
+
+        } catch (error) {
+            showError(error);
+            console.error("Error updating factory:", error);
+        }
+
     };
 
     const showSuccess = () => {
@@ -359,7 +359,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             });
         }
     };
-    const showError = (message:any) => {
+    const showError = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'error',
@@ -370,7 +370,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         }
     };
 
-    const showWaring = (message:any) => {
+    const showWaring = (message: any) => {
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'warn',
@@ -399,7 +399,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             <Button
                 severity="secondary" text raised
                 label="Reset"
-                className="mr-2"
+                className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
@@ -414,14 +414,13 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
     return (
         <>
-            <div className=" flex justify-content-center">
-                <Button label="Show" icon="pi pi-external-link" onClick={() => setIsEditProp(true)} />
+            <div className="  flex justify-content-center">
                 <Dialog visible={isEditProp} modal footer={footerContent}
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
                     <Toast ref={toast} />
-                    <div className="p-fluid p-formgrid p-grid">
-                        <h2 className="form-title">Edit Factory</h2>
+                    <h2 className="form-title mb-2">Edit Factory</h2>
+                    <div className="p-fluid p-formgrid p-grid factory-form-container">
                         <Card className="edit-form ">
                             {
                                 schema &&

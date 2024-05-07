@@ -5,8 +5,8 @@ import dynamic from 'next/dynamic'
 import { ShopFloor } from "../types/shop-floor";
 import { exportElementToJPEG } from "@/utility/factory-site-utility";
 import { Asset } from "../../../interfaces/asset-types";
-import HorizontalNavbar from "../../../components/horizontal-navbar";
-import Footer from "../../../components/footer";
+import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
+import Footer from "../../../components/navBar/footer";
 import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/shopfloor-list"), {

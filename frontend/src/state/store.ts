@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import unAllocatedAssetReducer from './unAllocatedAsset/unAllocatedAssetSlice';
 import machineStateReducer from "./machineState/machineStateSlice";
 import entityIdReducer from "./entityId/entityIdSlice";
+import authReducer from "./auth/authSlice"
 import relationsReducer from "./relations/relationsSlice";
 
 export const store = configureStore({
@@ -9,6 +10,7 @@ export const store = configureStore({
         unAllocatedAsset: unAllocatedAssetReducer,
         machineState: machineStateReducer,
         entityId: entityIdReducer,
+        auth: authReducer,
         relations: relationsReducer
     },
 });

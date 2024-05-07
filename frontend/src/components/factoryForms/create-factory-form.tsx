@@ -371,9 +371,9 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 onClick={() => setVisibleProp(false)}
             />
             <Button
-                severity="secondary" text raised
+                severity="secondary" text raised               
                 label="Reset"
-                className="mr-2"
+                className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />

@@ -18,7 +18,7 @@ import { Dialog } from "primereact/dialog";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import "../../styles/dashboard.css"
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { fetchAsset } from "@/utility/asset-utility";
@@ -29,12 +29,14 @@ import { FilterMatchMode } from "primereact/api";
 import AllocatedAsset from "./allocated-asset";
 import { Button } from "primereact/button";
 import axios from "axios";
+import { Toast, ToastMessage } from "primereact/toast";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface AssetManagementDialogProps {
   assetManageDialogProp: boolean;
   setAssetManageDialogProp: Dispatch<SetStateAction<boolean>>;
+
 }
 
 const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetManageDialogProp,
@@ -50,7 +52,12 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     asset_type: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     asset_manufacturer_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
   });
-  const [deleteAsset, setDeleteAsset] = useState(false);
+  const [deleteAsset, setDeleteAsset] = useState({
+    deleteFlag: false,
+    deleteAssetId: "",
+    deleteAssetName: ""
+  })
+  const toast = useRef<Toast>(null);
   const router = useRouter();
 
   const handleAsset = async () => {
@@ -83,11 +90,23 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
         },
         withCredentials: true,
       })
+      if (response.data?.status === 204 && response.data?.success === true) {
+        showToast("success", "success", `${deleteAsset.deleteAssetName}  deleted successfully`);
+        console.log(assetData, "all assets here");
+
+        const updateAssets = assetData.filter(asset => asset?.id !== assetId);
+        console.log(updateAssets, "after delete here");
+
+        setAssetData(updateAssets)
+      }
       console.log("delted asset", response);
     } catch (error) {
       console.error(error)
     }
   }
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+  };
 
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
@@ -98,15 +117,17 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     return <>{assetType}</>;
   };
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
-    return rowData?.product_icon ? (
-      <img
-        src={rowData?.product_icon}
-        alt={rowData?.product_name}
-        style={{ width: "70px", height: "auto" }}
-      />
-    ) : (
-      <span>No Image</span>
-    );
+
+    if (rowData && rowData.product_icon && rowData.product_icon !== 'NULL') {
+      return (
+        <img
+          src={rowData.product_icon}
+          style={{ width: "70px", height: "auto" }}
+        />
+      );
+    } else {
+      return <span>No Image</span>;
+    }
   };
   const manufacturerDataTemplate = (rowData: Asset): React.ReactNode => {
     return (
@@ -117,22 +138,33 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     )
   }
   const actionItemsTemplate = (rowData: Asset): React.ReactNode => {
+
     return (
       <>
         <button className="action-items-btn"
-          onClick={() => setDeleteAsset(true)}
+          onClick={() => {
+            setDeleteAsset({
+              deleteFlag: true,
+              deleteAssetId: rowData?.id,
+              deleteAssetName: rowData?.product_name // Assuming rowData has a name property
+            });
+          }}
         >
           <i className="pi pi-trash"></i>
         </button>
+
         {deleteAsset &&
           <Dialog
-            visible={deleteAsset} onHide={() => setDeleteAsset(false)}
+            visible={deleteAsset.deleteFlag} onHide={() => setDeleteAsset({ ...deleteAsset, deleteFlag: false })}
           >
-            <p>Are you sure you want to delete this asset</p>
+            <p>{`Are you sure you want to delete ${deleteAsset.deleteAssetName}`}</p>
             <div className="flex justify-content-end gap-3">
               <Button
                 label="OK"
-                onClick={() => deleteAssetData(rowData?.id)}
+                onClick={() => {
+                  setDeleteAsset({ ...deleteAsset, deleteFlag: false })
+                  deleteAssetData(deleteAsset.deleteAssetId);
+                }}
 
               ></Button>
               <Button
@@ -140,7 +172,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
-                onClick={() => setDeleteAsset(false)}
+                onClick={() => setDeleteAsset({ ...deleteAsset, deleteFlag: false })}
               ></Button>
             </div>
           </Dialog>
@@ -148,6 +180,8 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       </>
     )
   }
+
+
   const headerElement = (
     <h3 className="px-5"> Asset Management</h3>
   )
@@ -177,9 +211,6 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   const header = renderHeader();
 
 
-
-
-
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
@@ -192,6 +223,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 
   return (
     <>
+      <Toast ref={toast} />
       <Dialog
         header={headerElement}
         visible={assetManageDialogProp} style={{ width: '50vw' }} onHide={() => setAssetManageDialogProp(false)}>

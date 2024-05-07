@@ -280,7 +280,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         text
         raised
         label="Reset"
-        className="mr-2"
+        className="mr-2 reset-btn"
         type="button"
         onClick={handleReset}
       />
@@ -294,12 +294,8 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   );
 
   return (
-    <div className="card flex justify-content-center">
-      <Button
-        label="Show"
-        icon="pi pi-external-link"
-        onClick={() => setIsVisibleProp(true)}
-      />
+    <div className=" flex justify-content-center">
+   
       <Dialog
         visible={isVisibleProp}
         modal

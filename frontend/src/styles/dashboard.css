@@ -14,7 +14,22 @@
     background: #ecfeff !important;
     color: #0e7490 !important;
 }
-
+.dashboard-container{
+    padding-bottom: 2.5rem;
+    zoom: 95%;
+}
+.dashboard-assets{
+    height: 537px;
+}
+.p-datatable .p-paginator-bottom {
+    left: 0;
+        /* margin-top: 7rem; */
+        position: absolute;
+        /* bottom: 0; */
+        top: 30rem;
+        text-align: center;
+        right: 0;
+    }
 
 .factory-table th{
     display: none;
@@ -60,6 +75,10 @@
     padding: 4px;
     font-size: 14px;
     padding-top: 4px;
+}
+.onboard-btn{
+    background-color: transparent;
+    border: none;
 }
 
 .active-state {

@@ -1,15 +1,10 @@
 import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
-import 'primereact/resources/themes/saga-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
 import { Asset } from "@/interfaces/asset-types";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
-import axios from "axios";
-import { Dialog } from "primereact/dialog";
 import Cookies from "js-cookie";
 import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
@@ -28,7 +23,6 @@ interface DashboardAssetsProps {
 }
 
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
-
   const [assetData, setAssetData] = useState<Asset[]>([]);
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
   const [showBlocker, setShowBlocker] = useState(false);
@@ -38,15 +32,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     successToast: false
   })
   const [onboardAsset, setOnboardAsset] = useState(false)
-  const [selectedRowAsset, setSelectedRowAsset] = useState({})
   const [selectedRow, setSelectedRow] = useState({});
-  const [assetFlag, setAssetFlag] = useState(false);
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const {
-    machineStateValue, setMachineStateValue,
-    selectedAssetData, setSelectedAssetData,setAssetCount } = useDashboard();
+  const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
   const dispatch = useDispatch();
 
@@ -76,6 +66,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     return (
       <>
         <Button
+        className="onboard-btn"
           onClick={(e) => {
             setEditOnboardAsset(() => ({
               ...editOnboardAsset,
@@ -83,7 +74,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               onboardAssetId: rowData?.id
             }))
           }}
-          icon="pi pi-search" text />
+          >
+          <img src="/onboard.png" alt="" width="50px" height="50px"/>
+         </Button>
       </>
     )
   }
@@ -105,19 +98,18 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         console.error("Fetch returned undefined");
       }
     } catch (error) {
-      // console.error(error)
+      console.error("Fetched assets:", error)
     }
   }
+
 
   const handleClick = (selectedAsset: Asset) => {
     const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
-    setSelectedRowAsset(selectedAsset)
     setPrefixedAssetPropertyProp(prefixedKeys);
     dispatch(update(selectedAsset?.id));
-
     setSelectedAssetData(selectedAsset);
   
     if (prefixedKeys.length > 0) {
@@ -130,6 +122,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
     }
   };
+
+ console.log("all assets", assetData);
+ 
+
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
@@ -157,12 +153,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       router.push("/login");
     } else {
       if (router.isReady) {
-        const { } = router.query;
         handleAsset();
         if (editOnboardAsset.successToast) {
           showToast("success", "success", "onboard updated successfully")
         }
-
       }
     }
   }, [router.isReady, editOnboardAsset.successToast])
@@ -170,7 +164,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   useEffect(() => {
     if (onboardAsset && showBlocker === false) {
-      // console.log("is coming here for onboard Asset");
       showToast("warn", "warning", "file already exists")
     }
   }, [onboardAsset, showBlocker])
@@ -179,10 +172,13 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   return (
     <>
       <Toast ref={toast} />
-      <div style={{ zoom: "80%" }}>
-        <div className="dashboard-assets" style={{ width: "100%" }}>
+      <div style={{ zoom: "79%" }}>
+        <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
+            <div className=" flex justify-content-between">
             <h5 className="heading-text">Assets</h5>
+            <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
+            </div>            
             <div className="mb-5">
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
@@ -236,7 +232,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
           <OnboardForm
             showBlockerProp={showBlocker}
             setShowBlockerProp={setShowBlocker}
-            asset={selectedRowAsset}
+            asset={selectedRow}
             setBlocker={setBlockerProp}
             setOnboardAssetProp={setOnboardAsset}
           />

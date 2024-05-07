@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useContext, useEffect, useState,useRef } from "react";
 import { LayoutContext } from './layout/layout-context';
 import axios from "axios";
-import HorizontalNavbar from "@/components/horizontal-navbar";
+import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import "../../styles/dashboard.css"
 const CombineSensorChart = dynamic(
   () => import('@/components/dashboard/senosor-linear-charts'),
@@ -21,6 +21,7 @@ import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
+import Footer from '@/components/navBar/footer';
 
 
 
@@ -136,7 +137,7 @@ const Dashboard = () => {
         </div>
       </div>
       }
-      <div className="dashboard-container" style={{ zoom: "95%" }}>
+      <div className="dashboard-container">
         <HorizontalNavbar />
        <AutoRefresh />
         <DashboardCards  />
@@ -158,6 +159,7 @@ const Dashboard = () => {
           <DashboardChart/>
           </div>     
       </div>
+      <Footer />
     </DashboardProvider>
     </>
   )
