@@ -2,10 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TemplatesService } from '../templates/templates.service';
 import axios from 'axios';
 import { ImportAssetDto } from './dto/importAsset.dto';
-
+import { ReactFlowService } from '../react-flow/react-flow.service';
+import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 @Injectable()
 export class AssetService {
-  constructor(private readonly templatesService: TemplatesService) {}
+  constructor(
+    private readonly templatesService: TemplatesService,
+  ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
 
   async getAssetData(token: string) {
@@ -281,34 +284,13 @@ export class AssetService {
     }
   }
 
-  async deleteAssetRelation(assetId: string, token: string){
+  async deleteAssetRelation(assetId: string, token: string, reactFlowService: ReactFlowService, allocatedAssetService: AllocatedAssetService){
     try{
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      // Delete AssetId from Global Allocated Asset
-      let globalAssetUrl = `${this.scorpioUrl}/urn:ngsi-ld:global-allocated-assets-store`;
-      let globalAssets = await axios.get(globalAssetUrl, {headers});
-      globalAssets = globalAssets.data["http://www.industry-fusion.org/schema#last-data"].object;
-      console.log('globalAssets ',globalAssets)
-      if(Array.isArray(globalAssets) && globalAssets.includes(assetId)){
-        const newArray = globalAssets.filter(item => item !== assetId);
-        let deleteGlobalResponse = await this.deleteAssetById("urn:ngsi-ld:global-allocated-assets-store",token);
-        if(deleteGlobalResponse['status'] == 200 || deleteGlobalResponse['status'] == 204) {
-          const data = {
-            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-            "id": "urn:ngsi-ld:global-allocated-assets-store",
-            "type": "urn-holder",
-            "http://www.industry-fusion.org/schema#last-data": {
-              type: 'Property',
-              object: newArray
-            }
-          };
-          await axios.post(this.scorpioUrl, data, {headers});
-        }
-      }
 
       // Delete AssetId From Factory Specific Allocated Asset
       let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`; 
@@ -327,8 +309,15 @@ export class AssetService {
         let deleteFactoryResponse = await this.deleteAssetById(factoryAssetsResponse.data[0].id, token);
         if(deleteFactoryResponse['status'] == 200 || deleteFactoryResponse['status'] == 204) {
           await axios.post(this.scorpioUrl, factoryAssetsResponse.data[0], { headers });
+
+          //Update React Flow for Allocated Factory
+          let factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
+          await reactFlowService.findFactoryAndShopFloors(factoryId, token);
         }
       }
+
+      // Update Global Allocated Assets
+      await allocatedAssetService.updateGlobal(token);
 
       // Remove AssetId From HasAsset Relation Of ShopFloor
       let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`; 
