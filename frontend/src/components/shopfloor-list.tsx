@@ -16,7 +16,7 @@ import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
-  factoryId: string;
+  factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
   setShopfloorProp?: any;
 }
@@ -170,9 +170,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card className="card-full-height" style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
+      <Card className="card-full-height" style={{ fontSize: "15px", overflowY: "scroll" }}>
         <Toast ref={toast} style={{ top: '60px' }}/>
-
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="p-input-icon-left flex align-items-center ml-4">

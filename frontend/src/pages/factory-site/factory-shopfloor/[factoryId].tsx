@@ -30,7 +30,7 @@ const FactoryShopFloor = () => {
                                     <AllocatedAsset />
                                 </div>
                             </div>
-                            <div className="form-container">
+                            <div className="form-container" style={{zoom:"90%"}}>
                                 < FactoryShopFloorForm />
                             </div>
                             <div className="allocated-list-container" >

@@ -67,8 +67,10 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                     console.log("updatedValue in outside here", updatedValue);
 
                     if (getRelation === "hasCatridge" || getRelation === "hasWorkpiece") {
-                        //const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
-                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
+                        console.log("is coming inside here");
+                        
+                       
+                       const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
                         if (existingEntryIndex !== -1) {
                             // If the entry exists, create a new object with the updated arrays
                             const existingEntry = updatedValue[existingEntryIndex];
