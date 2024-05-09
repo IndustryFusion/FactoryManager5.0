@@ -70,7 +70,8 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                         console.log("is coming inside here");
                         
                        
-                       const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
+                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+
                         if (existingEntryIndex !== -1) {
                             // If the entry exists, create a new object with the updated arrays
                             const existingEntry = updatedValue[existingEntryIndex];
@@ -89,7 +90,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                         }
                     } else {
                         // For other relations, simply add a new object to the array
-                        //const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+                   
                         const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
                         console.log("existingEntryIndex here", existingEntryIndex);
                         

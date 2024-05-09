@@ -16,6 +16,8 @@ import Header from "@/components/factoryShopFloorForm/header";
 
 const FactoryShopFloor = () => {
 
+    const [formViewPage, setFormViewPage]= useState(true);
+
     return (
         <>
             <div style={{ overflow: "hidden", height: "95vh" }}>
@@ -25,7 +27,9 @@ const FactoryShopFloor = () => {
                     <div className="factory-shopfloor-container">
                         <ShopFloorProvider>
                             <div className="shopfloor-list-container">
-                                <ShopFloorList />
+                                <ShopFloorList 
+                                formViewPage={formViewPage}
+                                />
                                 <div>
                                     <AllocatedAsset />
                                 </div>
