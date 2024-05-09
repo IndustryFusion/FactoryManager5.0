@@ -19,11 +19,13 @@ interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
   setShopfloorProp?: any;
+  formViewPage?:any
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
-  setShopfloorProp
+  setShopfloorProp,
+  formViewPage
 }) => {
   const [shopFloors, setShopFloors] = useState<ShopFloor[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -170,9 +172,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card className="card-full-height" style={{ fontSize: "15px", overflowY: "scroll", backgroundColor: "" }}>
+      <Card className={formViewPage? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
         <Toast ref={toast} style={{ top: '60px' }}/>
-
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="p-input-icon-left flex align-items-center ml-4">
@@ -218,7 +219,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={handleDelete}
             />
           </div>
-          <ul className="list-disc" style={{ marginTop: "20px" }}>
+          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "20px" }}>
             {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}
