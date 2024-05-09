@@ -335,7 +335,7 @@ const PowerCo2Chart = () => {
     }, [chartData]);
 
     return (
-        <div className="card h-auto" style={{ width: "100%" }}>
+        <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
             <Toast ref={toast} />
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
