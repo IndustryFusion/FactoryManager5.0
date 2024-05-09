@@ -280,12 +280,11 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
         withCredentials: true,
       }
     );
-
     return response.data;
   } catch (error) {
-    console.error("Error fetching non-shop-floor assets", error);
-
-    throw error;
+     console.log("Error fetching non-shop-floor assets", error);
+     return [""]; 
+    
   }
 };
 

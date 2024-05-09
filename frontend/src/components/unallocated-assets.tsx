@@ -64,6 +64,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
           // console.log("fetchedAssetIds", fetchedAssetIds);
           dispatch(create(fetchedAssetIds));
         }
+        
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
         // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
         if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
@@ -96,17 +97,16 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
 
       } catch (err) {
 
-        setError("Failed to fetch assets");
-        setLoading(false);
-        allocatedAssetsArray = null;
-
+        // setError("Failed to fetch assets");
+        // setLoading(false);
+        console.log("Error : fetchNonShopFloorAssets  from @component/unallocated-asssets.tsx")
+        // allocatedAssetsArray = null;
+       
       }
     };
 
   useEffect(() => {
-    if(factoryId){
-      fetchNonShopFloorAssets(factoryId)
-    }
+
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else if (router.isReady) {
