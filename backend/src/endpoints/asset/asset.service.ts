@@ -160,15 +160,15 @@ export class AssetService {
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
-      typeArr = Array.isArray(typeArr) ? typeArr : [];
-
+      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
+      let uniqueType = [];
       // sending multiple requests to scorpio to save the asset array
       let response;
       if(Array.isArray(data)){
         for (let i = 0; i < data.length; i++) {
           try{
-            if(!typeArr.includes(data[i].type)){
-              typeArr.push(data[i].type);
+            if(typeArr.length > 0 && !typeArr.includes(data[i].type)){
+              uniqueType.push(data[i].type);
             }
             response = await axios.post(this.scorpioUrl, data[i], {headers});
           }catch(err){
@@ -177,17 +177,19 @@ export class AssetService {
         }
       } else {
         try{
-          if(!typeArr.includes(data.type)){
-            typeArr.push(data.type);
+          if(typeArr.length > 0 && !typeArr.includes(data.type)){
+            uniqueType.push(data.type);
           }
           response = await axios.post(this.scorpioUrl, data, {headers});
         }catch(err){
           throw err;
         }
       }
-      typeData.data["http://www.industry-fusion.org/schema#type-data"].object = typeArr.length > 0 ? typeArr: "";
-      await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
-      await axios.post(this.scorpioUrl, typeData.data, {headers});
+      if(uniqueType.length > 0){
+        typeData.data["http://www.industry-fusion.org/schema#type-data"].object = [...typeArr, ...uniqueType];
+        await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
+        await axios.post(this.scorpioUrl, typeData.data, {headers});
+      }
       return {
         status: response.status,
         statusText: response.statusText
