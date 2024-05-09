@@ -28,23 +28,27 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [usernameValid, setUsernameValid] = useState<boolean>(true);
   const [passwordValid, setPasswordValid] = useState<boolean>(true);
-  // const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const dispatch = useDispatch();
-
-  debugger;
-const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+ const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+ 
  useEffect(() => {
     const checkLoggedInStatus = () => {
-      const loggedInStatus = Cookies.get("login_flag"); // This should align with your auth state management
+      if(router.isReady){
+       console.log("called")
+      const loggedInStatus = Cookies.get("login_flag"); 
       if (loggedInStatus === "true") {
         router.push("/factory-site/factory-overview");
       }
+      else{
+         router.push("/login");
+      }
+      }
+    
     };
-
     checkLoggedInStatus();
-  }, [isLoggedIn, router]);
+  }, [isLoggedIn,router.isReady]);
 
   // validate username, it should be  Alpha Numeric includes underscore _
   const validateUsername = (value: string): boolean => {
