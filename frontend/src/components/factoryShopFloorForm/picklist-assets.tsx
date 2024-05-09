@@ -242,7 +242,7 @@ const PicklistAssets = () => {
         <>
             <Toast ref={toast} />
             <div className="flex ml-3 mb-3" >
-                <div className="p-input-icon-left" style={{ flex: "0 0 90%" }}>
+                <div className="p-input-icon-left" style={{ flex: "0 0 70%",marginLeft:"4rem" }}>
                     <i className="pi pi-search" />
                     <InputText
                         style={{ width: "100%" }}

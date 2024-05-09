@@ -11,8 +11,8 @@ import { RootState } from "@/state/store";
 interface InputValue {
     [key: string]: string | string[];
 }
-interface Obj{
-   [key: string]: string | string[];
+interface Obj {
+    [key: string]: string | string[];
 }
 // Define the type for the context value
 interface FactoryShopFloorContextValue {
@@ -27,9 +27,9 @@ interface FactoryShopFloorContextValue {
     setAssetId: React.Dispatch<React.SetStateAction<string>>;
     asset: string;
     setAsset: React.Dispatch<React.SetStateAction<string>>;
-    saveAllocatedAssets:boolean;
-    setSaveAllocatedAssets:React.Dispatch<React.SetStateAction<boolean>>;
-    shopFloorValue:Obj;
+    saveAllocatedAssets: boolean;
+    setSaveAllocatedAssets: React.Dispatch<React.SetStateAction<boolean>>;
+    shopFloorValue: Obj;
     setShopFloorValue: React.Dispatch<React.SetStateAction<Obj>>;
 }
 
@@ -43,26 +43,35 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     const [assetId, setAssetId] = useState("");
     const [asset, setAsset] = useState({});
     const [shownToast, setShownToast] = useState(false);
-    const [saveAllocatedAssets, setSaveAllocatedAssets]=useState(false);
-    const [shopFloorValue, setShopFloorValue]=useState({});
-    
+    const [saveAllocatedAssets, setSaveAllocatedAssets] = useState(false);
+    const [shopFloorValue, setShopFloorValue] = useState({});
+
 
     const relations = useSelector((state: RootState) => state.relations.values);
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
- 
-        for(let getRelation of relations){
-            const relation = getRelation.replace("has", "").toLowerCase();
-            console.log(relation, "in select items");
-            const formattedAssetCategory = assetCategory.replace(/\s+/g, '').toLowerCase();
+
+        for (let getRelation of relations) {
+            const relation = getRelation.replace("has", "").toLowerCase();            
+            const parts = assetCategory.split(" "); // Split the string into parts by space
+            const formattedAssetCategory = parts[1].toLowerCase();
+          
+
             if (formattedAssetCategory.includes(relation)) {
-    
+            
                 setInputValue(prevValue => {
                     // Create a new array to hold the updated state
+                    console.log("prevValue here", prevValue);
+                    
                     const updatedValue = [...prevValue];
-    
+                    console.log("updatedValue in outside here", updatedValue);
+
                     if (getRelation === "hasCatridge" || getRelation === "hasWorkpiece") {
+                        console.log("is coming inside here");
+                        
+                       
                         const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+
                         if (existingEntryIndex !== -1) {
                             // If the entry exists, create a new object with the updated arrays
                             const existingEntry = updatedValue[existingEntryIndex];
@@ -81,10 +90,16 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                         }
                     } else {
                         // For other relations, simply add a new object to the array
-                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
+                   
+                        const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
+                        console.log("existingEntryIndex here", existingEntryIndex);
+                        
                         if (existingEntryIndex !== -1) {
                             // If the entry exists, update it
+                            console.log("is coming in if");
+                            
                             const existingEntry = updatedValue[existingEntryIndex];
+
                             const updatedEntry = {
                                 ...existingEntry,
                                 [getRelation]: id,
@@ -93,27 +108,31 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                             updatedValue[existingEntryIndex] = updatedEntry;
                         } else {
                             // If the entry doesn't exist, create a new one
+                            console.log("updatedValue in else here", updatedValue);
                             updatedValue.push({
                                 [getRelation]: id,
                                 [`${getRelation}_asset`]: item
                             });
                         }
                     }
-    
+
+                    console.log("updatedValue here", updatedValue);
+                    
+
                     return updatedValue;
-                });       
+                });
             }
         }
 
     }
-    
-  
+
+
 
 
     return (
         <FactoryShopFloorContext.Provider
             value={{
-                selectItems,                       
+                selectItems,
                 inputValue, setInputValue,
                 assetId, setAssetId,
                 asset, setAsset,

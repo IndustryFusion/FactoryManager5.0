@@ -279,10 +279,10 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                   <Column
                     body={actionItemsTemplate}
                   ></Column>
-                </DataTable>
-                <AllocatedAsset />
+                </DataTable>      
               </>
           }
+                 <AllocatedAsset />
         </div>
 
       </Dialog>

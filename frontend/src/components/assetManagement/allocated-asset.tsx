@@ -11,11 +11,17 @@ import { useEffect, useState } from "react";
 const AllocatedAsset = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    factoryId: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+
   });
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
-  const [factoryName, setFactoryName] = useState("");
+  const assetObj = {
+    "KFC": ["prod_1", "theFcat"],
+    "KCF#": ["prod_3", "theFcatoui"],
+    "factory3": ["asset1"],
+    "factory4": ["asset1", "asset2"]
+  }
+  const [allAllocatedAssets, setAllAllocatedAssets] = useState(assetObj);
+
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -34,71 +40,31 @@ const AllocatedAsset = () => {
             value={globalFilterValue} onChange={onGlobalFilterChange}
             placeholder="Search" />
         </span>
-      </div>      
+      </div>
     );
   };
   const header = renderHeader();
 
+  console.log("allAllocatedAssets", allAllocatedAssets);
 
-  const getFactoryDetails = async (factoryId: string) => {
-    try {
-      const response = await fetchFactoryDetails(factoryId);
-      const factoryname = response["http://www.industry-fusion.org/schema#factory_name"]?.value;
-      console.log("factoryname here", factoryname);
-
-      setFactoryName(factoryname)
-    } catch (error) {
-      console.error(error);
+  //transform data from backend
+  let transformedArray = [];
+  for (let factoryName in allAllocatedAssets) {
+    let obj = {
+      factoryName: factoryName,
+      assets: allAllocatedAssets[factoryName]
     }
+    transformedArray.push(obj);
   }
-
-
-  const data = allAllocatedAssets.map(item => {
-    const factoryId = item.id.replace(/:allocated-assets$/, '');
-    // getFactoryDetails(factoryId)
-    let urnObject = item?.object;
-    let dataItem = { factoryName };
-
-    if (typeof urnObject === 'string') {
-      urnObject = [urnObject];
-    }
-
-    if (urnObject.length > 0) {
-      urnObject.forEach((urn, index) => {
-        dataItem[`urn_${index + 1}`] = urn;
-      });
-    }
-
-    return dataItem;
-
-  });
-
-  console.log("allocated data what's here", data);
-
-
-  const maxUrnFields = data.reduce((max, item) => {
-    const urnFields = Object.keys(item).filter(key => key.startsWith('urn_')).length;
-    return Math.max(max, urnFields);
-  }, 0);
-  // Generate column definitions dynamically
-  const urnColumns = Array.from({ length: maxUrnFields }, (_, i) => ({
-    field: `urn_${i + 1}`,
-    header: `URN ${i + 1}`,
-  }));
+  console.log("transformedArray", transformedArray);
 
 
 
   const handleAllAllocatedAsset = async () => {
     try {
       const response = await fetchAllAllocatedAssets();
-      console.log(response, "all response allocated");
-      const allocatedAssets = [];
-      response.forEach(({ id, "http://www.industry-fusion.org/schema#last-data": { object } }) => {
-        allocatedAssets.push({ id: id, object: object });
-        const factoryId = id.replace(/:allocated-assets$/, '');
-        setAllAllocatedAssets(allocatedAssets)
-        getFactoryDetails(factoryId)
-      });
+      // console.log(response, "all response allocated");   
+      // setAllAllocatedAssets(response)    
     } catch (error) {
       console.error(error)
     }
@@ -112,8 +78,8 @@ const AllocatedAsset = () => {
   const headerGroup = (
     <ColumnGroup>
       <Row>
-        <Column header="Factory"  />
-        <Column header="Assets"/>
+        <Column header="Factory" />
+        <Column header="Assets" />
       </Row>
     </ColumnGroup>
   )
@@ -124,28 +90,24 @@ const AllocatedAsset = () => {
       <DataTable
         style={{ zoom: "92%" }}
         className="factory-table"
-        value={data}
+        value={transformedArray}
         rowGroupMode="rowspan" showGridlines
         header={header}
         headerColumnGroup={headerGroup}
         filters={filters}
-        globalFilterFields={['factoryId', ...urnColumns.map(col => col.field)]}
-        groupField="factoryName"
-        >
-        <Column 
-        field="factoryName"
+        globalFilterFields={['factoryName', 'assets']}
+      >
+        <Column
+          field="factoryName"
           className="factory-id-text"
           filter
-
         ></Column>
-        {urnColumns.map((col, i) => (
-          <Column key={col.field}
-            filter
-            className="factory-urn-text"
-            field={col.field}
-
-          />
-        ))}
+        <Column
+          field="assets"
+          filter
+          body={(rowData) => rowData.assets.join(', ')}
+        >
+        </Column>
       </DataTable>
     </>
   )

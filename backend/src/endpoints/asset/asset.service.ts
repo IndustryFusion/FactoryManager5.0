@@ -187,7 +187,7 @@ export class AssetService {
       }
       typeData.data["http://www.industry-fusion.org/schema#type-data"].object = typeArr.length > 0 ? typeArr: "";
       await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
-      await axios.post(typeUrl, typeData.data, {headers});
+      await axios.post(this.scorpioUrl, typeData.data, {headers});
       return {
         status: response.status,
         statusText: response.statusText

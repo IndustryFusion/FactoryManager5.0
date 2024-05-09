@@ -21,7 +21,7 @@
 .dashboard-assets{
     height: 537px;
 }
-.p-datatable .p-paginator-bottom {
+.assets-table .p-datatable .p-paginator-bottom {
     left: 0;
         /* margin-top: 7rem; */
         position: absolute;
@@ -29,11 +29,13 @@
         top: 30rem;
         text-align: center;
         right: 0;
+        padding: 0;
     }
 
-.factory-table th{
+/* .factory-table th{
     display: none;
-}
+} */
+
 .factory-table table{
     border:1px solid #8a8282;
 }
@@ -53,11 +55,9 @@
 .factory-id-text{
     font-weight: 600;
     font-size: 14px;
-    width: 175px;
+    width: 100px;
     background-color: #ffe0c7;
 }
-
-
 .card {
     background: #ffffff;
     border: 1px solid #dfe7ef;
@@ -79,6 +79,7 @@
 .onboard-btn{
     background-color: transparent;
     border: none;
+    padding: 0;
 }
 
 .active-state {
