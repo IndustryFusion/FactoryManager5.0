@@ -134,22 +134,30 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
         onHide={() => { setVisible(false) }} style={{ width: '50vw' }}
       >
         {
-          count > 0 ? (
-            alerts.map((alert, index) => {
-              try {const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource))
-                      console.log("findAsset"+index, findAsset)
-                      const text = alert?.text;          
-                      let updatedText;
-                      if (text && text.includes("http://www.industry-fusion.org/fields#noise")) {
-                        const regex = /Value.*$/;
-                        const match = text.match(regex);
-                        if (match) {
-                          updatedText = "Property #noise : " + match[0];
+          count > 0 ? (         
+              alerts.map((alert, index) => {
+                try {
+                    const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource));
+                    console.log("findAsset" + index, findAsset);
+                    const text = alert?.text;
+                    let updatedText;
+            
+                    // Regular expression to match the URL and extract the fragment
+                    const urlRegex = /http:\/\/www\.industry-fusion\.org\/fields#([^ ]+)/;
+                    const match = text.match(urlRegex);
+            
+                    if (match) {                 
+                        const fragment = match[1];            
+                        // Regular expression to match the value after "Value"
+                        const valueRegex = /Value.*$/;
+                        const valueMatch = text.match(valueRegex);
+            
+                        if (valueMatch) {
+                            updatedText = `Property #${fragment} : ${valueMatch[0]}`;
                         }
-                      }
-                      else {
+                    } else {
                         updatedText = text;
-                      }
+                    }
                       
                       return (
                         <>
