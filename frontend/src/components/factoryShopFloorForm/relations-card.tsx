@@ -38,33 +38,34 @@ const Relations = () => {
     const dispatch = useDispatch();
     const relations = useSelector((state: RootState) => state.relations.values);
     const reduxAssetId = useSelector((state: RootState) => state.relations.id);
-    
+    const [resetData, setResetData] = useState(false);
+
     const getRelations = async () => {
         try {
             const response = await fetchAssetById(assetId);
             //console.log("all response in relations", response);
             if (Object.keys(response).length > 0) {
-                const relationsValues = Object.keys(response);               
-                if(relations.length == 0 || assetId !== reduxAssetId){
+                const relationsValues = Object.keys(response);
+                if (relations.length == 0 || assetId !== reduxAssetId) {
                     dispatch(reset());
                     dispatch(create({
                         id: assetId,
                         values: relationsValues
                     }));
-                }               
+                }
                 const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects])
                 );
-       
+
                 for (const [key, values] of Object.entries(allRelationsData)) {
                     for (const value of values) {
                         if (value === 'json-ld-1.1') {
-                          
+
                         } else {
                             console.log("relations else", relations);
                             const response = await fetchAssetDetailById(value);
                             console.log(`Response for ${key}:`, response);
-                            const { product_name, id, asset_category } = response ?? {};                           
-                                selectItems(product_name, asset_category, id)
+                            const { product_name, id, asset_category } = response ?? {};
+                            selectItems(product_name, asset_category, id)
                         }
                     }
                 }
@@ -79,7 +80,7 @@ const Relations = () => {
 
     useEffect(() => {
         getRelations();
-    }, [assetId, relations]);
+    }, [assetId, relations, resetData]);
 
     useEffect(() => {
         const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
@@ -93,29 +94,30 @@ const Relations = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-    console.log(deleteRelation, "deleteRelation here outside");
-   
-async function updateReactFlow(factoryId:string) {
-    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
-    
-    try {
-         await axios.get(reactFlowUpdate, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            withCredentials: true,
-        });
-    
-    } catch (error) {
-        console.log("Error updating React Flow in relation card component", error);
+    // console.log(deleteRelation, "deleteRelation here outside");
+
+    async function updateReactFlow(factoryId: string) {
+        const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+
+        try {
+            await axios.get(reactFlowUpdate, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+
+        } catch (error) {
+            console.log("Error updating React Flow in relation card component", error);
+        }
     }
-}
     const handleReset = () => {
         setInputValue([]);
         showToast("success", "success", "Relations reseted successfully")
     }
-    const handleUpdateRelations = async (payload:Payload) => {
+
+    const handleUpdateRelations = async (payload: Payload) => {
         const url = `${API_URL}/asset/update-relation`;
         try {
             const response = await axios.patch(url, payload, {
@@ -128,55 +130,58 @@ async function updateReactFlow(factoryId:string) {
             console.log("resposne of update relations", response);
 
             if (response.data?.status === 204 && response.data?.success === true) {
-                if(deleteRelation){
+                if (deleteRelation) {
                     console.log(deleteRelation, "deleteRelation here");
                     showToast("success", "success", "Relation deleted successfully");
                 } else {
                     showToast("success", "success", "Relations saved successfully");
                 }
-              
+
             }
         } catch (error) {
             console.error(error)
         }
     }
+
     const handleSave = () => {
         const obj = {};
-        const allocatedAssetIds:string[] = [];
+        const allocatedAssetIds: string[] = [];
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
                 // Check if the key ends with '_asset', if so, ignore it
                 if (key !== "" && !key.endsWith('_asset')) {
                     console.log(key, "key here");
-                  for(let relation of relations){
-                    if(relation === key){
-                        if (Array.isArray(item[key])) {
-                            const newArr: string[] = [];
-                            item[key].forEach(value => {
-                                newArr.push(value);
-                                obj[key] = newArr;
-                                allocatedAssetIds.push(value)
+                    for (let relation of relations) {
+                        if (relation === key) {
+                            if (Array.isArray(item[key])) {
+                                const newArr: string[] = [];
+                                item[key].forEach(value => {
+                                    newArr.push(value);
+                                    obj[key] = newArr;
+                                    allocatedAssetIds.push(value)
+                                }
+                                )
+                            } else {
+                                obj[key] = [item[key]];
+                                allocatedAssetIds.push(...[item[key]])
                             }
-                            )
-                        } else {
-                            obj[key] = [item[key]];
-                            allocatedAssetIds.push(...[item[key]])                         
                         }
                     }
-                  }
-                    
+
                 }
             });
         });
         const payload = {
             [assetId]: obj
-        };  
+        };
+        console.log("payload data", payload);
+
         handleUpdateRelations(payload);
         updateReactFlow(factoryId);
         setDeleteRelation(false);
     }
+
     const handleDelete = () => {
-        
         handleReset();
         const obj = {};
         inputValue.forEach(item => {
@@ -189,105 +194,163 @@ async function updateReactFlow(factoryId:string) {
         })
         const payload = {
             [assetId]: obj
-        };      
-        handleUpdateRelations(payload); 
-        setDeleteRelation(true);   
+        };
+         handleUpdateRelations(payload);
+        setDeleteRelation(true);
     }
- 
+
+    const handleDeleteValue = (relationData) => {
+
+        console.log("onfocus relationData", relationData);
+
+        if (relationData && Object.keys(relationData).length > 0) {
+            const relation = Object.keys(relationData)[0];
+            console.log("Object.keys(relationData)", Object.keys(relationData)[0]);
+            const index = inputValue.findIndex(item => item.hasOwnProperty(relation));
+            console.log("index here", index);
+
+            if (index !== -1) {
+                // Create a new array with the updated object
+                const updatedInputValue = inputValue.map((item, idx) => {
+                    if (idx === index) {
+                        if (relation === "hasWorkpiece" || relation === "hasCatridge") {
+                            return {
+                                ...item,
+                                [relation]: [], // Set to empty string or any other value as needed
+                                [`${relation}_asset`]: [] // Set to empty string or any other value as needed
+                            };
+                        } else {
+                            // Return the updated object
+                            return {
+                                ...item,
+                                [relation]: "", // Set to empty string or any other value as needed
+                                [`${relation}_asset`]: "" // Set to empty string or any other value as needed
+                            };
+                        }
+
+                    }
+                    return item;
+                });
+
+                // Update the state with the new array
+                setInputValue(updatedInputValue);
+            }
+        }
+        console.log("relationData", relationData);
+    }
+
+
+
+    console.log("inputValue all", inputValue);
+
     return (
         <>
-            <Card className="p-4">
-                <Toast ref={toast} />
-                {Array.isArray(relations) && relations.length > 0 && (
-                <form >
-                    <div>
-                      {
-                            relations.map((relation, index) => {
+            <div className="mt-4">
+                <div className="flex align-items-center gap-2">
+                    <p style={{ fontWeight: "bold" }}>Relations</p>
+                    <img
+                    onClick={()=>setResetData(prev => !prev)}
+                        style={{ cursor: "pointer" }}
+                        src="/refresh.png" alt="reset-icon" width="20px" height="20px" />
+                </div>
 
-                                const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
-                                const value = relatedObject ? relatedObject[`${relation}_asset`] : "";
-                                const relationAssetId = relatedObject ? relatedObject[`${relation}`] : "";
-                                allRelationAssetIds.push(relationAssetId);
+                <Card className="p-4">
+                    <Toast ref={toast} />
+                    {Array.isArray(relations) && relations.length > 0 && (
+                        <form >
+                            <div>
+                                {
+                                    relations.map((relation, index) => {
+
+                                        const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
 
 
-                                const getAssetValues = () => {
-                                    const entry = inputValue.find(entry => entry[relation]);
-                                    console.log(entry, "what's the entry here")
-                                    if (entry && entry.hasOwnProperty(relation) && Array.isArray(entry[`${relation}`])) {
-                                        console.log(entry[`${relation}`], "wht's here in entry asstes");
-                                        allRelationAssetIds.push(...entry[`${relation}`]);
+                                        const value = relatedObject ? relatedObject[`${relation}_asset`] : "";
+                                        const relationAssetId = relatedObject ? relatedObject[`${relation}`] : "";
+                                        allRelationAssetIds.push(relationAssetId);
+
+
+                                        const getAssetValues = () => {
+                                            const entry = inputValue.find(entry => entry[relation]);
+                                            console.log(entry, "what's the entry here");
+
+                                            if (entry && entry.hasOwnProperty(relation) && Array.isArray(entry[`${relation}`])) {
+                                                console.log(entry[`${relation}`], "wht's here in entry asstes");
+                                                allRelationAssetIds.push(...entry[`${relation}`]);
+                                            }
+                                            return entry ? entry[`${relation}_asset`] : [];
+                                        }
+
+
+                                        return (
+                                            <div key={index} className="flex mb-4">
+                                                <label htmlFor="" style={{ flex: "0 20%", marginRight: "1.2rem" }}>{relation}</label>
+                                                {(relation === "hasWorkpiece" || relation === "hasCatridge") ? (
+                                                    <Chips
+                                                        style={{ flex: "0 70%" }}
+                                                        value={getAssetValues()}
+                                                        onRemove={(e) => {
+                                                            const [value] = e.value;
+                                                            console.log(value, "on remove value here")
+                                                            setInputValue(prevValue => {
+                                                                return prevValue.map(item => {
+                                                                    if (item[relation]) {
+                                                                        console.log(item[relation], "what's here")
+                                                                        const newAssets = item[`${relation}_asset`].filter(asset => asset !== value);
+                                                                        return { ...item, [`${relation}_asset`]: newAssets };
+                                                                    }
+                                                                    return item;
+                                                                });
+                                                            });
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <>
+
+                                                        <InputText
+                                                            style={{ flex: "0 70%" }}
+                                                            className="input-content"
+                                                            placeholder=""
+                                                            value={value}
+                                                            onFocus={() => handleDeleteValue(relatedObject)}
+                                                        />
+                                                    </>
+                                                )}
+                                            </div>
+                                        )
                                     }
-                                    return entry ? entry[`${relation}_asset`] : [];
+                                    )
                                 }
+                            </div>
 
-
-                                return (
-                                    <div key={index} className="flex mb-4">
-                                        <label htmlFor="" style={{ flex: "0 20%", marginRight: "1.2rem" }}>{relation}</label>
-                                        {(relation === "hasWorkpiece" || relation === "hasCatridge") ? (
-                                            <Chips
-                                                style={{ flex: "0 70%" }}
-                                                value={getAssetValues()}
-                                                onRemove={(e) => {
-                                                    const [value] = e.value;
-                                                    console.log(value, "on remove value here")
-                                                    setInputValue(prevValue => {
-                                                        return prevValue.map(item => {
-                                                            if (item[relation]) {
-                                                                console.log(item[relation], "what's here")
-                                                                const newAssets = item[`${relation}_asset`].filter(asset => asset !== value);
-                                                                return { ...item, [`${relation}_asset`]: newAssets };
-                                                            }
-                                                            return item;
-                                                        });
-                                                    });
-                                                }}
-                                            />
-                                        ) : (
-                                            <>
-
-                                                <InputText
-                                                    style={{ flex: "0 70%" }}
-                                                    className="input-content"
-                                                    placeholder=""
-                                                    value={value}
-                                                />
-                                            </>
-                                        )}
-                                    </div>
-                                )
-                            }
-                            )
-                        }
-                    </div>
-                    
-                </form>
-                   )}
-                {relations.length > 0 &&
-                    <div className="form-btns">
-                        <Button
-                            onClick={() => handleSave()}
-                        >Save
-                        </Button>
-                        <Button
-                            onClick={() => handleReset()}
-                            severity="secondary" text raised
-                            label="Reset"
-                            className="mr-2 reset-btn"
-                            type="button"
-                        ></Button>
-                        <Button
-                            onClick={() => handleDelete() }
-                            label="Delete"
-                            severity="danger"
-                            outlined
-                            className="mr-2"
-                            type="button"
-                        />
-                    </div>
-                }
-                {relations.length === 0  && <p>No relations exist</p>}
-            </Card>
+                        </form>
+                    )}
+                    {relations.length > 0 &&
+                        <div className="form-btns">
+                            <Button
+                                onClick={() => handleSave()}
+                            >Save
+                            </Button>
+                            <Button
+                                onClick={() => handleReset()}
+                                severity="secondary" text raised
+                                label="Reset"
+                                className="mr-2 reset-btn"
+                                type="button"
+                            ></Button>
+                            <Button
+                                onClick={() => handleDelete()}
+                                label="Delete"
+                                severity="danger"
+                                outlined
+                                className="mr-2"
+                                type="button"
+                            />
+                        </div>
+                    }
+                    {relations.length === 0 && <p>No relations exist</p>}
+                </Card>
+            </div>
         </>
     );
 };
