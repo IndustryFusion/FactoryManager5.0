@@ -20,7 +20,7 @@ export class RedisService {
 //  }
 
   private readonly REDIS_SERVER =  process.env.REDIS_SERVER;
-  private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT, 10) || 6379 ;
+  private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT)  ;
   constructor() {
     this.redisClient = new Redis({ host:this.REDIS_SERVER, port: Number(this.REDIS_PORT)});
   }
