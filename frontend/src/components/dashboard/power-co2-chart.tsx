@@ -503,10 +503,10 @@ const PowerCo2Chart = () => {
             {
                 noChartData ?
                 <div className="flex flex-column justify-content-center align-items-center"
-                    style={{ marginTop: "9rem" }}
+                    style={{ marginTop: "5rem" }}
                 >
-                    <p> No data available</p>
-                    <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+                    <p> No chart data available</p>
+                    <img src="/no-chart-data.png" alt="" width="5%" height="5%"  />
                 </div>
                 :
                 isLoading ? (
