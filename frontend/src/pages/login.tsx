@@ -28,16 +28,16 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [usernameValid, setUsernameValid] = useState<boolean>(true);
   const [passwordValid, setPasswordValid] = useState<boolean>(true);
+
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const dispatch = useDispatch();
- const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
- 
- useEffect(() => {
+  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+  const loggedInStatus = Cookies.get("login_flag");
+  useEffect(() => {
     const checkLoggedInStatus = () => {
       if(router.isReady){
-       console.log("called")
-      const loggedInStatus = Cookies.get("login_flag"); 
+       // This should align with your auth state management
       if (loggedInStatus === "true") {
         router.push("/factory-site/factory-overview");
       }
@@ -45,10 +45,11 @@ const Login: React.FC = () => {
          router.push("/login");
       }
       }
-    
+     
     };
+
     checkLoggedInStatus();
-  }, [isLoggedIn,router.isReady]);
+  }, [isLoggedIn, router.isReady]);
 
   // validate username, it should be  Alpha Numeric includes underscore _
   const validateUsername = (value: string): boolean => {
@@ -134,7 +135,7 @@ const Login: React.FC = () => {
     <div className="flex flex-row justify-content-center align-content-center surface-ground" style={{minHeight:"calc(100vh - 20px)"}}>
       <Toast ref={toast} />
       
-    {isLoggedIn ? (
+     {isLoggedIn ? (
         <h1></h1>
               ) : (
         <>
