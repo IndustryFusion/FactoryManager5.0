@@ -1,37 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TemplatesService } from '../templates/templates.service';
 import axios from 'axios';
 import { ImportAssetDto } from './dto/importAsset.dto';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 @Injectable()
 export class AssetService {
-  constructor(
-    private readonly templatesService: TemplatesService,
-  ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
 
   async getAssetData(token: string) {
     try {
-      const templateData = [];
-      const templates = await this.templatesService.getTemplates();
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      for(let i = 0; i < templates.length; i++) {
-        let template = templates[i];
-        let id = Buffer.from(template.id, 'base64').toString('utf-8')
-        const url = this.scorpioUrl + '?type=' + id;
+      const assetData = [];
+      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
+      let typeData = await axios.get(typeUrl,{headers});
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      typeArr = Array.isArray(typeArr) ? typeArr : [];
+      console.log('typeArr ',typeArr);
+      for(let i = 0; i < typeArr.length; i++) {
+        let type = typeArr[i];
+        const url = this.scorpioUrl + '?type=' + type;
         const response = await axios.get(url, {headers});
         if(response.data.length > 0) {
           response.data.forEach(data => {
-            templateData.push(data);
+            assetData.push(data);
           });
         }
       }
-      return templateData;
+      return assetData;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
@@ -96,26 +95,27 @@ export class AssetService {
 
   async getAssetIds(token: string) {
     try {
-      const templateData = [];
-      const templates = await this.templatesService.getTemplates();
-      // console.log('templates ',templates);
+      const assetData = [];
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      for(let i = 0; i < templates.length; i++) {
-        let template = templates[i];
-        let id = Buffer.from(template.id, 'base64').toString('utf-8')
-        const url = this.scorpioUrl + '?type=' + id;
+      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
+      let typeData = await axios.get(typeUrl,{headers});
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      typeArr = Array.isArray(typeArr) ? typeArr : [];
+      for(let i = 0; i < typeArr.length; i++) {
+        let type = typeArr[i];
+        const url = this.scorpioUrl + '?type=' + type;
         const response = await axios.get(url, {headers});
         if(response.data.length > 0) {
           response.data.forEach(data => {
-            templateData.push(data.id);
+            assetData.push(data.id);
           });
         }
       }
-      return templateData;
+      return assetData;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
@@ -157,35 +157,43 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
+      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
+      let typeData = await axios.get(typeUrl,{headers});
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      typeArr = Array.isArray(typeArr) ? typeArr : [];
 
       // sending multiple requests to scorpio to save the asset array
       let response;
-      try{
-        if(Array.isArray(data)){
-          for (let i = 0; i < data.length; i++) {
+      if(Array.isArray(data)){
+        for (let i = 0; i < data.length; i++) {
+          try{
+            if(!typeArr.includes(data[i].type)){
+              typeArr.push(data[i].type);
+            }
             response = await axios.post(this.scorpioUrl, data[i], {headers});
+          }catch(err){
+            throw err;
           }
-        } else {
+        }
+      } else {
+        try{
+          if(!typeArr.includes(data.type)){
+            typeArr.push(data.type);
+          }
           response = await axios.post(this.scorpioUrl, data, {headers});
-        }
-        return {
-          status: response.status,
-          statusText: response.statusText,
+        }catch(err){
+          throw err;
         }
       }
-      catch(err){
-        return {
-          status: 500,
-          statusText: err
-        }
-      }
-      
+      typeData.data["http://www.industry-fusion.org/schema#type-data"].object = typeArr.length > 0 ? typeArr: "";
+      await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
+      await axios.post(this.scorpioUrl, typeData.data, {headers});
       return {
         status: response.status,
         statusText: response.statusText
       }
     } catch (err) {
-      throw ('files to upload new asset' + err);
+      throw err;
     }
   }
 
