@@ -200,7 +200,7 @@ const PowerCo2Chart = () => {
                     }
                 },
                 datalabels: {
-                    color: 'black',
+                    color: 'white',
                     align: 'end',
                     anchor: 'center',
                     formatter: function(value: any, context: any) {
@@ -498,7 +498,7 @@ const PowerCo2Chart = () => {
                         </>
                     )
                 }
-                <Button label="Submit" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
+                <Button label="Submit" severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
             </div>
             {
                 noChartData ?
