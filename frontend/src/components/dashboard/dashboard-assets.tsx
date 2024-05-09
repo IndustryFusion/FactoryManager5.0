@@ -172,7 +172,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   return (
     <>
       <Toast ref={toast} />
-      <div style={{ zoom: "79%" }}>
+      <div style={{ zoom: "74%" }}>
         <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
