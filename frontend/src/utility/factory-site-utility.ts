@@ -575,7 +575,7 @@ export const fetchAllocatedAssets = async (factoryId: string) => {
 
 export const fetchAllAllocatedAssets = async () => {
   try {
-    const response = await axios.get(`${API_URL}/allocated-asset`, {
+    const response = await axios.get(`${API_URL}/allocated-asset/product-names`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

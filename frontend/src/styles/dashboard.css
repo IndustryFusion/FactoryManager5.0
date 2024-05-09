@@ -32,9 +32,10 @@
         padding: 0;
     }
 
-.factory-table th{
+/* .factory-table th{
     display: none;
-}
+} */
+
 .factory-table table{
     border:1px solid #8a8282;
 }
@@ -54,11 +55,9 @@
 .factory-id-text{
     font-weight: 600;
     font-size: 14px;
-    width: 175px;
+    width: 100px;
     background-color: #ffe0c7;
 }
-
-
 .card {
     background: #ffffff;
     border: 1px solid #dfe7ef;
