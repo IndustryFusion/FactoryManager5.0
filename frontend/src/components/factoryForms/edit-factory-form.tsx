@@ -419,7 +419,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
                     <Toast ref={toast} />
-                    <h2 className="form-title mb-2">Edit Factory</h2>
+                    <h2 className="form-title mb-3">Edit Factory</h2>
                     <div className="p-fluid p-formgrid p-grid factory-form-container">
                         <Card className="edit-form ">
                             {

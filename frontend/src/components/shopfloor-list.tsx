@@ -16,7 +16,7 @@ import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 interface ShopfloorListProps {
-  factoryId: string;
+  factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
   setShopfloorProp?: any;
 }
