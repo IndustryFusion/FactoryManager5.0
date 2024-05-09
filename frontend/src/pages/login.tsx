@@ -34,10 +34,11 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
   const loggedInStatus = Cookies.get("login_flag");
+  const [hasMounted, setHasMounted] = useState(false); 
   useEffect(() => {
-    const checkLoggedInStatus = () => {
+    setHasMounted(true);
       if(router.isReady){
-       // This should align with your auth state management
+     
       if (loggedInStatus === "true") {
         router.push("/factory-site/factory-overview");
       }
@@ -46,9 +47,9 @@ const Login: React.FC = () => {
       }
       }
      
-    };
+    
 
-    checkLoggedInStatus();
+    
   }, [isLoggedIn, router.isReady]);
 
   // validate username, it should be  Alpha Numeric includes underscore _
@@ -135,9 +136,7 @@ const Login: React.FC = () => {
     <div className="flex flex-row justify-content-center align-content-center surface-ground" style={{minHeight:"calc(100vh - 20px)"}}>
       <Toast ref={toast} />
       
-     {isLoggedIn ? (
-        <h1></h1>
-              ) : (
+        {Cookies.get("login_flag") !== "true" && (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
           <h1 style={{color:"#363535d1",marginLeft:"1rem",marginTop:"-10px"}}> Factory Manager 5.0 </h1>
