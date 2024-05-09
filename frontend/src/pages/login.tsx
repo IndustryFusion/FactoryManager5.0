@@ -10,8 +10,8 @@ import "primeflex/primeflex.css";
 import { Password } from 'primereact/password';
 import "../styles/login.css";
 import 'primeicons/primeicons.css';
-import { redirect, useRouter } from 'next/navigation';
-import { useDispatch } from "react-redux";
+import {  useRouter, } from 'next/router';
+import { useDispatch,useSelector  } from "react-redux";
 import { login, startTimer } from "@/state/auth/authSlice";
 
 
@@ -28,20 +28,23 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [usernameValid, setUsernameValid] = useState<boolean>(true);
   const [passwordValid, setPasswordValid] = useState<boolean>(true);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    // Always do navigations after the first render
-    // isLoggedIn && router.push('/factory-site/factory-overview');
-    if (Cookies.get("login_flag") === "true") {
-      router.push("/factory-site/factory-overview");
-    } else {    
-        router.push("/login");    
-    }
-  }, [])
+  debugger;
+const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+ useEffect(() => {
+    const checkLoggedInStatus = () => {
+      const loggedInStatus = Cookies.get("login_flag"); // This should align with your auth state management
+      if (loggedInStatus === "true") {
+        router.push("/factory-site/factory-overview");
+      }
+    };
+
+    checkLoggedInStatus();
+  }, [isLoggedIn, router]);
 
   // validate username, it should be  Alpha Numeric includes underscore _
   const validateUsername = (value: string): boolean => {
@@ -90,13 +93,14 @@ const Login: React.FC = () => {
         dispatch(login(username));
         dispatch(startTimer());
         Cookies.set("connect.sid", data.sessionId, { expires: 7 });
+        router.push('/factory-site/factory-overview');
         toast.current?.show({
           severity: "success",
           summary: "Login Successful",
           detail: "Welcome!",
         });
-        setIsLoggedIn(true);
-        router.push('/factory-site/factory-overview');
+        // setIsLoggedIn(true);
+      
       } catch (err) {
         toast.current?.show({
           severity: "error",
@@ -125,8 +129,9 @@ const Login: React.FC = () => {
   return (
     <div className="flex flex-row justify-content-center align-content-center surface-ground" style={{minHeight:"calc(100vh - 20px)"}}>
       <Toast ref={toast} />
-      {isLoggedIn ? (
-        <h1>Welcome</h1>
+      
+    {isLoggedIn ? (
+        <h1></h1>
               ) : (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
