@@ -13,7 +13,7 @@ import 'primeicons/primeicons.css';
 import {  useRouter, } from 'next/router';
 import { useDispatch,useSelector  } from "react-redux";
 import { login, startTimer } from "@/state/auth/authSlice";
-
+import { RootState } from "@/state/store";
 
 //interface for token
 interface LoginResponse {
@@ -32,25 +32,27 @@ const Login: React.FC = () => {
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const dispatch = useDispatch();
-  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
-  const loggedInStatus = Cookies.get("login_flag");
+  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [hasMounted, setHasMounted] = useState(false); 
-  useEffect(() => {
-    setHasMounted(true);
-      if(router.isReady){
-     
-      if (loggedInStatus === "true") {
-        router.push("/factory-site/factory-overview");
-      }
-      else{
-         router.push("/login");
-      }
-      }
-     
-    
 
-    
-  }, [isLoggedIn, router.isReady]);
+  
+  useEffect(() => {
+    if(router.isReady){
+    setHasMounted(true);
+      if (typeof window !== "undefined" && hasMounted && router.isReady) {
+        const connectSid = Cookies.get("connect.sid");
+        const loginFlag = Cookies.get("login_flag") === "true";
+
+        if (connectSid && loginFlag) {
+          router.push("/factory-site/factory-overview");
+
+        } else {
+          router.push("/login");
+        }
+      }
+    }
+  }, [router.isReady, hasMounted]);
+
 
   // validate username, it should be  Alpha Numeric includes underscore _
   const validateUsername = (value: string): boolean => {
@@ -136,7 +138,8 @@ const Login: React.FC = () => {
     <div className="flex flex-row justify-content-center align-content-center surface-ground" style={{minHeight:"calc(100vh - 20px)"}}>
       <Toast ref={toast} />
       
-        {Cookies.get("login_flag") !== "true" && (
+      {hasMounted && (
+      !isLoggedIn || !Cookies.get("connect.sid") ? (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
           <h1 style={{color:"#363535d1",marginLeft:"1rem",marginTop:"-10px"}}> Factory Manager 5.0 </h1>
@@ -195,7 +198,7 @@ const Login: React.FC = () => {
           
         </Card>
         </>
-     )}
+     ):  ( <h1></h1>))}
     </div>
   );
 };
