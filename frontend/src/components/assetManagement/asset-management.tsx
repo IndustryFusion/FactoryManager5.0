@@ -92,11 +92,12 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       })
       if (response.data?.status === 204 && response.data?.success === true) {
         showToast("success", "success", `${deleteAsset.deleteAssetName}  deleted successfully`);
-        console.log(assetData, "all assets here");
-
         const updateAssets = assetData.filter(asset => asset?.id !== assetId);
-        console.log(updateAssets, "after delete here");
-
+        setAssetData(updateAssets)
+      }
+      if (response.data?.success === false) {
+        showToast("error", "Error",  `Asset:  ${deleteAsset.deleteAssetName}  not able to delete`);
+        const updateAssets = assetData.filter(asset => asset?.id !== assetId);
         setAssetData(updateAssets)
       }
       console.log("delted asset", response);
