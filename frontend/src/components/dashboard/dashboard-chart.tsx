@@ -831,8 +831,8 @@ const DashboardChart = () => {
                     <div className="flex flex-column justify-content-center align-items-center"
                         style={{ marginTop: "9rem" }}
                     >
-                        <p> No data available</p>
-                        <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+                        <p> No chart data available</p>
+                        <img src="/no-chart-data.png" alt="" width="8%" height="8%" />
                     </div>
                     :
                     isLoading ? (

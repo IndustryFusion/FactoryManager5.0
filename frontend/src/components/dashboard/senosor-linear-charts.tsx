@@ -676,7 +676,7 @@ const handleLoad = async () => {
                 height: '60vh',
               }}>
                 <p><b>No Asset Selected !! Please Select an asset ...</b></p>
-                <img src="/noDataFound.png" alt="" width="8%" height="25%" />
+                <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
               </div>
             ) : loading ? (
               <div style={{
@@ -707,8 +707,8 @@ const handleLoad = async () => {
                   alignItems: 'center',
                   height: '60vh',
                 }}>
-                  <p>No data available</p>
-                  <img src="/noDataFound.png" alt="" width="10%" height="25%" />
+                  <p>No chart data available</p>
+                  <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
                 </div>
               )
             )}

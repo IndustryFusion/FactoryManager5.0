@@ -200,7 +200,7 @@ const PowerCo2Chart = () => {
                     }
                 },
                 datalabels: {
-                    color: 'black',
+                    color: 'white',
                     align: 'end',
                     anchor: 'center',
                     formatter: function(value: any, context: any) {
@@ -335,7 +335,7 @@ const PowerCo2Chart = () => {
     }, [chartData]);
 
     return (
-        <div className="card h-auto" style={{ width: "100%" }}>
+        <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
             <Toast ref={toast} />
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
@@ -498,15 +498,15 @@ const PowerCo2Chart = () => {
                         </>
                     )
                 }
-                <Button label="Submit" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
+                <Button label="Submit" severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
             </div>
             {
                 noChartData ?
                 <div className="flex flex-column justify-content-center align-items-center"
-                    style={{ marginTop: "9rem" }}
+                    style={{ marginTop: "5rem" }}
                 >
-                    <p> No data available</p>
-                    <img src="/noDataFound.png" alt="" width="15%" height="15%" />
+                    <p> No chart data available</p>
+                    <img src="/no-chart-data.png" alt="" width="5%" height="5%"  />
                 </div>
                 :
                 isLoading ? (

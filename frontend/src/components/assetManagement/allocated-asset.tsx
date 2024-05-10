@@ -20,7 +20,7 @@ const AllocatedAsset = () => {
     "factory3": ["asset1"],
     "factory4": ["asset1", "asset2"]
   }
-  const [allAllocatedAssets, setAllAllocatedAssets] = useState(assetObj);
+  const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
 
 
   const onGlobalFilterChange = (e) => {
@@ -48,23 +48,28 @@ const AllocatedAsset = () => {
   console.log("allAllocatedAssets", allAllocatedAssets);
 
   //transform data from backend
-  let transformedArray = [];
-  for (let factoryName in allAllocatedAssets) {
-    let obj = {
-      factoryName: factoryName,
-      assets: allAllocatedAssets[factoryName]
-    }
-    transformedArray.push(obj);
-  }
-  console.log("transformedArray", transformedArray);
+
 
 
 
   const handleAllAllocatedAsset = async () => {
     try {
       const response = await fetchAllAllocatedAssets();
-      // console.log(response, "all response allocated");   
-      // setAllAllocatedAssets(response)    
+      console.log(response, "all response allocated"); 
+      let transformedArray = [];
+      if(Object.keys(response).length > 0){
+     
+        for (let factoryName in response) {
+          let obj = {
+            factoryName: factoryName,
+            assets: response[factoryName]
+          }
+          transformedArray.push(obj);
+        }
+           setAllAllocatedAssets(transformedArray)  
+        console.log("transformedArray", transformedArray);
+      }  
+     
     } catch (error) {
       console.error(error)
     }
@@ -90,7 +95,7 @@ const AllocatedAsset = () => {
       <DataTable
         style={{ zoom: "92%" }}
         className="factory-table"
-        value={transformedArray}
+        value={allAllocatedAssets}
         rowGroupMode="rowspan" showGridlines
         header={header}
         headerColumnGroup={headerGroup}
