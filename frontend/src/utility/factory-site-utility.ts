@@ -277,8 +277,6 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
     return response.data;
   } catch (error) {
      console.log("Error fetching non-shop-floor assets", error);
-     return [""]; 
-    
   }
 };
 

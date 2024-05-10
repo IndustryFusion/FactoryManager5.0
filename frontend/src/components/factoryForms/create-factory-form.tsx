@@ -39,7 +39,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         initialData || {
             factory_name: "",
             street: "",
-            zip: null,
+            zip: "",
             country: "",
             thumbnail: "",
             hasShopFloor: "",
@@ -128,8 +128,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     };
 
     const handleSave = async () => {
-        console.log(factory.thumbnail, "thumbnail value here");
-
+        const zipCode = typeof factory.zip === 'number' ? factory.zip.toString() : (factory.zip || "");
         let payload;
         if (factory.factory_name === "") {
             setValidateFactory(true)
@@ -145,7 +144,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 properties: {
                     factory_name: factory.factory_name,
                     street: factory.street,
-                    zip: factory.zip,
+                    zip: zipCode,
                     country: factory.country,
                     thumbnail: factory.thumbnail,
                     hasShopFloor: "",
