@@ -259,12 +259,6 @@ export const getshopFloorById = async (factoryId: string) => {
 
     params: { id: factoryId },
   });
-  // console.log("respoonse here", response.data);
-  
-  const mappedData1 = flattenData(response.data);
-
-  
-
   return response.data;
 };
 

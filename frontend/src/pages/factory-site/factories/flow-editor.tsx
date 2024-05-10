@@ -577,8 +577,6 @@ const onRestore = useCallback(async () => {
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-
-      dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
@@ -662,11 +660,9 @@ const onRestore = useCallback(async () => {
       if (allocatedAssetDeletion.data.status == 200 ||  allocatedAssetDeletion.data.status == 204) {
         setToastMessage( "Allocated Asset Deleted successfully.");
       }
-     dispatch(reset());
     } catch (error) {
       console.log("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
-     dispatch(reset());
     } finally {
       setIsOperationInProgress(false);
       dispatch(reset());
