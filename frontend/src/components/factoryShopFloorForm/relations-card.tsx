@@ -19,6 +19,7 @@ interface RelationObject {
 interface Payload {
     [key: string]: RelationObject | RelationObject[];
 }
+type RelationData = Record<string, any>;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Relations = () => {
@@ -39,6 +40,8 @@ const Relations = () => {
     const relations = useSelector((state: RootState) => state.relations.values);
     const reduxAssetId = useSelector((state: RootState) => state.relations.id);
     const [resetData, setResetData] = useState(false);
+    const [focus, setFocus] = useState(false);
+
 
     const getRelations = async () => {
         try {
@@ -56,19 +59,39 @@ const Relations = () => {
                 const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects])
                 );
 
+
+                let updateArr: any = [];
                 for (const [key, values] of Object.entries(allRelationsData)) {
-                    for (const value of values) {
+                    const newArr = await Promise.all(values.map(async (value) => {
+
                         if (value === 'json-ld-1.1') {
+                            updateArr = [...updateArr, {
+                                [key]: "",
+                                [`${key}_asset`]: ""
+                            }];
 
                         } else {
-                            console.log("relations else", relations);
                             const response = await fetchAssetDetailById(value);
-                            console.log(`Response for ${key}:`, response);
                             const { product_name, id, asset_category } = response ?? {};
-                            selectItems(product_name, asset_category, id)
+
+                            if (key === "hasCatridge" || key === "hasWorkpiece") {
+                                updateArr = [...updateArr, {
+                                    [key]: [id],
+                                    [`${key}_asset`]: [product_name]
+                                }];
+                            } else {
+                                updateArr = [...updateArr, {
+                                    [key]: id,
+                                    [`${key}_asset`]: product_name
+                                }];
+                            }
                         }
-                    }
+
+                        return updateArr;
+                    }));
+                    setInputValue(newArr.flat()); // Use flat() to flatten the array if newArr is nested
                 }
+
             } else {
                 console.error("Response is undefined");
                 dispatch(reset());
@@ -94,7 +117,6 @@ const Relations = () => {
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-    // console.log(deleteRelation, "deleteRelation here outside");
 
     async function updateReactFlow(factoryId: string) {
         const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
@@ -112,6 +134,7 @@ const Relations = () => {
             console.log("Error updating React Flow in relation card component", error);
         }
     }
+
     const handleReset = () => {
         setInputValue([]);
         showToast("success", "success", "Relations reseted successfully")
@@ -195,53 +218,42 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
-         handleUpdateRelations(payload);
+        handleUpdateRelations(payload);
         setDeleteRelation(true);
     }
 
-    const handleDeleteValue = (relationData) => {
+    const handleKeyDown = (event: React.KeyboardEvent, relationData: RelationData) => {
+        if (focus && event.key === 'Backspace') 
+            if (relationData && Object.keys(relationData).length > 0) {
 
-        console.log("onfocus relationData", relationData);
+                const relation = Object.keys(relationData)[0];    
+                const index = inputValue.findIndex(item => item.hasOwnProperty(relation));         
 
-        if (relationData && Object.keys(relationData).length > 0) {
-            const relation = Object.keys(relationData)[0];
-            console.log("Object.keys(relationData)", Object.keys(relationData)[0]);
-            const index = inputValue.findIndex(item => item.hasOwnProperty(relation));
-            console.log("index here", index);
+                if (index !== -1) {
+                    // Create a new array with the updated object
+                    const updatedInputValue = inputValue.map((item, idx) => {
+                        if (idx === index) {
 
-            if (index !== -1) {
-                // Create a new array with the updated object
-                const updatedInputValue = inputValue.map((item, idx) => {
-                    if (idx === index) {
-                        if (relation === "hasWorkpiece" || relation === "hasCatridge") {
-                            return {
-                                ...item,
-                                [relation]: [], // Set to empty string or any other value as needed
-                                [`${relation}_asset`]: [] // Set to empty string or any other value as needed
-                            };
-                        } else {
-                            // Return the updated object
                             return {
                                 ...item,
                                 [relation]: "", // Set to empty string or any other value as needed
                                 [`${relation}_asset`]: "" // Set to empty string or any other value as needed
                             };
                         }
-
-                    }
-                    return item;
-                });
-
-                // Update the state with the new array
-                setInputValue(updatedInputValue);
+                        return item;
+                    });
+                    console.log("updatedInputValue here", updatedInputValue);
+                    
+                    setInputValue(updatedInputValue);
+                }
             }
         }
-        console.log("relationData", relationData);
-    }
+
+    
+console.log("inputValue in relations", inputValue);
 
 
 
-    console.log("inputValue all", inputValue);
 
     return (
         <>
@@ -249,7 +261,7 @@ const Relations = () => {
                 <div className="flex align-items-center gap-2">
                     <p style={{ fontWeight: "bold" }}>Relations</p>
                     <img
-                    onClick={()=>setResetData(prev => !prev)}
+                        onClick={() => setResetData(prev => !prev)}
                         style={{ cursor: "pointer" }}
                         src="/refresh.png" alt="reset-icon" width="20px" height="20px" />
                 </div>
@@ -264,7 +276,6 @@ const Relations = () => {
 
                                         const relatedObject = inputValue.find(obj => obj[`${relation}_asset`]);
 
-
                                         const value = relatedObject ? relatedObject[`${relation}_asset`] : "";
                                         const relationAssetId = relatedObject ? relatedObject[`${relation}`] : "";
                                         allRelationAssetIds.push(relationAssetId);
@@ -272,10 +283,7 @@ const Relations = () => {
 
                                         const getAssetValues = () => {
                                             const entry = inputValue.find(entry => entry[relation]);
-                                            console.log(entry, "what's the entry here");
-
                                             if (entry && entry.hasOwnProperty(relation) && Array.isArray(entry[`${relation}`])) {
-                                                console.log(entry[`${relation}`], "wht's here in entry asstes");
                                                 allRelationAssetIds.push(...entry[`${relation}`]);
                                             }
                                             return entry ? entry[`${relation}_asset`] : [];
@@ -291,11 +299,17 @@ const Relations = () => {
                                                         value={getAssetValues()}
                                                         onRemove={(e) => {
                                                             const [value] = e.value;
-                                                            console.log(value, "on remove value here")
+
                                                             setInputValue(prevValue => {
                                                                 return prevValue.map(item => {
-                                                                    if (item[relation]) {
+                                                                    if (Array.isArray(item[relation])) {
                                                                         console.log(item[relation], "what's here")
+                                                                        const findIndexValue = item[`${relation}_asset`].findIndex(asset => asset == value);
+                                                                        console.log("findIndexValue", findIndexValue);
+                                                                        if (findIndexValue !== -1) { 
+                                                                            item[relation].splice(findIndexValue, 1); 
+                                                                        }
+                                                                        // remove findIndexValue index value in item[relation] array
                                                                         const newAssets = item[`${relation}_asset`].filter(asset => asset !== value);
                                                                         return { ...item, [`${relation}_asset`]: newAssets };
                                                                     }
@@ -312,7 +326,8 @@ const Relations = () => {
                                                             className="input-content"
                                                             placeholder=""
                                                             value={value}
-                                                            onFocus={() => handleDeleteValue(relatedObject)}
+                                                            onFocus={() => setFocus(true)}
+                                                            onKeyDown={(e) => handleKeyDown(e, relatedObject)}
                                                         />
                                                     </>
                                                 )}
