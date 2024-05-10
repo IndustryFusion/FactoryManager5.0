@@ -363,9 +363,9 @@ export class ShopFloorService {
         }
       } else {
         return {
-          success: false,
-          status: 500,
-          message: 'react flow nodes are unavailable'
+          success: true,
+          status: 200,
+          message: 'react flow reset successfully'
         }
       }
     } catch(err){
