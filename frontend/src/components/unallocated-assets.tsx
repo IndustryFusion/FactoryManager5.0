@@ -66,7 +66,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
         }
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
         // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
-        if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
+        if (Array.isArray(fetchedAllocatedAssets)) {
           allocatedAssetsArray = fetchedAllocatedAssets;
           setAllocatedAssets(fetchedAllocatedAssets);
         }
