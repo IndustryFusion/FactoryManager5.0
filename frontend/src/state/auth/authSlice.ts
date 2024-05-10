@@ -18,14 +18,17 @@ const getLocalStorageItem = (key: string, defaultValue: string) => {
 const initialState ={
     user: getLocalStorageUsername(),
     timerValue: getLocalStorageItem('timerValue', '0'),
+    isLoggedIn: true,
 }
 
 const authSlice = createSlice({
     name: 'auth',
     initialState,
-    reducers: {
+    reducers:
+     {
         login: (state, action) => {
           state.user = action.payload;
+          state.isLoggedIn = true;
           if (typeof window !== 'undefined') {
             localStorage.setItem('username', action.payload);
           }
@@ -33,6 +36,7 @@ const authSlice = createSlice({
         logout: (state) => {
           state.user = "";
           state.timerValue = 0;
+          state.isLoggedIn = false;
           if (typeof window !== 'undefined') {
             localStorage.removeItem('username');
           }
