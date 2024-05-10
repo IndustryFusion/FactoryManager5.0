@@ -9,9 +9,9 @@ const AutoRefresh = () => {
     <>
       <div className="autorefresh-btn mr-5 flex justify-content-between">
         {selectedAssetData?.product_name === undefined ?
-          <h3 style={{ fontSize: "20px", marginLeft: "2.5rem" }}> Unknown Product</h3>
+          <h3 style={{ fontSize: "18px", marginLeft: "2.5rem" }}> Unknown Product</h3>
           :
-          <h3 style={{ fontSize: "20px", marginLeft: "2.5rem" }}>
+          <h3 style={{ fontSize: "18px", marginLeft: "2.5rem" }}>
             <span>  {`${selectedAssetData?.product_name} :`}</span>
             <span style={{ textTransform: "lowercase" }}>{` ${selectedAssetData?.id}`}</span>
           </h3>

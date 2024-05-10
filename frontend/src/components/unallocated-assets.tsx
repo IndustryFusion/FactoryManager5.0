@@ -104,9 +104,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     };
 
   useEffect(() => {
-    if(factoryId){
-      fetchNonShopFloorAssets(factoryId)
-    }
+   
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else if (router.isReady) {

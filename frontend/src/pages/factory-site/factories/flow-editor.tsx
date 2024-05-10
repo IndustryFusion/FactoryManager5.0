@@ -124,7 +124,6 @@ const FlowEditor: React.FC<
 
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
-    console.log(relationClass, "class", assetId, "assetId")
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");

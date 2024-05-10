@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
 import { fetchAssetById } from "@/utility/factory-site-utility";
 import { MultiSelect } from "primereact/multiselect";
-import { Handle, Position } from "reactflow";
+import { Handle, Position,useStore } from "reactflow";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import EdgeAddContext from "@/context/edge-add-context";
 import { validateHeaderValue } from "http";
+import "../styles/custom-asset-node.css"
 interface RelationOption {
   label: string;
   value: string;
@@ -27,8 +28,15 @@ interface AssetDetail {
   class: string;
 
 }
+interface FlowState {
+    connectionNodeId: string | null;
+}
+const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
+ const connectionNodeId = useStore(connectionNodeIdSelector);
+  const isConnecting = connectionNodeId != null;
+  const isConnectable = connectionNodeId !== data.id;
   const [relationOptions, setRelationOptions] = useState<RelationOption[]>([]);
 
   const [selectedRelations, setSelectedRelations] = useState<string[]>([]);
@@ -119,10 +127,15 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
         justifyContent: "space-between",
         height: "100px",
       }}
+      className="customNode "
     >
-      <Handle type="target" position={Position.Top} />
+      
+      {!isConnecting && isConnectable && (
+        <Handle className="customHandle" position={Position.Bottom} type="source"  style={{ zIndex: 10 }} />
+      )}
+      <Handle className="customHandle" position={Position.Top} type="target" isConnectable={isConnectable}  style={{ zIndex: 10 }} />
       <small>{data.label}</small>
-      <div style={{ marginTop: "10px" }}>
+      <div style={{ marginTop: "10px",zIndex: 20  }} onClick={(e) => e.stopPropagation()}>
         <MultiSelect
           value={selectedRelations}
           options={relationOptions}
@@ -136,7 +149,6 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           appendTo="self" 
         />
       </div>
-      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 };
