@@ -204,7 +204,7 @@ const PicklistAssets = () => {
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Shopfloor assets saved successfully")
             }
-
+          updateReactFlow(factoryId)
         } catch (error) {
             console.error(error);
         }
@@ -231,7 +231,6 @@ const PicklistAssets = () => {
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
                 handleSaveShopFloors()
-                updateReactFlow(factoryId);
                 handleAllocatedAssets()
             }
             }>Save</Button>
