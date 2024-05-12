@@ -66,11 +66,11 @@ const AllocatedAsset = () => {
         try {
             if (unAllocatedAssetData.length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId); // for unallocated assets
-                console.log("fetchedAssetIds", fetchedAssetIds);
+                //console.log("fetchedAssetIds", fetchedAssetIds);
                 dispatch(create(fetchedAssetIds));
             }
             const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-            console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+           // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
             if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                 allocatedAssetsArray = fetchedAllocatedAssets;
             }
@@ -92,7 +92,6 @@ const AllocatedAsset = () => {
 
             // combined asset catagories from both allocated asset and un allocated asset
             const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
             setAssetCategories(categories);
             setAssets(fetchedAssets);
             setAllocatedAssets(fetchedAllocatedAssets);
@@ -102,41 +101,32 @@ const AllocatedAsset = () => {
             setError("Failed to fetch assets");
             setLoading(false);
             allocatedAssetsArray = null;
-
         }
     };
 
     useEffect(() => {
         if (Cookies.get("login_flag") === "false") {
             router.push("/login");
-        } else if (router.isReady) {
-            console.log("is coming here");
-            
+        } else if (router.isReady) {       
             const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
-            if (typeof id === 'string') {
-                console.log("is coming another if");
-                
+            if (typeof id === 'string') {        
                 fetchNonShopFloorAssets(id);
-                //getAllocatedAssets();
                 setFactoryIdValue(id);
             }
         }
-
     }, [router.query.factoryId, router.isReady, unAllocatedAssetData,saveAllocatedAssets]);
-    console.log("saveAllocatedAssets",saveAllocatedAssets);
-    
 
+    
     useEffect(() => {
         const results = assets.filter(asset => {
             const matchesSearchTerm = asset.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCategories = selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category);
-
             return matchesSearchTerm && matchesCategories;
-
         });
         setFilteredAssets(results);
     }, [searchTerm, selectedCategories, assets]);
 
+   
     const filteredAllocatedAssets = useMemo(() => {
         if (!Array.isArray(allocatedAssets) || allocatedAssets.length === 0) {
             return [];
@@ -148,19 +138,6 @@ const AllocatedAsset = () => {
             return isCategoryMatch && isSearchMatch;
         });
     }, [allocatedAssets, selectedCategoriesAllocated, searchTermAllocated]);
-
-    const handleCategoryChange = (category: string) => {
-        setSelectedCategories(prevCategories => {
-            const categoryIndex = prevCategories.indexOf(category);
-            if (categoryIndex > -1) {
-                // If found, remove it
-                return prevCategories.filter(c => c !== category);
-            } else {
-                // add it
-                return [...prevCategories, category];
-            }
-        });
-    };
 
     //allocated Asset Menu
     const allocatedMenuItems = [
@@ -189,11 +166,6 @@ const AllocatedAsset = () => {
                 return [...prev, category];
             }
         });
-    };
-
-    const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-        menu.current?.toggle(event);
-        setVisible(!visible);
     };
 
     if (loading) return <div>Loading...</div>;

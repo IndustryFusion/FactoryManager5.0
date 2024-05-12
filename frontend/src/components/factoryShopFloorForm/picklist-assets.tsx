@@ -1,7 +1,7 @@
 import { getShopFloorAssets, fetchAllocatedAssets, getNonShopFloorAsset } from "@/utility/factory-site-utility";
 import { PickList } from "primereact/picklist";
 import { RootState } from "@/state/store";
-import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { create,reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
@@ -13,6 +13,7 @@ import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
 import { InputText } from "primereact/inputtext";
+
 
 interface AssetProperty {
     type: "Property";
@@ -32,8 +33,6 @@ interface Asset {
 }
 
 
-
-
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const PicklistAssets = () => {
@@ -44,12 +43,11 @@ const PicklistAssets = () => {
     const dispatch = useDispatch();
     const router = useRouter();
     const { selectItems, setAsset, setSaveAllocatedAssets, shopFloorValue, saveAllocatedAssets } = useFactoryShopFloor();
-    const [factoryId, setFactoryId] = useState("")
+    const [factoryId, setFactoryId] = useState("");
     const toast = useRef<any>(null);
     let toastShown = false;
     let allocatedAssetsArray = null;
     const relations = useSelector((state: RootState) => state.relations.values);
-
 
 
     const fetchShopFloorAssets = async () => {
@@ -157,6 +155,8 @@ const PicklistAssets = () => {
         )
     };
 
+
+
     const shopfloorAssetIds = source.map(asset => asset?.id)
     const getPayload = () => {
         const shopfloorObj = {
@@ -173,22 +173,23 @@ const PicklistAssets = () => {
         console.log("allocatedObj", allocatedObj);
         return allocatedObj;
     }
- async function updateReactFlow(factoryId:string) {
-    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
-    
-    try {
-         await axios.get(reactFlowUpdate, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            withCredentials: true,
-        });
-    
-    } catch (error) {
-        console.log("Error updating React Flow in relation card component", error);
+
+    async function updateReactFlow(factoryId: string) {
+        const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+        try {
+            await axios.get(reactFlowUpdate, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+
+        } catch (error) {
+            console.log("Error updating React Flow in relation card component", error);
+        }
     }
-}
+
     const handleSaveShopFloors = async () => {
         const payload = getPayload();
         const url = `${API_URL}/shop-floor/update-asset`;
@@ -232,7 +233,8 @@ const PicklistAssets = () => {
             <Button onClick={() => {
                 handleSaveShopFloors()
                 updateReactFlow(factoryId);
-                handleAllocatedAssets()
+                handleAllocatedAssets();
+                dispatch(reset());
             }
             }>Save</Button>
         </div>
@@ -242,7 +244,7 @@ const PicklistAssets = () => {
         <>
             <Toast ref={toast} />
             <div className="flex ml-3 mb-3" >
-                <div className="p-input-icon-left" style={{ flex: "0 0 70%",marginLeft:"4rem" }}>
+                <div className="p-input-icon-left" style={{ flex: "0 0 70%", marginLeft: "4rem" }}>
                     <i className="pi pi-search" />
                     <InputText
                         style={{ width: "100%" }}
@@ -260,7 +262,6 @@ const PicklistAssets = () => {
                 </div>
             </div>
             <PickList dataKey="id" source={source} target={target}
-
                 onChange={onChange}
                 breakpoint="1280px"
                 sourceHeader={headerSource} targetHeader="Unallocated Assets"

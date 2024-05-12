@@ -8,7 +8,6 @@ import { Chips } from "primereact/chips";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 import { useRouter } from "next/router";
-import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/state/store";
 import { create, reset } from '@/state/relations/relationsSlice';
@@ -27,8 +26,6 @@ const Relations = () => {
         inputValue,
         setInputValue,
         assetId,
-        selectItems,
-        asset
     } = useFactoryShopFloor();
 
     const [factoryId, setFactoryId] = useState("");
@@ -46,7 +43,7 @@ const Relations = () => {
     const getRelations = async () => {
         try {
             const response = await fetchAssetById(assetId);
-            //console.log("all response in relations", response);
+
             if (Object.keys(response).length > 0) {
                 const relationsValues = Object.keys(response);
                 if (relations.length == 0 || assetId !== reduxAssetId) {
@@ -56,41 +53,67 @@ const Relations = () => {
                         values: relationsValues
                     }));
                 }
-                const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects])
-                );
+                const allRelationsData = Object.fromEntries(Object.entries(response).map(([key, { objects }]) => [key, objects]));
 
-
+                const allNewArr = [];
                 let updateArr: any = [];
-                for (const [key, values] of Object.entries(allRelationsData)) {
-                    const newArr = await Promise.all(values.map(async (value) => {
 
-                        if (value === 'json-ld-1.1') {
-                            updateArr = [...updateArr, {
-                                [key]: "",
-                                [`${key}_asset`]: ""
-                            }];
+                for (let relation in allRelationsData) {
+                    const values = allRelationsData[relation];
 
-                        } else {
-                            const response = await fetchAssetDetailById(value);
-                            const { product_name, id, asset_category } = response ?? {};
-
-                            if (key === "hasCatridge" || key === "hasWorkpiece") {
+                    if (relation === "hasCatridge" || relation === "hasWorkpiece") {
+                        const newArr = await Promise.all(values?.map(async (value, index) => {
+                            if (value === 'json-ld-1.1') {
                                 updateArr = [...updateArr, {
-                                    [key]: [id],
-                                    [`${key}_asset`]: [product_name]
+                                    [relation]: [],
+                                    [`${relation}_asset`]: []
                                 }];
                             } else {
+                                const response = await fetchAssetDetailById(value);
+                                const { product_name, id, asset_category } = response ?? {};
+                                const getIndex = updateArr.findIndex(item => Object.keys(item).includes(relation));
+                                const assetName: any = [`${relation}_asset`];
+
+                                if (getIndex >= 0) {
+                                    updateArr[getIndex] = {
+                                        [relation]: [...updateArr[getIndex][relation], id],
+                                        [`${relation}_asset`]: [...updateArr[getIndex][assetName], product_name]
+                                    }
+
+                                } else {
+                                    updateArr = [...updateArr, {
+                                        [relation]: [id],
+                                        [`${relation}_asset`]: [product_name]
+                                    }];
+                                }
+                            }
+
+                            return updateArr;
+                        }))
+                        allNewArr.push(...newArr.flat());
+                    } else {
+
+                        const newArr = await Promise.all(values?.map(async (value) => {
+                            if (value === 'json-ld-1.1') {
                                 updateArr = [...updateArr, {
-                                    [key]: id,
-                                    [`${key}_asset`]: product_name
+                                    [relation]: "",
+                                    [`${relation}_asset`]: ""
+                                }];
+                            } else {
+                                const response = await fetchAssetDetailById(value);
+                                const { product_name, id, asset_category } = response ?? {};
+                                updateArr = [...updateArr, {
+                                    [relation]: id,
+                                    [`${relation}_asset`]: product_name
                                 }];
                             }
-                        }
-
-                        return updateArr;
-                    }));
-                    setInputValue(newArr.flat()); // Use flat() to flatten the array if newArr is nested
+                            return updateArr;
+                        }))
+                        allNewArr.push(...newArr.flat());
+                    }
                 }
+                const uniqueArr = [...new Set(allNewArr.map(obj => JSON.stringify(obj)))].map(str => JSON.parse(str));
+                setInputValue(uniqueArr);
 
             } else {
                 console.error("Response is undefined");
@@ -150,11 +173,11 @@ const Relations = () => {
                 },
                 withCredentials: true,
             })
-            console.log("resposne of update relations", response);
+
 
             if (response.data?.status === 204 && response.data?.success === true) {
                 if (deleteRelation) {
-                    console.log(deleteRelation, "deleteRelation here");
+
                     showToast("success", "success", "Relation deleted successfully");
                 } else {
                     showToast("success", "success", "Relations saved successfully");
@@ -173,7 +196,7 @@ const Relations = () => {
             Object.keys(item).forEach(key => {
                 // Check if the key ends with '_asset', if so, ignore it
                 if (key !== "" && !key.endsWith('_asset')) {
-                    console.log(key, "key here");
+
                     for (let relation of relations) {
                         if (relation === key) {
                             if (Array.isArray(item[key])) {
@@ -223,11 +246,11 @@ const Relations = () => {
     }
 
     const handleKeyDown = (event: React.KeyboardEvent, relationData: RelationData) => {
-        if (focus && event.key === 'Backspace') 
+        if (focus && event.key === 'Backspace')
             if (relationData && Object.keys(relationData).length > 0) {
 
-                const relation = Object.keys(relationData)[0];    
-                const index = inputValue.findIndex(item => item.hasOwnProperty(relation));         
+                const relation = Object.keys(relationData)[0];
+                const index = inputValue.findIndex(item => item.hasOwnProperty(relation));
 
                 if (index !== -1) {
                     // Create a new array with the updated object
@@ -243,14 +266,14 @@ const Relations = () => {
                         return item;
                     });
                     console.log("updatedInputValue here", updatedInputValue);
-                    
+
                     setInputValue(updatedInputValue);
                 }
             }
-        }
+    }
 
-    
-console.log("inputValue in relations", inputValue);
+
+    console.log("inputValue in relations", inputValue);
 
 
 
@@ -303,11 +326,11 @@ console.log("inputValue in relations", inputValue);
                                                             setInputValue(prevValue => {
                                                                 return prevValue.map(item => {
                                                                     if (Array.isArray(item[relation])) {
-                                                                        console.log(item[relation], "what's here")
+
                                                                         const findIndexValue = item[`${relation}_asset`].findIndex(asset => asset == value);
-                                                                        console.log("findIndexValue", findIndexValue);
-                                                                        if (findIndexValue !== -1) { 
-                                                                            item[relation].splice(findIndexValue, 1); 
+
+                                                                        if (findIndexValue !== -1) {
+                                                                            item[relation].splice(findIndexValue, 1);
                                                                         }
                                                                         // remove findIndexValue index value in item[relation] array
                                                                         const newAssets = item[`${relation}_asset`].filter(asset => asset !== value);

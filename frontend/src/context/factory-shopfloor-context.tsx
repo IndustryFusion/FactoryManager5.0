@@ -39,7 +39,6 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
     const [inputValue, setInputValue] = useState<InputValue[]>([]);
     const [assetId, setAssetId] = useState("");
     const [asset, setAsset] = useState({});
-    const [shownToast, setShownToast] = useState(false);
     const [saveAllocatedAssets, setSaveAllocatedAssets] = useState(false);
     const [shopFloorValue, setShopFloorValue] = useState({});
 
@@ -63,30 +62,33 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
 
                         const emptyRelationindex = updatedValue.findIndex(entry => entry[getRelation] === "" && entry[`${getRelation}_asset`] === "");
                         const existingEntryIndex = updatedValue.findIndex(entry => entry[getRelation]);
-                        const duplicatedexistingEntryIndex = updatedValue.findIndex(entry => entry[getRelation] && entry[`${getRelation}_asset`].includes(item));
+                        const isEntryExists:any  = existingEntryIndex >= 0 ? updatedValue[existingEntryIndex] : null;
 
-                        if (emptyRelationindex >= 0) {
-                            // If the entry exists, create a new object with the updated arrays
-                            const existingEntry = updatedValue[emptyRelationindex];
-                            const updatedEntry = {
-                                ...existingEntry,
-                                [getRelation]: [...existingEntry[getRelation], id],
-                                [`${getRelation}_asset`]: [...existingEntry[`${getRelation}_asset`], item]
-                            };
-                            updatedValue[emptyRelationindex] = updatedEntry;
+                        const isDuplicateItem = isEntryExists && isEntryExists[getRelation].includes(id);
+                        console.log("isDuplicateItem", isDuplicateItem);
+                        
+                      
+                        if (emptyRelationindex >= 0) {                           
+                                const existingEntry = updatedValue[emptyRelationindex];
+                                const updatedEntry = {
+                                    ...existingEntry,
+                                    [getRelation]: [...existingEntry[getRelation], id],
+                                    [`${getRelation}_asset`]: [...existingEntry[`${getRelation}_asset`], item]
+                                };
+                                updatedValue[emptyRelationindex] = updatedEntry;                          
                         } else if (existingEntryIndex >= 0) {
-                            const existingEntry = updatedValue[existingEntryIndex];
-                            const updatedEntry = {
-                                ...existingEntry,
-                                [getRelation]: [...existingEntry[getRelation], id],
-                                [`${getRelation}_asset`]: [...existingEntry[`${getRelation}_asset`], item]
-                            };
-                            updatedValue[existingEntryIndex] = updatedEntry;
+                            if (!isDuplicateItem) { // Only update if it's not a duplicate item
+                                const updatedEntry = {
+                                    ...isEntryExists,
+                                    [getRelation]: [...isEntryExists[getRelation], id],
+                                    [`${getRelation}_asset`]: [...isEntryExists[`${getRelation}_asset`], item]
+                                };
+                                updatedValue[existingEntryIndex] = updatedEntry;
+                            }else{
+                                
+                            }
                         }
-                        if (duplicatedexistingEntryIndex !== -1) {
-                            alert("entry exits");
-                            return updatedValue;
-                        }
+                     
                         else {
                             // If the entry doesn't exist, create a new one
                             updatedValue.push({
@@ -125,11 +127,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                 });
             }
         }
-
     }
-
-
-
 
     return (
         <FactoryShopFloorContext.Provider
@@ -138,7 +136,6 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                 inputValue, setInputValue,
                 assetId, setAssetId,
                 asset, setAsset,
-                shownToast, setShownToast,
                 shopFloorValue, setShopFloorValue,
                 saveAllocatedAssets, setSaveAllocatedAssets
             }}
