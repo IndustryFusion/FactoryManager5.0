@@ -453,7 +453,7 @@ const onRestore = useCallback(async () => {
       } else {
        toast.current?.show({
         severity: 'warn',
-        summary: 'Flowchart already exists',
+        summary: 'Flowchart not updated',
         life: 3000,
       });
       }
@@ -551,7 +551,7 @@ const onRestore = useCallback(async () => {
         withCredentials: true,
       });
       if (reactFlowUpdateMongo.status == 201) {
-        setToastMessage("Flowchart saved successfully");
+        setToastMessage("Flowchart created successfully");
       } else {
        toast.current?.show({
         severity: 'warn',
@@ -811,11 +811,11 @@ const onRestore = useCallback(async () => {
                   withCredentials: true,
                 });
                 if (reactAllocatedAssetScorpio.status == 201) {
-                    setToastMessage("Allocated Asset Scorpio Updated");
+                    setToastMessage("Allocated Asset in Scorpio created ");
                   } else {
                     toast.current?.show({
                       severity: 'warn',
-                      summary: 'Allocated Asset Not Updated',
+                      summary: 'Allocated Asset Not created',
                       life: 3000,
                     });
                   }
@@ -837,7 +837,7 @@ const onRestore = useCallback(async () => {
               } else {
                 toast.current?.show({
                 severity: 'warn',
-                summary: 'Allocated asset not Updated',
+                summary: 'Allocated Asset Scorpio Not Updated',
                 life: 3000,
               });
               }
