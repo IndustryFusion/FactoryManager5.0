@@ -595,12 +595,11 @@ const DashboardChart = () => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
-                                        const hours = Math.floor(value / 3600);
-                                        const minutes = Math.floor((value % 3600) / 60);
-                                        const seconds = value % 60;
-                                        return `${hours.toString().padStart(2, '0')}:${minutes
-                                            .toString()
-                                            .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                        let duration = moment.duration(value, 'seconds'); 
+                                        let hours = duration.hours();
+                                        let minutes = duration.minutes();
+                                        let seconds = duration.seconds();
+                                        return `${hours}H ${minutes}M ${seconds}S`;
                                     } else {
                                         return '';
                                     }
@@ -616,10 +615,11 @@ const DashboardChart = () => {
                                 if (!totalSeconds) {
                                     return '';
                                 }
-                                const hours = Math.floor(totalSeconds / 3600);
-                                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                                const seconds = totalSeconds % 60;
-                                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                let duration = moment.duration(value, 'seconds'); 
+                                let hours = duration.hours();
+                                let minutes = duration.minutes();
+                                let seconds = duration.seconds();
+                                return `${hours}H ${minutes}M ${seconds}S`;
                             }
                         }
                     },
