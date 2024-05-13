@@ -23,7 +23,7 @@ const FactoryShopFloor = () => {
             <div style={{ overflow: "hidden", height: "95vh" }}>
                 <HorizontalNavbar />
                 <FactoryShopFloorProvider>
-                    <Header />
+                  
                     <div className="factory-shopfloor-container">
                         <ShopFloorProvider>
                             <div className="shopfloor-list-container">

@@ -7,6 +7,7 @@ import { fetchAssetById } from "@/utility/factory-site-utility";
 import Relations from "./relations-card";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { MultiStateCheckbox } from "primereact/multistatecheckbox";
+import Header from "./header";
 
 
 
@@ -30,6 +31,7 @@ const FactoryShopFloorForm = () => {
 
     return (
         <>
+          <Header />
             <Card className="px-3 " style={{ height: "20vh" }}>
                 <div >
                     <form >
