@@ -50,8 +50,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const [fileUploadKey, setFileUploadKey] = useState(0);
     const [schema, setSchema] = useState<Schema | null>(null);
     const router = useRouter();
-    const { locale } = useRouter();
-    console.log('locale ',locale); 
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
     const [validateFactory, setValidateFactory] = useState(false);

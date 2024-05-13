@@ -23,7 +23,6 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'
 import { useTranslation } from "next-i18next";
-// import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -406,16 +405,5 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         </>
     )
 }
-
-// export async function getStaticProps({ locale }: { locale: string }) {
-//     return {
-//       props: {
-//         ...(await serverSideTranslations(locale, [
-//           'header',
-//           'overview',
-//         ])),
-//       },
-//     }
-// }
 
 export default EditFactory;
