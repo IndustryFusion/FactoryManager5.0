@@ -11,6 +11,8 @@ import AssetManagementDialog from "../assetManagement/asset-management";
 import ProfileDialog from "./profile-dialog";
 import { useDispatch } from "react-redux";
 import { resetTimer, logout } from "@/state/auth/authSlice";
+import { CiViewBoard} from "react-icons/ci";
+import { RiTranslate } from "react-icons/ri";
 
 
 const HorizontalNavbar: React.FC = () => {
@@ -77,15 +79,13 @@ const HorizontalNavbar: React.FC = () => {
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "25px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
           onClick={()=>setAssetManage(true)}
-        ><img src="/assetManage.png"
-          width="22px"
-          height="22px"
-          alt="asset_manage_icon" />        
-          </Button>
+        >
+          <CiViewBoard />
+        </Button>
         <Button
           style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e",backgroundColor:"transparent",border: "none" }}
           tooltip="Dashboard"
