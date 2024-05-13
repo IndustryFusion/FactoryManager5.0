@@ -13,6 +13,9 @@ import { useDispatch } from "react-redux";
 import { resetTimer, logout } from "@/state/auth/authSlice";
 import { useTranslation } from "next-i18next";
 import Language from "./language";
+import { CiViewBoard } from "react-icons/ci";
+import { RiTranslate } from "react-icons/ri";
+
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
@@ -50,7 +53,6 @@ const HorizontalNavbar: React.FC = () => {
     fontSize: "21px"
   }
 
-
   const navigateToIndustryFusion = () => {
     router.push("https://industry-fusion.org/de");
   };
@@ -68,11 +70,8 @@ const HorizontalNavbar: React.FC = () => {
       <div className="flex align-items-center gap-1 logo-container cursor-pointer"
         onClick={() => router.push("/factory-site/factory-overview")}
       >
-        <div>
-          <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
-        </div>
-        <div> <p style={logoText}>{t('factoryManager')}</p></div>
-
+        <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
+        <p style={logoText}>{t('factoryManager')}</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <div className="mr-3">
@@ -89,14 +88,12 @@ const HorizontalNavbar: React.FC = () => {
             fontSize: "14px", fontWeight: "bold", color: "#615e5e"
           }} />
         <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "25px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
           onClick={() => setAssetManage(true)}
-        ><img src="/assetManage.png"
-          width="22px"
-          height="22px"
-          alt="asset_manage_icon" />
+        >
+          <CiViewBoard />
         </Button>
         <Button
           style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
