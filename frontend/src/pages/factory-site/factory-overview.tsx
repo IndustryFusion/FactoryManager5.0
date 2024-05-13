@@ -360,7 +360,7 @@ const FactoryOverview = () => {
         <div className="col-12" style={{ marginTop: "5rem" }}>
           <ConfirmDialog />
           <div className="">
-            <h2 className="ml-4">{t('factoryOverview')}</h2>
+          <h2 className="ml-4 mt-6">{t('factoryOverview')}</h2>
             <DataView
               value={filteredValue || factorySite}
               itemTemplate={itemTemplate}

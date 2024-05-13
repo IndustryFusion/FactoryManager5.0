@@ -98,11 +98,11 @@
 
 .p-button.p-button-sm .p-button-icon {
   font-size: 15px;
-
 }
 
 .p-dataview .p-dataview-header {
-  background: #c5dcff24;
+  background: #a7caff24;
+  padding: 1.8rem 1rem;
   border: none;
 }
 
@@ -134,23 +134,27 @@
   height: 2.5rem;
   background: #e0f7ec;
 }
+
 .delete-btn {
   width: 2.5rem;
   height: 2.5rem;
   background-color: #ffe0c7;
   margin-right: 2rem;
 }
-.address-text{
+
+.address-text {
   /* margin-top: 1.5rem; */
   font-size: 14.6px;
   letter-spacing: 0.1px;
 }
-.image-container{
+
+.image-container {
   flex: 30%;
 }
-.factory-text-container{
-flex: 70%;
-margin-top: 8px;
+
+.factory-text-container {
+  flex: 70%;
+  margin-top: 8px;
 }
 
 
@@ -164,7 +168,8 @@ margin-top: 8px;
   .factory-card-title {
     font-size: 1rem;
   }
-  .address-text{
+
+  .address-text {
     font-size: 14px;
   }
 }

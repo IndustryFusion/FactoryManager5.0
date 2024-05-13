@@ -65,7 +65,7 @@ const HorizontalNavbar: React.FC = () => {
 
   return (
     <div style={navbarStyle}>
-      <div className="flex align-items-center gap-2 logo-container cursor-pointer"
+      <div className="flex align-items-center logo-container cursor-pointer"
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />

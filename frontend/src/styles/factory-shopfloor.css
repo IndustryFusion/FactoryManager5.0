@@ -5,6 +5,7 @@
     overflow: hidden;
     zoom: 96%;
     width: 100%;
+    margin-top: 4rem;
     /* padding: 0 1rem; */
 }
 
@@ -30,7 +31,9 @@ ul {
 .input-content {
     width: 90%;
 }
-
+.factory-heading{
+    text-transform: capitalize;
+}
 
 .checkbox-lock{
     justify-content: center;
