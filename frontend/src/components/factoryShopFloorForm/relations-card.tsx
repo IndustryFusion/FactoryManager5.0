@@ -174,7 +174,6 @@ const Relations = () => {
                 withCredentials: true,
             })
 
-
             if (response.data?.status === 204 && response.data?.success === true) {
                 if (deleteRelation) {
 
@@ -184,8 +183,14 @@ const Relations = () => {
                 }
 
             }
-        } catch (error) {
-            console.error(error)
+        }catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+               showToast('error', 'Error', "Updating relations");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }
         }
     }
 
