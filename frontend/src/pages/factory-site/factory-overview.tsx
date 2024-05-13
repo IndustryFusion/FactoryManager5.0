@@ -22,11 +22,15 @@ import AssetManagement from "@/components/asset-management";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
   const router = useRouter();
+  const { t } = useTranslation('overview');
   const [factorySite, setFactorySite] = useState<Factory[]>([]);
   const [sortKey, setSortKey] = useState(null);
   const [sortOrder, setSortOrder] = useState<0 | 1 | -1 | null>(null);
@@ -223,7 +227,7 @@ const FactoryOverview = () => {
       <div className=" flex justify-content-end align-items-center" >
         <div className="mr-3">
           <Button
-            label="Import Assets"
+            label={t('importAsset')}
             onClick={triggerFileInput}
             className="bg-purple-100 factory-btn"
           />
@@ -242,7 +246,7 @@ const FactoryOverview = () => {
           }
         </div>
         <Button
-          label="Create Factory"
+          label={t('createAsset')}
           className="bg-blue-100 factory-btn"
           onClick={() => setVisible(true)}
         />
@@ -356,7 +360,7 @@ const FactoryOverview = () => {
         <div className="col-12" style={{ marginTop: "5rem" }}>
           <ConfirmDialog />
           <div className="">
-            <h2 className="ml-4">Factory Overview</h2>
+            <h2 className="ml-4">{t('factoryOverview')}</h2>
             <DataView
               value={filteredValue || factorySite}
               itemTemplate={itemTemplate}
@@ -385,4 +389,15 @@ const FactoryOverview = () => {
   );
 };
 
+
+export async function getStaticProps({ locale }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'overview',
+      ])),
+    },
+  }
+}
 export default FactoryOverview;
