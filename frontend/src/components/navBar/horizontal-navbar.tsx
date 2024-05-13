@@ -11,12 +11,15 @@ import AssetManagementDialog from "../assetManagement/asset-management";
 import ProfileDialog from "./profile-dialog";
 import { useDispatch } from "react-redux";
 import { resetTimer, logout } from "@/state/auth/authSlice";
+import { useTranslation } from "next-i18next";
+import Language from "./language";
 import { CiViewBoard} from "react-icons/ci";
 import { RiTranslate } from "react-icons/ri";
 
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation('header');
   const [assetManage, setAssetManage] = useState(false);
   const [profileDetail, setProfileDetail] = useState(false);
   const dispatch = useDispatch();
@@ -65,17 +68,20 @@ const HorizontalNavbar: React.FC = () => {
 
   return (
     <div style={navbarStyle}>
-      <div className="flex align-items-center gap-2 logo-container cursor-pointer"
+      <div className="flex align-items-center logo-container cursor-pointer"
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
-        <p style={logoText}>Factory Manager</p>
+        <p style={logoText}>{t('factoryManager')}</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
-        <Button label="About Us" link onClick={navigateToIndustryFusion}
+        <div className="mr-3">
+          <Language />
+        </div>
+        <Button label={t('aboutUs')} link onClick={navigateToIndustryFusion}
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
-        <Button label="Contact Us" link onClick={navigateToIndustryFusion}
+        <Button label={t('contactUs')} link onClick={navigateToIndustryFusion}
           className="mr-2" style={{ fontFamily: "Segoe UI",
            fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
         <Button

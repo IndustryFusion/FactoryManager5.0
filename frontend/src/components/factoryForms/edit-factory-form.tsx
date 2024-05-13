@@ -1,5 +1,4 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent, useRef, useMemo } from "react";
-import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 import { Factory } from "@/interfaces/factory-type";
@@ -20,7 +19,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Property, Schema } from "../../pages/factory-site/types/factory-form";
 import Thumbnail from "@/components/thumbnail";
-import { Toast } from "primereact/toast";
+import { Toast, ToastMessage } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'
 
@@ -45,15 +44,11 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [fileUploadKey, setFileUploadKey] = useState(0);
     const [schema, setSchema] = useState<Schema | null>(null);
     const [isEdit, setIsEdit] = useState(true);
-    const router = useRouter();
     const [updateData, setUpdateData] = useState<Record<string, any>>({});
     const toast = useRef<Toast | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<any>({});
     const [validateFactory, setValidateFactory] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false);
-    const [validateShopFloor, setValidateShopFloor] = useState(false);
-
-
 
     const findFactoryTemplate = async () => {
         try {
@@ -67,12 +62,14 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             const responseData = response.data;
             setSchema(responseData);
         } catch (error: any) {
-            if (error.response.status === 404) {
-                showError("getting factory template");
+            if (axios.isAxiosError(error)) {
+                showToast('error', 'Error', "fetching factory template");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
             }
         }
     }
-
 
     const options = useMemo(() => {
         return countryList().getData().map(country => ({
@@ -95,8 +92,6 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                 if (response) {
                     // Transforming the backend data to match the Factory type
                     const factoryData = response.data;
-
-
                     const transformedFactoryData = {
                         factory_name:
                             factoryData["http://www.industry-fusion.org/schema#factory_name"]
@@ -112,25 +107,23 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                         thumbnail:
                             factoryData["http://www.industry-fusion.org/schema#thumbnail"]
                                 ?.value,
+                        id: factoryData?.id
                     };
 
                     setEditedFactory(transformedFactoryData);
                     setResetFactory(transformedFactoryData);
 
-                    // if(editedFactory?.country){
-                    //     const editFactory = options.find(option => option.label === editedFactory?.country);
-                    //     console.log(editFactory, " wt's the value");
-
-                    //    setSelectedCountry(editFactory)
-                    //     }
-
-                    console.log(editedFactory, "fatc data");
                 } else {
                     console.log("No factory data returned from the API");
                 }
-            } catch (error) {
-                console.error("Error fetching factory details:", error);
-            }
+            }catch (error: any) {
+                if (axios.isAxiosError(error)) {
+                    showToast('error', 'Error', "fetching factory details");
+                } else {
+                    console.error("Error:", error);
+                    showToast('error', 'Error', error);
+                }
+            }            
         };
 
         if (factory) {
@@ -145,13 +138,9 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     useEffect(() => {
         if (editedFactory?.country) {
             const editFactory = options.find(option => option.label === editedFactory?.country);
-            console.log(editFactory, " wt's the value");
-
-            // Set the selected country using the label property of editFactory
             setSelectedCountry(editFactory);
         }
     }, [editedFactory, options]); // dependencies array
-
 
 
     const renderFields = (key: string, property: Property) => {
@@ -259,17 +248,14 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
         if (selectedOption) {
             const label = selectedOption.label;
-            console.log(typeof label, "country label");
             setEditedFactory((prev: any) => ({ ...prev, [key]: label }))
             setUpdateData((prev: any) => ({ ...prev, [key]: label }))
             setSelectedCountry(selectedOption)
         }
     };
 
-
     // Handle input change events to update state
     const handleChange = (key: string, value: any) => {
-        console.log(value, "wt's the value");
         if (key === "factory_name") {
             setValidateFactory(false)
         }
@@ -302,89 +288,55 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             setUploading(false);
         }
     };
+
     // Submit the edited factory data
     const handleSubmit = async (event: any) => {
         event.preventDefault();
 
-        console.log(updateData, "what's in this");
-        console.log(Object.keys(updateData).length === 0);
-
         if (updateData.factory_name === "") {
             setValidateFactory(true)
-
         }
 
         if (Object.values(updateData).every(value => value === '')) {
-            showError("Please fill all required fields");
-            return;  // Stop further execution
+            showToast("error", "Error", "Please fill all required fields");
+            return;
         }
-
-
         const dataToUpdate = {
             ...updateData,
         };
 
         const transformedData: any = transformDataForBackend(dataToUpdate);
-        console.log(transformedData, "what's the transformeddata");
         try {
             const response = await updateFactory(transformedData, factory!);
-            console.log(response, "factory response");
-
             if (response.success) {
-                showSuccess();
+                showToast("success", "Success", "Factory edited successfully")
             }
-
             else {
                 if (response.message.detail === "Index 0 out of bounds for length 0") {
-                    showWaring("Browse and Upload the image");
+                    showToast('warn', 'warning', "Browse and Upload the image");
                 } else {
-                    showWaring(response.message.detail);
+                    showToast('warn', 'warning', response.message.detail);
                 }
             }
-
-        } catch (error) {
-            showError(error);
-            console.error("Error updating factory:", error);
-        }
-
-    };
-
-    const showSuccess = () => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Factory edited successfully',
-                life: 2000
-            });
-        }
-    };
-    const showError = (message: any) => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'error',
-                summary: 'Error',
-                detail: message,
-                life: 2000
-            });
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                showToast('error', 'Error', "Updating factory");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }
         }
     };
 
-    const showWaring = (message: any) => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'warn',
-                summary: 'Warning',
-                detail: message,
-                life: 2000
-            });
-        }
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 3000 });
     };
 
     const handleReset = () => {
         setEditedFactory(resetFactory);
         setValidateFactory(false);
-        setIsEdit(true)
+        setIsEdit(true);
+        showToast("success", "Success", "Reset successfully");
     }
 
     const footerContent = (
@@ -422,6 +374,16 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                     <h2 className="form-title mb-3">Edit Factory</h2>
                     <div className="p-fluid p-formgrid p-grid factory-form-container">
                         <Card className="edit-form ">
+                            <div className="align-center">
+                                <p className=" mb-3 mt-0"
+                                    style={{
+                                        fontStyle: 'italic',
+                                        color: "#a8a8ff",
+                                        fontSize: "15px"
+                                    }}
+                                >
+                                    {editedFactory?.id} </p>
+                            </div>
                             {
                                 schema &&
                                 schema?.properties &&
@@ -434,13 +396,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                                     <label>No Shop Floors</label>
                                 </div>
                             )}
-
                         </Card>
                     </div>
                 </Dialog>
             </div>
-
-
         </>
     )
 }

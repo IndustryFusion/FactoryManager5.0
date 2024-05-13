@@ -32,9 +32,9 @@ import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
-import "../../../styles/asset-list.css"
 import dagre from '@dagrejs/dagre';
-
+import { Dialog } from "primereact/dialog";
+import "../../../styles/react-flow.css"
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -119,8 +119,8 @@ const FlowEditor: React.FC<
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
   const [switchView, setSwitchView] = useState(false);
   const dispatch = useDispatch();
-
-
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
 
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
@@ -464,8 +464,7 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-
-      console.log("reactAllocatedAssetScorpio", reactAllocatedAssetScorpio)
+    
       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.data.status == 404) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
@@ -487,15 +486,16 @@ const onRestore = useCallback(async () => {
       } else {
         setToastMessage("Scorpio already has these data");
       }
-   
+     dispatch(reset());
 
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
+        dispatch(reset());
     }
     finally {
       setIsOperationInProgress(false);
-      dispatch(reset());
+     
 
     }
   }, [nodes, edges, factoryId]);
@@ -570,17 +570,16 @@ const onRestore = useCallback(async () => {
           params: { id: factoryId },
         }
       );
-
+      dispatch(reset());
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-
-      dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
+      
     }
     finally {
       setIsOperationInProgress(false);
@@ -623,7 +622,17 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
-
+      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+        params:{
+          "id": `${factoryId}:allocated-assets`
+        }
+        
+      });
       const reactFlowScorpioUpdate =  await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -636,18 +645,8 @@ const onRestore = useCallback(async () => {
         }
       );
 
-      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-        params:{
-          "id": `${factoryId}:allocated-assets`
-        }
-        
-      });
-      console.log("reactFlowScorpioUpdate ", reactFlowScorpioUpdate)
+    
+     
       if (reactFlowUpdateMongo.data.status == 200 ||  reactFlowUpdateMongo.data.status == 204) {
         setToastMessage("Flowchart saved successfully");
       }
@@ -661,12 +660,10 @@ const onRestore = useCallback(async () => {
       }
       dispatch(reset());
     } catch (error) {
-      console.error("Error deleting elements:", error);
+      console.log("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
-     
     } finally {
       setIsOperationInProgress(false);
-     
    
     }
   };
@@ -704,12 +701,13 @@ const onRestore = useCallback(async () => {
       },
       withCredentials: true,
     });
-
+  //  console.log(response, "lll")
     // Check if the response data exists and has the necessary elements
     const data = response.data;
-    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData || !data.factoryData.edges;
-    console.log("Fetched flowchart data: ", response.data);
+    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData;
 
+   
+    // const existingMongoEdges = data?.factoryData.edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
     if (isEmpty) {
       await onSave();
     } else {
@@ -717,8 +715,8 @@ const onRestore = useCallback(async () => {
       const onlyFactoryToShopFloor = data.factoryData.edges.every((edge:Edge) => 
         edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_")
       );
-
-      if (onlyFactoryToShopFloor) {
+      const existingEdgesFactToShopFloor = edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
+      if (onlyFactoryToShopFloor ||!existingEdgesFactToShopFloor) {
       const payLoad = {
       factoryId: factoryId,
 
@@ -748,24 +746,51 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         });
         setToastMessage("Flowchart updated successfully.");
-
-        const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-        payLoad.factoryData.edges, {
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-
-      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-        setToastMessage("Allocated Asset Scorpio Updated");
-      } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
-      }
+         const allocatedAssetAvailableOrNot = await axios.get(`${API_URL}/allocated-asset/${factoryId}`,  {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            });
+        if(allocatedAssetAvailableOrNot.data.length==0){
+          const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+                  payLoad.factoryData.edges, {
+                  params: {
+                    "factory-id": factoryId,
+                  },
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                  },
+                  withCredentials: true,
+                });
+                if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+                    setToastMessage("Allocated Asset Scorpio Updated");
+                  } else {
+                    setToastMessage("Allocated Asset Scorpio Not Updated");
+                  }
+        }
+        else{
+           const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+              payLoad.factoryData.edges, {
+              params: {
+                "factory-id": factoryId,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            });
+             if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204) {
+                setToastMessage("Allocated Asset Scorpio Updated");
+              } else {
+                setToastMessage("Allocated Asset Scorpio Not Updated");
+              }
+         }
+       
+     
 
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
@@ -779,26 +804,27 @@ const onRestore = useCallback(async () => {
           params: { id: factoryId },
         }
       );
-    
+        dispatch(reset());
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
+    
       } else {
         await onUpdate();
+      
       }
     }
-    dispatch(reset());
   } catch (error) {
-    console.error("Error during save or update operation:", error);
+    console.log("Error during save or update operation:", error);
     setToastMessage("Error during operation, check the logs for details");
   } finally {
     setIsOperationInProgress(false);
   }
 }, [factoryId, onSave]);
 
-useEffect(() => {
+  useEffect(() => {
   let isRouteChangeAllowed = true; // control navigation flow
 
   const handleRouteChange = async (url:string) => {
@@ -994,52 +1020,67 @@ const handleExportClick = () => {
   );
 
 
-  const handleBackspacePress = useCallback(() => {
-    if (!selectedElements) {
-      return;
-    }
+ const handleBackspacePress = useCallback(() => {
+  if (!selectedElements || (!selectedElements.nodes && !selectedElements.edges)) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "No selection",
+      detail: "Please select an edge or node to delete.",
+      life: 3000,
+    });
+    return;
+  }
 
-    // Exclude the factory and shopFloor Nodes from deletion
-    const containsNonDeletableNodes = selectedElements.nodes?.some(
-      (node: Node) =>
-        node.data.type === "factory" || node.data.type === "shopFloor"
-    );
+  // Initialize deletable edge IDs
+  let edgeIdsToDelete: string[] = [];
 
-    if (containsNonDeletableNodes) {
-      toast.current?.show({
-        severity: "warn",
-        summary: "Deletion Not Allowed",
-        detail: "You cannot delete factory or shopFloor nodes from here.",
-        life: 3000,
-      });
-      return;
-    }
+  // Filter edges that are not connecting a factory to a shopFloor
+  if (selectedElements.edges) {
+    edgeIdsToDelete = selectedElements.edges
+      .filter(edge => {
+        const sourceNode = nodes.find(node => node.id === edge.source);
+        const targetNode = nodes.find(node => node.id === edge.target);
+        return !(sourceNode?.data.type === "factory" && targetNode?.data.type === "shopFloor");
+      })
+      .map(edge => edge.id);
+  }
 
-    const nodeIdsToDelete = new Set(
-      selectedElements.nodes?.map((node: Node) => node.id)
-    );
-    let updatedNodes = [...nodes];
-    let updatedEdges = [...edges];
-    // Filter out the nodes and edges  to be deleted
-    updatedNodes = updatedNodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    updatedEdges = updatedEdges.filter(
-      (edge) =>
-        !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
-    );
+  // Exclude the factory and shopFloor nodes from deletion
+  const containsNonDeletableNodes = selectedElements.nodes?.some(
+    (node: Node<any>) => node.data.type === "factory" || node.data.type === "shopFloor"
+  );
 
-    setNodes(updatedNodes);
-    setEdges(updatedEdges);
+  if (containsNonDeletableNodes) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "Deletion Not Allowed",
+      detail: "Cannot delete factory or shopFloor nodes.",
+      life: 3000,
+    });
+    return;
+  }
 
-    setSelectedElements(null);
-  }, [
-    selectedElements,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setSelectedElements,
-    toast,
-  ]);
+  // Collect IDs of nodes to delete
+  const nodeIdsToDelete = new Set<string>(
+    selectedElements.nodes?.map(node => node.id) ?? []
+  );
+
+  // Update nodes and edges state
+  const updatedNodes = nodes.filter(node => !nodeIdsToDelete.has(node.id));
+  const updatedEdges = edges.filter(edge => !edgeIdsToDelete.includes(edge.id));
+
+  setNodes(updatedNodes);
+  setEdges(updatedEdges);
+  setSelectedElements(null); 
+}, [
+  selectedElements,
+  nodes,
+  edges,
+  setNodes,
+  setEdges,
+  setSelectedElements,
+  toast,
+]);
 
   useHotkeys(
     "backspace",
@@ -1052,6 +1093,12 @@ const handleExportClick = () => {
 const onNodeDoubleClick: NodeMouseHandler = useCallback(
     async (event, node) => {
         console.log(node, "Node double-clicked");
+        if (node.type == "factory") {
+           const cleanedFactoryId = node.id.replace("factory_", "");
+            setSelectedFactoryId(cleanedFactoryId);
+            setDialogVisible(true);
+          }
+
         if (node.type === "shopFloor") {
             if (hasChanges) {
                 // Save or update changes before navigating if there are any changes
@@ -1164,9 +1211,16 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
   return (
     <>
       <ReactFlowProvider>
-        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
+        <Dialog header="Factory Details" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: '50vw' }}>
+          <hr style={{ margin: '0' }} />
+          <p>
+            <span className="bold-text">Factory ID:  </span> <span>{selectedFactoryId}</span>
+          </p>
+       </Dialog>
 
+        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
+          
           <div className="flex justify-content-between">
             <div>
               <Button

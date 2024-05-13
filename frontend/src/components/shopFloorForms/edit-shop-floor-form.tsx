@@ -8,7 +8,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
 import { ShopFloor } from "../../pages/factory-site/types/shop-floor-form";
 import { handleUpload } from "@/utility/factory-site-utility";
-import { Toast } from "primereact/toast";
+import { Toast, ToastMessage } from "primereact/toast";
 import "../../styles/factory-form.css"
 import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
@@ -41,6 +41,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     const [submitDisabled, setSubmitDisabled] = useState(false);
     const [validateShopFloor, setValidateShopFloor] = useState(false);
 
+
     const findShopFloorTemplate = async () => {
         try {
             const response = await axios.get(API_URL + '/shop-floor/template', {
@@ -51,14 +52,15 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 withCredentials: true,
             })
             setShopFloorTemplate(response.data)
-            console.log("shop floor template:", response.data);
-        } catch (error: any) {
-            if (error.response.status === 404) {
-                showError("Fetching shopfloor template")
+        }catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                showToast('error', 'Error', "Fetching shopfloor template");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
             }
-            console.error("Error fetching shopfloor template", error)
         }
-    }
+      }
 
     const getShopFloorData = async () => {
         try {
@@ -69,8 +71,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 },
                 withCredentials: true,
             });
-            if (response.data) {
-                console.log('response data ', response.data)
+            if (Object.keys(response.data).length > 0) {
                 const shopFloorData = response.data;
                 const flattenedData = Object.keys(shopFloorData).reduce((acc, key) => {
                     if (key.includes("http://www.industry-fusion.org/schema#")) {
@@ -88,15 +89,16 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                     }
                     return acc;
                 }, {} as ShopFloor);
-                console.log('flattenedData ', flattenedData)
                 setShopFloor(flattenedData);
             }
-        } catch (error: any) {
-            if (error.response.status === 404) {
-                showError("Fetching shopfloor data")
+        }catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                showToast('error', 'Error', "Fetching shopfloor data");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
             }
-            console.error("Fetching shopfloor data")
-        }
+        } 
     }
 
     useEffect(() => {
@@ -104,21 +106,15 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         getShopFloorData();
     }, [editShopFloorProp])
 
-    console.log(updateShopFloor);
-
 
     const handleInputTextChange = (
         e: ChangeEvent<HTMLInputElement>,
         key: keyof ShopFloor
     ) => {
-
-
         setUpdateShopFloor({ ...updateShopFloor, [key]: e.target.value });
-
-
-
         setValidateShopFloor(false);
     };
+
     const handleInputTextAreaChange = (
         e: ChangeEvent<HTMLTextAreaElement>,
         key: keyof ShopFloor
@@ -133,7 +129,6 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
     const handleFileUpload = async (e: { files: File[] }) => {
         const file = e.files[0];
-        console.log("file name", file);
         setIsEdit(false);
         if (file) {
             setUploading(true);
@@ -144,6 +139,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 setUploading(false);
                 setSubmitDisabled(false);
             } catch (error) {
+                showToast("error", "Error","Error uploading file");
                 console.error("Error uploading file:", error);
                 setUploading(false);
             }
@@ -155,16 +151,15 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         setUpdateShopFloor({});
         setIsEdit(true);
         setValidateShopFloor(false);
+        showToast("success", "Success", "Reset successfully")
     }
 
     const handleSave = async () => {
         if (updateShopFloor.floor_name === "") {
             setValidateShopFloor(true);
-            showError("Please fill all required fields")
+            showToast("error", "Error","Please fill all required fields");
         } else {
-            try {
-                console.log('updateShopFloor ', updateShopFloor);
-
+            try {          
                 const finalData = Object.keys(updateShopFloor).reduce((acc, key) => {
                     acc[`http://www.industry-fusion.org/schema#${key}`] = {
                         type: "Property",
@@ -185,45 +180,33 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
                 const shopFloorResponse = response.data;
                 if (shopFloorResponse.status === 200 || shopFloorResponse.status == 204) {
-                    showSuccess();
+                    showToast("success", "Success", "ShopFloor Updated successfully")
                 } else {
-                    showError('Error Updating Shop Floor');
+                    showToast("error", "Error","Error Updating ShopFloor");
                 }
-
             } catch (error: any) {
-                showError("Error saving shop floor");
-                console.error("Error saving shop floor", error)
+                if (axios.isAxiosError(error)) {
+                    showToast('error', 'Error', "saving shopfloor");
+                } else {
+                    console.error("Error:", error);
+                    showToast('error', 'Error', error);
+                }
             }
         }
 
     }
 
-    const showSuccess = () => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'Shop Floor Updated successfully',
-                life: 2000
-            });
-        }
+    const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+        toast.current?.show({ severity: severity, summary: summary, detail: message, life: 3000 });
     };
-    const showError = (message: any) => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'error',
-                summary: 'Error',
-                detail: message,
-                life: 3000
-            });
-        }
-    }
 
     const renderFields = (key: string, property: Property) => {
         let value = shopFloor[key];
+
         if (updateShopFloor.hasOwnProperty(key)) {
             value = updateShopFloor[key];
         }
+
         return (
             <>
                 {property.type === "string" &&
@@ -236,7 +219,6 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                                 rows={4}
                                 cols={30}
                                 placeholder={property?.description}
-
                             />
                             :
                             <InputText
@@ -316,6 +298,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         </div>
     )
 
+
     return (
         <>
             <div className=" flex justify-content-center">
@@ -324,6 +307,16 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                     <div className="p-fluid p-formgrid p-grid ">
                         <h2 className="form-title mb-3">Edit Shop Floor</h2>
                         <Card className="factory-form-container  center-button-container py-3">
+                            <div className="align-center">
+                                <p className=" mb-3 mt-0"
+                                    style={{
+                                        fontStyle:'italic',
+                                        color: "#a8a8ff",
+                                        fontSize: "15px"
+                                    }}
+                                >
+                                    {shopFloor?.id} </p>
+                            </div>
                             {
                                 shopFloorTemplate &&
                                 shopFloorTemplate?.properties &&

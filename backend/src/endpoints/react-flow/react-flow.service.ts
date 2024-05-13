@@ -62,7 +62,6 @@ export class ReactFlowService {
       const updatedUser = await this.factoryModel.updateOne({factoryId} , data, {
         new: true, 
       });
-      console.log('updatedUser ',updatedUser);
       return updatedUser;
     } catch(err) {
       throw err;

@@ -51,6 +51,7 @@ const DashboardCards: React.FC = () => {
 
     const fetchData = async () => {
         try {
+            setDifference("00:00:00");
             let response = await axios.get(API_URL + '/value-change-state', {
                 params: {
                     attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
@@ -63,13 +64,14 @@ const DashboardCards: React.FC = () => {
                     Accept: "application/json",
                 },
                 withCredentials: true,
-            }
-            )
+            })
+
 
             console.log("value change resposne", response.data);
             if (Array.isArray(response.data) && response.data.length > 0) {
                 if (response.data[0]?.value === "2") {
                     const timeValueReceived = findDifference(response.data[0]?.observedAt);
+                    console.log("response.data[0]?.observedAt", response.data[0]?.observedAt, entityIdValue);
                     console.log(timeValueReceived, "timeValueReceived ");
                     setDifference(timeValueReceived);
                     setPrevTimer(timeValueReceived); //set intial timer value

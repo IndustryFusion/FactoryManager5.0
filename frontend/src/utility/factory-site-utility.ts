@@ -259,12 +259,6 @@ export const getshopFloorById = async (factoryId: string) => {
 
     params: { id: factoryId },
   });
-  // console.log("respoonse here", response.data);
-  
-  const mappedData1 = flattenData(response.data);
-
-  
-
   return response.data;
 };
 
@@ -280,12 +274,9 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
         withCredentials: true,
       }
     );
-
     return response.data;
   } catch (error) {
-    console.error("Error fetching non-shop-floor assets", error);
-
-    throw error;
+     console.log("Error fetching non-shop-floor assets", error);
   }
 };
 
