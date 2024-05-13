@@ -1,7 +1,7 @@
 export interface Factory {
   factory_name?: string;
   street?: string;
-  zip?: number | null;
+  zip?: number | string;
   country?: string | null;
   thumbnail?: string | null;
   hasShopFloor?: {} | null;

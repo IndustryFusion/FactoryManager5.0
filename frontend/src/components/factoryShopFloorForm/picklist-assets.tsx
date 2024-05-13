@@ -203,11 +203,18 @@ const PicklistAssets = () => {
             })
             console.log("response from shopfloors", response.data)
             if (response.data?.status === 204 && response.data?.success === true) {
-                showToast("success", "success", "Shopfloor assets saved successfully")
+                showToast("success", "success", "Shopfloor assets saved successfully");
+                dispatch(reset());
             }
-
-        } catch (error) {
-            console.error(error);
+          updateReactFlow(factoryId)
+        }   catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+               showToast('error', 'Error', "Saving shopFloor assets");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }
         }
     }
 
@@ -222,8 +229,14 @@ const PicklistAssets = () => {
             }
             console.log("response from allocated asset", response?.data)
 
-        } catch (error) {
-            console.error(error);
+        }   catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+               showToast('error', 'Error', "Saving allocated assets");
+            } else {
+                console.error("Error:", error);
+                showToast('error', 'Error', error);
+            }
         }
     }
 
@@ -231,10 +244,8 @@ const PicklistAssets = () => {
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
-                handleSaveShopFloors()
-                updateReactFlow(factoryId);
-                handleAllocatedAssets();
-                dispatch(reset());
+                handleSaveShopFloors()            
+                handleAllocatedAssets();               
             }
             }>Save</Button>
         </div>

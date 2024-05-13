@@ -81,8 +81,8 @@ li {
     border: none;
 }
 .card-full-height {
-  overflow: auto;
-  height: 70%;
+  /* overflow: auto; */
+  height: 60%;
 }
 
 .p-card.p-component.card-full-height {

@@ -19,7 +19,8 @@
     zoom: 95%;
 }
 .dashboard-assets{
-    height: 537px;
+    height: 579px;
+	margin-top: 0.6rem;
 }
 .assets-table .p-datatable .p-paginator-bottom {
     left: 0;
@@ -30,6 +31,7 @@
         text-align: center;
         right: 0;
         padding: 0;
+        zoom:90%;
     }
 
 /* .factory-table th{

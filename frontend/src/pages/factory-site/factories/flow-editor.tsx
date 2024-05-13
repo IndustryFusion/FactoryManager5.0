@@ -464,8 +464,7 @@ const onRestore = useCallback(async () => {
         },
         withCredentials: true,
       });
-
-      console.log("reactAllocatedAssetScorpio", reactAllocatedAssetScorpio)
+    
       if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.data.status == 404) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
@@ -487,15 +486,16 @@ const onRestore = useCallback(async () => {
       } else {
         setToastMessage("Scorpio already has these data");
       }
-   
+     dispatch(reset());
 
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("");
+        dispatch(reset());
     }
     finally {
       setIsOperationInProgress(false);
-      dispatch(reset());
+     
 
     }
   }, [nodes, edges, factoryId]);
@@ -570,17 +570,16 @@ const onRestore = useCallback(async () => {
           params: { id: factoryId },
         }
       );
-
+      dispatch(reset());
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
-
-      dispatch(reset());
     } catch (error) {
       console.error("Error saving flowchart:", error);
       setToastMessage("Error saving flowchart");
+      
     }
     finally {
       setIsOperationInProgress(false);
@@ -623,7 +622,17 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
-
+      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+        params:{
+          "id": `${factoryId}:allocated-assets`
+        }
+        
+      });
       const reactFlowScorpioUpdate =  await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -636,18 +645,8 @@ const onRestore = useCallback(async () => {
         }
       );
 
-      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-        params:{
-          "id": `${factoryId}:allocated-assets`
-        }
-        
-      });
-      console.log("reactFlowScorpioUpdate ", reactFlowScorpioUpdate)
+    
+     
       if (reactFlowUpdateMongo.data.status == 200 ||  reactFlowUpdateMongo.data.status == 204) {
         setToastMessage("Flowchart saved successfully");
       }
@@ -661,12 +660,10 @@ const onRestore = useCallback(async () => {
       }
       dispatch(reset());
     } catch (error) {
-      console.error("Error deleting elements:", error);
+      console.log("Error deleting elements:", error);
       setToastMessage("Error deleting elements.");
-     
     } finally {
       setIsOperationInProgress(false);
-     
    
     }
   };
@@ -704,21 +701,23 @@ const onRestore = useCallback(async () => {
       },
       withCredentials: true,
     });
-
+  //  console.log(response, "lll")
     // Check if the response data exists and has the necessary elements
     const data = response.data;
-    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData || !data.factoryData.edges;
-    console.log("Fetched flowchart data: ", response.data);
+    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData;
 
+   
+    // const existingMongoEdges = data?.factoryData.edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
     if (isEmpty) {
+        // console.log("called  save")
       await onSave();
     } else {
       // Check if edges only connect factory to shopFloor\\
       const onlyFactoryToShopFloor = data.factoryData.edges.every((edge:Edge) => 
         edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_")
       );
-
-      if (onlyFactoryToShopFloor) {
+      const existingEdgesFactToShopFloor = edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
+      if (onlyFactoryToShopFloor ||!existingEdgesFactToShopFloor) {
       const payLoad = {
       factoryId: factoryId,
 
@@ -748,24 +747,46 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         });
         setToastMessage("Flowchart updated successfully.");
-
+        
+        if(existingEdgesFactToShopFloor){
         const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-        payLoad.factoryData.edges, {
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
+                payLoad.factoryData.edges, {
+                params: {
+                  "factory-id": factoryId,
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                withCredentials: true,
+              });
+               if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+                  setToastMessage("Allocated Asset Scorpio Updated");
+                } else {
+                  setToastMessage("Allocated Asset Scorpio Not Updated");
+                }
+        }
 
-      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-        setToastMessage("Allocated Asset Scorpio Updated");
-      } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
-      }
+        else{
+           const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
+              payLoad.factoryData.edges, {
+              params: {
+                "factory-id": factoryId,
+              },
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            });
+             if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204) {
+                setToastMessage("Allocated Asset Scorpio Updated");
+              } else {
+                setToastMessage("Allocated Asset Scorpio Not Updated");
+              }
+         }
+       
+     
 
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
@@ -779,26 +800,29 @@ const onRestore = useCallback(async () => {
           params: { id: factoryId },
         }
       );
-    
+        dispatch(reset());
+        // console.log("called  sh")
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
         setToastMessage("Data Already Exist in Scorpio");
       }
+    
       } else {
+        // console.log("called  update")
         await onUpdate();
+      
       }
     }
-    dispatch(reset());
   } catch (error) {
-    console.error("Error during save or update operation:", error);
+    console.log("Error during save or update operation:", error);
     setToastMessage("Error during operation, check the logs for details");
   } finally {
     setIsOperationInProgress(false);
   }
 }, [factoryId, onSave]);
 
-useEffect(() => {
+  useEffect(() => {
   let isRouteChangeAllowed = true; // control navigation flow
 
   const handleRouteChange = async (url:string) => {
