@@ -32,9 +32,9 @@ import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
-import "../../../styles/asset-list.css"
 import dagre from '@dagrejs/dagre';
-
+import { Dialog } from "primereact/dialog";
+import "../../../styles/react-flow.css"
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -119,8 +119,8 @@ const FlowEditor: React.FC<
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
   const [switchView, setSwitchView] = useState(false);
   const dispatch = useDispatch();
-
-
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
 
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
@@ -709,7 +709,6 @@ const onRestore = useCallback(async () => {
    
     // const existingMongoEdges = data?.factoryData.edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
     if (isEmpty) {
-        // console.log("called  save")
       await onSave();
     } else {
       // Check if edges only connect factory to shopFloor\\
@@ -801,7 +800,6 @@ const onRestore = useCallback(async () => {
         }
       );
         dispatch(reset());
-        // console.log("called  sh")
       if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
@@ -809,7 +807,6 @@ const onRestore = useCallback(async () => {
       }
     
       } else {
-        // console.log("called  update")
         await onUpdate();
       
       }
@@ -1018,52 +1015,67 @@ const handleExportClick = () => {
   );
 
 
-  const handleBackspacePress = useCallback(() => {
-    if (!selectedElements) {
-      return;
-    }
+ const handleBackspacePress = useCallback(() => {
+  if (!selectedElements || (!selectedElements.nodes && !selectedElements.edges)) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "No selection",
+      detail: "Please select an edge or node to delete.",
+      life: 3000,
+    });
+    return;
+  }
 
-    // Exclude the factory and shopFloor Nodes from deletion
-    const containsNonDeletableNodes = selectedElements.nodes?.some(
-      (node: Node) =>
-        node.data.type === "factory" || node.data.type === "shopFloor"
-    );
+  // Initialize deletable edge IDs
+  let edgeIdsToDelete: string[] = [];
 
-    if (containsNonDeletableNodes) {
-      toast.current?.show({
-        severity: "warn",
-        summary: "Deletion Not Allowed",
-        detail: "You cannot delete factory or shopFloor nodes from here.",
-        life: 3000,
-      });
-      return;
-    }
+  // Filter edges that are not connecting a factory to a shopFloor
+  if (selectedElements.edges) {
+    edgeIdsToDelete = selectedElements.edges
+      .filter(edge => {
+        const sourceNode = nodes.find(node => node.id === edge.source);
+        const targetNode = nodes.find(node => node.id === edge.target);
+        return !(sourceNode?.data.type === "factory" && targetNode?.data.type === "shopFloor");
+      })
+      .map(edge => edge.id);
+  }
 
-    const nodeIdsToDelete = new Set(
-      selectedElements.nodes?.map((node: Node) => node.id)
-    );
-    let updatedNodes = [...nodes];
-    let updatedEdges = [...edges];
-    // Filter out the nodes and edges  to be deleted
-    updatedNodes = updatedNodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    updatedEdges = updatedEdges.filter(
-      (edge) =>
-        !nodeIdsToDelete.has(edge.source) && !nodeIdsToDelete.has(edge.target)
-    );
+  // Exclude the factory and shopFloor nodes from deletion
+  const containsNonDeletableNodes = selectedElements.nodes?.some(
+    (node: Node<any>) => node.data.type === "factory" || node.data.type === "shopFloor"
+  );
 
-    setNodes(updatedNodes);
-    setEdges(updatedEdges);
+  if (containsNonDeletableNodes) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "Deletion Not Allowed",
+      detail: "Cannot delete factory or shopFloor nodes.",
+      life: 3000,
+    });
+    return;
+  }
 
-    setSelectedElements(null);
-  }, [
-    selectedElements,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setSelectedElements,
-    toast,
-  ]);
+  // Collect IDs of nodes to delete
+  const nodeIdsToDelete = new Set<string>(
+    selectedElements.nodes?.map(node => node.id) ?? []
+  );
+
+  // Update nodes and edges state
+  const updatedNodes = nodes.filter(node => !nodeIdsToDelete.has(node.id));
+  const updatedEdges = edges.filter(edge => !edgeIdsToDelete.includes(edge.id));
+
+  setNodes(updatedNodes);
+  setEdges(updatedEdges);
+  setSelectedElements(null); 
+}, [
+  selectedElements,
+  nodes,
+  edges,
+  setNodes,
+  setEdges,
+  setSelectedElements,
+  toast,
+]);
 
   useHotkeys(
     "backspace",
@@ -1076,6 +1088,12 @@ const handleExportClick = () => {
 const onNodeDoubleClick: NodeMouseHandler = useCallback(
     async (event, node) => {
         console.log(node, "Node double-clicked");
+        if (node.type == "factory") {
+           const cleanedFactoryId = node.id.replace("factory_", "");
+            setSelectedFactoryId(cleanedFactoryId);
+            setDialogVisible(true);
+          }
+
         if (node.type === "shopFloor") {
             if (hasChanges) {
                 // Save or update changes before navigating if there are any changes
@@ -1188,9 +1206,16 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
   return (
     <>
       <ReactFlowProvider>
-        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
+        <Dialog header="Factory Details" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: '50vw' }}>
+          <hr style={{ margin: '0' }} />
+          <p>
+            <span className="bold-text">Factory ID:  </span> <span>{selectedFactoryId}</span>
+          </p>
+       </Dialog>
 
+        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
+          
           <div className="flex justify-content-between">
             <div>
               <Button
