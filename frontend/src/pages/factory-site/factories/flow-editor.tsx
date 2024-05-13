@@ -746,26 +746,31 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         });
         setToastMessage("Flowchart updated successfully.");
-        
-        if(existingEdgesFactToShopFloor){
-        const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-                payLoad.factoryData.edges, {
-                params: {
-                  "factory-id": factoryId,
-                },
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                },
-                withCredentials: true,
-              });
-               if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-                  setToastMessage("Allocated Asset Scorpio Updated");
-                } else {
-                  setToastMessage("Allocated Asset Scorpio Not Updated");
-                }
+         const allocatedAssetAvailableOrNot = await axios.get(`${API_URL}/allocated-asset/${factoryId}`,  {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            });
+        if(allocatedAssetAvailableOrNot.data.length==0){
+          const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
+                  payLoad.factoryData.edges, {
+                  params: {
+                    "factory-id": factoryId,
+                  },
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                  },
+                  withCredentials: true,
+                });
+                if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
+                    setToastMessage("Allocated Asset Scorpio Updated");
+                  } else {
+                    setToastMessage("Allocated Asset Scorpio Not Updated");
+                  }
         }
-
         else{
            const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
               payLoad.factoryData.edges, {
