@@ -34,7 +34,10 @@ import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
 import dagre from '@dagrejs/dagre';
 import { Dialog } from "primereact/dialog";
-import "../../../styles/react-flow.css"
+import "../../../styles/react-flow.css";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -121,7 +124,8 @@ const FlowEditor: React.FC<
   const dispatch = useDispatch();
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
-
+  const { t } = useTranslation('button');
+  
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
@@ -1224,32 +1228,32 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           <div className="flex justify-content-between">
             <div>
               <Button
-                label="Save / Update"
+                label={t('saveAndUpdate')}
                 onClick={saveOrUpdate}
                 className="m-2"
                 raised
               />
               <Button
-                label="Undo"
+                label={t('undo')}
                 onClick={onRestore}
                 className="p-button-secondary m-2"
                 raised
               />
                <Button
-                label="Refresh"
+                label={t('refresh')}
                 onClick={refreshFromScorpio}
                 className="m-2"
                 severity="help"
                 raised
               />
               <Button
-                label="Reset"
+                label={t('reset')}
                 onClick={handleDelete}
                 className="p-button-danger m-2"
                 raised
               />
               <Button
-                label="Export as JPEG"
+                label={t('exportJPEG')}
                 className="m-2"
                 onClick={handleExportClick}
                   severity="info"
@@ -1303,5 +1307,17 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
 
   );
 };
+
+export async function getStaticProps({ locale }: { locale: string }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'button',
+        'placeholder'
+      ])),
+    },
+  }
+}
 
 export default FlowEditor;

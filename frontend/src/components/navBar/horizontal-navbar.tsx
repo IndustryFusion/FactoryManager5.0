@@ -72,7 +72,7 @@ const HorizontalNavbar: React.FC = () => {
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
-        <p style={logoText}>{t('factoryManager')}</p>
+        <p style={logoText}>Factory Manager</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
         <div className="mr-3">

@@ -10,7 +10,7 @@ import { Password } from "primereact/password";
 import { Checkbox } from "primereact/checkbox";
 import { Toast, ToastMessage } from "primereact/toast";
 import "../../styles/dashboard.css"
-
+import { useTranslation } from "next-i18next";
 
 interface OnboardFormProps {
     showBlockerProp: boolean;
@@ -27,7 +27,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     asset, setBlocker,
     setOnboardAssetProp
 }) => {
-
+    const { t } = useTranslation('button');
     const podName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
     const assetProtocol = asset?.asset_communication_protocol === undefined ? "" : asset?.asset_communication_protocol;
     const [onboardForm, setOnboardForm] = useState(
@@ -118,7 +118,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             <div className="finish-btn">
                 <Button
                     onClick={handleSubmit}
-                    label="Submit" autoFocus />
+                    label={t('submit')} autoFocus />
             </div>
         </div>
     )

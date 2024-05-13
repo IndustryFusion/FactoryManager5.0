@@ -13,6 +13,7 @@ import "../../styles/factory-form.css";
 import Thumbnail from "@/components/thumbnail";
 import { Dialog } from "primereact/dialog";
 import { useShopFloor } from "@/context/shopfloor-context";
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -44,6 +45,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   });
   const toast = useRef<Toast | null>(null);
   const { addShopFloor } = useShopFloor();
+  const { t } = useTranslation('button');
   useEffect(() => {
     findShopFloorTemplate();
   }, []);
@@ -268,7 +270,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   const footerContent = (
     <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
       <Button
-        label="Cancel"
+        label={t('cancel')}
         severity="danger"
         outlined
         className="mr-2"
@@ -279,13 +281,13 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         severity="secondary"
         text
         raised
-        label="Reset"
+        label={t('reset')}
         className="mr-2 reset-btn"
         type="button"
         onClick={handleReset}
       />
       <Button
-        label="Submit"
+        label={t('submit')}
         onClick={handleSave}
         className="border-none  ml-2 mr-2"
         disabled={submitDisabled}

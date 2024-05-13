@@ -13,7 +13,7 @@ import "../../styles/factory-form.css"
 import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Dialog } from "primereact/dialog";
-
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -40,7 +40,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     const [isEdit, setIsEdit] = useState(true);
     const [submitDisabled, setSubmitDisabled] = useState(false);
     const [validateShopFloor, setValidateShopFloor] = useState(false);
-
+    const { t } = useTranslation('button');
 
     const findShopFloorTemplate = async () => {
         try {
@@ -276,7 +276,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     const footerContent = (
         <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
             <Button
-                label="Cancel"
+                label={t('cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
@@ -284,13 +284,13 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             />
             <Button
                 severity="secondary" text raised
-                label="Reset"
+                label={t('reset')}
                 className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
             <Button
-                label="Submit"
+                label={t('submit')}
                 onClick={handleSave}
                 className="border-none  ml-2 mr-2"
                 disabled={submitDisabled}

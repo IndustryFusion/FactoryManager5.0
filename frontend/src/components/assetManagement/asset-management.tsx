@@ -30,6 +30,7 @@ import AllocatedAsset from "./allocated-asset";
 import { Button } from "primereact/button";
 import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -59,6 +60,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   })
   const toast = useRef<Toast>(null);
   const router = useRouter();
+  const { t } = useTranslation('button');
 
   const handleAsset = async () => {
     try {
@@ -161,7 +163,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
             <p>{`Are you sure you want to delete ${deleteAsset.deleteAssetName}`}</p>
             <div className="flex justify-content-end gap-3">
               <Button
-                label="OK"
+                label={t('ok')}
                 onClick={() => {
                   setDeleteAsset({ ...deleteAsset, deleteFlag: false })
                   deleteAssetData(deleteAsset.deleteAssetId);
@@ -169,7 +171,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 
               ></Button>
               <Button
-                label="Cancel"
+                label={t('cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"

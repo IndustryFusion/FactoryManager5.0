@@ -13,6 +13,7 @@ import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import Footer from "@/components/navBar/footer";
 import PicklistAssets from "@/components/factoryShopFloorForm/picklist-assets";
 import Header from "@/components/factoryShopFloorForm/header";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const FactoryShopFloor = () => {
 
@@ -49,5 +50,17 @@ const FactoryShopFloor = () => {
         </>
     )
 }
+
+export async function getServerSideProps({ locale }: { locale: string }) {
+    return {
+      props: {
+        ...(await serverSideTranslations(locale, [
+          'header',
+          'button',
+          'placeholder'
+        ])),
+      },
+    }
+  }
 
 export default FactoryShopFloor;

@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { TabView, TabPanel } from 'primereact/tabview';
-
+import { useTranslation } from "next-i18next";
 
 interface AssetListProps {
   factoryId: string;
@@ -52,6 +52,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
   const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
   const [view, setView] = useState('unallocated');
+  const { t } = useTranslation('placeholder');
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
@@ -172,7 +173,7 @@ return (
         <InputText
           value={searchTerm}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search by name..."
+          placeholder={t('searchByName')}
           style={{width: "320px"}}
         />
         <Button icon="pi pi-filter-fill" onClick={(e) => menu.current?.toggle(e)}    style={{ backgroundColor: "white", borderColor: "darkgrey", color: "grey", border:"none"}} />
