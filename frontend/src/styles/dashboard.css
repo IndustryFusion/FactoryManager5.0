@@ -22,7 +22,7 @@
 }
 
 .dashboard-assets {
-    height: 579px;
+    height: 720px;
     margin-top: 0.6rem;
 }
 
@@ -31,7 +31,7 @@
     /* margin-top: 7rem; */
     position: absolute;
     /* bottom: 0; */
-    top: 38rem;
+    top: 48rem;
     text-align: center;
     right: 0;
     padding: 0;
@@ -114,7 +114,7 @@
 .dashboard-card-container {
     gap: 1.2rem;
     justify-content: center;
-    margin-top: 10rem;
+    margin-top: 12rem;
 }
 
 .autorefresh-btn {
