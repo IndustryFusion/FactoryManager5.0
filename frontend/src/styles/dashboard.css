@@ -22,8 +22,9 @@
 }
 
 .dashboard-assets {
-    height: 720px;
+    min-height: 45rem;
     margin-top: 0.6rem;
+    height: auto;
 }
 
 .dashboard-assets .p-datatable .p-paginator-bottom {
