@@ -80,16 +80,19 @@ li {
     border-color: #ccc; /* Slightly darker border for definition */
     border: none;
 }
-.card-full-height {
-  /* overflow: auto; */
-  height: 60%;
-}
 
 .p-card.p-component.card-full-height {
   height: 100vh; 
 } 
 .list-disc{
   height:150px; 
+}
+
+.p-tabview-panels{
+  height: 100vh;
   overflow-y: scroll;
 }
 
+.p-tabview .p-tabview-panels {
+  height: 78vh; 
+}

@@ -1287,40 +1287,40 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           <BlockUI blocked={isOperationInProgress} fullScreen />
           
           <div className="flex justify-content-between">
-            <div>
+            <div className="mt-2">
               <Button
                 label={t('saveAndUpdate')}
                 onClick={saveOrUpdate}
-                className="m-2"
+                className="m-2 bold-text"
                 raised
               />
               <Button
                 label={t('undo')}
                 onClick={onRestore}
-                className="p-button-secondary m-2"
+                className="p-button-secondary m-2 bold-text"
                 raised
               />
                <Button
                 label={t('refresh')}
                 onClick={refreshFromScorpio}
-                className="m-2"
+                className="m-2 bold-text"
                 severity="help"
                 raised
               />
               <Button
                 label={t('reset')}
                 onClick={handleDelete}
-                className="p-button-danger m-2"
+                className="p-button-danger m-2 bold-text"
                 raised
               />
               <Button
                 label={t('exportJPEG')}
-                className="m-2"
+                className="m-2 bold-text"
                 onClick={handleExportClick}
                   severity="info"
               />
             </div>
-            <div className="flex align-items-center gap-2">
+            <div className="flex align-items-center gap-2 mt-2">
               <span>Switch View</span>
               <InputSwitch checked={switchView} onChange={(e) => {
                 setSwitchView(e.value);

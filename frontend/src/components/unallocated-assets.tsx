@@ -168,15 +168,16 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   };
 return (
     <>
-   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '95%', overflowY: 'auto' }}>
+   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '80%' }}>
       <div className="flex align-items-center justify-content-center gap-2 mb-4">
         <InputText
           value={searchTerm}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder={t('searchByName')}
-          style={{width: "320px"}}
+          style={{width: "350px"}}
+          className="mt-2"
         />
-        <Button icon="pi pi-filter-fill" onClick={(e) => menu.current?.toggle(e)}    style={{ backgroundColor: "white", borderColor: "darkgrey", color: "grey", border:"none"}} />
+        <Button icon="pi pi-filter-fill" onClick={(e) => menu.current?.toggle(e)}    style={{ backgroundColor: "white", borderColor: "darkgrey", color: "grey", border:"none"}} className="mt-2" />
         <Menu model={[
           {
             label: 'Asset Categories',
@@ -192,10 +193,9 @@ return (
         ]} popup ref={menu} style={{marginLeft:"-20%"}} />
       </div>
 
-      <TabView className="ml-1"  >
-        <TabPanel header="Unallocated Assets" className="" >
-          <Card className="card-full-height">
-            <ul>
+      <TabView className="ml-1" >
+        <TabPanel header="Unallocated Assets" >
+            <ul className="-ml-2">
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
@@ -205,11 +205,9 @@ return (
                 </li>
               ))}
             </ul>
-          </Card>
         </TabPanel>
-        <TabPanel header="Allocated Assets" className="-ml-2">
-          <Card className="card-full-height" >
-            <ul>
+        <TabPanel header="Allocated Assets" className="-ml-2" >
+            <ul className="-ml-1">
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
@@ -219,7 +217,6 @@ return (
                 </li>
               ))}
             </ul>
-          </Card>
         </TabPanel>
       </TabView>
     </div>
