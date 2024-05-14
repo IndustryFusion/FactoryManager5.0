@@ -120,7 +120,7 @@ const ShopFloorManager: React.FC = () => {
               borderRadius: "10px",
               padding: "10px",
           
-              maxHeight: "98%",
+              maxHeight: "100%",
               flexShrink: 0,
             }}
           >
