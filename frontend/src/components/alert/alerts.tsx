@@ -60,28 +60,28 @@ const Alerts = () => {
         },
         withCredentials: true,
       })
-      
-    return mapBackendDataToAssetState(response.data);
+
+      return mapBackendDataToAssetState(response.data);
     } catch (error) {
       console.error("Error fetching asset data", error)
     }
   }
 
 
-  
+
   useEffect(() => {
     const fetchAllAlerts = async () => {
       try {
         const response = await getAlerts();
-         setAlerts(response.alerts)
+        setAlerts(response.alerts)
         setAlertsCount(response.total);
-        const assetsData  =[];
+        const assetsData = [];
         for (const alert of response.alerts) {
           // assetsData.push( fetchAssetData(alert.resource));
           const response = await fetchAssetData(alert.resource);
-          assetsData.push(response )
-        // console.log("response",response);
-        
+          assetsData.push(response)
+          // console.log("response",response);
+
         }
         setAssetData(assetsData);
       } catch (error) {
@@ -102,12 +102,9 @@ const Alerts = () => {
   return (
     <>
       <div style={{
-        position: 'relative', display: 'inline-block', paddingBottom: "1rem",
-        background: "#fff",
-        borderRadius: "50%",
+        position: 'relative',
+        display: 'inline-block',
         width: "40px",
-        height: "40px",
-        color: "#615e5e"
       }}>
         <Button
           icon="pi pi-bell"
@@ -119,6 +116,7 @@ const Alerts = () => {
           }}
           tooltip="Alerts"
           tooltipOptions={{ position: 'bottom' }}
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
         />
         <div style={badgeStyle}>
           <Badge className={`p-badge ${alertsCount > 5 ? "active" : ""}`} value={alertsCount} />

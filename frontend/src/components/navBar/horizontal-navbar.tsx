@@ -31,7 +31,9 @@ import { useTranslation } from "next-i18next";
 import Language from "./language";
 import { CiViewBoard } from "react-icons/ci";
 import { RiTranslate } from "react-icons/ri";
-
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
@@ -94,37 +96,37 @@ const HorizontalNavbar: React.FC = () => {
           <Language />
         </div>
         <Button label={t('aboutUs')} link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{
+          style={{
             fontFamily: "Segoe UI",
             fontSize: "14px", fontWeight: "bold", color: "#615e5e"
           }} />
         <Button label={t('contactUs')} link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{
+          style={{
             fontFamily: "Segoe UI",
             fontSize: "14px", fontWeight: "bold", color: "#615e5e"
           }} />
-        <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "25px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
+        <Button icon="pi pi-warehouse" link
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
           onClick={() => setAssetManage(true)}
-        >
-          <CiViewBoard />
-        </Button>
-        <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
+        />
+        <Button icon="pi pi-objects-column" link
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
           tooltip="Dashboard"
-          onClick={() => router.push("/factory-site/dashboard")}
           tooltipOptions={{ position: 'bottom' }}
-        ><LuLayoutDashboard /></Button>
+          onClick={() => router.push("/factory-site/dashboard")}
+        />
         <Alerts />
         <Button icon="pi pi-user" link
-          className="mr-2 " style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="Profile Details"
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
+          tooltip="Profile Details"
           tooltipOptions={{ position: 'bottom' }}
           onClick={() => setProfileDetail(true)}
         />
         <Button onClick={handleLogout} icon="pi pi-sign-out" link
-          className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
+          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
+          tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
         {assetManage && <AssetManagementDialog
           assetManageDialogProp={assetManage}
           setAssetManageDialogProp={setAssetManage}
