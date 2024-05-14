@@ -151,8 +151,8 @@ const Dashboard = () => {
         </div>
       </div>
       }
-      <div className="dashboard-container">
-        <HorizontalNavbar />
+       <HorizontalNavbar />
+      <div className="dashboard-container">      
        <AutoRefresh />
         <DashboardCards  />
         <div className="flex flex-column md:flex-row my-3 gap-2" style={{height:"80%", width:"100%" }}>
