@@ -124,7 +124,7 @@ const [data, setChartData] = useState<ChartDataState>({
   labels: [],
   datasets: [],
 });
-const { t } = useTranslation('button');
+const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
   const socketRef = useRef<any>(null);
   const [selectedInterval, setSelectedInterval] = useState<string>("live"); // Default selected interval
   const [loading, setLoading] = useState<boolean>(true);
@@ -156,7 +156,6 @@ const { t } = useTranslation('button');
     { label: "Custom", interval: "custom" },
   
   ];
-
   const colors = [
 
     {
@@ -600,7 +599,7 @@ const handleLoad = async () => {
       <div className="custom-button-container">
           <div className="custom-button">
               <span className="button-text">
-                 {formatAttributeName(selectedAttribute) || 'Select an Attribute'}
+                 {formatAttributeName(selectedAttribute) || t('dashboard:selectAnAttribute')}
               </span>
           </div>
        </div>
@@ -608,18 +607,18 @@ const handleLoad = async () => {
         <div className="col-12">
             <div className="control-container">
               <div className="attribute-dropdown-container">
-                <p className="font-bold">Select Attributes</p>
+                <p className="font-bold">{t('dashboard:selectAttribute')}</p>
                     <Dropdown
-                      value={selectedAttribute || 'Select an Attribute'}
+                      value={selectedAttribute || t('dashboard:selectAnAttribute')}  
                       options={attributes}
                       onChange={(e) => handleAttributeChange(e.value)}
-                      placeholder="Select an Attribute"
+                      placeholder={t('placeholder:selectAttribute')}
                       style={{ width: '100%' }}
                       appendTo="self" 
                     />
               </div>
             <div className="interval-dropdown-container">
-              <p className="font-bold">Interval</p>
+              <p className="font-bold">{t('dashboard:interval')}</p>
               <Dropdown
                 value={selectedInterval}
                 options={intervalButtons.map(({ label, interval }) => ({
@@ -634,14 +633,14 @@ const handleLoad = async () => {
             </div>
             
             <div className="date-time-container">
-                <p className="font-bold">Select Date</p>
+                <p className="font-bold">{t('dashboard:selectDate')}</p>
                 <div className="date-time-flex">
                   <Calendar 
                     value={selectedDate} 
                     onChange={(e) => handleDateChange(e)}
                     showTime={false} 
                     dateFormat="yy-mm-dd" 
-                    placeholder="Select a Date"
+                    placeholder={t('placeholder:selectDate')}
                     className="w-full sm:w-auto" 
                     minDate={minDate} 
                     maxDate={new Date()}
@@ -649,7 +648,7 @@ const handleLoad = async () => {
                     appendTo="self" 
                   />
                  <div className="input-with-label mt-3">
-                    <label htmlFor="startTime" className="input-label -mt-6 -ml-5">Start Time</label>
+                    <label htmlFor="startTime" className="input-label -mt-6 -ml-5">{t('dashboard:startTime')}</label>
                     <InputText
                       id="startTime"
                       type="time"
@@ -661,7 +660,7 @@ const handleLoad = async () => {
                     />
                   </div>
                   <div className="input-with-label mt-3">
-                    <label htmlFor="endTime" className="input-label -mt-6 -ml-5">End Time</label>
+                    <label htmlFor="endTime" className="input-label -mt-6 -ml-5">{t('dashboard:endTime')}</label>
                     <InputText
                       id="endTime"
                       type="time"
@@ -673,7 +672,7 @@ const handleLoad = async () => {
                     />
                   </div>
                   <Button 
-                    label={t('load')} 
+                    label={t('button:load')} 
                     severity="info" 
                     disabled={selectedInterval !== 'custom'}
                     style={{ width: "100px" }}

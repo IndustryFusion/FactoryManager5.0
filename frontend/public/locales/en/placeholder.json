@@ -2,5 +2,8 @@
     "searchByName": "Search by name...",
     "searchByProduct": "Search by product name",
     "searchByFactoryCountry": "Search by Factory Name, Country",
-    "sortByFactory": "Sort By Factory Name"
+    "sortByFactory": "Sort By Factory Name",
+    "selectAttribute": "Select an Attribute",
+    "selectDate": "Select a Date",
+    "search": "Search"
 }

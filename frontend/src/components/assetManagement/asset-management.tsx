@@ -60,7 +60,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   })
   const toast = useRef<Toast>(null);
   const router = useRouter();
-  const { t } = useTranslation('button');
+  const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
 
   const handleAsset = async () => {
     try {
@@ -163,7 +163,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
             <p>{`Are you sure you want to delete ${deleteAsset.deleteAssetName}`}</p>
             <div className="flex justify-content-end gap-3">
               <Button
-                label={t('ok')}
+                label={t('button:ok')}
                 onClick={() => {
                   setDeleteAsset({ ...deleteAsset, deleteFlag: false })
                   deleteAssetData(deleteAsset.deleteAssetId);
@@ -171,7 +171,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 
               ></Button>
               <Button
-                label={t('cancel')}
+                label={t('button:cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
@@ -206,7 +206,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
           <InputText
             value={globalFilterValue}
             onChange={onGlobalFilterChange}
-            placeholder="Search" />
+            placeholder={t('placeholder:search')} />
         </span>
       </div>
     );
@@ -259,24 +259,24 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                   globalFilterFields={['product_name', 'asset_type', 'asset_manufacturer_name']}
                 >
                   <Column
-                    header="Product Image"
+                    header={t('dashboard:productImage')}
                     field="product_icon"
                     body={productIconTemplate}
 
                   />
                   <Column
-                    header="Product Name"
+                    header={t('dashboard:productName')}
                     field="product_name"
                     body={productNameBodyTemplate}
                   />
                   <Column
-                    header="AssetType"
+                    header={t('dashboard:assetType')}
                     field="asset_type"
                     body={assetTypeBodyTemplate}
                   />
                   <Column
                     field="asset_manufacturer_name"
-                    header="Manufacturer"
+                    header={t('dashboard:manufacturer')}
                     body={manufacturerDataTemplate}
                   />
                   <Column

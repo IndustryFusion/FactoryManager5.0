@@ -23,6 +23,7 @@ import { DataTable } from "primereact/datatable";
 import { InputText } from "primereact/inputtext";
 import { Row } from "primereact/row";
 import { useEffect, useState } from "react";
+import { useTranslation } from "next-i18next";
 
 const AllocatedAsset = () => {
   const [filters, setFilters] = useState({
@@ -30,7 +31,7 @@ const AllocatedAsset = () => {
   });
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
-
+  const { t } = useTranslation(['placeholder', 'reactflow']);
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -47,7 +48,7 @@ const AllocatedAsset = () => {
           <i className="pi pi-search" />
           <InputText
             value={globalFilterValue} onChange={onGlobalFilterChange}
-            placeholder="Search" />
+            placeholder={t('placeholder:search')} />
         </span>
       </div>
     );
@@ -97,7 +98,7 @@ const AllocatedAsset = () => {
 
   return (
     <>
-      <h3>Allocated Assets</h3>
+      <h3>{t('reactflow:allocatedAsset')}</h3>
       <DataTable
         style={{ zoom: "92%" }}
         className="factory-table"

@@ -81,7 +81,7 @@ const PowerCo2Chart = () => {
     const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate());
     const toast = useRef<any>(null);
     const dispatch = useDispatch();
-    const { t } = useTranslation('button');
+    const { t } = useTranslation(['button', 'dashboard']);
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
     let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
     console.log(`redux data ${minimumDate} id ${reduxId}`);
@@ -357,11 +357,11 @@ const PowerCo2Chart = () => {
             <Toast ref={toast} />
             <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
-                <p>Filter Interval</p>
+                <p>{t('dashboard:filterInterval')}</p>
             </div>
             <div className="flex align-items-center justify-content-center" >
                 <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                    <p>Type</p>
+                    <p>{t('dashboard:type')}</p>
                     <Dropdown
                         value={selectedInterval}
                         options={intervalButtons.map(({ label, interval }) => ({
@@ -377,7 +377,7 @@ const PowerCo2Chart = () => {
                     selectedInterval == 'days' ? 
                     <>
                         <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <p>Start Time</p>
+                            <p>{t('dashboard:startTime')}</p>
                             <Calendar
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
@@ -387,7 +387,7 @@ const PowerCo2Chart = () => {
                         </div>
                         
                         <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <p>End Time</p>
+                            <p>{t('dashboard:endTime')}</p>
                             <Calendar
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
@@ -399,7 +399,7 @@ const PowerCo2Chart = () => {
                     : selectedInterval == 'weeks' ? (
                         <>
                             <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                                <p>Interval</p>
+                                <p>{t('dashboard:interval')}</p>
                                 <Dropdown
                                     value={selectedWeekSubInterval}
                                     options={weekSubIntervalButtons.map(({ label, interval }) => ({
@@ -415,7 +415,7 @@ const PowerCo2Chart = () => {
                             {
                                 selectedWeekSubInterval == 'months' ? 
                                     <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>Months</p>
+                                        <p>{t('dashboard:months')}</p>
                                         <Calendar
                                             value={startMonth}
                                             onChange={(e) => setStartMonth(e.value ? moment(e.value).toDate() : null)}
@@ -428,7 +428,7 @@ const PowerCo2Chart = () => {
                                 : selectedWeekSubInterval == 'all' ?
                                 (
                                     <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>Years</p>
+                                        <p>{t('dashboard:years')}</p>
                                         <Calendar
                                             value={startYear}
                                             onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
@@ -439,7 +439,7 @@ const PowerCo2Chart = () => {
                                 ) : (
                                     <>
                                         <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>Start Time</p>
+                                            <p>{t('dashboard:startTime')}</p>
                                             <Calendar
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
@@ -449,7 +449,7 @@ const PowerCo2Chart = () => {
                                         </div>
                                         
                                         <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>End Time</p>
+                                            <p>{t('dashboard:endTime')}</p>
                                             <Calendar
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
@@ -464,7 +464,7 @@ const PowerCo2Chart = () => {
                     ) : (
                         <>
                             <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                                <p>Interval</p>
+                                <p>{t('dashboard:interval')}</p>
                                 <Dropdown
                                     value={selectedMonthSubInterval}
                                     options={monthSubIntervalButtons.map(({ label, interval }) => ({
@@ -481,7 +481,7 @@ const PowerCo2Chart = () => {
                                 selectedMonthSubInterval == 'all' ?
                                 (
                                     <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>Years</p>
+                                        <p>{t('dashboard:years')}</p>
                                         <Calendar
                                             value={startYear}
                                             onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
@@ -492,7 +492,7 @@ const PowerCo2Chart = () => {
                                 ) : (
                                     <>
                                         <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>Start Time</p>
+                                            <p>{t('dashboard:startTime')}</p>
                                             <Calendar
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
@@ -502,7 +502,7 @@ const PowerCo2Chart = () => {
                                         </div>
                                         
                                         <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>End Time</p>
+                                            <p>{t('dashboard:endTime')}</p>
                                             <Calendar
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
@@ -516,14 +516,14 @@ const PowerCo2Chart = () => {
                         </>
                     )
                 }
-                <Button label={t('submit')} severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
+                <Button label={t('button:submit')} severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
             </div>
             {
                 noChartData ?
                 <div className="flex flex-column justify-content-center align-items-center"
                     style={{ marginTop: "5rem" }}
                 >
-                    <p> No chart data available</p>
+                    <p>{t('dashboard:nochartData')}</p>
                     <img src="/no-chart-data.png" alt="" width="5%" height="5%"  />
                 </div>
                 :

@@ -185,7 +185,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
       ...(await serverSideTranslations(locale, [
         'header',
         'button',
-        'placeholder'
+        'placeholder',
+        'dashboard'
       ])),
     },
   }

@@ -160,6 +160,9 @@ export async function getServerSideProps({ locale }: { locale: string }) {
       ...(await serverSideTranslations(locale, [
         'header',
         'button',
+        'placeholder',
+        'reactflow',
+        'dashboard',
         'placeholder'
       ])),
     },

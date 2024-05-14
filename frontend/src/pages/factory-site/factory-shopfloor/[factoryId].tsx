@@ -73,7 +73,8 @@ export async function getServerSideProps({ locale }: { locale: string }) {
         ...(await serverSideTranslations(locale, [
           'header',
           'button',
-          'placeholder'
+          'placeholder',
+          'dashboard'
         ])),
       },
     }

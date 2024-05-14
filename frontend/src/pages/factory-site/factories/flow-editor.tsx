@@ -140,7 +140,7 @@ const FlowEditor: React.FC<
   const dispatch = useDispatch();
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
-  const { t } = useTranslation('button');
+  const { t } = useTranslation(['button', 'reactflow']);
   
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
@@ -1305,39 +1305,39 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           <div className="flex justify-content-between">
             <div className="mt-2">
               <Button
-                label={t('saveAndUpdate')}
+                label={t('button:saveAndUpdate')}
                 onClick={saveOrUpdate}
                 className="m-2 bold-text"
                 raised
               />
               <Button
-                label={t('undo')}
+                label={t('button:undo')}
                 onClick={onRestore}
                 className="p-button-secondary m-2 bold-text"
                 raised
               />
                <Button
-                label={t('refresh')}
+                label={t('button:refresh')}
                 onClick={refreshFromScorpio}
                 className="m-2 bold-text"
                 severity="help"
                 raised
               />
               <Button
-                label={t('reset')}
+                label={t('button:reset')}
                 onClick={handleDelete}
                 className="p-button-danger m-2 bold-text"
                 raised
               />
               <Button
-                label={t('exportJPEG')}
+                label={t('button:exportJPEG')}
                 className="m-2 bold-text"
                 onClick={handleExportClick}
                   severity="info"
               />
             </div>
             <div className="flex align-items-center gap-2 mt-2">
-              <span>Switch View</span>
+              <span>{t('reactflow:switchView')}</span>
               <InputSwitch checked={switchView} onChange={(e) => {
                 setSwitchView(e.value);
                 saveOrUpdate();
@@ -1391,7 +1391,9 @@ export async function getStaticProps({ locale }: { locale: string }) {
       ...(await serverSideTranslations(locale, [
         'header',
         'button',
-        'placeholder'
+        'placeholder',
+        'reactflow',
+        'dashboard'
       ])),
     },
   }
