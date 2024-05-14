@@ -199,14 +199,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               outlined
               raised
               onClick={() => setIsVisible(true)}
-              className="bold-button border-none mr-2 ml-2"
+              className="bold-button border-none mr-2 ml-2 p-2"
             />
             <Button
               severity="secondary"
               text
               raised
               label={t('button:edit')}
-              className="bold-button mr-2 ml-2"
+              className="bold-button mr-2 ml-2 p-2"
               type="button"
               onClick={handleEdit}
             />
@@ -215,12 +215,12 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               severity="danger"
               text
               raised
-              className="bold-button mr-2 ml-2"
+              className="bold-button mr-2 ml-2 p-2"
               type="button"
               onClick={handleDelete}
             />
           </div>
-          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "20px" }}>
+          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "13%" }}>
             {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}
@@ -235,6 +235,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                   backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
                   position: "relative",
                   paddingLeft: "20px",
+                  maxWidth:"93%"
                 }}
                 className="ml-3 mb-3 list-item"
               >

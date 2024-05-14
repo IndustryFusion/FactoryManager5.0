@@ -96,3 +96,16 @@ li {
 .p-tabview .p-tabview-panels {
   height: 78vh; 
 }
+.p-tabview .p-tabview-nav-link {
+    text-decoration: none !important; /* Removes underline */
+    border: none !important; /* Removes any borders that might be considered as underlines */
+}
+
+/* Specific handling for active tabs to remove any underline or border used as underline */
+.p-tabview .p-tabview-nav-link.p-highlight {
+    border-bottom: none !important;
+}
+
+.p-tabview-nav{
+  margin-bottom: 10px;
+}
