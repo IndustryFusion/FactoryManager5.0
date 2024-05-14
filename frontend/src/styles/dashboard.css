@@ -22,8 +22,9 @@
 }
 
 .dashboard-assets {
-    height: 579px;
+    min-height: 45rem;
     margin-top: 0.6rem;
+    height: auto;
 }
 
 .dashboard-assets .p-datatable .p-paginator-bottom {
@@ -31,7 +32,7 @@
     /* margin-top: 7rem; */
     position: absolute;
     /* bottom: 0; */
-    top: 38rem;
+    top: 48rem;
     text-align: center;
     right: 0;
     padding: 0;
@@ -114,7 +115,7 @@
 .dashboard-card-container {
     gap: 1.2rem;
     justify-content: center;
-    margin-top: 10rem;
+    margin-top: 12rem;
 }
 
 .autorefresh-btn {

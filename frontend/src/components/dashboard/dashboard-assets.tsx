@@ -208,7 +208,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             </div>
             <DataTable
               ref={dataTableRef}
-              rows={5}
+              rows={6}
               paginator
               value={assetData}
               className="dashboard-assets"
