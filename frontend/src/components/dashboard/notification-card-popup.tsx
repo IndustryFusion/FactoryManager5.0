@@ -3,7 +3,7 @@ import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { getAlerts } from "../alert/alert-service";
 import { Button } from "primereact/button";
-
+import { useTranslation } from "next-i18next";
 
 interface NotificationPopupProps {
   notificationProp: boolean;
@@ -23,7 +23,8 @@ interface Notification {
 
 const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp, setNotificationProp }) => {
   const { entityIdValue, notificationData, selectedAssetData } = useDashboard();
-
+  const { t } = useTranslation('button');
+  
   const getStatusTextColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -165,7 +166,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                   <div className='alert-btn'>
                     <Button
                       className="alert-btn-text"
-                      label="Acknowledge"
+                      label={t('acknowledge')}
                       severity="warning"
                     />
                   </div>

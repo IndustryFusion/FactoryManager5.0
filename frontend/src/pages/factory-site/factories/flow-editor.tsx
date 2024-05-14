@@ -34,7 +34,10 @@ import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
 import dagre from '@dagrejs/dagre';
 import { Dialog } from "primereact/dialog";
-import "../../../styles/react-flow.css"
+import "../../../styles/react-flow.css";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -121,7 +124,8 @@ const FlowEditor: React.FC<
   const dispatch = useDispatch();
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
-
+  const { t } = useTranslation('button');
+  
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
@@ -448,10 +452,14 @@ const onRestore = useCallback(async () => {
         }
       );
 
-      if (reactFlowUpdateMongo.status == 200 || reactFlowUpdateMongo.status == 204) {
+      if (reactFlowUpdateMongo.status == 200) {
         setToastMessage("Flowchart Updated successfully");
       } else {
-        setToastMessage("FlowChart already exist");
+       toast.current?.show({
+        severity: 'warn',
+        summary: 'Flowchart not updated',
+        life: 3000,
+      });
       }
       const reactAllocatedAssetScorpio = await axios.patch(`${API_URL}/allocated-asset`,
         payLoad.factoryData.edges, {
@@ -465,10 +473,14 @@ const onRestore = useCallback(async () => {
         withCredentials: true,
       });
     
-      if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204 || reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.data.status == 404) {
+      if (reactAllocatedAssetScorpio.status == 200 ) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
+        toast.current?.show({
+        severity: 'error',
+        summary: 'Alocated asset not updated',
+        life: 3000,
+      });
       }
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
@@ -481,16 +493,24 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
-      if (reactFlowScorpioUpdate.status == 200 || reactFlowScorpioUpdate.status == 204) {
+      if (reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
-        setToastMessage("Scorpio already has these data");
+        toast.current?.show({
+        severity: 'warn',
+        summary: 'Scorpio Not Updated',
+        life: 3000,
+      });
       }
      dispatch(reset());
 
     } catch (error) {
-      console.error("Error saving flowchart:", error);
-      setToastMessage("");
+    console.error("Error saving flowchart:", error);
+    toast.current?.show({
+        severity: 'error',
+        summary: 'Error in Server',
+        life: 3000,
+      });
         dispatch(reset());
     }
     finally {
@@ -535,9 +555,13 @@ const onRestore = useCallback(async () => {
         withCredentials: true,
       });
       if (reactFlowUpdateMongo.status == 201) {
-        setToastMessage("Flowchart saved successfully");
+        setToastMessage("Flowchart created successfully");
       } else {
-        setToastMessage("Flowchart already exist");
+       toast.current?.show({
+        severity: 'warn',
+        summary: 'Flowchart Not created',
+        life: 3000,
+      });
       }
   
       const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
@@ -552,10 +576,14 @@ const onRestore = useCallback(async () => {
         withCredentials: true,
       });
 
-      if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-        setToastMessage("Allocated Asset Scorpio Updated");
+      if (reactAllocatedAssetScorpio.status == 201) {
+        setToastMessage("Allocated Asset Scorpio created");
       } else {
-        setToastMessage("Allocated Asset Scorpio Not Updated");
+        toast.current?.show({
+        severity: 'warn',
+        summary: 'Allocated Asset not created',
+        life: 3000,
+      });
       }
 
       const reactFlowScorpioUpdate = await axios.patch(
@@ -571,14 +599,22 @@ const onRestore = useCallback(async () => {
         }
       );
       dispatch(reset());
-      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
+      if (reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
-        setToastMessage("Data Already Exist in Scorpio");
+        toast.current?.show({
+        severity: 'warn',
+        summary: 'Scorpio Not Updated',
+        life: 3000,
+      });
       }
     } catch (error) {
       console.error("Error saving flowchart:", error);
-      setToastMessage("Error saving flowchart");
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Server Error : Not Saved',
+        life: 3000,
+      });
       
     }
     finally {
@@ -622,6 +658,7 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
+
       const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
         headers: {
           "Content-Type": "application/json",
@@ -644,24 +681,24 @@ const onRestore = useCallback(async () => {
           withCredentials: true,
         }
       );
-
-    
-     
-      if (reactFlowUpdateMongo.data.status == 200 ||  reactFlowUpdateMongo.data.status == 204) {
-        setToastMessage("Flowchart saved successfully");
+      if (allocatedAssetDeletion.status == 200 && reactFlowUpdateMongo.status == 200 && reactFlowScorpioUpdate.status == 200 ) {
+        setToastMessage( "Successfully updated");
       }
-
-      if (reactFlowScorpioUpdate.data.status == 200 ||  reactFlowScorpioUpdate.data.status == 204) {
-        setToastMessage( "Scorpio updated successfully.");
-      }
-
-      if (allocatedAssetDeletion.data.status == 200 ||  allocatedAssetDeletion.data.status == 204) {
-        setToastMessage( "Allocated Asset Deleted successfully.");
+      else{
+        toast.current?.show({
+        severity: 'warn',
+        summary: 'Not Updated Properly',
+        life: 3000,
+      });
       }
       dispatch(reset());
     } catch (error) {
       console.log("Error deleting elements:", error);
-      setToastMessage("Error deleting elements.");
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Server Error : Not Updated',
+        life: 3000,
+      });
     } finally {
       setIsOperationInProgress(false);
    
@@ -683,7 +720,11 @@ const onRestore = useCallback(async () => {
     await onRestore(); 
   } catch (error) {
     console.error('Failed to update flowchart:', error);
-    setToastMessage('Error updating flowchart.');
+    toast.current?.show({
+        severity: 'error',
+        summary: 'Failed to refresh flowchart',
+        life: 3000,
+      });
   } finally {
     setIsOperationInProgress(false);  // Hide loading indicator or enable UI elements
   }
@@ -738,14 +779,22 @@ const onRestore = useCallback(async () => {
         })),
       },
     };
-        await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
+       const reactFlowUpdateMongo=  await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
           withCredentials: true,
         });
-        setToastMessage("Flowchart updated successfully.");
+        if (reactFlowUpdateMongo.status == 200) {
+            setToastMessage("Flowchart updated");
+          } else {
+            toast.current?.show({
+              severity: 'warn',
+              summary: 'Flowchart not updated',
+              life: 3000,
+            });
+          }
          const allocatedAssetAvailableOrNot = await axios.get(`${API_URL}/allocated-asset/${factoryId}`,  {
               headers: {
                 "Content-Type": "application/json",
@@ -765,10 +814,14 @@ const onRestore = useCallback(async () => {
                   },
                   withCredentials: true,
                 });
-                if (reactAllocatedAssetScorpio.status == 201 || reactAllocatedAssetScorpio.status == 204) {
-                    setToastMessage("Allocated Asset Scorpio Updated");
+                if (reactAllocatedAssetScorpio.status == 201) {
+                    setToastMessage("Allocated Asset in Scorpio created ");
                   } else {
-                    setToastMessage("Allocated Asset Scorpio Not Updated");
+                    toast.current?.show({
+                      severity: 'warn',
+                      summary: 'Allocated Asset Not created',
+                      life: 3000,
+                    });
                   }
         }
         else{
@@ -783,10 +836,14 @@ const onRestore = useCallback(async () => {
               },
               withCredentials: true,
             });
-             if (reactAllocatedAssetScorpio.status == 200 || reactAllocatedAssetScorpio.status == 204) {
+             if (reactAllocatedAssetScorpio.status == 200) {
                 setToastMessage("Allocated Asset Scorpio Updated");
               } else {
-                setToastMessage("Allocated Asset Scorpio Not Updated");
+                toast.current?.show({
+                severity: 'warn',
+                summary: 'Allocated Asset Scorpio Not Updated',
+                life: 3000,
+              });
               }
          }
        
@@ -805,10 +862,14 @@ const onRestore = useCallback(async () => {
         }
       );
         dispatch(reset());
-      if (reactFlowScorpioUpdate.status == 201 || reactFlowScorpioUpdate.status == 204 || reactFlowScorpioUpdate.status == 200) {
+      if (reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
       } else {
-        setToastMessage("Data Already Exist in Scorpio");
+        toast.current?.show({
+          severity: 'warn',
+          summary: 'Scorpio Not Updated',
+          life: 3000,
+        });
       }
     
       } else {
@@ -818,7 +879,11 @@ const onRestore = useCallback(async () => {
     }
   } catch (error) {
     console.log("Error during save or update operation:", error);
-    setToastMessage("Error during operation, check the logs for details");
+    toast.current?.show({
+          severity: 'error',
+          summary: 'Server Error',
+          life: 3000,
+        });
   } finally {
     setIsOperationInProgress(false);
   }
@@ -1224,32 +1289,32 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           <div className="flex justify-content-between">
             <div>
               <Button
-                label="Save / Update"
+                label={t('saveAndUpdate')}
                 onClick={saveOrUpdate}
                 className="m-2"
                 raised
               />
               <Button
-                label="Undo"
+                label={t('undo')}
                 onClick={onRestore}
                 className="p-button-secondary m-2"
                 raised
               />
                <Button
-                label="Refresh"
+                label={t('refresh')}
                 onClick={refreshFromScorpio}
                 className="m-2"
                 severity="help"
                 raised
               />
               <Button
-                label="Reset"
+                label={t('reset')}
                 onClick={handleDelete}
                 className="p-button-danger m-2"
                 raised
               />
               <Button
-                label="Export as JPEG"
+                label={t('exportJPEG')}
                 className="m-2"
                 onClick={handleExportClick}
                   severity="info"
@@ -1303,5 +1368,17 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
 
   );
 };
+
+export async function getStaticProps({ locale }: { locale: string }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'button',
+        'placeholder'
+      ])),
+    },
+  }
+}
 
 export default FlowEditor;

@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/state/store";
 import { create, reset } from '@/state/relations/relationsSlice';
+import { useTranslation } from "next-i18next";
 interface RelationObject {
     type: string;
     object: string | string[];
@@ -38,7 +39,7 @@ const Relations = () => {
     const reduxAssetId = useSelector((state: RootState) => state.relations.id);
     const [resetData, setResetData] = useState(false);
     const [focus, setFocus] = useState(false);
-
+    const { t } = useTranslation('button');
 
     const getRelations = async () => {
         try {
@@ -377,13 +378,13 @@ const Relations = () => {
                             <Button
                                 onClick={() => handleReset()}
                                 severity="secondary" text raised
-                                label="Reset"
+                                label={t('reset')}
                                 className="mr-2 reset-btn"
                                 type="button"
                             ></Button>
                             <Button
                                 onClick={() => handleDelete()}
-                                label="Delete"
+                                label={t('delete')}
                                 severity="danger"
                                 outlined
                                 className="mr-2"

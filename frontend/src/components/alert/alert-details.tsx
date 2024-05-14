@@ -5,7 +5,7 @@ import { Avatar } from "primereact/avatar";
 import "../../app/globals.css"
 import "../../styles/asset-list.css"
 import { Button } from "primereact/button";
-
+import { useTranslation } from "next-i18next";
 interface AlertDetailsProps {
   alerts: Alerts[];
   count: number;
@@ -30,6 +30,7 @@ interface Alerts {
 
 const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData }) => {
 
+  const { t } = useTranslation('button');
   const badgeStyle: React.CSSProperties = {
     position: 'absolute',
     top: '-9px',
@@ -231,7 +232,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                             <div className='alert-btn'>
                               <Button
                                 className="alert-btn-text"
-                                label="Acknowledge"
+                                label={t('acknowledge')}
                                 severity="warning"
                               />
                             </div>

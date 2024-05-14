@@ -15,6 +15,7 @@ import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import { useTranslation } from "next-i18next";
 interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -41,7 +42,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [searchValue, setSearchValue] = useState<string>("");
   const { setShopFloorValue } = useFactoryShopFloor();
   const [factoryIdValue, setFactoryIdvalue] = useState("");
-
+  const { t } = useTranslation(['button','placeholder']);
 
   const filterShopFloors = () => {
     if (searchValue.trim()) {
@@ -183,7 +184,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setSearchValue(e.target.value)
               }
-              placeholder="Search by name..."
+              placeholder={t('placeholder:searchByName')}
               style={{ width: "95%", marginRight: "1rem" }}
               className=""
             >
@@ -193,7 +194,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           <div className="form-btn-container mb-2 flex  ml-2 mt-4">
 
             <Button
-              label="New"
+              label={t('button:new')}
               severity="success"
               outlined
               raised
@@ -204,13 +205,13 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               severity="secondary"
               text
               raised
-              label="Edit"
+              label={t('button:edit')}
               className="bold-button mr-2 ml-2"
               type="button"
               onClick={handleEdit}
             />
             <Button
-              label="Delete"
+              label={t('button:delete')}
               severity="danger"
               text
               raised

@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
+import { useTranslation } from "next-i18next";
 
 interface AssetProperty {
     type: "Property";
@@ -60,7 +61,7 @@ const AllocatedAsset = () => {
     const dispatch = useDispatch();
     const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryIdValue, setFactoryIdValue] = useState("");
-
+    const { t } = useTranslation('placeholder');
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
@@ -187,7 +188,7 @@ const AllocatedAsset = () => {
                             style={{ width: "100%" }}
                             value={searchTermAllocated}
                             onChange={(e) => setSearchTermAllocated(e.target.value)}
-                            placeholder="Search by name..."
+                            placeholder={t('searchByName')}
                             className="w-120"
                         />
                     </div>

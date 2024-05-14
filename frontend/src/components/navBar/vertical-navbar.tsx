@@ -4,8 +4,10 @@ import { Badge } from "primereact/badge";
 import "primeflex/primeflex.css";
 import "primeicons/primeicons.css";
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
+import { useTranslation } from "next-i18next";
 
 const VerticalNavbar = () => {
+  const { t } = useTranslation('button');
   const [isMobile, setIsMobile] = useState(false);
   const buttonStyle = {
     backgroundColor: "white", // Set background color to grey
@@ -49,7 +51,7 @@ const VerticalNavbar = () => {
         }}
       >
         <Button
-          label={isMobile ? "" : "Dashboard"}
+          label={isMobile ? "" : t('dashboard')}
           icon="pi pi-fw pi-home"
           className="mb-2"
           style={buttonStyle}
@@ -57,7 +59,7 @@ const VerticalNavbar = () => {
           tooltipOptions={{ position: "right" }}
         />
         <Button
-          label={isMobile ? "" : "Assets"}
+          label={isMobile ? "" : t('assets')}
           icon="pi pi-fw pi-briefcase"
           className="mb-2"
           style={buttonStyle}
