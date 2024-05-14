@@ -34,7 +34,7 @@ import { Button } from 'primereact/button';
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { InputText } from 'primereact/inputtext';
-
+import { useTranslation } from "next-i18next";
 
 // Register the zoom plugin
 ChartJS.register(zoomPlugin);
@@ -108,7 +108,7 @@ const [data, setChartData] = useState<ChartDataState>({
   labels: [],
   datasets: [],
 });
-
+const { t } = useTranslation('button');
   const socketRef = useRef<any>(null);
   const [selectedInterval, setSelectedInterval] = useState<string>("live"); // Default selected interval
   const [loading, setLoading] = useState<boolean>(true);
@@ -657,7 +657,7 @@ const handleLoad = async () => {
                     />
                   </div>
                   <Button 
-                    label="Load" 
+                    label={t('load')} 
                     severity="info" 
                     disabled={selectedInterval !== 'custom'}
                     style={{ width: "100px" }}

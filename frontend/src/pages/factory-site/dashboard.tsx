@@ -22,8 +22,8 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Toast, ToastMessage } from "primereact/toast";
 import Footer from '@/components/navBar/footer';
-
-
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -38,7 +38,7 @@ const Dashboard = () => {
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
   const router = useRouter();
   const toast = useRef<any>(null);
-
+  const { t } = useTranslation('button');
 
   const fetchNotifications = async () => {
     try {
@@ -127,7 +127,7 @@ const Dashboard = () => {
           </div>
           <div className="flex justify-content-end">
           <Button
-                label="Cancel"
+                label={t('cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
@@ -163,6 +163,18 @@ const Dashboard = () => {
     </DashboardProvider>
     </>
   )
+}
+
+export async function getStaticProps({ locale }: { locale: string }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'button',
+        'placeholder'
+      ])),
+    },
+  }
 }
 
 export default Dashboard;

@@ -14,7 +14,7 @@ import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
 import { create, update} from '@/state/entityId/entityIdSlice';
-
+import { useTranslation } from "next-i18next";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface DashboardAssetsProps {
@@ -39,7 +39,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
   const dispatch = useDispatch();
-
+  const { t } = useTranslation('placeholder');
 
 
 
@@ -186,7 +186,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   type="search"
                   value={searchedAsset}
                   onChange={searchAsset}
-                  placeholder="Search by product name"
+                  placeholder={t('searchByProduct')}
                   className="mb-10" style={{ borderRadius: "10px", width: "460px" }} />
               </span>
             </div>

@@ -18,6 +18,7 @@ import { Button } from "primereact/button";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/powerConsumption/powerConsumptionSlice";
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -64,6 +65,7 @@ const PowerCo2Chart = () => {
     const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate());
     const toast = useRef<any>(null);
     const dispatch = useDispatch();
+    const { t } = useTranslation('button');
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
     let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
     console.log(`redux data ${minimumDate} id ${reduxId}`);
@@ -498,7 +500,7 @@ const PowerCo2Chart = () => {
                         </>
                     )
                 }
-                <Button label="Submit" severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
+                <Button label={t('submit')} severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
             </div>
             {
                 noChartData ?

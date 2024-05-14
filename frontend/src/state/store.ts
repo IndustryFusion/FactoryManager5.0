@@ -5,6 +5,7 @@ import entityIdReducer from "./entityId/entityIdSlice";
 import authReducer from "./auth/authSlice"
 import relationsReducer from "./relations/relationsSlice";
 import powerConsumptionReducer from "./powerConsumption/powerConsumptionSlice";
+import languageReducer from "./language/languageSlice";
 
 export const store = configureStore({
     reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
         entityId: entityIdReducer,
         auth: authReducer,
         relations: relationsReducer,
-        powerConsumption: powerConsumptionReducer
+        powerConsumption: powerConsumptionReducer,
+        language: languageReducer
     },
 });
 

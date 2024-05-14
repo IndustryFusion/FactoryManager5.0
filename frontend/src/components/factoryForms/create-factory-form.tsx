@@ -24,7 +24,7 @@ import { Factory, FactoryFormProps } from "../../interfaces/factory-type";
 import { handleUpload } from "@/utility/factory-site-utility";
 import { Property, Schema } from "../../pages/factory-site/types/factory-form";
 import { Dialog } from "primereact/dialog";
-;
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -55,7 +55,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const [validateFactory, setValidateFactory] = useState(false);
     const [validateThumbnail, setValidateThumbnail] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false)
-
+    const { t } = useTranslation('button');
 
     const options = useMemo(() => {
         return countryList().getData().map(country => ({
@@ -363,7 +363,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const footerContent = (
         <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
             <Button
-                label="Cancel"
+                label={t('cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
@@ -371,13 +371,13 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             />
             <Button
                 severity="secondary" text raised               
-                label="Reset"
+                label={t('reset')}
                 className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
             <Button
-                label="Submit"
+                label={t('submit')}
                 onClick={handleSave}
                 className="border-none  ml-2 mr-2"
                 disabled={submitDisabled}
@@ -389,7 +389,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     return (
         <>
             <div className=" flex justify-content-center">
-                <Button label="Show" icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
+                <Button label={t('show')} icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
                 <Dialog visible={visibleProp} modal footer={footerContent}
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
