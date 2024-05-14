@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { resetTimer, logout } from "@/state/auth/authSlice";
 import { useTranslation } from "next-i18next";
 import Language from "./language";
-import { CiViewBoard} from "react-icons/ci";
+import { CiViewBoard } from "react-icons/ci";
 import { RiTranslate } from "react-icons/ri";
 
 
@@ -32,27 +32,26 @@ const HorizontalNavbar: React.FC = () => {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "1rem 3.4rem 0px",
-    backgroundColor: "white",
+    padding: "1rem 3.4rem 0px 1.6rem",
+    backgroundColor: "#fff",
     zIndex: 1000,
     borderBottom: "solid",
     borderBottomWidth: "1px",
     borderRadius: "5px",
     borderColor: "#A9A9A9",
-
   };
 
   const logoStyle: CSSProperties = {
     width: "45px",
     padding: "0.5rem 0"
   }
+
   const logoText: CSSProperties = {
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#615E5E",
-    fontFamily: "Segoe UI",
-    fontSize: "19px"
+    fontFamily: "Inter",
+    fontSize: "21px"
   }
-   
 
   const navigateToIndustryFusion = () => {
     router.push("https://industry-fusion.org/de");
@@ -68,7 +67,7 @@ const HorizontalNavbar: React.FC = () => {
 
   return (
     <div style={navbarStyle}>
-      <div className="flex align-items-center logo-container cursor-pointer"
+      <div className="flex align-items-center gap-1 logo-container cursor-pointer"
         onClick={() => router.push("/factory-site/factory-overview")}
       >
         <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
@@ -79,21 +78,25 @@ const HorizontalNavbar: React.FC = () => {
           <Language />
         </div>
         <Button label={t('aboutUs')} link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{ fontFamily: "Segoe UI",
-           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
+          className="mr-2" style={{
+            fontFamily: "Segoe UI",
+            fontSize: "14px", fontWeight: "bold", color: "#615e5e"
+          }} />
         <Button label={t('contactUs')} link onClick={navigateToIndustryFusion}
-          className="mr-2" style={{ fontFamily: "Segoe UI",
-           fontSize: "14px", fontWeight: "bold", color: "#615e5e"  }} />
+          className="mr-2" style={{
+            fontFamily: "Segoe UI",
+            fontSize: "14px", fontWeight: "bold", color: "#615e5e"
+          }} />
         <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "25px", fontWeight: "bold", color: "#615e5e" ,backgroundColor:"transparent",border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "25px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
           tooltip="Asset Management"
           tooltipOptions={{ position: 'bottom' }}
-          onClick={()=>setAssetManage(true)}
+          onClick={() => setAssetManage(true)}
         >
           <CiViewBoard />
         </Button>
         <Button
-          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e",backgroundColor:"transparent",border: "none" }}
+          style={{ fontFamily: "Segoe UI", fontSize: "19px", fontWeight: "bold", color: "#615e5e", backgroundColor: "transparent", border: "none" }}
           tooltip="Dashboard"
           onClick={() => router.push("/factory-site/dashboard")}
           tooltipOptions={{ position: 'bottom' }}
@@ -102,15 +105,15 @@ const HorizontalNavbar: React.FC = () => {
         <Button icon="pi pi-user" link
           className="mr-2 " style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="Profile Details"
           tooltipOptions={{ position: 'bottom' }}
-          onClick={()=>setProfileDetail(true)}
-          />
+          onClick={() => setProfileDetail(true)}
+        />
         <Button onClick={handleLogout} icon="pi pi-sign-out" link
           className="mr-2" style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }} tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
-          {assetManage && <AssetManagementDialog
+        {assetManage && <AssetManagementDialog
           assetManageDialogProp={assetManage}
           setAssetManageDialogProp={setAssetManage}
-          />}
-          {profileDetail && <ProfileDialog
+        />}
+        {profileDetail && <ProfileDialog
           profileDetailProp={profileDetail}
           setProfileDetailProp={setProfileDetail}
         />}

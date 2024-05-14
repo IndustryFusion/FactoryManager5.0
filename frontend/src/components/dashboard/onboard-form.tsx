@@ -111,7 +111,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     }
 
     const headerElement = (
-        <p className="m-0"> Please onboard the asset gateway before moving to dashboard. After onboarding click on 'submit' button </p>
+        <div>
+            <p className="m-0"> Please onboard the asset gateway before moving to dashboard.  </p>
+            <p className="m-0">Submit the form to start the Asset onboard</p>
+        </div>
+
+
     )
     const footerContent = (
         <div>
@@ -129,7 +134,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             <Dialog visible={showBlockerProp} modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '40rem' }} onHide={() => {
+                style={{ width: '50rem' }} onHide={() => {
                     setShowBlockerProp(false)
                     setOnboardAssetProp(false)
                 }
