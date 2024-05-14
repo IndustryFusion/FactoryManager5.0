@@ -23,7 +23,7 @@ import { getAlerts } from "../alert/alert-service";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
-
+import { useTranslation } from "next-i18next";
 
 const DashboardCards: React.FC = () => {
 
@@ -47,7 +47,7 @@ const DashboardCards: React.FC = () => {
     const [childCount, setChildCount] = useState(0);
     const [prevTimer, setPrevTimer] = useState('00:00:00');
     let intervalId: any;
-
+    const { t } = useTranslation('dashboard');
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 
@@ -219,7 +219,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0">
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">Machine State</span>
+                                <span className="block text-500 font-medium mb-3">{t('machineState')}</span>
                                 <div className="text-900 font-medium text-xl">{machineStateValue == "2" ? "Online" : "Offline"}</div>
 
                             </div>
@@ -229,14 +229,14 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500"> registered</span>
+                        <span className="text-500">{t('registered')}</span>
                     </div>
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
                     <div className="card mb-0 d">
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">Running Since</span>                              
+                                <span className="block text-500 font-medium mb-3">{t('runningSince')}</span>                              
                                 <div className="text-900 font-medium text-xl">{difference}</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
@@ -244,14 +244,14 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">%{onlineAverage} </span>
-                        <span className="text-500">since last week</span>
+                        <span className="text-500">{t('sinceLastWeek')}</span>
                     </div>
                 </div>
                 <div className="col-12 lg:col-6 xl:col-3 dashboard-card" >
                     <div className="card mb-0 " onClick={() => setRelations(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">Relations</span>
+                                <span className="block text-500 font-medium mb-3">{t('relations')}</span>
                                 <div className="flex gap-1">
                                     <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
                                     <span className="text-900 font-medium text-xl"
@@ -263,7 +263,7 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">{relationsCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500">machines are connected</span>
+                        <span className="text-500">{t('machinesConnected')}</span>
                     </div>
                     {relations &&
                         <RelationDialog
@@ -276,7 +276,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0" onClick={() => setNotification(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">Notifications</span>
+                                <span className="block text-500 font-medium mb-3">{t('notifications')}</span>
                                 <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
@@ -284,7 +284,7 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">00 </span>
-                        <span className="text-500">responded</span>
+                        <span className="text-500">{t('responded')}</span>
 
                     </div>
                     {notification &&

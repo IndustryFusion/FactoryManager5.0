@@ -68,7 +68,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
   const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
   const [view, setView] = useState('unallocated');
-  const { t } = useTranslation('placeholder');
+  const { t } = useTranslation(['placeholder', 'reactflow']);
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
@@ -189,7 +189,7 @@ return (
         <InputText
           value={searchTerm}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder={t('searchByName')}
+          placeholder={t('placeholder:searchByName')}
           style={{width: "350px"}}
           className="mt-2"
         />
@@ -210,7 +210,7 @@ return (
       </div>
 
       <TabView className="ml-1" >
-        <TabPanel header="Unallocated Assets" >
+        <TabPanel header={t('reactflow:unAllocatedAsset')} >
             <ul className="-ml-2">
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
@@ -222,7 +222,7 @@ return (
               ))}
             </ul>
         </TabPanel>
-        <TabPanel header="Allocated Assets" className="-ml-2" >
+        <TabPanel header={t('reactflow:allocatedAsset')} className="-ml-2" >
             <ul className="-ml-1">
               {allocatedAssets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 

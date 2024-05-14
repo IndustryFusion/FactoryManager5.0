@@ -29,10 +29,10 @@ const Language: React.FC = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     const languageRedux = useSelector((state: RootState) => state.language);
-    const [selectedLanguage, setSelectedLanguage] = useState<{ name: string; code: string } | null>(null);
+    const [selectedLanguage, setSelectedLanguage] = useState<{ name: string; code: string } | null>({ name: 'EN', code: 'US' });
     const countries = [
-        { name: 'English', code: 'UK' },
-        { name: 'German', code: 'DE' }
+        { name: 'EN', code: 'US' },
+        { name: 'DE', code: 'DE' }
     ];
     useEffect(()=> {
         if(languageRedux.name.length > 0){
@@ -43,7 +43,7 @@ const Language: React.FC = () => {
     const changeLocale = (newLocale: any) => {
         setSelectedLanguage(newLocale);
         const { pathname, asPath, query } = router;
-        router.push({ pathname, query }, asPath, { locale: newLocale.code == 'UK' ? 'en' : newLocale.code.toLowerCase() });
+        router.push({ pathname, query }, asPath, { locale: newLocale.code == 'US' ? 'en' : newLocale.code.toLowerCase() });
         dispatch(create({
             name: newLocale.name,
             code: newLocale.code
@@ -73,8 +73,8 @@ const Language: React.FC = () => {
     };
 
     return (
-        <Dropdown value={selectedLanguage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" placeholder="Select a Language" 
-            filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-14rem" />
+        <Dropdown value={selectedLanguage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" 
+            filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-7rem" />
     )
 };
 

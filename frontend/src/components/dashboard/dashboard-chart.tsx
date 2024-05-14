@@ -33,6 +33,7 @@ import socketIOClient from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { create } from "@/state/machineState/machineStateSlice";
+import { useTranslation } from "next-i18next";
 
 export interface Datasets {
     label?: string;
@@ -74,6 +75,7 @@ const DashboardChart = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
     const dispatch = useDispatch();
+    const { t } = useTranslation('dashboard');
     const intervalButtons = [
         { label: "days", interval: "days" },
         { label: "weeks", interval: "weeks" },
@@ -825,7 +827,7 @@ const DashboardChart = () => {
             <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
             <div className="interval-filter-container">
-                <p>Filter Interval</p>
+                <p>{t('filterInterval')}</p>
                 <div
                     className="dropdown-container custom-button"
                     style={{ padding: "0" }}
@@ -847,7 +849,7 @@ const DashboardChart = () => {
                     <div className="flex flex-column justify-content-center align-items-center"
                         style={{ marginTop: "9rem" }}
                     >
-                        <p> No chart data available</p>
+                        <p>{t('nochartData')}</p>
                         <img src="/no-chart-data.png" alt="" width="8%" height="8%" />
                     </div>
                     :

@@ -55,7 +55,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
   const dispatch = useDispatch();
-  const { t } = useTranslation('placeholder');
+  const { t } = useTranslation(['placeholder','dashboard']);
 
 
 
@@ -202,7 +202,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   type="search"
                   value={searchedAsset}
                   onChange={searchAsset}
-                  placeholder={t('searchByProduct')}
+                  placeholder={t('placeholder:searchByProduct')}
                   className="mb-10" style={{ borderRadius: "10px", width: "460px" }} />
               </span>
             </div>
@@ -221,22 +221,22 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               rowClassName={rowClassName}
             >
               <Column
-                header="Product Image"
+                header={t('dashboard:productImage')}
                 field="product_icon"
                 body={productIconTemplate}
               />
               <Column
-                header="Product Name"
+                header={t('dashboard:productName')}
                 field="product_name"
                 body={productNameBodyTemplate}
               />
               <Column
-                header="AssetType"
+                header={t('dashboard:assetType')}
                 field="asset_type"
                 body={assetTypeBodyTemplate}
               />
               <Column
-                header="View"
+                header={t('dashboard:view')}
                 style={{ width: '15%' }}
                 body={viewBodyTemplate}
 
