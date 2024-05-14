@@ -22,6 +22,7 @@ import Thumbnail from "@/components/thumbnail";
 import { Toast, ToastMessage } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -49,7 +50,8 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [selectedCountry, setSelectedCountry] = useState<any>({});
     const [validateFactory, setValidateFactory] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false);
-
+    const { t } = useTranslation('button');
+    
     const findFactoryTemplate = async () => {
         try {
             const response = await axios.get(API_URL + '/factory-site/template', {
@@ -342,7 +344,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const footerContent = (
         <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
             <Button
-                label="Cancel"
+                label={t('cancel')}
                 severity="danger" outlined
                 className="mr-2"
                 type="button"
@@ -350,13 +352,13 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             />
             <Button
                 severity="secondary" text raised
-                label="Reset"
+                label={t('reset')}
                 className="mr-2 reset-btn"
                 type="button"
                 onClick={handleReset}
             />
             <Button
-                label="Save"
+                label={t('save')}
                 onClick={handleSubmit}
                 className="border-none  ml-2 mr-2"
                 disabled={submitDisabled}
@@ -403,4 +405,5 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         </>
     )
 }
+
 export default EditFactory;

@@ -8,7 +8,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Password } from "primereact/password";
 import { Toast, ToastMessage } from "primereact/toast";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
-
+import { useTranslation } from "next-i18next";
 interface EditOnboardAssetProp {
     editOnboardAssetProp: {
         showEditOnboard: boolean,
@@ -27,6 +27,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
     const toast = useRef<any>(null);
+    const { t } = useTranslation('button');
 
     const getOnboardFormData = async () => {
         try {
@@ -126,7 +127,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             <div className="finish-btn">
                 <Button
                     onClick={handleSubmit}
-                    label="Submit" autoFocus />
+                    label={t('submit')} autoFocus />
             </div>
         </div>
     )

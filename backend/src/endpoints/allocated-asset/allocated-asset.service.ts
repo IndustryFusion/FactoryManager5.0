@@ -201,7 +201,7 @@ export class AllocatedAssetService {
             finalData[factoryName].push(productName);
           }
         } else if(factorySpecificAssets !== "json-ld-1.1") {
-          let assetData = this.assetService.getAssetDataById(factorySpecificAssets, token);
+          let assetData = await this.assetService.getAssetDataById(factorySpecificAssets, token);
           let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
           finalData[factoryName].push(productName);
         }

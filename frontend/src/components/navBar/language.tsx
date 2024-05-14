@@ -1,25 +1,37 @@
 import "../../app/flag.css";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown } from 'primereact/dropdown';
 import { useRouter } from "next/router";
-
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/state/store";
+import { create, reset } from "@/state/language/languageSlice";
 interface localeObject {
     name: string;
     code: string;
 }
 const Language: React.FC = () => {
     const router = useRouter();
-    const [selectedLanugage, setSelectedLanguage] = useState(null);
+    const dispatch = useDispatch();
+    const languageRedux = useSelector((state: RootState) => state.language);
+    const [selectedLanguage, setSelectedLanguage] = useState<{ name: string; code: string } | null>(null);
     const countries = [
         { name: 'English', code: 'UK' },
-        { name: 'French', code: 'FR' },
         { name: 'German', code: 'DE' }
     ];
-
+    useEffect(()=> {
+        if(languageRedux.name.length > 0){
+            setSelectedLanguage(languageRedux);
+        }
+    },[languageRedux])
+    
     const changeLocale = (newLocale: any) => {
         setSelectedLanguage(newLocale);
         const { pathname, asPath, query } = router;
         router.push({ pathname, query }, asPath, { locale: newLocale.code == 'UK' ? 'en' : newLocale.code.toLowerCase() });
+        dispatch(create({
+            name: newLocale.name,
+            code: newLocale.code
+        }));
     }
 
     const selectedLanguageTemplate = (option: localeObject, props: any) => {
@@ -45,10 +57,8 @@ const Language: React.FC = () => {
     };
 
     return (
-        // <div className="card flex justify-content-center">
-            <Dropdown value={selectedLanugage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" placeholder="Select a Language" 
-                filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-14rem" />
-        // </div>    
+        <Dropdown value={selectedLanguage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" placeholder="Select a Language" 
+            filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-14rem" />
     )
 };
 

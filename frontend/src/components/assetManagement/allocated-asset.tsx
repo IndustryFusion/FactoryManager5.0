@@ -11,15 +11,8 @@ import { useEffect, useState } from "react";
 const AllocatedAsset = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-
   });
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const assetObj = {
-    "KFC": ["prod_1", "theFcat"],
-    "KCF#": ["prod_3", "theFcatoui"],
-    "factory3": ["asset1"],
-    "factory4": ["asset1", "asset2"]
-  }
   const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
 
 
@@ -48,9 +41,6 @@ const AllocatedAsset = () => {
   console.log("allAllocatedAssets", allAllocatedAssets);
 
   //transform data from backend
-
-
-
 
   const handleAllAllocatedAsset = async () => {
     try {

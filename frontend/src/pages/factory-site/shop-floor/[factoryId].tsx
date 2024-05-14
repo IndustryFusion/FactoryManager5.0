@@ -26,6 +26,7 @@ import {
 import { any } from "prop-types";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -136,5 +137,17 @@ const ShopFloorManager: React.FC = () => {
     </>
   );
 };
+
+export async function getServerSideProps({ locale }: { locale: string }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'button',
+        'placeholder'
+      ])),
+    },
+  }
+}
 
 export default ShopFloorManager;
