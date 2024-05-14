@@ -913,7 +913,7 @@ const onRestore = useCallback(async () => {
       isRouteChangeAllowed = false; // Prevent further navigation attempts while saving
       try {
         await saveOrUpdate(); 
-        router.push(url); 
+        // router.push(url); 
       } catch (error) {
         toast.current?.show({
           severity: 'error',
