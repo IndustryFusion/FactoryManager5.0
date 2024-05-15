@@ -48,7 +48,7 @@ const FactoryShopFloorForm = () => {
     return (
         <>
           <Header />
-            <Card className="px-3 " style={{ height: "20vh" }}>
+            <Card className="px-3 mt-4" style={{ height: "20vh" }}>
                 <div >
                     <form >
                         <div className="input-container gap-3">
@@ -68,7 +68,7 @@ const FactoryShopFloorForm = () => {
                           
                             <div style={{ width: "88%" }}>
                                 <InputText
-                                    style={{ width: "86%" }}
+                                    style={{ width: "82%" }}
                                     className="input-content"
                                     placeholder=""
                                     value={assetValue || ""} // Use assetValue state here
@@ -79,7 +79,8 @@ const FactoryShopFloorForm = () => {
                                 <p style={{ fontSize: "10px" }}>Select asset from shopfloor assets</p> : null
                             } */}
                              <MultiStateCheckbox
-                             style={{marginLeft:"12px"}}
+                             className="checkbox-lock"
+                             style={{marginLeft:"12px",marginBottom:"0.5rem"}}
                              value={checkBoxvalue} onChange={(e) => setCheckBoxValue(e.value)} options={options} optionValue="value" />
                             </div>                                               
                         </div>

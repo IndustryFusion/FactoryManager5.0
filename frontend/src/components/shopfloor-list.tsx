@@ -189,7 +189,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card className={formViewPage? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
+      <Card className={formViewPage? "form-view-height" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
         <Toast ref={toast} style={{ top: '60px' }}/>
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
@@ -236,7 +236,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={handleDelete}
             />
           </div>
-          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "13%" }}>
+          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "10%" }}>
             {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}
@@ -248,7 +248,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 }}
                 style={{
                   cursor: "pointer",
-                  backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
+                  backgroundColor: selectedShopFloorId === floor.id ? "#e3e3e3a6" : "#fff",
                   position: "relative",
                   paddingLeft: "20px",
                   maxWidth:"93%"
