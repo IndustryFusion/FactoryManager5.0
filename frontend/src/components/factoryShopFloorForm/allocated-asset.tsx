@@ -59,24 +59,21 @@ const AllocatedAsset = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    // const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
     const router = useRouter();
     const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
     const [assetCategories, setAssetCategories] = useState<string[]>([]);
     const [searchTermAllocated, setSearchTermAllocated] = useState("");
-    const menu = useRef<Menu>(null);
-    const [visible, setVisible] = useState(false);
     const allocatedMenu = useRef<Menu>(null);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
     let allocatedAssetsArray = null;
     let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-    // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
     const dispatch = useDispatch();
     const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryIdValue, setFactoryIdValue] = useState("");
+    const [selectedAllocatedAsset, setSelectedAllocatedAsset] = useState<string | null>( null);
     const { t } = useTranslation('placeholder');
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
@@ -224,8 +221,16 @@ const AllocatedAsset = () => {
                 <div style={{ height: "220px" }}>
                     <ul>
                         {filteredAllocatedAssets.map((asset, index) => (
-                            <li key={index} className="mb-2 ml-3"
-                                onClick={() => selectItems(asset?.product_name, asset?.asset_category, asset?.id)}
+                            <li 
+                            key={index} 
+                            className="mb-2 ml-3 list-item"
+                            onClick={() =>{
+                                setSelectedAllocatedAsset(asset?.id)
+                                selectItems(asset?.product_name, asset?.asset_category, asset?.id)}
+                            }
+                                
+                              
+                           style={{backgroundColor: selectedAllocatedAsset === asset.id ? "#e3e3e3a6" : "#fff"}} 
                             >
                                 {typeof asset === 'string' ? asset : asset.product_name}
                             </li>
