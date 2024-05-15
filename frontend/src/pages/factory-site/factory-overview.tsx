@@ -53,6 +53,7 @@ const FactoryOverview = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState("");
   const [filteredValue, setFilteredValue] = useState<Factory[] | null>(null);
   const [visible, setVisible] = useState(false);
+  const [visibleDelete, setVisibleDelete] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editFactory, setEditFactory] = useState<string | undefined>("");
   const [assetManageDialog, setAssetManageDialog] = useState(false);
@@ -261,7 +262,7 @@ const FactoryOverview = () => {
           }
         </div>
         <Button
-          label={t('overview:createAsset')}
+          label={t('overview:createFactory')}
           className="bg-blue-100 factory-btn"
           onClick={() => setVisible(true)}
         />
@@ -271,12 +272,13 @@ const FactoryOverview = () => {
 
   // Confirm deletion dialog
   const confirmDeleteFactory = (factory: Factory) => {
+    setVisibleDelete(true);
     console.log("inside confirm delete");
     confirmDialog({
-      message: "Are you sure you want to delete this factory?",
-      header: "Confirmation",
+      message: t('overview:deleteWarning'),
+      header: t('overview:confirmation'),
       icon: "pi pi-exclamation-triangle",
-      accept: () => handleDeleteFactory(factory),
+      footer: footer(factory)
     });
   };
 
@@ -287,6 +289,7 @@ const FactoryOverview = () => {
       await deleteFactory(factoryToDelete);
       dispatch(reset());
       await fetchFactoryLists();
+      setVisibleDelete(false);
       showToast("success", "success", "Factory deleted successfully")
 
     } catch (error: any) {
@@ -365,6 +368,12 @@ const FactoryOverview = () => {
     );
   };
 
+  const footer = (factory: Factory) => (
+    <div>
+      <Button label={t('yes')} icon="pi pi-check" onClick={() => handleDeleteFactory(factory)} />
+      <Button label={t('no')} icon="pi pi-times" onClick={() => setVisibleDelete(false)} />
+    </div>
+  );
 
 
   return (
@@ -373,7 +382,10 @@ const FactoryOverview = () => {
       <HorizontalNavbar />
       <div className="grid py-1 px-2 factory-overview " style={{ zoom: "80%" }} >
         <div className="col-12" style={{ marginTop: "5rem" }}>
-          <ConfirmDialog />
+          <ConfirmDialog
+            visible={visibleDelete}
+            onHide={() => setVisibleDelete(false)}
+           />
           <div className="">
           <h2 className="ml-4 mt-6">{t('overview:factoryOverview')}</h2>
             <DataView
@@ -412,7 +424,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'header',
         'overview',
         'placeholder',
-        'dashboard'
+        'dashboard',
+        'button'
       ])),
     },
   }
