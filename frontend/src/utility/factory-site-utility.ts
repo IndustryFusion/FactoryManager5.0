@@ -562,6 +562,23 @@ export const fetchAssetById = async (assetId: string) => {
   }
 };
 
+
+export const getAssetById = async(assetId: string) =>{
+  try {
+    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    const responseData = response.data;
+    return responseData;
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
 export const fetchAllocatedAssets = async (factoryId: string) => {
   try {
     const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {

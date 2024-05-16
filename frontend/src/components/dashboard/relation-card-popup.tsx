@@ -19,6 +19,7 @@ import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "../../styles/relation-container.css"
+import { getAssetById } from "@/utility/factory-site-utility";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -28,18 +29,43 @@ interface RelationPopupProps {
 }
 
 
+
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
     const [parentRelations, setParentRelations] = useState([]);
     const { selectedAssetData, entityIdValue } = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState([]);
 
-    const getHasProperties = () => {
-        const propertiesArray = [];
+
+    const getAssetData = async (relationData: any) => {
+        try {
+            let newArr = [];
+            if (Array.isArray(relationData) && relationData.length > 0) {
+                for (let item of relationData) {
+                    const response = await getAssetById(item?.object);                  
+                    let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
+                    newArr.push(product_name);
+                }
+            }
+            else if (relationData?.object !== "json-ld-1.1") {
+                const response = await getAssetById(relationData?.object);
+                let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
+                newArr.push(product_name);
+            }
+            return newArr;
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+
+    const getHasProperties = async () => {
+        const propertiesArray: any = [];
         for (const key in selectedAssetData) {
             if (key.startsWith("has")) {
                 const propertyName = key.substring(3); // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
-                propertiesArray.push({ [propertyName]: propertyValue });
+                let dataValues = await getAssetData(propertyValue)
+                propertiesArray.push({ [propertyName]: dataValues });
             }
         }
         setHasPropertiesArray(propertiesArray)
@@ -75,13 +101,13 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     }, [selectedAssetData])
 
     console.log(hasPropertiesArray, "hasPropertiesArray ");
-    
+
 
     return (
         <>
-            <Dialog header={Header} 
-        
-            visible={relationsProp} style={{ width: '50vw' }} onHide={() => setRelationsProp(false)}>
+            <Dialog header={Header}
+
+                visible={relationsProp} style={{ width: '45vw' }} onHide={() => setRelationsProp(false)}>
                 <div className="flex gap-3 relation-dialog">
                     <div style={{ flex: "40%" }}>
                         <h4 className="m-0 mb-3 child-heading">Child</h4>
@@ -92,23 +118,24 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
                                     <div className="mb-2 relation-container">
-                                    <div className="flex gap-2">
-                                       <div className="child-bullet-point"></div>
-                                        <h4 className="child-key-text m-0 mb-1">{key}</h4>
-                                        </div>                           
-                                        <p className="ml-2 child-key-value m-0">{value.object === "json-ld-1.1" ? "" : value.object}</p>
-                                        {typeof value === "object" &&
-                                            value.length > 0 &&
+                                        <div className="flex gap-2">
+                                            <div className="child-bullet-point"></div>
+                                            <h4 className="child-key-text m-0 mb-1">{key}</h4>
+                                        </div>
+                                        <p className="ml-2 child-key-value m-0">{value?.length === 1 && value[0]}</p>
+                                        {/* workpiece ,catridge relation */}
+                                        {
+                                            value?.length > 1 &&
                                             <ul
                                                 className="m-0 p-0"
                                                 style={{ listStyle: "circle" }}
                                             >
-                                                {value.map((item, index) => {
+                                                {value?.map((item, index) => {
                                                     return (
                                                         <>
                                                             <li
                                                                 className="ml-4 child-key-value"
-                                                                key={index}>{item.object === "json-ld-1.1" ? "" : item.object}</li>
+                                                                key={index}>{item}</li>
                                                         </>
                                                     )
                                                 }
@@ -120,7 +147,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             )
                         })}
                     </div>
-                    <div style={{flex:"20%"}} className="parent-child-icon">                  
+                    <div style={{ flex: "20%" }} className="parent-child-icon">
                         <img src="/parent_child2.png" alt="" width="50px" height="auto" />
                     </div>
                     <div style={{ flex: "40%" }}>
@@ -129,16 +156,16 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                             const { product_name, id, asset_category } = item;
                             return (
                                 <>
-                                <div className="flex gap-2 relation-container">
-                                <div className="bullet-point"></div>
-                                <div>
-                                <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
-                                    <ul className=" m-0">
-                                        <li className="child-key-value">{id}</li>
-                                        <li className="child-key-value">{asset_category?.value}</li>
-                                    </ul>
-                                </div>
-                                </div>                                   
+                                    <div className="flex gap-2 relation-container">
+                                        <div className="bullet-point"></div>
+                                        <div>
+                                            <h4 className="parent-key-text m-0 mb-1">{product_name?.value}</h4>
+                                            <ul className=" m-0">
+                                                <li className="child-key-value">{id}</li>
+                                                <li className="child-key-value">{asset_category?.value}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </>
                             )
                         })
