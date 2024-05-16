@@ -73,6 +73,8 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
   // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
   const dispatch = useDispatch();
+  const [selectedUnallocatedAsset, setSelectedUnallocatedAsset] = useState<string | null>( null);
+  const [selectedAllocatedAsset, setSelectedAllocatedAsset] = useState<string | null>( null);
 
  const fetchNonShopFloorAssets = async (factoryId: string) => {
       try {
@@ -216,7 +218,14 @@ return (
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-4 ml-4  list-item" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li 
+                key={index} 
+                className="mb-4 ml-4  list-item" 
+                onClick={()=>setSelectedUnallocatedAsset(asset?.id)}
+                draggable={true} 
+                onDragStart={(e) => handleDragStart(e, asset, "asset")}
+                style={{backgroundColor: selectedUnallocatedAsset === asset?.id? "#e3e3e3a6" : "#fff",}}
+                >
                   {asset.product_name}
                 </li>
               ))}
@@ -228,7 +237,14 @@ return (
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li key={index} className="mb-4 ml-4 list-item" draggable={true} onDragStart={(e) => handleDragStart(e, asset, "asset")}>
+                <li 
+                key={index} 
+                className="mb-4 ml-4 list-item" 
+                draggable={true} 
+                onDragStart={(e) => handleDragStart(e, asset, "asset")}
+                onClick={()=> setSelectedAllocatedAsset(asset?.id)}
+                style={{backgroundColor: selectedAllocatedAsset === asset?.id? "#e3e3e3a6" : "#fff",}}
+                >
                   {asset.product_name}
                 </li>
               ))}

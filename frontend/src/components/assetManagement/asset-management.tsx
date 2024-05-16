@@ -60,7 +60,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   })
   const toast = useRef<Toast>(null);
   const router = useRouter();
-  const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
+  const { t } = useTranslation(['button', 'placeholder', 'dashboard', 'overview']);
 
   const handleAsset = async () => {
     try {
@@ -160,7 +160,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
           <Dialog
             visible={deleteAsset.deleteFlag} onHide={() => setDeleteAsset({ ...deleteAsset, deleteFlag: false })}
           >
-            <p>{`Are you sure you want to delete ${deleteAsset.deleteAssetName}`}</p>
+            <p>{`${t('overview:deleteAssetWarning')} ${deleteAsset.deleteAssetName}`}</p>
             <div className="flex justify-content-end gap-3">
               <Button
                 label={t('button:ok')}

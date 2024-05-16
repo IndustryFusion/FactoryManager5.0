@@ -54,7 +54,7 @@ const Header =()=>{
         <>
          <div className="flex justify-content-between px-5 factory-header" style={{width:"100%"}}>
                         <h3 className="factory-heading">{factoryName}</h3>
-                        <div className=" flex  gap-2 mt-4">
+                        <div className=" flex align-items-center gap-2 mt-4">
                             <span>Switch View</span>
                             <InputSwitch checked={switchView} onChange={(e) => {
                                 setSwitchView(e.value);
