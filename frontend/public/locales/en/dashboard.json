@@ -22,5 +22,6 @@
     "responded": "Responded",
     "months": "Months",
     "years": "Years",
-    "manufacturer": "Manufacturer"
+    "manufacturer": "Manufacturer",
+    "unknownProduct": "Unknown Product"
 }
