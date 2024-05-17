@@ -254,7 +254,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={confirmDelete}
             />
           </div>
-          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "13%" }}>
+          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "10%" }}>
             {filteredShopFloors.map((floor) => (
               <li
                 key={floor.id}
@@ -266,7 +266,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 }}
                 style={{
                   cursor: "pointer",
-                  backgroundColor: selectedShopFloorId === floor.id ? "lightgrey" : "transparent",
+                  backgroundColor: selectedShopFloorId === floor.id ? "#e3e3e3a6" : "#fff",
                   position: "relative",
                   paddingLeft: "20px",
                   maxWidth:"93%"

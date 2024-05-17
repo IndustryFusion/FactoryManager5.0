@@ -16,11 +16,12 @@
     "runningSince": "Running Since",
     "relations": "Relations",
     "notifications": "Notifications",
-    "registered": "registered",
+    "registered": "Registered",
     "sinceLastWeek": "since last week",
     "machinesConnected": "machines are connected",
-    "responded": "responded",
+    "responded": "Responded",
     "months": "Months",
     "years": "Years",
-    "manufacturer": "Manufacturer"
+    "manufacturer": "Manufacturer",
+    "unknownProduct": "Unknown Product"
 }

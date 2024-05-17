@@ -206,11 +206,18 @@ export class FactorySiteService {
       if(response['status'] == 200 || response['status'] == 204) {
         // Delete shopFloor and the asset relations
         let factoryReactData = await this.factoryModel.find({factoryId: id}) as FactoryReactData[];
-        let deleteResponse = await shopFloorService.deleteScript(factoryReactData[0].factoryData.nodes, token);
-        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204){
-          // Delete react flow for that factory
-          let deleteReactResponse = await this.factoryModel.deleteOne({factoryId: id});
-          return deleteReactResponse;
+        if(factoryReactData.length > 0){
+          let deleteResponse = await shopFloorService.deleteScript(factoryReactData[0].factoryData.nodes, token);
+          if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204){
+            // Delete react flow for that factory
+            let deleteReactResponse = await this.factoryModel.deleteOne({factoryId: id});
+            return deleteReactResponse;
+          }
+        }else{
+          return {
+            status: response.status,
+            data: response.data
+          }
         }
       }
     } catch (err) {

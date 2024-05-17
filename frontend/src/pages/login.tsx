@@ -30,8 +30,6 @@ import {  useRouter, } from 'next/router';
 import { useDispatch,useSelector  } from "react-redux";
 import { login, startTimer } from "@/state/auth/authSlice";
 import { RootState } from "@/state/store";
-import { useTranslation } from "next-i18next";
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 //interface for token
 interface LoginResponse {
@@ -52,7 +50,6 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [hasMounted, setHasMounted] = useState(false); 
-  const { t } = useTranslation('button');
   
   useEffect(() => {
     if(router.isReady){
@@ -160,7 +157,7 @@ const Login: React.FC = () => {
        Cookies.get("login_flag") === "false" || !Cookies.get("connect.sid") ? (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
-          <h1 style={{color:"#363535d1",marginLeft:"1rem",marginTop:"-10px"}}> Factory Manager 5.0 </h1>
+          <h1 style={{color:"white",marginLeft:"1rem"}}> Factory Manager 5.0 </h1>
         </Card> 
         <Card  className="flex"
         style={{color:"balck", marginTop:"50px", width:"500px", height:"600px"}}>
@@ -199,14 +196,14 @@ const Login: React.FC = () => {
 
           <div className="flex" style={{marginTop:"3rem", marginLeft:"9rem"}}>
           <Button
-            label={t('cancel')}
+            label="Cancel"
             onClick={handleLogin}
             text raised
             severity="secondary"
             style={{width:"6rem"}}
           />
           <Button
-            label={t('submit')}
+            label="Submit"
             onClick={handleLogin}
             raised
             disabled={!usernameValid || !passwordValid || !username || !password}
@@ -220,17 +217,5 @@ const Login: React.FC = () => {
     </div>
   );
 };
-
-export async function getStaticProps({ locale }: { locale: string }) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, [
-        'header',
-        'button',
-        'placeholder'
-      ])),
-    },
-  }
-}
 
 export default Login;

@@ -16,11 +16,12 @@
     "runningSince": "Läuft seit",
     "relations": "Beziehungen",
     "notifications": "Benachrichtigungen",
-    "registered": "registriert",
-    "sinceLastWeek": "seit letzter Woche",
+    "registered": "Registriert",
+    "sinceLastWeek": "Seit letzter Woche",
     "machinesConnected": "Maschinen sind verbunden",
     "responded": "geantwortet",
     "months": "Monate",
     "years": "Jahre",
-    "manufacturer": "Hersteller"
+    "manufacturer": "Hersteller",
+    "unknownProduct": "Unbekanntes Produkt"
 }
