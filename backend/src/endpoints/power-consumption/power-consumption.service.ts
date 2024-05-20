@@ -43,7 +43,6 @@ export class PowerConsumptionService {
             .join('&').replace('#','%23');
       const url = this.timescaleUrl + '/power_emission_entries_days?' + queryString;
       const response = await axios.get(url, {headers});
-      // console.log('response ',response.data)
       if(response.data.length > 0){
         response.data.forEach(data => {
           const day = moment(data.day);
@@ -66,7 +65,6 @@ export class PowerConsumptionService {
 
   async findChartData(queryParams: any, token: string) {
     try {
-      console.log('queryParams ',queryParams);
       const headers = {
         Authorization: 'Bearer ' + token
       };
@@ -81,7 +79,6 @@ export class PowerConsumptionService {
 
       if(queryParams.type == 'days'){
         const url = this.timescaleUrl + `/power_emission_entries_days?entityId=eq.${queryParams.assetId}&day=gte.${moment.utc(queryParams.startTime).toISOString()}&day=lte.${moment.utc(queryParams.endTime).toISOString()}`;
-        console.log('url ',url);
         const response = await axios.get(url, {headers});
         if(response.data.length > 0){
           response.data.forEach(data => {

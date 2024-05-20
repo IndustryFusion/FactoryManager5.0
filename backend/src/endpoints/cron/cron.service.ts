@@ -105,7 +105,6 @@ async handleFindAllEverySecond() {
 @Cron('* * * * *')
 async handleChartDataUpdate() {
   try {
-    
     const credentials = await this.redisService.getTokenAndEntityId();
     if (!credentials) {
       return;
@@ -153,7 +152,6 @@ async handleMachineStateRefresh(){
         this.valueChangeStateGateway.sendUpdate(newData);
       }
     }else{
-      console.log('inside else condition');
       await this.redisService.saveData('machine-state-data',newData);
     }
   }
@@ -162,29 +160,13 @@ async handleMachineStateRefresh(){
   // Existing method that runs at the end of the day
   @Cron('0 0 * * *')
   async handleCron() {
-    console.log('time ', new Date());
-    
-
     const url = 'http://localhost:4002/cron'; // Replace with your actual URL
-
-    // axios.get(url, { 
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Accept: "application/json",
-    //   },
-    //   withCredentials: true }).then((response: AxiosResponse) => {
-    //   console.log('Response:', response.data);
-    // }).catch((error) => {
-    //   console.error('Error:', error);
-    // });
-    // const response = await this.httpService.get('http://localhost:4002/cron');
-
     this.httpService.get('http://localhost:4002/cron').subscribe({
       next: (response: AxiosResponse<any>) => {
-        console.log('Response:', response.data);
+        this.logger.log(`Validate Scorpio with ReactFlow is Successfull`);
       },
       error: (error: any) => {
-        console.error('Error:', error);
+        this.logger.error('Error during Validate Scorpio with ReactFlow', error);
       },
     });
   }
@@ -196,9 +178,7 @@ async handleMachineStateRefresh(){
         let factoryId = factoryData[i].id;
         let reactData = await this.reactFlowService.findOne(factoryId);
         if(reactData && reactData.factoryData) {
-          console.log('factoryData ',factoryData[i]);
           let edges = reactData.factoryData['edges'];
-          console.log('edges ',edges);
           let shopFloorIds = factoryData[i]['http://www.industry-fusion.org/schema#hasShopFloor'];
           let assetData = [];
           if(shopFloorIds && Array.isArray(shopFloorIds) && shopFloorIds.length > 0){
@@ -235,7 +215,6 @@ async handleMachineStateRefresh(){
               assetData.push(response);
             }
           }
-          console.log('assetData ',assetData);
 
           if(assetData.length > 0){
             for(let j = 0; j < assetData.length; j++){
@@ -248,39 +227,25 @@ async handleMachineStateRefresh(){
                     for(let idx = 0; idx < materialArr.length; idx++){
                       let target = materialArr[idx].object;
                       for(let k = 0; k < edges.length; k++){
-                        console.log('source ',edges[k].source);
-                        console.log('check source ',assetData[j].id);
-                        console.log('target ',edges[k].target);
-                        console.log('check target ',target);
                         if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
                           count++;
                         }
                       }
                     }
                     if(materialArr.length !== count){
-                      console.log('materialArr length ',materialArr);
-                      console.log('count check ',count);
                       let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
                       return response;
                     }
                   } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn')){
                     let flag = false;
                     let target = assetData[j][key].object;
-                    console.log('target ',target);
                     for(let k = 0; k < edges.length; k++){
-                      console.log('source ',edges[k].source);
-                      console.log('check source ',assetData[j].id);
-                      console.log('target ',edges[k].target);
-                      console.log('check target ',target);
                       if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
-                        console.log('inside check');
                         flag = true;
                       }
                     }
-                    console.log('flag check ',flag);
                     if(!flag){
                       let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
-                      console.log('response ',response);
                       return response;
                     }
                   }

@@ -94,7 +94,6 @@ export class FactorySiteController {
         return response;
       }
     } catch (err) {
-      console.log('err ',err);
       return { 
         success: false, 
         status: err.response.status,
@@ -108,7 +107,6 @@ export class FactorySiteController {
     try {
       const token = await getSessionToken(req);
       const response = await this.factorySiteService.remove(id, token, this.shopFloorService);
-      console.log('response from controller ',response);
       if(response['acknowledged']) {
         // Delete factory specific allocated assets
         let allocatedAssetId = `${id}:allocated-assets`;

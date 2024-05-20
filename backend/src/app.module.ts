@@ -20,7 +20,7 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthService } from './endpoints/auth/auth.service';
-import { SessionMiddleware } from './endpoints/auth/session.middleware';
+import { SessionMiddleware } from './utils/session.middleware';
 import { AuthController } from './endpoints/auth/auth.controller';
 import { AlertsService } from './endpoints/alerts/alerts.service';
 import { AlertsController } from './endpoints/alerts/alerts.controller';
@@ -60,11 +60,10 @@ import { OnboardingAssetService } from './endpoints/onboarding-asset/onboarding-
 import { RedisService } from './endpoints/redis/redis.service';
 import { ValueChangeStateGateway } from './endpoints/value-change-state/value-change-state.gateway';
 import { PowerConsumptionGateway } from './endpoints/power-consumption/power-consumption-gateway';
+import { LoggerMiddleware } from './utils/logger.middleware';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
-console.log('mongoURI ',mongoURI)
-console.log('FactorySite ',FactorySite)
 
 @Module({
   imports: [
@@ -126,5 +125,6 @@ console.log('FactorySite ',FactorySite)
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(SessionMiddleware).forRoutes('/auth/login');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

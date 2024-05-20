@@ -35,7 +35,6 @@ export class AssetService {
       let typeData = await axios.get(typeUrl,{headers});
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
       typeArr = Array.isArray(typeArr) ? typeArr : [];
-      console.log('typeArr ',typeArr);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
         const url = this.scorpioUrl + '?type=' + type;
@@ -148,7 +147,6 @@ export class AssetService {
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1); 
       let relationKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
       let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`;
-      console.log('url ',url);
       const response = await axios.get(url, {headers});
       let assetData = [];
       if(response.data.length > 0) {
@@ -263,13 +261,10 @@ export class AssetService {
             }
           }
         }
-        console.log('assetData ', assetData);
 
         const deleteResponse = await this.deleteAssetById(key, token);
-        console.log('deleteResponse ', deleteResponse);
         if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
           const response = await axios.post(this.scorpioUrl, assetData, { headers });
-          console.log('create response ', response['status']);
           responses.push(response);
         } 
       }
@@ -321,14 +316,11 @@ export class AssetService {
       // Delete AssetId From Factory Specific Allocated Asset
       let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`; 
       const factoryAssetsResponse = await axios.get(factoryAssetsUrl, {headers});
-      console.log('factoryAssetsResponse ',factoryAssetsResponse.data)
       if(factoryAssetsResponse.data.length > 0){
         factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
         let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
-        console.log('lastData ',lastData)
         if(Array.isArray(lastData)){
           const newArray = lastData.filter(item => item !== assetId);
-          console.log('newArray ',newArray)
           factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = newArray;
         }else{
           factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = '';
@@ -345,10 +337,8 @@ export class AssetService {
       // Remove AssetId From HasAsset Relation Of ShopFloor
       let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`; 
       const shopFloorResponse = await axios.get(shopFloorUrl, {headers});
-      console.log('shopFloorResponse ',shopFloorResponse.data)
       if(shopFloorResponse.data.length > 0){
         let hasAssetData = shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"];
-        console.log('hasAssetData ',hasAssetData);
         if(Array.isArray(hasAssetData)){
           const newArray = hasAssetData.filter(item => item.object !== assetId);
           shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = newArray; 
@@ -367,18 +357,15 @@ export class AssetService {
       // Delete Asset From Scorpio
       let assetData = await this.getAssetDataById(assetId, token);
       let assetCategory = assetData["http://www.industry-fusion.org/schema#asset_category"].value.split(" ").pop(); 
-      console.log('assetCategory ',assetCategory)
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
       let urlKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
       let relationKey = `http://www.industry-fusion.org/schema#has${assetCategory}`;
       let url = `${this.scorpioUrl}?q=${urlKey}==%22${assetId}%22`; 
       const response = await axios.get(url, {headers});
-      console.log('response ',response.data)
       if(response.data.length > 0) {
         // Delete Asset From Parents Relation
         for(let i = 0; i < response.data.length; i++){
           let relationData = response.data[i][relationKey];
-          console.log('relationData ',relationData);
           if(Array.isArray(relationData)){
             const newArray = relationData.filter(item => item.object !== assetId);
             response.data[i][relationKey] = newArray;
@@ -396,13 +383,11 @@ export class AssetService {
       }
 
       if(factoryId.length > 0){
-        console.log('factory id ',factoryId);
         await reactFlowService.findFactoryAndShopFloors(factoryId, token);
       }
       // Delete AssetId From Scorpio
       const finalUrl = this.scorpioUrl + '/' + assetId; 
       let deleteResponse = await axios.delete(finalUrl, {headers});
-      console.log('deleteResponse ',deleteResponse.status);
       return {
         status: deleteResponse.status,
         data: deleteResponse.data

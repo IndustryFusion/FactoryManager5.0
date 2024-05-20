@@ -29,8 +29,6 @@ export class ValueChangeStateGateway {
   server: Server;
 
   sendUpdate(data: any) {
-
-    // console.log("updates", data)
     this.server.emit('valueChangeState', data);
   }
 }

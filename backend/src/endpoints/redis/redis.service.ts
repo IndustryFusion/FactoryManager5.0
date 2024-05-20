@@ -83,7 +83,6 @@ export class RedisService {
     if (error.code === 'MOVED' && retryAttempts > 0) {
       return this.getData(key, retryAttempts - 1);
     }
-    console.log("Error fetching data from Redis:", error.message);
     throw error;
   }
 }
@@ -98,7 +97,6 @@ async saveData(key: string, data: any, ttl?: number, retryAttempts = 3): Promise
     if (error.code === 'MOVED' && retryAttempts > 0) {
       return this.saveData(key, data, ttl, retryAttempts - 1);
     }
-    console.log("Error saving data to Redis:", error.message);
     throw error;
   }
 }
@@ -134,7 +132,6 @@ async saveData(key: string, data: any, ttl?: number, retryAttempts = 3): Promise
 
             return credentialsList;
         } catch (error) {
-            console.log(`Error fetching all credentials: ${error.message}`);
             return [];
         }
     }

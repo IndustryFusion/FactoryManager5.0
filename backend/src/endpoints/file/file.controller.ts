@@ -14,13 +14,14 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Logger } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from './file.service';
 import { extname } from 'path';
 
 @Controller('file')
 export class FileController {
+  private logger = new Logger(FileController.name);
   constructor(private readonly fileService: FileService) {}
 
     @Post()
@@ -48,12 +49,11 @@ export class FileController {
     )
     async fileUpload(@UploadedFile() file) {
       try {
-        console.log('file ',file);
         return await this.fileService.fileUpload({
           ...file
         }, 'image');
       } catch(err) {
-        console.log('err ',err);
+        this.logger.error('Failed to Upload File ',err.stack);
       }
     }
 
