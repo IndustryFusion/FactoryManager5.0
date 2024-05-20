@@ -14,35 +14,38 @@
 // limitations under the License. 
 // 
 
-import { NotFoundException } from '@nestjs/common';
+
 import { Request } from 'express';
 
-
-export const getSessionToken = async (req: Request): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      let cookie = '';
-      req.headers['cookie'].split('; ').forEach(pair => {
-          const [key, value] = pair.split('=');
-          // Store each key-value pair in the cookies object
-          if(key == 'connect.sid' && value.includes('%3A')){
-            cookie = value.split('%3A')[1].split('.')[0];
-          }
-          else if(key == 'connect.sid'){
-            cookie = value;
-          }
-      });;
-
-      const sessionStore = req['sessionStore'];
-
-      sessionStore.get(cookie, (err, sessionData) => {
-        if (err) {
-          reject(new NotFoundException('Session not found'));
+export const getSessionToken = async (req: Request) => {
+  try{
+    let cookie = '';
+    req.headers['cookie'].split('; ').forEach(pair => {
+        const [key, value] = pair.split('=');
+        // Store each key-value pair in the cookies object
+        if(key == 'connect.sid' && value.includes('%3A')){
+          cookie = value.split('%3A')[1].split('.')[0];
         }
-        const token = sessionData['accessToken'];
-        resolve(token);
+        else if(key == 'connect.sid'){
+          cookie = value;
+        }
+    });
+    const sessionStore = req['sessionStore'];
+    const sessionData = await new Promise((resolve, reject) => {
+      sessionStore.get(cookie, (err, data) => {
+          if (err) {
+            reject(err); 
+          } else {
+            resolve(data); 
+          }
       });
     });
+    const token = sessionData['accessToken'];
+    return token;
+  }catch(err){
+    return err;
   }
+}
 
 export const getCronToken = async (req: Request) => {
   let sessionStore = req['sessionStore'].sessions;
