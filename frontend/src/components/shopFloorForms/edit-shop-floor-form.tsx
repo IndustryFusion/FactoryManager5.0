@@ -184,7 +184,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                     return acc;
                 }, {} as ShopFloor);
 
-                console.log('finalData ', finalData);
+           
 
                 const response = await axios.patch(API_URL + `/shop-floor/${editShopFloorProp}`, finalData, {
                     headers: {

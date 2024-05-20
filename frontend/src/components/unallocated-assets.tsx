@@ -71,7 +71,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const { t } = useTranslation(['placeholder', 'reactflow']);
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-  // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
+
   const dispatch = useDispatch();
   const [selectedUnallocatedAsset, setSelectedUnallocatedAsset] = useState<string | null>( null);
   const [selectedAllocatedAsset, setSelectedAllocatedAsset] = useState<string | null>( null);
@@ -80,12 +80,12 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       try {
         if (unAllocatedAssetData.length === 0) {
           const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-          // console.log("fetchedAssetIds", fetchedAssetIds);
+    
           dispatch(create(fetchedAssetIds));
         }
         
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-        // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+
         if (Array.isArray(fetchedAllocatedAssets)) {
           allocatedAssetsArray = fetchedAllocatedAssets;
           setAllocatedAssets(fetchedAllocatedAssets);

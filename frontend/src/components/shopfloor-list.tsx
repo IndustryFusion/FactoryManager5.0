@@ -178,7 +178,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-    console.log(item, "item")
+  
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";

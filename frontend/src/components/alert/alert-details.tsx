@@ -56,7 +56,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
 
   // Get the alert color based on severity
   const getAlertColor = (severity: string) => {
-    console.log('severity ', severity);
     switch (severity) {
       case 'warning':
         return 'orange';
@@ -160,7 +159,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
               alerts.map((alert, index) => {
                 try {
                     const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource));
-                    console.log("findAsset" + index, findAsset);
                     const text = alert?.text;
                     let updatedText;
             

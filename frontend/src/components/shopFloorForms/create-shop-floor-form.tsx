@@ -76,7 +76,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         withCredentials: true,
       });
       setShopFloorTemplate(response.data);
-      console.log("shop floor template:", response.data);
+   
     } catch (error: any) {
       if (error.response.status === 404) {
         showError("Fetching shopfloor template");
@@ -103,7 +103,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   };
   const handleFileUpload = async (e: { files: File[] }) => {
     const file = e.files[0];
-    console.log("file name", file);
+
 
     if (file) {
       setUploading(true);
@@ -128,7 +128,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
 
     Object.keys(shopFloorTemplate?.properties || {}).forEach((key) => {
       const property = shopFloorTemplate?.properties[key];
-      console.log(property);
+   
       if (
         property &&
         typeof property === "object" &&

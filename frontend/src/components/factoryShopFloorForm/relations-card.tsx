@@ -242,7 +242,7 @@ const Relations = () => {
         const payload = {
             [assetId]: obj
         };
-        console.log("payload data", payload);
+       
 
         handleUpdateRelations(payload);
         updateReactFlow(factoryId);
@@ -255,7 +255,7 @@ const Relations = () => {
         inputValue.forEach(item => {
             Object.keys(item).forEach(key => {
                 if (key !== "" && !key.endsWith('_asset')) {
-                    console.log(key, "key here")
+                 
                     obj[key] = []
                 }
             })
@@ -287,15 +287,14 @@ const Relations = () => {
                         }
                         return item;
                     });
-                    console.log("updatedInputValue here", updatedInputValue);
-
+                 
                     setInputValue(updatedInputValue);
                 }
             }
     }
 
 
-    console.log("inputValue in relations", inputValue);
+
 
 
 

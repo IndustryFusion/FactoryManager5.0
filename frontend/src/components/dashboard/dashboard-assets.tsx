@@ -48,7 +48,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     successToast: false
   })
   const [onboardAsset, setOnboardAsset] = useState(false)
-  const [selectedRow, setSelectedRow] = useState({});
+  const [selectedRow, setSelectedRow] = useState<Asset | null>(null);
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
@@ -109,7 +109,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         setAssetData(response);
         setAllAssets(response);
         setAssetCount(response.length)
-        // console.log(response.length, "allresponse");
       } else {
         console.error("Fetch returned undefined");
       }
@@ -139,9 +138,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   };
 
- console.log("all assets", assetData);
  
-
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
@@ -153,8 +150,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     if (searchedText.length === 0) {
       setAssetData(allAssets)
     } else {
-      // console.log("assetData", assetData);
-
+ 
       const filteredAssets = searchedText.length > 0 ? [...assetData].filter(ele =>
         ele?.product_name?.toLowerCase().includes(searchedAsset.toLowerCase())
       ) : allAssets;
@@ -217,7 +213,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               onRowClick={(e) => handleClick(e.data as Asset)}
               selectionMode="single"
               selection={selectedRow}
-              onSelectionChange={(e) => setSelectedRow(e.value)}
+              onSelectionChange={(e) => setSelectedRow(e.value as Asset)}
               rowClassName={rowClassName}
             >
               <Column

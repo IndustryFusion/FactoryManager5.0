@@ -70,7 +70,7 @@ const PicklistAssets = () => {
         try {
             const response = await getShopFloorAssets(shopFloorValue?.id);
             const { assetsData } = response;
-            console.log(response, 'response from shopfloor');
+         
 
             setAsset({})
             setShopFloorAssets(assetsData);
@@ -87,14 +87,14 @@ const PicklistAssets = () => {
         try {
             if (unAllocatedAssetData.length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-                // console.log("fetchedAssetIds", fetchedAssetIds);
+            
                 dispatch(create(fetchedAssetIds));
             }
 
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
             const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                 const relationsArr: string[] = [];
-                // console.log(unAllocatedAssetData[key], "its object here");
+              
                 const checkHas = 'http://www.industry-fusion.org/schema#has';
 
                 Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
@@ -114,7 +114,7 @@ const PicklistAssets = () => {
             }
 
             );
-            console.log("fetchedAssets", fetchedAssets);
+          
             setTarget(fetchedAssets);
 
             // combined asset catagories from both allocated asset and un allocated asset
@@ -178,7 +178,7 @@ const PicklistAssets = () => {
         const shopfloorObj = {
             [shopFloorValue?.id]: shopfloorAssetIds
         };
-        console.log("shopfloorObj", shopfloorObj);
+
         return shopfloorObj;
     }
 
@@ -186,7 +186,7 @@ const PicklistAssets = () => {
         const allocatedObj = {
             [factoryId]: shopfloorAssetIds
         }
-        console.log("allocatedObj", allocatedObj);
+   
         return allocatedObj;
     }
 
@@ -202,7 +202,7 @@ const PicklistAssets = () => {
             });
 
         } catch (error) {
-            console.log("Error updating React Flow in relation card component", error);
+            console.log("Error updating React Flow in /factoryShopFloorForm/picklist-asset.tsx", error);
         }
     }
 
@@ -217,7 +217,7 @@ const PicklistAssets = () => {
                 },
                 withCredentials: true,
             })
-            console.log("response from shopfloors", response.data)
+        
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Shopfloor assets saved successfully");
                 dispatch(reset());
@@ -243,8 +243,7 @@ const PicklistAssets = () => {
                 setSaveAllocatedAssets(!saveAllocatedAssets)
                 showToast("success", "success", "saved to allocated assets successfully")
             }
-            console.log("response from allocated asset", response?.data)
-
+          
         }   catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);

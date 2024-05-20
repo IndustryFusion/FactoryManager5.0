@@ -100,7 +100,6 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
         const updateAssets = assetData.filter(asset => asset?.id !== assetId);
         setAssetData(updateAssets)
       }
-      console.log("delted asset", response);
     } catch (error) {
       console.error(error)
     }

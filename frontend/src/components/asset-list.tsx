@@ -37,7 +37,7 @@ export default function AssetDetailsCard({ asset, setShowExtraCard }: AssetDetai
   const handleRowSelect = (data: any) => {
     setSelectedData(data);
   };
-  console.log("card details.", asset);
+
 
   const renderGeneralContent = () => {
     return (

@@ -85,7 +85,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     }
     const handleSubmit = async (e: any) => {
         e.preventDefault();
-        console.log(onboardForm, "all values");
         const modifiedOnboardForm = {
             ...onboardForm,
             app_config: "|" + onboardForm.app_config
@@ -101,7 +100,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 },
                 withCredentials: true,
             })
-            console.log("Response from server: onboarding", response.data);
             const { success, status, message } = response.data;
             if (status === 201 && success === true) {
                 setShowBlockerProp(false);
@@ -121,7 +119,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 showToast('error', "Error", "Internal Server Error")
             }
         }
-        console.log(payload, "all values in JSON format");
 
     }
 
