@@ -74,7 +74,6 @@ const login = async (username: string, password: string): Promise<LoginResponse>
 const logout = async () => {
     const logoutUrl = API_URL + '/auth/logout';
     const response = await axios.delete(logoutUrl as string);
-    console.log('response ',response);
     // Clear tokens and other data from cookies
     Cookies.set('login_flag', "false");
 };

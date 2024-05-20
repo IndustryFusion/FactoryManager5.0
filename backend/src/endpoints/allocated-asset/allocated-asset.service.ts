@@ -151,7 +151,6 @@ export class AllocatedAssetService {
       return finalArray;
     } catch(err) {
       if (err.response && err.response.status === 404) {
-        console.log('No data found from fetchUrl');
         return [];
       } else {
         return err;
@@ -181,16 +180,12 @@ export class AllocatedAssetService {
 
   async findProductName(token: string){
     try{
-      console.log('inside findProductName')
       let finalData = {};
       let allocatedAssetData = await this.findAll(token);
-      console.log('allocatedAssetData ',allocatedAssetData);
       for(let i = 0; i < allocatedAssetData.length; i++){  
         let factoryId = allocatedAssetData[i].id;
         factoryId = factoryId.split(':allocated-assets')[0];
-        console.log('factoryId ',factoryId);
         let factoryData = await this.factorySiteService.findOne(factoryId, token);
-        console.log('factoryData ',factoryData);
         let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
         const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object;
         finalData[factoryName] = [];
@@ -206,7 +201,6 @@ export class AllocatedAssetService {
           finalData[factoryName].push(productName);
         }
       }
-      console.log('finalData ',finalData);
       return finalData;
     }catch(err){
       return err;

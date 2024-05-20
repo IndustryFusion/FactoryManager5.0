@@ -59,12 +59,10 @@ export class ShopFloorController {
             shopFloorData = [obj];
           }
           
-          console.log('after shopfloor data ',shopFloorData)
           data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
           const deleteResponse = await this.factorySiteService.removeScript(factoryId, token);
           if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
             const response = await axios.post(this.scorpioUrl, data, { headers });
-            console.log('response ',response['status']);
             if(response['status'] == 200 || response['status'] == 201) {
               return {
                 success: true,
@@ -161,7 +159,6 @@ export class ShopFloorController {
         return response;
       }
     } catch (err) {
-      console.log('err ',err);
       return { 
         success: false, 
         status: err.response.status,
@@ -185,7 +182,6 @@ export class ShopFloorController {
         return response;
       }
     } catch (err) {
-      console.log('err ',err);
       return { 
         success: false, 
         status: err.response.status,
@@ -230,19 +226,15 @@ export class ShopFloorController {
           const data = await this.factorySiteService.findOne(factoryId, token);
           if(data) {
             let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
-            console.log('shopFloorData ',shopFloorData);
-            console.log('id to be deleted ',id);
             if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
               shopFloorData = shopFloorData.filter(item => item.object !== id); 
             } else if(shopFloorData.object == id) {
               shopFloorData.object = "";
             }
-            console.log('after shopfloor data ',shopFloorData)
             data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
             const deleteResponse = await this.factorySiteService.removeScript(factoryId, token);
             if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
               const response = await axios.post(this.scorpioUrl, data, { headers });
-              console.log('response ',response['status']);
               if(response['status'] == 200 || response['status'] == 201) {
                 return {
                   success: true,

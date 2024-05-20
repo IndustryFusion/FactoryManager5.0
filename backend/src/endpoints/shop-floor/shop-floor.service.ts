@@ -107,7 +107,6 @@ export class ShopFloorService {
         }
       }
     } catch (err) {
-      console.log('err ', err);
       throw err;
     }
   }

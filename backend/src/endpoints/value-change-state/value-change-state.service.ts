@@ -43,7 +43,6 @@ export class ValueChangeStateService {
             .join('&').replace('#','%23');
       const url = this.timescaleUrl + '/value_change_state_entries?' + queryString;
       const response = await axios.get(url, {headers});
-      // console.log('response ',response.data)
       if (response.data) {
         return response.data;
       } else {
@@ -75,8 +74,6 @@ export class ValueChangeStateService {
           const day = moment().subtract(i, 'days').startOf('day');
           let startTime = day.format().split('+')[0] + '-00:00';
           let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
-          // console.log('startTime ',startTime);
-          // console.log('endTime ',endTime);
           let key = day.format('MMMM Do');
           finalData[key] = [];
           const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
@@ -95,10 +92,6 @@ export class ValueChangeStateService {
           const formattedStartOfWeek = startOfWeek.format().split('+')[0] + '-00:00';
           const formattedEndOfWeek = endOfWeek.format().split('+')[0] + '-00:00';
       
-          // console.log(`Week ${startOfWeek.format('YYYY-MM-DD')}`);
-          // console.log('Start:', formattedStartOfWeek);
-          // console.log('End:', formattedEndOfWeek);
-          // console.log();
           let key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
           finalData[key] = [];
           const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
@@ -117,10 +110,6 @@ export class ValueChangeStateService {
           const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
           const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
       
-          // console.log(`Month ${i + 1}:`);
-          // console.log('Start:', formattedStartOfMonth);
-          // console.log('End:', formattedEndOfMonth);
-          // console.log();
           const key = moment(startOfMonth).format('MMMM');
           finalData[key] = [];
           const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
@@ -130,7 +119,6 @@ export class ValueChangeStateService {
           }
         }
       }
-      // console.log('final data ',finalData);
       return finalData;
     }catch(err) {
       throw new NotFoundException(

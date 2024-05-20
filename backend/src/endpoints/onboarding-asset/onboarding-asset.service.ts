@@ -26,14 +26,12 @@ export class OnboardingAssetService {
   async create(data: any) {
     try {
       let fileName = `${data['device_id']}.yaml`;
-      console.log('fileName ',fileName);
       const fileContent = YAML.dump(data);
       const headers = {
         Authorization: 'Bearer ' + this.token,
         'Content-Type': 'application/json',
       };
       let url = this.gatwayUrl + '/' + fileName;
-      console.log('url ',url);
       const response = await axios.put(url,
         {
           message: 'Add new file',
@@ -72,16 +70,13 @@ export class OnboardingAssetService {
       const response = await axios.get(url, {
         headers,
       });
-      console.log('response ',response.data);
       if (response.data.encoding === 'base64' && response.data.content) {
         // Decode Base64 content to UTF-8 string
         const decodedContent = Buffer.from(
           response.data.content,
           'base64',
         ).toString('utf-8');
-        console.log('decodedContent ',decodedContent);
         const parsedContent = YAML.load(decodedContent);
-        console.log('parsedContent ', parsedContent);
         return parsedContent;
       }
     } catch (err) {
@@ -94,14 +89,12 @@ export class OnboardingAssetService {
   async update(id: string, data: any) {
     try {
       let fileName = `${id}.yaml`;
-      console.log('fileName ',fileName);
       const fileContent = YAML.dump(data);
       const headers = {
         Authorization: 'Bearer ' + this.token,
         'Content-Type': 'application/json',
       };
       let url = this.gatwayUrl + '/' + fileName;
-      // console.log('url ',url);
 
       // Retrieve existing file content
       const getResponse = await axios.get(url, { 
@@ -110,8 +103,6 @@ export class OnboardingAssetService {
           Accept: 'application/vnd.github.v3', // Specify raw content
         } 
       });
-      console.log('response ',getResponse.data);
-      console.log('sha ',getResponse.data.sha);
 
       const response = await axios.put(url,
         {

@@ -61,7 +61,6 @@ export class AlertsService {
         'Accept': 'application/ld+json'
       };
       let url = this.alertaUrl + '/alerts?resource=' + id;
-      console.log('url ',url);
       const response = await axios.get(url, {headers});
       return response.data;
     } catch (err) {
