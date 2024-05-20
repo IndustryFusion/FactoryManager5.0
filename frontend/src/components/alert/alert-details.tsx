@@ -14,9 +14,8 @@
 // limitations under the License. 
 // 
 
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React from "react";
 import { Dialog } from 'primereact/dialog';
-import { Divider } from 'primereact/divider';
 import { Avatar } from "primereact/avatar";
 import "../../app/globals.css"
 import "../../styles/asset-list.css"
@@ -43,10 +42,11 @@ interface Alerts {
   updateTime: string;
 }
 
-
 const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData }) => {
 
   const { t } = useTranslation('button');
+
+  // Define CSS style for the badge
   const badgeStyle: React.CSSProperties = {
     position: 'absolute',
     top: '-9px',
@@ -54,6 +54,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     fontSize: '0.2rem',
   };
 
+  // Get the alert color based on severity
   const getAlertColor = (severity: string) => {
     console.log('severity ', severity);
     switch (severity) {
@@ -68,6 +69,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     }
   };
 
+  // Get the icon and color based on severity
   const getIcon = (severity: string) => {
     switch (severity) {
       case 'ok':
@@ -90,9 +92,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
           icon: 'pi pi-times',
           color: "#ff0000"
         }
+      default:
+      return { icon: '', color: '' };
     }
   };
 
+  // Get the text color based on severity
   const getTextColor = (severity: string) => {
     switch (severity) {
       default:
@@ -107,6 +112,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     }
   };
 
+  // Get the text color for status
   const getStatusTextColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -141,7 +147,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
         return '#ffcccc';
     }
   };
-
 
   return (
     <>
@@ -186,7 +191,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                               <div  className="data-container">
                                 <div>
                                   <div className=" align-center">
-                                    {/* <p className="font-medium">Product name: </p> */}
                                     <p className="ml-2 mb-0"
                                       style={{
                                         fontStyle: 'italic',

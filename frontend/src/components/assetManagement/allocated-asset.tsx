@@ -15,7 +15,7 @@
 // limitations under the License. 
 // 
 
-import { fetchAllAllocatedAssets, fetchFactoryDetails } from "@/utility/factory-site-utility";
+import { fetchAllAllocatedAssets } from "@/utility/factory-site-utility";
 import { FilterMatchMode } from "primereact/api";
 import { Column } from "primereact/column";
 import { ColumnGroup } from "primereact/columngroup";
@@ -24,16 +24,20 @@ import { InputText } from "primereact/inputtext";
 import { Row } from "primereact/row";
 import { useEffect, useState } from "react";
 import { useTranslation } from "next-i18next";
+import { AllocatedAssetData } from "@/interfaces/allocated-asset-data";
 
 const AllocatedAsset = () => {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    global: { value: string | null; matchMode: FilterMatchMode };
+  }>({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [allAllocatedAssets, setAllAllocatedAssets] = useState([]);
+  const [allAllocatedAssets, setAllAllocatedAssets] =  useState<AllocatedAssetData[]>([]);
   const { t } = useTranslation(['placeholder', 'reactflow']);
 
-  const onGlobalFilterChange = (e) => {
+  // Handle global filter change
+  const onGlobalFilterChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     let _filters = { ...filters };
     _filters['global'].value = value;
@@ -41,6 +45,7 @@ const AllocatedAsset = () => {
     setGlobalFilterValue(value);
   };
 
+  // Render the search input for the DataTable header
   const renderHeader = () => {
     return (
       <div className="flex justify-content-center">
@@ -55,30 +60,25 @@ const AllocatedAsset = () => {
   };
   const header = renderHeader();
 
-  console.log("allAllocatedAssets", allAllocatedAssets);
-
-  //transform data from backend
-
+// Fetch and transform data from the backend
   const handleAllAllocatedAsset = async () => {
     try {
       const response = await fetchAllAllocatedAssets();
-      console.log(response, "all response allocated"); 
-      let transformedArray = [];
+      let transformedArray:AllocatedAssetData[] = [];
       if(Object.keys(response).length > 0){
      
         for (let factoryName in response) {
-          let obj = {
+          let obj: AllocatedAssetData = {
             factoryName: factoryName,
             assets: response[factoryName]
           }
           transformedArray.push(obj);
         }
            setAllAllocatedAssets(transformedArray)  
-        console.log("transformedArray", transformedArray);
       }  
      
     } catch (error) {
-      console.error(error)
+      console.error("Error from @components/assetManagement/allocated-asset.tsx",error)
     }
   }
 
