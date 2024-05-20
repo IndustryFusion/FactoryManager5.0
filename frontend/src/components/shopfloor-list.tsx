@@ -32,6 +32,7 @@ import { InputText } from "primereact/inputtext";
 import "../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { useTranslation } from "next-i18next";
+import { Dialog } from 'primereact/dialog';
 interface ShopfloorListProps {
   factoryId?: string;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -59,6 +60,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const { setShopFloorValue } = useFactoryShopFloor();
   const [factoryIdValue, setFactoryIdvalue] = useState("");
   const { t } = useTranslation(['button','placeholder']);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+
 
   const filterShopFloors = () => {
     if (searchValue.trim()) {
@@ -122,36 +125,37 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   }, [router.query.factoryId, router.isReady, isEdit, isVisible])
 
-
-
-  async function handleDelete() {
-    if (!selectedShopFloorId) {
-      console.error("No shop floor selected for deletion");
+ const confirmDelete = () => {
+    if (selectedShopFloorId) {
+      setShowConfirmDialog(true);
+    } else {
       toast.current?.show({
         severity: "warn",
         summary: "Warning",
         detail: "No shop floor selected for deletion",
       });
+    }
+  };
+
+  const onConfirmDelete = async () => {
+    setShowConfirmDialog(false); // Close the dialog before performing async operations
+    await handleDelete(); // Wait for the delete operation to complete
+  };
+
+  const handleDelete = async () => {
+    if (!selectedShopFloorId) {
+      console.error("No shop floor selected for deletion");
       return;
     }
-
     try {
-      await deleteShopFloorById(
-        selectedShopFloorId,
-        factoryId
-      );
-      setShopFloors((prevShopFloors) =>
-        prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
-      );
-
+      await deleteShopFloorById(selectedShopFloorId, factoryId);
+      setShopFloors(prevFloors => prevFloors.filter(floor => floor.id !== selectedShopFloorId));
       toast.current?.show({
         severity: "success",
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
-      if (onShopFloorDeleted) {
-        onShopFloorDeleted(selectedShopFloorId);
-      }
+      onShopFloorDeleted?.(selectedShopFloorId);
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({
@@ -160,8 +164,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         detail: "Failed to delete shop floor",
       });
     }
-  }
-
+  };
   function handleEdit() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for editing");
@@ -189,7 +192,22 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   return (
     <>
-      <Card className={formViewPage? "form-view-height" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
+      <Card className={formViewPage? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
+         <Dialog
+          visible={showConfirmDialog}
+          style={{ width: '450px' }}
+          header="Confirm Deletion"
+          modal
+          footer={
+            <>
+              <Button label="No" icon="pi pi-times" onClick={() => setShowConfirmDialog(false)} className="p-button-text" />
+              <Button label="Yes" icon="pi pi-check" onClick={onConfirmDelete} autoFocus />
+            </>
+          }
+          onHide={() => setShowConfirmDialog(false)}
+        >
+          Are you sure you want to delete this shop floor?
+        </Dialog>
         <Toast ref={toast} style={{ top: '60px' }}/>
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
@@ -233,7 +251,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               raised
               className="bold-button mr-2 ml-2 p-2"
               type="button"
-              onClick={handleDelete}
+              onClick={confirmDelete}
             />
           </div>
           <ul className={formViewPage?"list-disc":""} style={{ marginTop: "10%" }}>
