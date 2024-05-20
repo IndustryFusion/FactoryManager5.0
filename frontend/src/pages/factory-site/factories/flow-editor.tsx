@@ -42,7 +42,7 @@ import {
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
-import CustomAssetNode from "@/components/custom-asset-node";
+import CustomAssetNode from "@/components/reactFlow/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";

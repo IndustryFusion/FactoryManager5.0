@@ -25,13 +25,13 @@ import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
 import Footer from "../../../components/navBar/footer";
 import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
-const ShopFloorList = dynamic(() => import("../../../components/shopfloor-list"), {
+const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
   suspense: true
 });
 const FlowEditor = dynamic(() => import("../factories/flow-editor"), {
   suspense: true
 });
-const UnallocatedAssets = dynamic(() => import("../../../components/unallocated-assets"), {
+const UnallocatedAssets = dynamic(() => import("../../../components/reactFlow/unallocated-allocated-assets"), {
   suspense: true
 });
 import {
