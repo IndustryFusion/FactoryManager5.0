@@ -115,7 +115,7 @@ const FactoryOverview = () => {
   useEffect(() => {
     if (Cookies.get("login_flag") === "true") {
       if (router.isReady) {
-        const { } = router.query;
+        const { } = router.query;//needed
         fetchFactoryLists();
         setGlobalFilterValue("");
       }   
