@@ -28,7 +28,7 @@ interface RelationPopupProps {
     setRelationsProp: Dispatch<SetStateAction<boolean>>;
 }
 
-interface RelationData {
+interface ParentRelationData {
     product_name: { value: string };
     id: string;
     asset_category: { value: string };
@@ -38,12 +38,12 @@ interface RelationData {
 
 
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
-    const [parentRelations, setParentRelations] = useState<RelationData[]>([]);
+    const [parentRelations, setParentRelations] = useState<ParentRelationData[]>([]);
     const { selectedAssetData, entityIdValue } = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState<{[key:string]:string[]}[]>([]);
 
 
-    const getAssetData = async (relationData:RelationData  ) => {
+    const getAssetData = async (relationData:ParentRelationData  ) => {
         try {
             let newArr = [];
             if (Array.isArray(relationData) && relationData.length > 0) {
