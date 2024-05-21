@@ -207,6 +207,12 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  useEffect(() => {
+    if (filteredShopFloors.length > 0) {
+      setShopFloorValue(filteredShopFloors[0]);
+    }
+  }, [filteredShopFloors]); 
+
   return (
     <>
       <Card className={formViewPage? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
@@ -272,7 +278,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             />
           </div>
           <ul className={formViewPage?"list-disc":""} style={{ marginTop: "10%" }}>
-            {filteredShopFloors.map((floor) => (
+            {filteredShopFloors.map((floor, index) => (
               <li
                 key={floor.id}
                 draggable
@@ -283,7 +289,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 }}
                 style={{
                   cursor: "pointer",
-                  backgroundColor: selectedShopFloorId === floor.id ? "#e3e3e3a6" : "#fff",
+                  backgroundColor: index === 0 ? "#e3e3e3a6": selectedShopFloorId === floor.id ? "#e3e3e3a6" : "#fff",
                   position: "relative",
                   paddingLeft: "20px",
                   maxWidth:"93%"

@@ -17,7 +17,7 @@
 import { getShopFloorAssets, fetchAllocatedAssets, getNonShopFloorAsset } from "@/utility/factory-site-utility";
 import { PickList } from "primereact/picklist";
 import { RootState } from "@/state/store";
-import { create,reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { create, reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
@@ -97,6 +97,13 @@ const PicklistAssets = () => {
         fetchShopFloorAssets();
     }, [shopFloorValue?.id]);
 
+    useEffect(() => {
+        if (shopFloorAssets.length > 0) {
+            setAsset(shopFloorAssets[0]);
+        }
+    }, [shopFloorAssets]);
+
+
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
             if (Object.keys(unAllocatedAssetData).length === 0) {
@@ -130,10 +137,8 @@ const PicklistAssets = () => {
             );
           
             setTarget(fetchedAssets);
-
             // combined asset catagories from both allocated asset and un allocated asset
             const categories = Array.from(new Set([...fetchedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
         } catch (err) {
             console.error(err)
         }
@@ -168,9 +173,11 @@ const PicklistAssets = () => {
 
         return (
             <>
-                <span className="list-items" onClick={() => {
+                <span className="list-items"
+                style={{ fontWeight : item.product_name === source[0]?.product_name ?"500": "normal"}}
+                 onClick={() => {
                     selectItems(item.product_name, item.asset_category, item?.id)//relation
-                    source.forEach(sourceItem => {
+                    source.map(sourceItem => {
                         if (sourceItem?.product_name === item.product_name) {
                             setAsset(item)
                             toastShown = true;
@@ -185,6 +192,9 @@ const PicklistAssets = () => {
         )
     };
 
+
+    console.log("source here", source);
+    
 
 
     const shopfloorAssetIds = source.map(asset => asset?.id)
@@ -271,8 +281,8 @@ const PicklistAssets = () => {
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
-                handleSaveShopFloors()            
-                handleAllocatedAssets();               
+                handleSaveShopFloors()
+                handleAllocatedAssets();
             }
             }>Save</Button>
         </div>
