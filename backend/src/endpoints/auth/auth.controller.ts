@@ -15,7 +15,6 @@
 // 
 
 import { Controller, Post, Delete, Session, Req } from '@nestjs/common';
-import { Request } from 'express';
 import { TokenService } from '../session/token.service';
 @Controller('auth')
 export class AuthController {
@@ -27,7 +26,6 @@ export class AuthController {
   async getSession(@Session() session: Record<string, any>) {
     try {
         const tokenData = await this.tokenService.getToken();
-        console.log('token data ',tokenData);
         if(tokenData && tokenData.length > 0){
           return {
             success: true,
@@ -41,7 +39,6 @@ export class AuthController {
         };
         return Promise.resolve(token);
     } catch (err) {
-      console.log('err ',err);
       return { 
         success: false, 
         status: err.response.status,

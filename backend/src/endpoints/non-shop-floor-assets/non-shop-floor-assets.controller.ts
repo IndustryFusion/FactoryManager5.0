@@ -17,7 +17,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException } from '@nestjs/common';
 import { NonShopFloorAssetsService } from './non-shop-floor-assets.service';
 import { TokenService } from '../session/token.service';
-import { Request, Response } from 'express';
 
 @Controller('non-shop-floor-assets')
 export class NonShopFloorAssetsController {
@@ -27,7 +26,7 @@ export class NonShopFloorAssetsController {
   ) {}
 
   @Get(':id')
-  async findAll(@Param('id') id: string, @Req() req: Request) {
+  async findAll(@Param('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       return this.nonShopFloorAssetsService.findAll(id, token);

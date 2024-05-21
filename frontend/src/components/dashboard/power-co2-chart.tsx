@@ -26,7 +26,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
 import socketIOClient from "socket.io-client";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { types } from 'util';
 import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
@@ -67,7 +67,6 @@ const initialChartData = {
 };
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const {autorefresh} = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [chartOptions, setChartOptions] = useState({});
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
@@ -84,34 +83,6 @@ const PowerCo2Chart = () => {
     const { t } = useTranslation(['button', 'dashboard']);
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
     let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
-
-    useEffect(() => {
-        const socket = socketIOClient(`${API_URL}/`);
-        socket.on("connect", () => {
-        });
-
-        socket.on("powerConsumptionUpdate", (newData) => {
-        setChartData((currentData) => {
-                const updatedChartData:any = { ...currentData };
-                const lastIndex = updatedChartData.chartData.labels.length - 1;
-                
-                // Ensure datasets array exists and has necessary structure
-                if (updatedChartData.datasets && updatedChartData.datasets.length >= 2 && (updatedChartData.labels[lastIndex] == newData.labels[0])) {
-                    updatedChartData.datasets[0].data[lastIndex] = newData.powerConsumption[0];
-                    updatedChartData.datasets[1].data[lastIndex] = newData.emission[0];
-                } else {
-                    console.error("Datasets are not properly initialized");
-                }
-                return updatedChartData;
-            });
-        });
-
-        // Disconnect socket on cleanup
-        return () => {
-            socket.disconnect();
-            console.log('WebSocket Disconnected');
-        };
-    }, []);
 
     const intervalButtons = [
         { label: "Days", interval: "days" },
