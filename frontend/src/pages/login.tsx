@@ -33,9 +33,9 @@ import { RootState } from "@/state/store";
 
 //interface for token
 interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  sessionId: string;
+  success: string;
+  status: string;
+  message: string;
 }
 
 const Login: React.FC = () => {
@@ -48,21 +48,16 @@ const Login: React.FC = () => {
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const dispatch = useDispatch();
-  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [hasMounted, setHasMounted] = useState(false); 
   
   useEffect(() => {
     if(router.isReady){
-    setHasMounted(true);
-      if (typeof window !== "undefined" && hasMounted && router.isReady) {
-        const connectSid = Cookies.get("connect.sid");
+      setHasMounted(true);
+      if (typeof window !== "undefined") {
         const loginFlag = Cookies.get("login_flag") === "true";
 
-        if (connectSid && loginFlag) {
+        if (loginFlag) {
           router.push("/factory-site/factory-overview");
-
-        } else {
-          router.push("/login");
         }
       }
     }
@@ -115,15 +110,14 @@ const Login: React.FC = () => {
       
         dispatch(login(username));
         dispatch(startTimer());
-        Cookies.set("connect.sid", data.sessionId, { expires: 7 });
-        router.push('/factory-site/factory-overview');
-        toast.current?.show({
-          severity: "success",
-          summary: "Login Successful",
-          detail: "Welcome!",
-        });
-        // setIsLoggedIn(true);
-      
+        if(data.success){
+          router.push('/factory-site/factory-overview');
+          toast.current?.show({
+            severity: "success",
+            summary: "Login Successful",
+            detail: "Welcome!",
+          });
+        }
       } catch (err) {
         toast.current?.show({
           severity: "error",
@@ -154,7 +148,7 @@ const Login: React.FC = () => {
       <Toast ref={toast} />
       
       {hasMounted && (
-       Cookies.get("login_flag") === "false" || !Cookies.get("connect.sid") ? (
+       Cookies.get("login_flag") === "false" ? (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
           <h1 style={{color:"white",marginLeft:"1rem"}}> Factory Manager 5.0 </h1>

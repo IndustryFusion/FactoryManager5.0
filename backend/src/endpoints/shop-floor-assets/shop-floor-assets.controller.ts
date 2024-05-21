@@ -16,17 +16,20 @@
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException } from '@nestjs/common';
 import { ShopFloorAssetsService } from './shop-floor-assets.service';
-import { getSessionToken } from '../session/session.service';
+import { TokenService } from '../session/token.service';
 import { Request, Response } from 'express';
 
 @Controller('shop-floor-assets')
 export class ShopFloorAssetsController {
-  constructor(private readonly shopFloorAssetsService: ShopFloorAssetsService) {}
+  constructor(
+    private readonly shopFloorAssetsService: ShopFloorAssetsService,
+    private readonly tokenService: TokenService
+  ) {}
 
   @Get()
   async findAll(@Param('id') id: string, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return this.shopFloorAssetsService.findAll(id, token);
     } catch (err) {
       throw new NotFoundException();

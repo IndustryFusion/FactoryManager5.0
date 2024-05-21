@@ -23,9 +23,9 @@ dotenv.config();
 //interface for token
 
 interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  sessionId: string
+  success: string;
+  status: string;
+  message: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -45,9 +45,10 @@ const login = async (username: string, password: string): Promise<LoginResponse>
     const loginUrl = API_URL + '/auth/login';
     try {
         const response: AxiosResponse<LoginResponse> = await axios.post(loginUrl as string, data, { headers });
-        if (response.data) 
+        console.log('response ',response.data);
+        if (response.data.success) 
         {
-            // Securely store tokens in cookies
+            // Set LogIn to true
             Cookies.set('login_flag', "true", { expires: 86400 });
         }
         return response.data;

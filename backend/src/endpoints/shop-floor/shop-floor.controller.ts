@@ -18,7 +18,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundExc
 import { ShopFloorService } from './shop-floor.service';
 import { Request, Response } from 'express';
 import * as jsonData from './shop-floor-schema.json';
-import { getSessionToken } from '../session/session.service';
+import { TokenService } from '../session/token.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import axios from 'axios';
@@ -29,13 +29,14 @@ export class ShopFloorController {
   constructor(
     private readonly shopFloorService: ShopFloorService, 
     private readonly factorySiteService: FactorySiteService,
-    private readonly allocatedAssetService: AllocatedAssetService
+    private readonly allocatedAssetService: AllocatedAssetService,
+    private readonly tokenService: TokenService
     ) {}
 
   @Post()
   async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const createResponse = await this.shopFloorService.create(data, token);
       if(createResponse['status'] == 200 || createResponse['status'] == 201) {
         try{
@@ -101,7 +102,7 @@ export class ShopFloorController {
   @Get()
   async findAll(@Query('id') id: string, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.shopFloorService.findAll(id, token);
     } catch (err) {
       throw new NotFoundException();
@@ -111,7 +112,7 @@ export class ShopFloorController {
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.shopFloorService.findOne(id, token);
     } catch (err) {
       throw new NotFoundException();
@@ -121,7 +122,7 @@ export class ShopFloorController {
   @Patch('/update-react')
   async updateReact(@Body() data, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateReact(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         let updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
@@ -147,7 +148,7 @@ export class ShopFloorController {
   @Patch('/update-asset')
   async updateAssets(@Body() data, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateAssets(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -170,7 +171,7 @@ export class ShopFloorController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() data, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.update(id, data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -193,7 +194,7 @@ export class ShopFloorController {
   @Delete('/delete-react')
   async deleteReact(@Body() data, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.deleteScript(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -214,7 +215,7 @@ export class ShopFloorController {
   @Delete(':id')
   async remove(@Param('id') id: string, @Query('factory-id') factoryId: string, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.remove(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
         try {
