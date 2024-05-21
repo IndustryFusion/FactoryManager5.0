@@ -25,7 +25,6 @@ export class CronController {
 
     @Get()
     async validate(@Req() req: Request) {
-        console.log('inside validate')
         try {
             const token = await getCronToken(req);
             return this.cronService.validateScript(token);

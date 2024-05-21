@@ -53,10 +53,7 @@ export class PgRestService {
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
       const response = await axios.get(url, {headers});
       return response.data;
-     
-
     } catch(err) {
-      console.log("PGREST SERVICE ERROR FOUND")
       return [];
     }
   }
@@ -139,9 +136,7 @@ async findAll(token, queryParams) {
     }
    return response.data ;
   } catch (err) {
-    console.log("Error fetching data from TimescaleDB:");
     return [];
-   
   }
 }
 

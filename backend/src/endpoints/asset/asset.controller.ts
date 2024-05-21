@@ -36,8 +36,7 @@ export class AssetController {
       if (type) {
         return this.getAssetByType(type, token);
       } else {
-     
-      return await this.assetService.getAssetData(token);
+        return await this.assetService.getAssetData(token);
       }
     } catch (err) {
       throw new NotFoundException("Error fetching assets " + err);
@@ -76,7 +75,6 @@ export class AssetController {
   @Get(':id/keyvalues')
   async getkeyValuesById(@Param('id') id: string, @Req() req: Request) {
     try {
-      console.log('inside keyvalues func');
       const token = await getSessionToken(req);
       return await this.assetService.getkeyValuesById(id, token);
     } catch (err) {
@@ -110,7 +108,6 @@ export class AssetController {
     try {
       const token = await getSessionToken(req);
       const response = await this.assetService.updateRelations(data, token);
-      console.log(response);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
           success: true,
@@ -121,6 +118,7 @@ export class AssetController {
     } catch (err) {
       return { 
         success: false,
+        status: err.response.status,
         message: "Error while updating asset relationships"
       };
     }

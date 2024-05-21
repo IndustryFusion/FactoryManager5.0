@@ -20,11 +20,13 @@ import * as cors from 'cors';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import * as dotenv from 'dotenv';
+import { AllExceptionsFilter } from './utils/exception.middleware';
 
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.use(cors({
     origin: [process.env.CORS_ORIGIN],
     credentials: true, 

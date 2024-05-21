@@ -265,6 +265,29 @@ const FlowEditor: React.FC<
         setEdges((eds) => [...eds, newEdge]);
       }
     }
+
+    if (deletedShopFloors) {
+      deletedShopFloors.forEach((deletedShopFloorId) => {
+
+        const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
+
+        setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
+
+        setEdges((edges) =>
+
+          edges.filter(
+
+            (edge) =>
+
+              edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
+
+          )
+
+        );
+
+      });
+
+    }
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -295,30 +318,20 @@ const FlowEditor: React.FC<
       console.warn = originalWarn;
     };
 
-  }, [latestShopFloor, reactFlowInstance, nodes, setNodes, setEdges, deletedShopFloors, factoryId, API_URL, toastMessage]);
+  }, [latestShopFloor, reactFlowInstance, nodes,edges]);
 
 
+// useEffect(() => {
+
+ 
+// }, [deletedShopFloors]); // Ensure all dependencies are listed
 useEffect(() => {
   if (deletedShopFloors && deletedShopFloors.length > 0) {
-    console.log("Processing deletions for: ", deletedShopFloors);
-
-    const newNodes = nodes.filter(node => 
-      !deletedShopFloors.includes(node.id.replace('shopFloor_', ''))
-    );
-    const newEdges = edges.filter(edge => 
-      !deletedShopFloors.includes(edge.source.replace('shopFloor_', '')) &&
-      !deletedShopFloors.includes(edge.target.replace('shopFloor_', ''))
-    );
-
-    if (newNodes.length !== nodes.length || newEdges.length !== edges.length) {
-      setNodes(newNodes);
-      setEdges(newEdges);
-    }
-
-   saveOrUpdate();
-  //  onRestore();
+      saveOrUpdate();
   }
+   
 }, [deletedShopFloors]); 
+
 
 
   const checkForNewAdditions = useCallback(() => {
@@ -335,7 +348,6 @@ useEffect(() => {
       setHasChanges(true);
     }
   }, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
-
   const onEdgesChange = useCallback((changes: any) => {
     onEdgesChangeProvide(changes);
     if (isRestored && checkForNewAdditions()) {

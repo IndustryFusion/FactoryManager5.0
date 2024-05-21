@@ -30,7 +30,6 @@ export class AuthController {
         };
         return Promise.resolve(token);
     } catch (err) {
-      console.log('Login middleware err ',err);
       throw new err;
     }
   }
