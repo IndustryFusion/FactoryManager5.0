@@ -32,7 +32,7 @@ const relationSlice = createSlice({
     initialState,
     reducers: {
         create: (state, action) => {
-            console.log('inside relations slice ',action.payload);
+         
             const { id, values } = action.payload;
 
            return {

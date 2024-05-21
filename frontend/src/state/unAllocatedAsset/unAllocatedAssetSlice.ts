@@ -34,7 +34,7 @@ const unAllocatedAssetSlice = createSlice({
     initialState,
     reducers: {
         create: (state, action) => {
-            console.log('action payload ',action.payload);
+         
             return action.payload;
         },
         reset: () => initialState,

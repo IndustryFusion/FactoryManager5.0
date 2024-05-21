@@ -74,14 +74,11 @@ export const findOnlineAverage = (onlineTime: any) => {
   const avgOnlinePercent = Math.round(averageOnline * 100);
   return avgOnlinePercent;
 
-  // console.log("sumOfTime",sumOfTime);
-  // console.log("averageOnline ",averageOnline  );
-  // console.log("avgOnlinePercent", avgOnlinePercent);
 }
 
 
 export const fetchAssets = async (assetId: string) => {
-  // console.log(assetId, "getting assetId")
+ 
   try {
       const attributeIds: string[] = [];
       const response = await axios.get(API_URL + `/asset/${assetId}`, {
@@ -92,7 +89,6 @@ export const fetchAssets = async (assetId: string) => {
           withCredentials: true,
       });
       const assetData: Asset = response.data;
-      // console.log(assetData, "what's the data");
 
       Object.keys(assetData).map((key) => {
           if (key.includes("fields")) {
@@ -120,19 +116,11 @@ export const fetchAssets = async (assetId: string) => {
       finalDays.push(day.format('YYYY-MM-DD'));
   }
 
-  // console.log(finalDays);
   return finalDays;
 };
 
 
 export const getWeekHasData = (weeksArrayValue, finalDataValue) => { [{}]
-  //finalData: 49days: eachday: value from pgrest // 
-  /* {
-    finalData:{
-      "31/03/2024": [],
-      "01/05/2024":[]
-    }
-  } ***/
   const result = [];
   for (const weekKey in weeksArrayValue[0]) {
       for (const arrayDate of weeksArrayValue[0][weekKey]) {

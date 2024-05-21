@@ -35,7 +35,7 @@ interface CustomAssetNodeProps {
     label:string,
     type:string
   }
-  onEdgeAdd?: (assetId: string, relationName: string) => void;
+  createRelationNodeAndEdge?: (assetId: string, relationName: string) => void;
 }
 
 interface AssetDetail {
@@ -58,7 +58,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
   const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
-  const { onEdgeAdd } = useContext(EdgeAddContext);
+  const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
 
   useEffect(() => {
     const getAssetDetails = async () => {
@@ -108,7 +108,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       const relationOption = relationOptions.find(option => option.label === relationLabel);
       const relationClass = relationOption ? relationOption.class : '';
 
-      onEdgeAdd(data.id, relationLabel ,relationClass);
+      createRelationNodeAndEdge(data.id, relationLabel ,relationClass);
 
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>
