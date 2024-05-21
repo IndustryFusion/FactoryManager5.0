@@ -17,16 +17,19 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query, NotFoundException } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ValueChangeStateService } from './value-change-state.service';
-import { getSessionToken } from '../session/session.service';
+import { TokenService } from '../session/token.service';
 
 @Controller('value-change-state')
 export class ValueChangeStateController {
-  constructor(private readonly valueChangeStateService: ValueChangeStateService) {}
+  constructor(
+    private readonly valueChangeStateService: ValueChangeStateService,
+    private readonly tokenService: TokenService
+  ) {}
 
   @Get()
   async findOne(@Query() queryParams: any, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findOne(queryParams, token);
     } catch (err) {
       throw new NotFoundException();
@@ -36,7 +39,7 @@ export class ValueChangeStateController {
   @Get('/chart')
   async findAll(@Query('asset-id') assetId: string, @Query('type') type: string, @Req() req: Request) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findAll(assetId, type, token);
     } catch (err) {
       throw new NotFoundException();
