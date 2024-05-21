@@ -61,6 +61,7 @@ import { RedisService } from './endpoints/redis/redis.service';
 import { ValueChangeStateGateway } from './endpoints/value-change-state/value-change-state.gateway';
 import { PowerConsumptionGateway } from './endpoints/power-consumption/power-consumption-gateway';
 import { LoggerMiddleware } from './utils/logger.middleware';
+import { TokenService } from './endpoints/session/token.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -119,7 +120,8 @@ const mongoURI = process.env.MONGO_URL;
     PgRestService,
     RedisService,
     ValueChangeStateGateway,
-    PowerConsumptionGateway
+    PowerConsumptionGateway,
+    TokenService
   ]
 })
 export class AppModule {

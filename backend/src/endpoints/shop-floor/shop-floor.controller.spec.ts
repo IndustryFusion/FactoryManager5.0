@@ -17,7 +17,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShopFloorController } from './shop-floor.controller';
 import { ShopFloorService } from './shop-floor.service';
-import * as sessionService from '../session/session.service';
+import * as sessionService from '../session/token.service';
 
 jest.mock('../session/session.service');
 

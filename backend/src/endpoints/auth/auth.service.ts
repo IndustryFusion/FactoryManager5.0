@@ -41,7 +41,6 @@ export class AuthService {
         'grant_type': 'password',
         'client_id': this.CLIENT_ID as string
       });
-
       const response = await axios.post(this.API_URL, data, {headers});
       if(response.data) {
         const accessToken = response.data.access_token;

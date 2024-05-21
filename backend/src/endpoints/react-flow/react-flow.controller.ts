@@ -17,12 +17,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException,Req,Query } from '@nestjs/common';
 import { ReactFlowService } from './react-flow.service';
 import { ReactFlowDto } from './dto/react-flow.dto';
-import { getSessionToken } from '../session/session.service';
+import { TokenService } from '../session/token.service';
 import { Request, Response } from 'express';
 
 @Controller('react-flow')
 export class ReactFlowController {
-  constructor(private readonly reactFlowService: ReactFlowService) {}
+  constructor(
+    private readonly reactFlowService: ReactFlowService,
+    private readonly tokenService: TokenService
+  ) {}
 
   @Post()
   async create(@Body() data: ReactFlowDto) {
@@ -67,7 +70,7 @@ export class ReactFlowController {
   @Get('/react-flow-update/:id')
   async findFactoryAndShopFloors(@Param('id') id: string, @Req() req: Request)  {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.reactFlowService.findFactoryAndShopFloors(id,token);
       
       return response;

@@ -17,11 +17,14 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from '../endpoints/auth/auth.service'
-
+import { RedisService } from '../endpoints/redis/redis.service';
 
 @Injectable()
 export class SessionMiddleware implements NestMiddleware {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly redisService: RedisService
+  ) {}
 
   /**
    * Middleware responsible for handling user session tokens.
@@ -35,8 +38,12 @@ export class SessionMiddleware implements NestMiddleware {
     try {
       const response = await this.authService.login(username, password);
       if(response.accessToken) {
-        req.session.accessToken = response.accessToken;
-        req.session.refreshToken = response.refreshToken;
+        let tokenKey = 'token-storage';
+        let tokenData = {
+          'accessToken': response.accessToken,
+          'refreshToken': response.refreshToken
+        }
+        await this.redisService.saveData(tokenKey, tokenData);
       } else {
         throw new Error('Invaid Credentials');
       }
