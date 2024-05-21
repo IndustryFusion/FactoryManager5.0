@@ -22,7 +22,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { fetchAsset } from "@/utility/asset-utility";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { fetchAllAllocatedAssets } from "@/utility/factory-site-utility";
 import { InputText } from "primereact/inputtext";
 import { FilterMatchMode } from "primereact/api";

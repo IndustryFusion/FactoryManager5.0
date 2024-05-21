@@ -23,7 +23,7 @@ import "../../styles/asset-list.css";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/asset-types";
+import { AllocatedAssets } from "../../types/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
@@ -56,7 +56,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
+  const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAssets[]>([]);
   const [assetCategories, setAssetCategories] = useState<string[]>([]);
   const menu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -159,7 +159,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
 
   function handleDragStart(
     event: React.DragEvent,
-    data: AllocatedAsset,
+    data: AllocatedAssets,
     type: string
   ) {
     const dragData = JSON.stringify({

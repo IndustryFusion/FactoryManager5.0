@@ -16,7 +16,7 @@
 
 import React, { useState } from "react";
 import { Button } from "primereact/button";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 
 interface AssetDetailsCardProps {
   asset: Asset;

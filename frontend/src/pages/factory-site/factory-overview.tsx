@@ -15,10 +15,10 @@
 // 
 
 import { MdLocationOn } from "react-icons/md";
-import { Factory } from "@/interfaces/factory-type";
+import { Factory } from "../../types/factory-type";
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
-import { DataView, DataViewLayoutOptions } from "primereact/dataview";
+import { DataView } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 import { Button } from "primereact/button";
@@ -29,12 +29,10 @@ import { useRouter } from "next/router";
 import HorizontalNavbar from "../../components/navBar/horizontal-navbar";
 import Footer from "../../components/navBar/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
-import { Dialog } from "primereact/dialog";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
-import AssetManagement from "@/components/asset-management";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
@@ -59,7 +57,7 @@ const FactoryOverview = () => {
   const [assetManageDialog, setAssetManageDialog] = useState(false);
   const toast = useRef<Toast | null>(null);
   const dispatch = useDispatch();
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
@@ -139,7 +137,6 @@ const FactoryOverview = () => {
     }
   };
 
-  const fileInputRef = useRef(null);
   const triggerFileInput = () => {
     // Trigger the hidden file input onClick of the button
 
@@ -181,7 +178,7 @@ const FactoryOverview = () => {
         reader.onload = function (e) {
           // e.target.result contains the file's content as a text string
           try {
-            const json = JSON.parse(e.target.result); // Parse the JSON string into an object
+            const json = JSON.parse(e.target?.result as string); // Parse the JSON string into an object
             createAssets(JSON.stringify(json)); // Call createAssets with the parsed JSON data
           } catch (error) {
             console.error('Error parsing JSON:', error);
@@ -205,11 +202,10 @@ const FactoryOverview = () => {
     } else {
       const filtered =
         value.length > 0
-          ? factorySite?.filter((factory) => {
+          ? factorySite?.filter((factory:Factory) => {
+            console.log("factory", factory)
             return (
-              factory?.factory_name
-                .toLowerCase()
-                .includes(value.toLowerCase()) ||
+              factory.factory_name?.toLowerCase().includes(value.toLowerCase()) ||
               factory?.country?.toLowerCase().includes(value.toLowerCase())
             );
           })
@@ -343,7 +339,7 @@ const FactoryOverview = () => {
                 icon="pi pi-eye"
                 className="p-button-rounded p-button-secondary p-button-sm view-btn"
                 onClick={() =>
-                  router.push(`/factory-site/shop-floor/${data.id}`)
+                  router.push(`/factory-site/factory-management/${data.id}`)
                 }
               />
               <Button

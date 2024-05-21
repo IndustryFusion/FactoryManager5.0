@@ -15,12 +15,10 @@
 // limitations under the License. 
 // 
 
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import { ChartData, ChartOptions } from 'chart.js';
-import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
+import { useEffect, useRef, useState } from "react";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
@@ -55,20 +53,27 @@ interface GroupedData {
     type: string;
 }
 
+interface MachineState {
+    id: string;
+    days: Record<string, any>;
+    weeks: Record<string, any>;
+    months: Record<string, any>;
+    [key: string]: any; 
+}
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const DashboardChart = () => {
+const MachineStateChart = () => {
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
     const [factoryData, setFactoryData] = useState({});
-    const [lastData, setLastData] = useState({});
+    const [lastData, setLastData] = useState<Record<string, any>>({});
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
     const { setMachineStateData,  setAllOnlineTime } = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
-    const machineStateData = useSelector((state: RootState) => state.machineState);
+    const machineStateData = useSelector((state: RootState) => state.machineState  as MachineState);
     const toast = useRef<any>(null);
-    const intervalId: any = useRef(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -94,12 +99,10 @@ const DashboardChart = () => {
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            type DataType = any;
-            const finalData: { [key: string]: DataType[] } = {};
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
-            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length == 0)){
+            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
                         'asset-id': entityId,
@@ -137,6 +140,7 @@ const DashboardChart = () => {
                 }
                 setFactoryData(response.data);
                 setMachineStateData(response.data);
+                console.log("machine state ", machineStateData)
                 //set redux values for weeks and months
                 if(selectedInterval == 'weeks'){
                     dispatch(create({
@@ -535,6 +539,7 @@ const DashboardChart = () => {
     const alignData = (data: any) => {
         setLastData({});
         if(selectedInterval == 'days'){
+           
             const finalData = {};
             for(let key in data){
                 const dateObject = moment(key, 'MMMM Do');
@@ -869,4 +874,4 @@ const DashboardChart = () => {
     )
 }
 
-export default DashboardChart;
+export default MachineStateChart;

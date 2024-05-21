@@ -15,7 +15,7 @@
 // 
 
 import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-shopfloor";
-import ShopFloorList from "@/components/shopfloor-list";
+import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 import "../../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
 import { useEffect, useState } from "react";

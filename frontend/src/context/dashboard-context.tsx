@@ -64,8 +64,8 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [blocker, setBlocker] = useState(false);
   const [selectedAssetData, setSelectedAssetData] = useState<{ [key: string]: any; }>({});
   const [machineStateData, setMachineStateData] = useState({});
-  const [notificationData, setNotificationData] = useState([]);
-  const [allOnlineTime, setAllOnlineTime]= useState([]);
+  const [notificationData, setNotificationData] =useState<any[]>([]);
+  const [allOnlineTime, setAllOnlineTime]= useState<any[]>([]); 
   const [relationsCount, setRelationsCount] = useState<number>(0);
   const [assetCount, setAssetCount] = useState<number>(0);
 

@@ -14,10 +14,10 @@
 // limitations under the License. 
 // 
 
-import React, { useState, useEffect, ChangeEvent, FormEvent, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
-import { Factory } from "@/interfaces/factory-type";
+import { Factory } from "@/types/factory-type";
 import { handleUpload, updateFactory } from "@/utility/factory-site-utility";
 import { Button } from "primereact/button";
 import { transformDataForBackend } from "@/utility/factory-site-utility";
@@ -33,7 +33,7 @@ import {
     faMapMarkedAlt,
     faBoxOpen,
 } from "@fortawesome/free-solid-svg-icons";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Property, Schema } from "../../types/factory-form";
 import Thumbnail from "@/components/thumbnail";
 import { Toast, ToastMessage } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
@@ -46,11 +46,6 @@ interface FactoryEditProps {
     factory: string | undefined;
     isEditProp: boolean,
     setIsEditProp: React.Dispatch<React.SetStateAction<boolean>>;
-}
-interface CountryOption {
-    label: string;
-    value: string;
-
 }
 
 const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEditProp }) => {

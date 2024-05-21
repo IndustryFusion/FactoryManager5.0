@@ -26,7 +26,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { BlockUI } from 'primereact/blockui';
 import socketIOClient from "socket.io-client";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { types } from 'util';
 import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
@@ -67,7 +67,6 @@ const initialChartData = {
 };
 const PowerCo2Chart = () => {
     const [chartData, setChartData] = useState({});
-    const {autorefresh} = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [chartOptions, setChartOptions] = useState({});
     const [selectedInterval, setSelectedInterval] = useState<string>("days");

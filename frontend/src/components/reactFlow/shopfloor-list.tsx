@@ -20,7 +20,7 @@ import {
   getshopFloorById,
   deleteShopFloorById,
 } from "@/utility/factory-site-utility";
-import { ShopFloor } from "../../pages/factory-site/types/shop-floor";
+import { ShopFloor } from "../../types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";

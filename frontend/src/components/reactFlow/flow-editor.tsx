@@ -40,7 +40,7 @@ import {
   exportElementToJPEG,
   fetchAssetById,
 } from "@/utility/factory-site-utility";
-import { Factory } from "@/interfaces/factory-type";
+import { Factory } from "../../types/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
 import CustomAssetNode from "@/components/reactFlow/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
@@ -50,9 +50,9 @@ import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
 import dagre from '@dagrejs/dagre';
 import { Dialog } from "primereact/dialog";
-import "../../../styles/react-flow.css";
+import "../../styles/react-flow.css";
 import { useTranslation } from "next-i18next";
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
 const nodeTypes = {
   asset: CustomAssetNode,
 };
@@ -424,7 +424,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
 
         setRelationCounts(updatedRelationCounts);
       } else {
-        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/factories/flow-editor");
+        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
       }
     } catch (error) {
       console.error("Error fetching flowchart data:", error);
@@ -722,7 +722,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
       }
       dispatch(reset());
     } catch (error) {
-      console.log("Error from deleteMongoAndScorpio function @pages/factory-site/factories/flow-editor", error);
+      console.log("Error from deleteMongoAndScorpio function @pages/factory-site/react-flow/flow-editor", error);
       toast.current?.show({
         severity: 'error',
         summary: 'Server Error : Not Updated',
@@ -914,7 +914,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
       }
     }
   } catch (error) {
-    console.log("Error from saveOrUpdate function @pages/factory-site/factories/flow-editor", error);
+    console.log("Error from saveOrUpdate function @pages/factory-site/react-flow/flow-editor", error);
     toast.current?.show({
           severity: 'error',
           summary: 'Server Error',
@@ -1401,19 +1401,5 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
 
   );
 };
-
-export async function getStaticProps({ locale }: { locale: string }) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, [
-        'header',
-        'button',
-        'placeholder',
-        'reactflow',
-        'dashboard'
-      ])),
-    },
-  }
-}
 
 export default FlowEditor;

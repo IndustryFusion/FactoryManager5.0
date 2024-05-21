@@ -26,7 +26,7 @@ const CombineSensorChart = dynamic(
 );
 const AutoRefresh = dynamic(() => import("@/components/dashboard/auto-refresh"), { ssr: false });
 const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
-const DashboardChart = dynamic(() => import("@/components/dashboard/dashboard-chart"), { ssr: false });
+const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
 const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false, loading: () => <ProgressSpinner /> });
 import { useRouter } from "next/router";
@@ -170,7 +170,7 @@ const Dashboard = () => {
           <div className="flex border-round mx-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>
-          <DashboardChart/>
+          <MachineStateChart/>
           </div>     
       </div>
       <Footer />

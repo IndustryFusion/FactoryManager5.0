@@ -16,13 +16,13 @@
 
 import axios from "axios"
 import { useEffect, useState, ChangeEvent, useRef } from "react";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Property, Schema } from "../../types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
-import { ShopFloor } from "../../pages/factory-site/types/shop-floor-form";
+import { ShopFloor } from "../../types/shop-floor-form";
 import { handleUpload } from "@/utility/factory-site-utility";
 import { Toast, ToastMessage } from "primereact/toast";
 import "../../styles/factory-form.css"

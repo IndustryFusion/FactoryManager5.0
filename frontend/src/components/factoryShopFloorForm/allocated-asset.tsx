@@ -17,16 +17,14 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
     getNonShopFloorAsset,
-    getNonShopFloorAssetDetails,
     fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
-// import { Asset } from "../interfaces/assetTypes";
 import "../../styles/asset-list.css";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/asset-types";
+import { AllocatedAssets } from "@/types/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
@@ -62,7 +60,7 @@ const AllocatedAsset = () => {
     const router = useRouter();
     const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
+    const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAssets[]>([]);
     const [assetCategories, setAssetCategories] = useState<string[]>([]);
     const [searchTermAllocated, setSearchTermAllocated] = useState("");
     const allocatedMenu = useRef<Menu>(null);

@@ -18,7 +18,6 @@ import React, { useState, ChangeEvent, useEffect, useRef, useMemo } from "react"
 import Select from "react-select";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
-import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import axios from "axios";
@@ -36,9 +35,9 @@ import {
 import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Toast } from "primereact/toast"
-import { Factory, FactoryFormProps } from "../../interfaces/factory-type";
+import { Factory, FactoryFormProps } from "../../types/factory-type";
 import { handleUpload } from "@/utility/factory-site-utility";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Property, Schema } from "../../types/factory-form";
 import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
 

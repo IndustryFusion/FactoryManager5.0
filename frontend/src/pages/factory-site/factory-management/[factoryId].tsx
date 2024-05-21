@@ -15,12 +15,9 @@
 // 
 
 import React, { useState, useEffect, useRef, useCallback ,Suspense } from "react";
-import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import dynamic from 'next/dynamic'
-import { ShopFloor } from "../types/shop-floor";
-import { exportElementToJPEG } from "@/utility/factory-site-utility";
-import { Asset } from "../../../interfaces/asset-types";
+import { ShopFloor } from "../../../types/shop-floor";
 import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
 import Footer from "../../../components/navBar/footer";
 import Cookies from "js-cookie";
@@ -28,19 +25,15 @@ import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
   suspense: true
 });
-const FlowEditor = dynamic(() => import("../factories/flow-editor"), {
+const FlowEditor = dynamic(() => import("../../../components/reactFlow/flow-editor"), {
   suspense: true
 });
 const UnallocatedAssets = dynamic(() => import("../../../components/reactFlow/unallocated-allocated-assets"), {
   suspense: true
 });
 import {
-  getshopFloorById,
-  getNonShopFloorAsset,
   getShopFloors,
 } from "@/utility/factory-site-utility";
-import { any } from "prop-types";
-import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 

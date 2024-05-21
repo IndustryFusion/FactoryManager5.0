@@ -20,9 +20,9 @@ import React, { useContext, useEffect, useRef, useState ,useCallback} from "reac
 import { ChartData, ChartOptions, registerables ,TooltipItem, ChartType, ScriptableContext} from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { Dropdown   } from "primereact/dropdown";
-import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
+import { Datasets, pgData, DataCache } from "../../types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
 import socketIOClient from "socket.io-client";
 import Cookies from "js-cookie";
