@@ -19,9 +19,7 @@ import {
   getNonShopFloorAsset,
   fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
-// import { Asset } from "../interfaces/assetTypes";
-import "../styles/asset-list.css";
-import { Card } from "primereact/card";
+import "../../styles/asset-list.css";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
@@ -47,7 +45,7 @@ interface Asset {
  [key: string]:any,
 }
 
-const UnallocatedAssets: React.FC<AssetListProps> = ({
+const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   factoryId,
   product_name,
 }) => {
@@ -56,36 +54,30 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
   const [error, setError] = useState<string | null>(null);
   // const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
   const router = useRouter();
-  const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
   const [assetCategories, setAssetCategories] = useState<string[]>([]);
-  const [searchTermAllocated, setSearchTermAllocated] = useState("");
   const menu = useRef<Menu>(null);
-  const [visible, setVisible] = useState(false);
-  const allocatedMenu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
-  const [showAllocated, setShowAllocated] = useState(false); // New state to toggle views
-  const [view, setView] = useState('unallocated');
   const { t } = useTranslation(['placeholder', 'reactflow']);
   let allocatedAssetsArray = null;
   let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
-  // console.log('unAllocatedAssets from redux ', unAllocatedAssetData);
+
   const dispatch = useDispatch();
   const [selectedUnallocatedAsset, setSelectedUnallocatedAsset] = useState<string | null>( null);
   const [selectedAllocatedAsset, setSelectedAllocatedAsset] = useState<string | null>( null);
 
- const fetchNonShopFloorAssets = async (factoryId: string) => {
+ const getAllocatedAndUnallocatedAssets = async (factoryId: string) => {
       try {
         if (unAllocatedAssetData.length === 0) {
           const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-          // console.log("fetchedAssetIds", fetchedAssetIds);
+    
           dispatch(create(fetchedAssetIds));
         }
         
         const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-        // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+
         if (Array.isArray(fetchedAllocatedAssets)) {
           allocatedAssetsArray = fetchedAllocatedAssets;
           setAllocatedAssets(fetchedAllocatedAssets);
@@ -133,7 +125,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
     } else if (router.isReady) {
       const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
       if (typeof id === 'string') {
-        fetchNonShopFloorAssets(id);
+        getAllocatedAndUnallocatedAssets(id);
       }
     }
 
@@ -147,7 +139,7 @@ const UnallocatedAssets: React.FC<AssetListProps> = ({
       return matchesSearchTerm && matchesCategories;
 
     });
-    setFilteredAssets(results);
+   
   }, [searchTerm, selectedCategories, assets]);
 
 
@@ -256,4 +248,4 @@ return (
   );
 };
 
-export default UnallocatedAssets;
+export default UnallocatedAndAllocatedAssets;

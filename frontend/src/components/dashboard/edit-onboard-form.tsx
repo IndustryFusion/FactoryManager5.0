@@ -60,9 +60,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
             const assetProtocol = response.data.asset_communication_protocol === undefined ? "" : response.data.asset_communication_protocol;
 
-            console.log("response podName", podName);
-
-
+        
             // Update the state with the new values
             setOnboard(prevState => ({
                 ...prevState,
@@ -106,7 +104,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             ...onboard,
             app_config: "|" + onboard.app_config
         };
-        console.log(modifiedOnboard, "all values on submit");
         try {
             const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, modifiedOnboard, {
                 headers: {
@@ -115,7 +112,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 },
                 withCredentials: true,
             })
-            console.log("updated values", response);
             const { success, status, message } = response.data;
             if (status === 204 && success === true) {
                 setEditOnboardAssetProp(

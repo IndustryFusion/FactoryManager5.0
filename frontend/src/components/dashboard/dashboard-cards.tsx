@@ -15,7 +15,7 @@
 // 
 
 import { useDashboard } from "@/context/dashboard-context";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
 import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
@@ -27,7 +27,6 @@ import { useTranslation } from "next-i18next";
 
 const DashboardCards: React.FC = () => {
 
-    // const [timer, setTimer] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const { machineStateValue,
         selectedAssetData,
         machineStateData,
@@ -83,19 +82,16 @@ const DashboardCards: React.FC = () => {
             })
 
 
-            console.log("value change resposne", response.data);
             if (Array.isArray(response.data) && response.data.length > 0) {
                 if (response.data[0]?.value === "2") {
                     const timeValueReceived = findDifference(response.data[0]?.observedAt);
-                    console.log("response.data[0]?.observedAt", response.data[0]?.observedAt, entityIdValue);
-                    console.log(timeValueReceived, "timeValueReceived ");
                     setDifference(timeValueReceived);
                     setPrevTimer(timeValueReceived); //set intial timer value
                 }
             } 
         }
         catch (error) {
-            console.log(error);
+            console.log("Error From fetchData function from @components/dashboard/dashboard-cards.tsx",error);
         }
     }
 
@@ -132,7 +128,6 @@ const DashboardCards: React.FC = () => {
                 propertiesArray.push({ [propertyName]: propertyValue });
             }
         }
-        // console.log("propertiesArray in dashboard cards", propertiesArray);
         propertiesArray.forEach(property => {
             const key = Object.keys(property)[0];
             const value = property[key];
@@ -165,8 +160,7 @@ const DashboardCards: React.FC = () => {
                     },
                     withCredentials: true,
                 });
-                // console.log("parent relation response", response);
-
+   
                 response?.data.forEach(item => {
                     if (item.id !== "json-ld-1.1") {
                         setRelationsCount((prev: any) => prev + 1);

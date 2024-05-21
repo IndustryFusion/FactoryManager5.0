@@ -36,7 +36,6 @@ const FactoryShopFloorForm = () => {
     ];
     const [assetValue, setAssetValue] = useState('');
 
-    // console.log("in shopfloor asste", asset);
 
     useEffect(() => {
         if (checkBoxvalue !== 'lock') {

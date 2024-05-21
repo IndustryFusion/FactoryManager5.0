@@ -84,7 +84,7 @@ const PowerCo2Chart = () => {
     const { t } = useTranslation(['button', 'dashboard']);
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
     let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
-    console.log(`redux data ${minimumDate} id ${reduxId}`);
+
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
         socket.on("connect", () => {
@@ -148,7 +148,6 @@ const PowerCo2Chart = () => {
                 },
                 withCredentials: true,
             });
-            console.log('response ',response.data);
             if(reduxId !== entityIdValue){
                 const firstValueResponse = await axios.get(`${API_URL}/power-consumption`, {
                     params: {
@@ -161,10 +160,9 @@ const PowerCo2Chart = () => {
                     },
                     withCredentials: true,
                 })
-                console.log('firstValueResponse ',firstValueResponse.data);
+             
                 if(firstValueResponse.data.labels.length > 0){
                     let date = moment(firstValueResponse.data.labels[0], 'MMM Do').format('YYYY-MM-DD');
-                    console.log('min date ',date);
                     dispatch(create({
                         minimumDate: date,
                         id: entityIdValue
@@ -262,7 +260,7 @@ const PowerCo2Chart = () => {
         setNoChartData(false);
         if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
             const obj = await fetchData(entityIdValue, selectedInterval, startTime, endTime);
-            console.log('obj data ',obj);
+    
             // check if there is data or not 
             if(obj && obj.labels.length > 0){
                 await setGraphData(obj);

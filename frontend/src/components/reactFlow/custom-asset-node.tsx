@@ -22,8 +22,7 @@ import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import EdgeAddContext from "@/context/edge-add-context";
-import { validateHeaderValue } from "http";
-import "../styles/custom-asset-node.css"
+import "../../styles/custom-asset-node.css"
 interface RelationOption {
   label: string;
   value: string;
@@ -36,7 +35,7 @@ interface CustomAssetNodeProps {
     label:string,
     type:string
   }
-  onEdgeAdd?: (assetId: string, relationName: string) => void;
+  createRelationNodeAndEdge?: (assetId: string, relationName: string) => void;
 }
 
 interface AssetDetail {
@@ -59,7 +58,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
   const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
-  const { onEdgeAdd } = useContext(EdgeAddContext);
+  const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
 
   useEffect(() => {
     const getAssetDetails = async () => {
@@ -76,15 +75,11 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
               class:value.class
               
             }));
-          console.log(" options ", options)
-          console.log("Formatted options for MultiSelect:", options);
+    
           setRelationOptions(options);
-          console.log(
-            relationOptions,
-            "The relation options list after setRelation"
-          );
+
         } catch (error) {
-          console.error("Failed to fetch asset details:", error);
+          console.log("Error from fetchAssetById function from custom-asset-node.tsx", error);
         }
       }
     };
@@ -113,7 +108,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       const relationOption = relationOptions.find(option => option.label === relationLabel);
       const relationClass = relationOption ? relationOption.class : '';
 
-      onEdgeAdd(data.id, relationLabel ,relationClass);
+      createRelationNodeAndEdge(data.id, relationLabel ,relationClass);
 
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>

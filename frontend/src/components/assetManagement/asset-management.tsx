@@ -44,14 +44,14 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   setAssetManageDialogProp
 }) => {
   const [assetData, setAssetData] = useState<Asset[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState<Asset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    product_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    asset_type: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    asset_manufacturer_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
+    global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+    product_name: { value: null as string | null, matchMode: FilterMatchMode.STARTS_WITH },
+    asset_type: { value: null as string | null, matchMode: FilterMatchMode.STARTS_WITH },
+    asset_manufacturer_name: { value: null as string | null, matchMode: FilterMatchMode.STARTS_WITH }
   });
   const [deleteAsset, setDeleteAsset] = useState({
     deleteFlag: false,
@@ -68,13 +68,11 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       if (response !== undefined) {
         setIsLoading(false);
         const sortedAssets = [...response].sort((a, b) => {
-          // Use Moment.js to parse and compare the dates
           return moment(b.creation_date, "DD.MM.YYYY HH:mm:ss").diff(moment(a.creation_date, "DD.MM.YYYY HH:mm:ss"));
         });
 
         setAssetData(sortedAssets);
-        // console.log(sortedAssets, "sorted Assets");
-        // console.log(response, "all assets");
+      
       } else {
         console.error("Fetch returned undefined");
       }
@@ -102,7 +100,6 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
         const updateAssets = assetData.filter(asset => asset?.id !== assetId);
         setAssetData(updateAssets)
       }
-      console.log("delted asset", response);
     } catch (error) {
       console.error(error)
     }
@@ -189,7 +186,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     <h3 className="px-5"> Asset Management</h3>
   )
 
-  const onGlobalFilterChange = (e) => {
+  const onGlobalFilterChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     let _filters = { ...filters };
     _filters['global'].value = value;
@@ -253,7 +250,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
                   className="assets-table"
                   selectionMode="single"
                   selection={selectedProduct}
-                  onSelectionChange={(e) => setSelectedProduct(e.value)}
+                  onSelectionChange={(e) => setSelectedProduct(e.value as Asset)}
                   header={header}
                   filters={filters}
                   globalFilterFields={['product_name', 'asset_type', 'asset_manufacturer_name']}

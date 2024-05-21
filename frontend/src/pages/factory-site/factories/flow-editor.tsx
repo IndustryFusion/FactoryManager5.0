@@ -42,7 +42,7 @@ import {
 } from "@/utility/factory-site-utility";
 import { Factory } from "@/interfaces/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
-import CustomAssetNode from "@/components/custom-asset-node";
+import CustomAssetNode from "@/components/reactFlow/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
@@ -53,7 +53,9 @@ import { Dialog } from "primereact/dialog";
 import "../../../styles/react-flow.css";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
+const nodeTypes = {
+  asset: CustomAssetNode,
+};
 interface FlowEditorProps {
   factory: Factory;
   factoryId: string;
@@ -72,7 +74,6 @@ interface ExtendedNodeData {
 interface Edge {
   source: string;
   target: string;
-  // include other properties that edges might have
 }
 
 interface ExtendedNode extends Node<ExtendedNodeData> {
@@ -101,9 +102,7 @@ interface FactoryNodeData {
   type: string;
   undeletable?: boolean;
 }
-const nodeTypes = {
-  asset: CustomAssetNode,
-};
+
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
@@ -124,7 +123,6 @@ const FlowEditor: React.FC<
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const elementRef = useRef(null);
-
   const [loadedFlowEditor, setLoadedFlowEditor] = useState(false);
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
     {}
@@ -143,7 +141,7 @@ const FlowEditor: React.FC<
   const { t } = useTranslation(['button', 'reactflow']);
   
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
-  const onEdgeAdd = (assetId: string, relationsInput: string, relationClass: string) => {
+  const createRelationNodeAndEdge = (assetId: string, relationsInput: string, relationClass: string) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
@@ -265,29 +263,29 @@ const FlowEditor: React.FC<
         setEdges((eds) => [...eds, newEdge]);
       }
     }
+ 
+  
+    if (deletedShopFloors && deletedShopFloors.length > 0) {
+    let nodesUpdated = false;
 
-    if (deletedShopFloors) {
-      deletedShopFloors.forEach((deletedShopFloorId) => {
+    deletedShopFloors.forEach((deletedShopFloorId) => {
+      const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
 
-        const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
-
-        setNodes((nodes) => nodes.filter((node) => node.id !== shopFloorNodeId));
-
-        setEdges((edges) =>
-
-          edges.filter(
-
-            (edge) =>
-
-              edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
-
-          )
-
-        );
-
+      setNodes((nodes) => {
+        const updatedNodes = nodes.filter((node) => node.id !== shopFloorNodeId);
+        if (updatedNodes.length !== nodes.length) {
+          nodesUpdated = true;
+        }
+        return updatedNodes;
       });
 
+      setEdges((edges) => edges.filter((edge) => edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId));
+    });
+
+    if (nodesUpdated) {
+      saveOrUpdate();
     }
+  }
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -302,7 +300,7 @@ const FlowEditor: React.FC<
       };
 
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
-      onRestore();
+      getMongoDataFlowEditor();
       setLoadedFlowEditor(true)
     }
     if (toastMessage) {
@@ -318,23 +316,10 @@ const FlowEditor: React.FC<
       console.warn = originalWarn;
     };
 
-  }, [latestShopFloor, reactFlowInstance, nodes,edges]);
+  }, [latestShopFloor, reactFlowInstance, nodes,edges,deletedShopFloors]);
 
 
-// useEffect(() => {
-
- 
-// }, [deletedShopFloors]); // Ensure all dependencies are listed
-useEffect(() => {
-  if (deletedShopFloors && deletedShopFloors.length > 0) {
-      saveOrUpdate();
-  }
-   
-}, [deletedShopFloors]); 
-
-
-
-  const checkForNewAdditions = useCallback(() => {
+  const checkForNewAdditionsNodesEdges = useCallback(() => {
     const newNodesAdded = nodes.length > originalNodes.length || nodes.length < originalNodes.length;
     const newEdgesAdded = edges.length > originalEdges.length || edges.length < originalEdges.length;
 
@@ -344,21 +329,27 @@ useEffect(() => {
 
   const onNodesChange = useCallback((changes: any) => {
     onNodesChangeProvide(changes);
-    if (isRestored && checkForNewAdditions()) {
+    if (isRestored && checkForNewAdditionsNodesEdges()) {
       setHasChanges(true);
     }
-  }, [onNodesChangeProvide, isRestored, checkForNewAdditions]);
+  }, [onNodesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]);
+
   const onEdgesChange = useCallback((changes: any) => {
     onEdgesChangeProvide(changes);
-    if (isRestored && checkForNewAdditions()) {
+    if (isRestored && checkForNewAdditionsNodesEdges()) {
       setHasChanges(true);
     }
-  }, [onEdgesChangeProvide, isRestored, checkForNewAdditions]);
+  }, [onEdgesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]);
 
-const onRestore = useCallback(async () => {
+
+// @desc: 
+//@GET : the React Flow data for the specified factory ID both mongo 
+const getMongoDataFlowEditor = useCallback(async () => {
   if (factoryId) {
     try {
       setIsOperationInProgress(true);
+
+     
       const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
         headers: {
           "Content-Type": "application/json",
@@ -374,24 +365,25 @@ const onRestore = useCallback(async () => {
       ) {
         const dagreGraph = new dagre.graphlib.Graph();
         dagreGraph.setGraph({
-          ranksep: 30,    // vertical spacing between nodes
-          nodesep: 90      // horizontal spacing between nodes
+          ranksep: 30,     // @desc: Set vertical spacing between nodes
+          nodesep: 90      // @desc: Set horizontal spacing between nodes
         });
         dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-        // Add nodes to the dagre graph
+        // @desc: Add nodes to the dagre graph
         getReactFlowMongo.data.factoryData.nodes.forEach((node:Node) => {
           dagreGraph.setNode(node.id, { width: 100, height: 100 });
         });
 
-        // Add edges to the dagre graph
+       // @desc: Add edges to the dagre graph
         getReactFlowMongo.data.factoryData.edges.forEach((edge:Edge) => {
           dagreGraph.setEdge(edge.source, edge.target);
         });
 
-        // Auto layout the nodes using dagre
+        // @desc: Auto layout the nodes using dagre
         dagre.layout(dagreGraph);
-
+ 
+        // @desc: Map nodes to the new positions provided by dagre
         const layoutedNodes = getReactFlowMongo.data.factoryData.nodes.map((node:Node) => {
           const nodeWithPosition = dagreGraph.node(node.id);
           return {
@@ -404,12 +396,14 @@ const onRestore = useCallback(async () => {
         setNodes(layoutedNodes);
         setEdges(getReactFlowMongo.data.factoryData.edges);
 
+        // @desc: Set the original nodes and edges for comparison
         setOriginalNodes(layoutedNodes);
         setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
 
         setIsRestored(true);
         const updatedRelationCounts: RelationCounts = {};
 
+        // @desc: Update relation counts based on the highest count for each relation
         layoutedNodes.forEach((node: Node) => {
           if (node.data.type === "relation") {
             // node IDs follow the format "relation-relationName_count"
@@ -430,7 +424,7 @@ const onRestore = useCallback(async () => {
 
         setRelationCounts(updatedRelationCounts);
       } else {
-        console.log("Invalid data received from backend");
+        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/factories/flow-editor");
       }
     } catch (error) {
       console.error("Error fetching flowchart data:", error);
@@ -440,7 +434,9 @@ const onRestore = useCallback(async () => {
   }
 }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
-  const onUpdate = useCallback(async () => {
+ // @desc: 
+ //@PATCH : the React Flow data for the specified factory ID ( both mongo and scorpio)
+  const updateMongoAndScorpio = useCallback(async () => {
  
     const payLoad = {
       factoryId: factoryId,
@@ -548,7 +544,9 @@ const onRestore = useCallback(async () => {
     }
   }, [nodes, edges, factoryId]);
 
-  const onSave = useCallback(async () => {
+  //@desc: 
+  //@POST : the React Flow data for the specified factory ID , both mongo and scorpio
+  const saveMongoAndScorpio = useCallback(async () => {
 
     const payLoad = {
       factoryId: factoryId,
@@ -649,8 +647,11 @@ const onRestore = useCallback(async () => {
       setIsOperationInProgress(false);
     }
   }, [nodes, edges, factoryId]);
-  //
-  const handleDelete = async () => {
+  
+  //@desc :
+  //@DELETE : the React Flow data for the specified factory ID, both mongo and scorpio(except Factory Node and ShopFloor Node)
+  
+  const deleteMongoAndScorpio = async () => {
     const preservedNodeTypes = new Set(["factory", "shopFloor"]);
     const preservedNodes = nodes.filter((node) =>
       preservedNodeTypes.has(node.type || node.data.type)
@@ -721,7 +722,7 @@ const onRestore = useCallback(async () => {
       }
       dispatch(reset());
     } catch (error) {
-      console.log("Error deleting elements:", error);
+      console.log("Error from deleteMongoAndScorpio function @pages/factory-site/factories/flow-editor", error);
       toast.current?.show({
         severity: 'error',
         summary: 'Server Error : Not Updated',
@@ -732,6 +733,8 @@ const onRestore = useCallback(async () => {
    
     }
   };
+  //@desc :
+  //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
  const refreshFromScorpio = async () => {
   const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
   try {
@@ -745,7 +748,7 @@ const onRestore = useCallback(async () => {
     });
 
     setToastMessage('Refresh Completed');
-    await onRestore(); 
+    await getMongoDataFlowEditor(); 
   } catch (error) {
     console.error('Failed to update flowchart:', error);
     toast.current?.show({
@@ -758,27 +761,28 @@ const onRestore = useCallback(async () => {
   }
 };
 
+//@desc: helps to decide when to save or update data according to different reactflow scenarios
+//@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio 
   const saveOrUpdate = useCallback(async () => {
   try {
     setIsOperationInProgress(true);
 
     // Fetch the current state from the server to determine the nature of the flowchart
-    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+    const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
       withCredentials: true,
     });
-  //  console.log(response, "lll")
+ 
     // Check if the response data exists and has the necessary elements
-    const data = response.data;
+    const data = getReactFlowMongo.data;
     const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData;
 
    
-    // const existingMongoEdges = data?.factoryData.edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
     if (isEmpty) {
-      await onSave();
+      await saveMongoAndScorpio();
     } else {
       // Check if edges only connect factory to shopFloor\\
       const onlyFactoryToShopFloor = data.factoryData.edges.every((edge:Edge) => 
@@ -823,6 +827,7 @@ const onRestore = useCallback(async () => {
               life: 3000,
             });
           }
+
          const allocatedAssetAvailableOrNot = await axios.get(`${API_URL}/allocated-asset/${factoryId}`,  {
               headers: {
                 "Content-Type": "application/json",
@@ -830,6 +835,7 @@ const onRestore = useCallback(async () => {
               },
               withCredentials: true,
             });
+
         if(allocatedAssetAvailableOrNot.data.length==0){
           const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
                   payLoad.factoryData.edges, {
@@ -852,7 +858,9 @@ const onRestore = useCallback(async () => {
                     });
                   }
         }
-        else{
+
+        else
+        {
            const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
               payLoad.factoryData.edges, {
               params: {
@@ -875,8 +883,6 @@ const onRestore = useCallback(async () => {
               }
          }
        
-     
-
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -892,7 +898,8 @@ const onRestore = useCallback(async () => {
         dispatch(reset());
       if (reactFlowScorpioUpdate.status == 200) {
         setToastMessage("Scorpio updated successfully");
-      } else {
+      } 
+      else {
         toast.current?.show({
           severity: 'warn',
           summary: 'Scorpio Not Updated',
@@ -900,13 +907,14 @@ const onRestore = useCallback(async () => {
         });
       }
     
-      } else {
-        await onUpdate();
+      } 
+      else {
+        await updateMongoAndScorpio();
       
       }
     }
   } catch (error) {
-    console.log("Error during save or update operation:", error);
+    console.log("Error from saveOrUpdate function @pages/factory-site/factories/flow-editor", error);
     toast.current?.show({
           severity: 'error',
           summary: 'Server Error',
@@ -915,7 +923,9 @@ const onRestore = useCallback(async () => {
   } finally {
     setIsOperationInProgress(false);
   }
-}, [factoryId, onSave]);
+}, [factoryId, saveMongoAndScorpio]);
+
+
 
   useEffect(() => {
   let isRouteChangeAllowed = true; // control navigation flow
@@ -979,12 +989,12 @@ const handleExportClick = () => {
     }
   }, []);
 
-  const onConnect = useCallback(
+  const connectEdgestoNode = useCallback(
     (params: Connection) => {
 
       const { source, target } = params;
 
-      console.log("params ", params)
+     
       const sourceNode = nodes.find((node): node is ExtendedNode => node.id === source);
       const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
 //       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
@@ -1042,14 +1052,14 @@ const handleExportClick = () => {
         // access the asset_category and split it.
         const assetCategoryPart = targetNode.asset_category?.split(" ")[1] || "";
         const assetCategory = assetCategoryPart.toLowerCase();
-        console.log("asset category", assetCategoryPart);
+      
 
         // relation label is like "hasTracker_001", extract "Tracker" and normalize
         const relationType = sourceNode.data.label
           .split("_")[0]
           .replace("has", "")
           .toLowerCase();
-        console.log(relationType, "relation type");
+    
         // Check if the asset category === the relation type
         if (assetCategory !== relationType) {
           toast.current?.show({
@@ -1091,16 +1101,16 @@ const handleExportClick = () => {
         setNodes(updatedNodes);
         setEdges([...updatedEdges, newEdge]);
 
-        console.log("Updated Edges:", [...updatedEdges, newEdge]);
+       
       } else if (
         sourceNode.data.type === "factory" &&
         targetNode.data.type === "shopFloor"
       ) {
         setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
-        console.log(edges, "Edges last");
+       
       } else {
         if (toast) {
-          console.log(sourceNode, targetNode, "The nodes data");
+       
           toast.current?.show({
             severity: "error",
             summary: "Connection not allowed",
@@ -1112,7 +1122,7 @@ const handleExportClick = () => {
     [nodes, setNodes, setEdges, toast]
   );
 
-
+//@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
  const handleBackspacePress = useCallback(() => {
   if (!selectedElements || (!selectedElements.nodes && !selectedElements.edges)) {
     toast.current?.show({
@@ -1183,9 +1193,12 @@ const handleExportClick = () => {
     },
     [handleBackspacePress]
   );
+
+//@desc : 1) on shopFloor node double click navigate to dashboard 
+//        2) on factory node double click show dialog          
 const onNodeDoubleClick: NodeMouseHandler = useCallback(
     async (event, node) => {
-        console.log(node, "Node double-clicked");
+      
         if (node.type == "factory") {
            const cleanedFactoryId = node.id.replace("factory_", "");
             setSelectedFactoryId(cleanedFactoryId);
@@ -1204,27 +1217,21 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
     [hasChanges, saveOrUpdate, router] // Include all dependencies used in the callback
 );
 
-  const onDrop = useCallback(
+//@desc : drag and drop asset from unallocated-allocated-asset.tsx component
+
+  const assetNodeDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
       if (!reactFlowInstance || !reactFlowWrapper.current) return;
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const data = event.dataTransfer.getData("application/json");
 
       try {
         const { item, type } = JSON.parse(data);
 
-        console.log(
-          "Parsed item:",
-          item,
-
-          "Type: ",
-          type
-        );
-        const position = reactFlowInstance.project({
-          x: event.clientX - reactFlowBounds.left,
-          y: event.clientY - reactFlowBounds.top,
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
         });
 
         const idPrefix = `${type}_${item.id}`;
@@ -1236,7 +1243,6 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
             const shopFloorNode = {
               id: idPrefix,
               type: "shopFloor",
-
               position,
               style: {
                 backgroundColor: "#faedc4",
@@ -1251,13 +1257,10 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
             };
 
             setNodes((nds) => [...nds, shopFloorNode]);
-
             break;
 
           case "asset":
             const factoryNodeId = `${factory.id}`;
-            // setSelectedNodeData(item);
-
             if (factoryNodeId) {
               const assetNode = {
                 id: idPrefix + `_${new Date().getTime()}`,
@@ -1267,15 +1270,12 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
                 data: {
                   type: type,
                   label,
-
                   id: item.id,
                 }
               };
 
               setNodes((nds) => [...nds, assetNode]);
-
             }
-
             break;
 
           default:
@@ -1292,11 +1292,16 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
     ]
   );
 
+
+ //@desc : Drag Event for Asset/ shopFloor nodes
+ 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
+
+//@desc :  set react flow instance
   const onInit = useCallback((instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
   }, []);
@@ -1311,7 +1316,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           </p>
        </Dialog>
 
-        <EdgeAddContext.Provider value={{ onEdgeAdd }}>
+        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
           
           <div className="flex justify-content-between">
@@ -1324,7 +1329,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
               />
               <Button
                 label={t('button:undo')}
-                onClick={onRestore}
+                onClick={getMongoDataFlowEditor}
                 className="p-button-secondary m-2 bold-text"
                 raised
               />
@@ -1337,7 +1342,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
               />
               <Button
                 label={t('button:reset')}
-                onClick={handleDelete}
+                onClick={deleteMongoAndScorpio}
                 className="p-button-danger m-2 bold-text"
                 raised
               />
@@ -1362,7 +1367,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
           <div
             ref={reactFlowWrapper}
             style={{ height: "95%", width: "100%" }}
-            onDrop={onDrop}
+            onDrop={assetNodeDrop}
             onDragOver={onDragOver}
           >
 
@@ -1372,7 +1377,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
+              onConnect={connectEdgestoNode}
               onInit={onInit}
               onNodeDoubleClick={onNodeDoubleClick}
               onSelectionChange={onSelectionChange}
