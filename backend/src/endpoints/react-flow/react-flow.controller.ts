@@ -18,7 +18,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException,Re
 import { ReactFlowService } from './react-flow.service';
 import { ReactFlowDto } from './dto/react-flow.dto';
 import { TokenService } from '../session/token.service';
-import { Request, Response } from 'express';
 
 @Controller('react-flow')
 export class ReactFlowController {
@@ -68,7 +67,7 @@ export class ReactFlowController {
   }
  
   @Get('/react-flow-update/:id')
-  async findFactoryAndShopFloors(@Param('id') id: string, @Req() req: Request)  {
+  async findFactoryAndShopFloors(@Param('id') id: string)  {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.reactFlowService.findFactoryAndShopFloors(id,token);

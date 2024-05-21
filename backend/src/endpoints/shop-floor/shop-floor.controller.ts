@@ -16,7 +16,6 @@
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, Query } from '@nestjs/common';
 import { ShopFloorService } from './shop-floor.service';
-import { Request, Response } from 'express';
 import * as jsonData from './shop-floor-schema.json';
 import { TokenService } from '../session/token.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
@@ -34,7 +33,7 @@ export class ShopFloorController {
     ) {}
 
   @Post()
-  async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
+  async create(@Query('factory-id') factoryId: string, @Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const createResponse = await this.shopFloorService.create(data, token);
@@ -100,7 +99,7 @@ export class ShopFloorController {
   }
 
   @Get()
-  async findAll(@Query('id') id: string, @Req() req: Request) {
+  async findAll(@Query('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.shopFloorService.findAll(id, token);
@@ -110,7 +109,7 @@ export class ShopFloorController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
+  async findOne(@Param('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.shopFloorService.findOne(id, token);
@@ -120,7 +119,7 @@ export class ShopFloorController {
   }
 
   @Patch('/update-react')
-  async updateReact(@Body() data, @Req() req: Request) {
+  async updateReact(@Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateReact(data, token);
@@ -146,7 +145,7 @@ export class ShopFloorController {
   }
 
   @Patch('/update-asset')
-  async updateAssets(@Body() data, @Req() req: Request) {
+  async updateAssets(@Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateAssets(data, token);
@@ -169,7 +168,7 @@ export class ShopFloorController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data, @Req() req: Request) {
+  async update(@Param('id') id: string, @Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.update(id, data, token);
@@ -192,7 +191,7 @@ export class ShopFloorController {
   }
   
   @Delete('/delete-react')
-  async deleteReact(@Body() data, @Req() req: Request) {
+  async deleteReact(@Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.deleteScript(data, token);
@@ -213,7 +212,7 @@ export class ShopFloorController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Query('factory-id') factoryId: string, @Req() req: Request) {
+  async remove(@Param('id') id: string, @Query('factory-id') factoryId: string) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.remove(id, token);

@@ -16,7 +16,6 @@
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Session, NotFoundException, Req,Injectable } from '@nestjs/common';
 import { PgRestService } from './pgrest.service';
-import { Request } from 'express';
 import { TokenService } from '../session/token.service';
 @Injectable()
 @Controller('pgrest')
@@ -26,14 +25,8 @@ export class PgRestController {
     private readonly tokenService: TokenService
   ) {}
 
-  @Post()
-  create() {
-    return this.pgRestService.create();
-  }
-
   @Get()
-  async findAll(@Query() queryParams: any, @Req() req: Request) {
-    const { entityId } = queryParams;
+  async findAll(@Query() queryParams: any) {
     try{
       let token = await this.tokenService.getToken();
       return this.pgRestService.findAll(token, queryParams);
@@ -41,21 +34,4 @@ export class PgRestController {
       throw new NotFoundException("Error finding the details: " + err);
     }
   }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pgRestService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string) {
-    return this.pgRestService.update(id);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pgRestService.remove(id);
-  }
-
-  
 }

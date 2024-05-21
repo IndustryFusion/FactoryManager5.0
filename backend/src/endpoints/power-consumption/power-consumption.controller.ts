@@ -15,21 +15,18 @@
 // 
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { PowerConsumptionService } from './power-consumption.service';
 import { TokenService } from '../session/token.service';
-import { RedisService } from '../redis/redis.service';
 
 @Controller('power-consumption')
 export class PowerConsumptionController {
   constructor(
     private readonly powerConsumptionService: PowerConsumptionService, 
-    private readonly redisService: RedisService,
     private readonly tokenService: TokenService
   ) {}
 
   @Get('/chart')
-  async findChartData(@Query() queryParams: any, @Req() req: Request) {
+  async findChartData(@Query() queryParams: any) {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.powerConsumptionService.findChartData(queryParams, token);
@@ -40,7 +37,7 @@ export class PowerConsumptionController {
   }
 
   @Get()
-  async findOne(@Query() queryParams: any, @Req() req: Request){
+  async findOne(@Query() queryParams: any){
     try {
       const token = await this.tokenService.getToken();
       let response = await this.powerConsumptionService.findOne(queryParams, token);

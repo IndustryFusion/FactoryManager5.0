@@ -18,9 +18,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundExc
 import { FactorySiteService } from './factory-site.service';
 import * as jsonData from './factory-schema.json';
 import { TokenService } from '../session/token.service';
-import { Request, Response } from 'express';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
+import { String } from 'aws-sdk/clients/appstream';
 
 @Controller('factory-site')
 export class FactorySiteController {
@@ -32,7 +32,7 @@ export class FactorySiteController {
     ) {}
 
   @Post()
-  async create(@Body() data, @Req() req: Request) {
+  async create(@Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.create(data, token);
@@ -61,7 +61,7 @@ export class FactorySiteController {
   }
 
   @Get()
-  async findAll(@Req() req: Request) {
+  async findAll() {
     try {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findAll(token);
@@ -71,7 +71,7 @@ export class FactorySiteController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
+  async findOne(@Param('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findOne(id, token);
@@ -81,7 +81,7 @@ export class FactorySiteController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data, @Req() req: Request) {
+  async update(@Param('id') id: string, @Body() data) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.update(id, data, token);
@@ -104,7 +104,7 @@ export class FactorySiteController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request) {
+  async remove(@Param('id') id: String) {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.remove(id, token, this.shopFloorService);

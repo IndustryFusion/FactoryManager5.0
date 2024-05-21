@@ -15,7 +15,6 @@
 // 
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { AllocatedAssetService } from './allocated-asset.service';
 import { TokenService } from '../session/token.service';
 
@@ -27,7 +26,7 @@ export class AllocatedAssetController {
   ) {}
 
   @Post('/global')
-  async createGlobal(@Req() req: Request) {
+  async createGlobal() {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.createGlobal(token);
@@ -48,7 +47,7 @@ export class AllocatedAssetController {
   }
 
   @Post('/form')
-  async updateFormAllocatedAsset(@Body() data, @Req() req: Request) {
+  async updateFormAllocatedAsset(@Body() data) {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.updateFormAllocatedAsset(data, token);
@@ -69,7 +68,7 @@ export class AllocatedAssetController {
   }
 
   @Post()
-  async create(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
+  async create(@Query('factory-id') factoryId: string) {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.create(factoryId, token);
@@ -90,7 +89,7 @@ export class AllocatedAssetController {
   } 
 
   @Get('/product-names')
-  async findProductName(@Req() req: Request) {
+  async findProductName() {
     try {
       const token = await this.tokenService.getToken();
       return this.allocatedAssetService.findProductName(token);
@@ -100,7 +99,7 @@ export class AllocatedAssetController {
   }
   
   @Get()
-  async findAll(@Req() req: Request) {
+  async findAll() {
     try {
       const token = await this.tokenService.getToken();
       return this.allocatedAssetService.findAll(token);
@@ -110,7 +109,7 @@ export class AllocatedAssetController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
+  async findOne(@Param('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.allocatedAssetService.findOne(id, token);
@@ -120,7 +119,7 @@ export class AllocatedAssetController {
   }
 
   @Patch('/global')
-  async updateGlobal(@Req() req: Request) {
+  async updateGlobal() {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.updateGlobal(token);
@@ -142,7 +141,7 @@ export class AllocatedAssetController {
   }
 
   @Patch()
-  async update(@Query('factory-id') factoryId: string, @Body() data, @Req() req: Request) {
+  async update(@Query('factory-id') factoryId: string, @Body() data) {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.update(factoryId, token);
@@ -164,7 +163,7 @@ export class AllocatedAssetController {
   }
 
   @Delete()
-  async remove(@Query('id') id: string, @Req() req: Request) {
+  async remove(@Query('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
       let response = await this.allocatedAssetService.remove(id, token);
