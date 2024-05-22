@@ -74,6 +74,7 @@ const PicklistAssets = () => {
     let toastShown = false;
     let allocatedAssetsArray = null;
     const relations = useSelector((state: RootState) => state.relations.values);
+    const [firstElementClicked, setFirstElementClicked] = useState(false);
 
 
     const fetchShopFloorAssets = async () => {
@@ -93,6 +94,7 @@ const PicklistAssets = () => {
             console.error(error)
         }
     }
+
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorValue?.id]);
@@ -108,14 +110,14 @@ const PicklistAssets = () => {
         try {
             if (Object.keys(unAllocatedAssetData).length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-            
+
                 dispatch(create(fetchedAssetIds));
             }
 
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
             const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                 const relationsArr: string[] = [];
-              
+
                 const checkHas = 'http://www.industry-fusion.org/schema#has';
 
                 Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
@@ -135,7 +137,7 @@ const PicklistAssets = () => {
             }
 
             );
-          
+
             setTarget(fetchedAssets);
             // combined asset catagories from both allocated asset and un allocated asset
             const categories = Array.from(new Set([...fetchedAssets].map(asset => asset.asset_category))).filter(Boolean);
@@ -174,27 +176,28 @@ const PicklistAssets = () => {
         return (
             <>
                 <span className="list-items"
-                style={{ fontWeight : item.product_name === source[0]?.product_name ?"500": "normal"}}
-                 onClick={() => {
-                    selectItems(item.product_name, item.asset_category, item?.id)//relation
-                    source.map(sourceItem => {
-                        if (sourceItem?.product_name === item.product_name) {
-                            setAsset(item)
-                            toastShown = true;
+                      style={{ fontWeight: firstElementClicked? "normal" : item.product_name== source[0]?.product_name ? "500":"normal" }}
+                    onClick={() => {
+                        setFirstElementClicked(true);
+                        selectItems(item.product_name, item.asset_category, item?.id)//relation
+                        source.map(sourceItem => {
+                            if (sourceItem?.product_name === item.product_name) {
+                                setAsset(item)
+                                toastShown = true;
+                            }
+                        })
+                        if (!toastShown) { // Check if toast has not been shown
+                            showToast("warn", "Warning", "move asset to shopfloor assets");
                         }
-                    })
-                    if (!toastShown) { // Check if toast has not been shown
-                        showToast("warn", "Warning", "move asset to shopfloor assets");
-                    }
 
-                }}>{item.product_name}</span>
+                    }}>{item.product_name}</span>
             </>
         )
     };
 
 
     console.log("source here", source);
-    
+
 
 
     const shopfloorAssetIds = source.map(asset => asset?.id)
@@ -214,7 +217,7 @@ const PicklistAssets = () => {
         const allocatedObj = {
             [factoryId]: shopfloorAssetIds
         }
-   
+
         return allocatedObj;
     }
 
@@ -245,7 +248,7 @@ const PicklistAssets = () => {
                 },
                 withCredentials: true,
             })
-        
+
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Shopfloor assets saved successfully");
                 dispatch(reset());

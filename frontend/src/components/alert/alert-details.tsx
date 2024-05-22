@@ -75,7 +75,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
           color: "#ff0000"
         };
       case 'machine-error':
-        return {
+        return{
           icon: 'pi pi-times',
           color: "#ff0000"
         }
@@ -223,7 +223,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 console.log("alertlist skip", err);
                 return null;
               }
-
+              
             }
             ).filter(component => component !== null)
           ) : (
