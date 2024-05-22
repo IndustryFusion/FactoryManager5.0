@@ -103,7 +103,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
         if (selectedOption) {
             const label = selectedOption.label;
-            console.log(typeof label, "country label");
+           
             setFactory({ ...factory, [key]: label });
             setSelectedCountry(selectedOption)
         }
@@ -129,7 +129,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         }
     };
 
-    console.log("button state", submitDisabled);
+ 
 
 
     const showWaring = (message: any) => {
@@ -168,7 +168,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             };
         }
 
-        console.log("Sending payload:", payload);
+
 
         try {
             const response = await axios.post(API_URL + "/factory-site/", payload, {
@@ -178,7 +178,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 },
                 withCredentials: true,
             });
-            console.log("Response from server:", response.data);
+      
             const responseData = response.data;
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
@@ -187,7 +187,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 }, 1000); 
             }
         } catch (error: any) {
-            console.log(error, "what's the error");
+            console.log( "handleSave function Error from @components/factoryForms/create-factory-form",error);
             showError("Please fill all required fields");
             if (error.response.status === 404) {
                 showError("Error saving factory");
@@ -225,7 +225,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
         Object.keys(schema?.properties || {}).forEach((key) => {
             const property = schema?.properties[key];
-            console.log(property);
+           
             if (
                 property &&
                 typeof property === "object" &&
@@ -252,7 +252,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 },
                 withCredentials: true,
             });
-            console.log(response, "template response");
+       
 
             const responseData = response.data;
             setSchema(responseData);
@@ -267,26 +267,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         findFactoryTemplate();
     }, []);
 
-
-    // useEffect(() => {
-    //     const fetchAllAlerts = async () => {
-    //         try {
-    //             const response = await axios.get(API_URL + "/alerts", {
-    //                 headers: {
-    //                     "Content-Type": "application/json",
-    //                     Accept: "application/json",
-    //                 },
-    //                 withCredentials: true,
-    //             });
-    //             console.log("alerts response", response.data);
-
-
-    //         } catch (error) {
-    //             console.error(error)
-    //         }
-    //     }
-    //     fetchAllAlerts();
-    // })
 
 
     const renderFields = (key: string, property: Property) => {

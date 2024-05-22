@@ -108,7 +108,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 },
                 withCredentials: true,
             });
-            console.log("parent relation response", response);
+       
             setParentRelations(response.data)
         } catch (error) {
             console.error(error)
@@ -124,7 +124,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         getHasProperties();
     }, [selectedAssetData])
 
-    console.log(hasPropertiesArray, "hasPropertiesArray ");
+
 
 
     return (

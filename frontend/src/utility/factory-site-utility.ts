@@ -262,8 +262,6 @@ export const getShopFloors = async (factoryId: string) => {
 
 export const getshopFloorById = async (factoryId: string) => {
 
-  // console.log("is getshopfloor calling");
-  
   const response = await axios.get(`${API_URL}/shop-floor/`, {
     headers: {
       "Content-Type": "application/json",
@@ -656,7 +654,6 @@ export async function getShopFloorAssets(shopFloorId: string) {
     Array.isArray(hasAsset)?
       hasAsset.map((elem:{type:string, object:string})=> elem?.object) :
       hasAsset?.object ;
-      // console.log(  shopFloorData["http://www.industry-fusion.org/schema#hasAsset"],"hasAsset");
     assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
     assetIds = assetIds.filter(id => id !== "json-ld-1.1");
    

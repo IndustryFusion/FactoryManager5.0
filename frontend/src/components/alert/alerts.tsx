@@ -29,15 +29,15 @@ interface Alerts {
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Alerts = () => {
+// State hooks for alerts, alert count, alert visibility, and asset data
   const [alerts, setAlerts] = useState([]);
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
   const [assetData, setAssetData] = useState<any>([])
 
+  // Function to map backend data to asset state
   const mapBackendDataToAssetState = (backendData: any) => {
-    // console.log(backendData, "is any data");
-
     const modifiedObject: any = {};
     // Iterate over the properties of the object
     Object.keys(backendData).forEach((key) => {
@@ -51,6 +51,7 @@ const Alerts = () => {
     return modifiedObject;
   };
 
+  // Function to fetch asset data by asset ID
   const fetchAssetData = async (assetId: string) => {
     try {
       const response = await axios.get(API_URL + `/asset/${assetId}`, {
@@ -68,7 +69,7 @@ const Alerts = () => {
   }
 
 
-
+ // useEffect hook to fetch all alerts and their associated asset data
   useEffect(() => {
     const fetchAllAlerts = async () => {
       try {
@@ -77,21 +78,20 @@ const Alerts = () => {
         setAlertsCount(response.total);
         const assetsData = [];
         for (const alert of response.alerts) {
-          // assetsData.push( fetchAssetData(alert.resource));
+    
           const response = await fetchAssetData(alert.resource);
           assetsData.push(response)
-          // console.log("response",response);
 
         }
         setAssetData(assetsData);
       } catch (error) {
-        // console.error(error)
+        console.log("Error from @components/alert/alert.tsx",error)
       }
     }
     fetchAllAlerts();
   }, [])
 
-
+// CSS style for badge position and appearance
   const badgeStyle: React.CSSProperties = {
     position: 'absolute',
     top: '-2px',

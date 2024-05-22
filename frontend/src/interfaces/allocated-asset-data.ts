@@ -14,10 +14,8 @@
 // limitations under the License. 
 // 
 
-import React from "react";
 
-const EdgeAddContext = React.createContext({
-  createRelationNodeAndEdge: (assetId: string, relationName: string,relationClass:string) => {},
-});
-
-export default EdgeAddContext;
+export interface AllocatedAssetData {
+  factoryName: string;
+  assets: string[];
+}

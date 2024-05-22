@@ -15,22 +15,35 @@
 // 
 
 import { Controller, Post, Delete, Session, Req } from '@nestjs/common';
-import { Request } from 'express';
-
+import { TokenService } from '../session/token.service';
 @Controller('auth')
 export class AuthController {
+  constructor(
+    private readonly tokenService: TokenService
+  ){}
 
   @Post('login')
-  getSession(@Session() session: Record<string, any>) {
+  async getSession(@Session() session: Record<string, any>) {
     try {
+        const tokenData = await this.tokenService.getToken();
+        if(tokenData && tokenData.length > 0){
+          return {
+            success: true,
+            status: '201',
+            message: 'Logged In successfully'
+          }
+        }
         const token = {
           access_token: session.accessToken,
-          refresh_token: session.refreshToken,
-          sessionId: session.id
+          refresh_token: session.refreshToken
         };
         return Promise.resolve(token);
     } catch (err) {
-      throw new err;
+      return { 
+        success: false, 
+        status: err.response.status,
+        message: err.response.data 
+      }
     }
   }
 }

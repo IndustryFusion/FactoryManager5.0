@@ -85,7 +85,6 @@ export const updateRelationDataInLocalStorage = (newRelationData: any) => {
   const existingData = JSON.parse(localStorage.getItem("relationData") || "{}");
   const updatedData = { ...existingData, ...newRelationData };
   localStorage.setItem("relationData", JSON.stringify(updatedData));
-  console.log("Updated relation data in localStorage:", updatedData);
 };
 export const handleEditClick = async (assetId: string) => {
   const router = useRouter();

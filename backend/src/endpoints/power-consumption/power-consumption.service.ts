@@ -17,12 +17,10 @@
 import { Injectable, NotFoundException,Logger, ConsoleLogger } from '@nestjs/common';
 import axios from 'axios';
 import * as moment from 'moment';
-import { RedisService } from '../redis/redis.service';
 @Injectable()
 export class PowerConsumptionService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
   private readonly logger = new Logger(PowerConsumptionService.name);
-  constructor(private readonly redisService: RedisService) {}
 
   async findOne(queryParams: any, token: string) {
     try {
@@ -71,12 +69,6 @@ export class PowerConsumptionService {
       const labels = [], powerConsumption = [], emission = [];
       const redisKey = `chartData:${queryParams.assetId}:${queryParams.type}`;
 
-      // Check if credentials have changed and update Redis accordingly
-      // const credentialsChanged = await this.redisService.credentialsChanged(token, queryParams, queryParams.assetId);
-      // if (credentialsChanged) {
-      //   await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.assetId);
-      // }
-
       if(queryParams.type == 'days'){
         const url = this.timescaleUrl + `/power_emission_entries_days?entityId=eq.${queryParams.assetId}&day=gte.${moment.utc(queryParams.startTime).toISOString()}&day=lte.${moment.utc(queryParams.endTime).toISOString()}`;
         const response = await axios.get(url, {headers});
@@ -88,7 +80,6 @@ export class PowerConsumptionService {
             emission.push(Number(data.total_carbon_emission).toFixed(2));
           });
         }
-       // await this.redisService.saveData(redisKey, { labels, powerConsumption, emission }, 86400 * 8);
       } else if(queryParams.type == 'weeks'){
         const url = this.timescaleUrl + `/power_emission_entries_weeks?entityId=eq.${queryParams.assetId}&week=gte.${moment.utc(queryParams.startTime).toISOString()}&week=lte.${moment.utc(queryParams.endTime).toISOString()}`;
         const response = await axios.get(url, {headers});

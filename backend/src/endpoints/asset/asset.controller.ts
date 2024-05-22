@@ -16,9 +16,7 @@
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query } from '@nestjs/common';
 import { AssetService } from './asset.service';
-import { Request, Response } from 'express';
-import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
-import { getSessionToken } from '../session/session.service';
+import { TokenService } from '../session/token.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 @Controller('asset')
@@ -27,12 +25,13 @@ export class AssetController {
     private readonly assetService: AssetService,
     private readonly reactFlowService: ReactFlowService,
     private readonly allocatedAssetService: AllocatedAssetService,
+    private readonly tokenService: TokenService
   ) {}
 
   @Get()
-  async getAssetData(@Req() req: Request, @Query('type') type: string) {
+  async getAssetData(@Query('type') type: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       if (type) {
         return this.getAssetByType(type, token);
       } else {
@@ -53,9 +52,9 @@ export class AssetController {
   }
 
   @Get('/parent-ids')
-  async getParentIds(@Query('asset-id') assetId: string, @Query('asset-category') assetCategory: string, @Req() req: Request) {
+  async getParentIds(@Query('asset-id') assetId: string, @Query('asset-category') assetCategory: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.assetService.getParentIds(assetId, assetCategory, token);
     } catch (err) {
       throw new NotFoundException();
@@ -63,9 +62,9 @@ export class AssetController {
   }
 
   @Get(':id')
-  async getAssetDataById(@Param('id') id: string, @Req() req: Request) {
+  async getAssetDataById(@Param('id') id: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.assetService.getAssetDataById(id, token);
     } catch (err) {
       throw new NotFoundException();
@@ -73,9 +72,9 @@ export class AssetController {
   }
 
   @Get(':id/keyvalues')
-  async getkeyValuesById(@Param('id') id: string, @Req() req: Request) {
+  async getkeyValuesById(@Param('id') id: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.assetService.getkeyValuesById(id, token);
     } catch (err) {
       throw new NotFoundException();
@@ -83,9 +82,9 @@ export class AssetController {
   }
 
   @Post()
-  async setAssetData( @Body() data, @Req() req: Request) {
+  async setAssetData( @Body() data) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.assetService.setAssetData(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
@@ -104,9 +103,9 @@ export class AssetController {
   }
 
   @Patch('/update-relation')
-  async updateRelations(@Body() data, @Req() req: Request) {
+  async updateRelations(@Body() data) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.assetService.updateRelations(data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -125,9 +124,9 @@ export class AssetController {
   }
 
   @Patch(':id')
-  async updateAssetById(@Param('id') id: string, @Body() data, @Req() req: Request) {
+  async updateAssetById(@Param('id') id: string, @Body() data) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.assetService.updateAssetById(id, data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -146,9 +145,9 @@ export class AssetController {
   }
 
   @Delete('/delete-asset/:id')
-  async deleteAssetRelation(@Param('id') id: string, @Req() req: Request){
+  async deleteAssetRelation(@Param('id') id: string){
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.assetService.deleteAssetRelation(id, token, this.reactFlowService, this.allocatedAssetService);
       if(response['status'] == 200 || response['status'] == 204 || response['status'] == 201) {
         return {
@@ -167,9 +166,9 @@ export class AssetController {
   }
 
   @Delete(':id')
-  async deleteAssetById(@Param('id') id: string, @Req() req: Request) {
+  async deleteAssetById(@Param('id') id: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.assetService.deleteAssetById(id, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {

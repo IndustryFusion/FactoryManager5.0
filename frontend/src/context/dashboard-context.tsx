@@ -20,8 +20,6 @@ import React, {
   useContext,
   useState,
   ReactNode,
-  useCallback,
-  useEffect,
 } from "react";
 
 
@@ -48,6 +46,12 @@ interface DashboardContextValue {
   setMachineStateData: React.Dispatch<React.SetStateAction<{}>>;
   assetCount:number,
   setAssetCount: React.Dispatch<React.SetStateAction<number>>
+  notificationData: any[]; 
+  setNotificationData: React.Dispatch<React.SetStateAction<any[]>>; 
+  allOnlineTime: any[]; 
+  setAllOnlineTime: React.Dispatch<React.SetStateAction<any[]>>; 
+  relationsCount: number; 
+  setRelationsCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const DashboardContext = createContext<DashboardContextValue | undefined>(undefined);
@@ -62,8 +66,8 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [machineStateData, setMachineStateData] = useState({});
   const [notificationData, setNotificationData] = useState([]);
   const [allOnlineTime, setAllOnlineTime]= useState([]);
-  const [relationsCount, setRelationsCount] = useState(0);
-  const [assetCount, setAssetCount] = useState(0);
+  const [relationsCount, setRelationsCount] = useState<number>(0);
+  const [assetCount, setAssetCount] = useState<number>(0);
 
   return (
     <DashboardContext.Provider

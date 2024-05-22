@@ -17,7 +17,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PgRestController } from './pgrest.controller';
 import { PgRestService } from './pgrest.service';
-import * as sessionService from '../session/session.service';
+import * as sessionService from '../session/token.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FactoryManagerController', () => {

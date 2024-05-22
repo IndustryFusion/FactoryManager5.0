@@ -20,21 +20,21 @@ import {
   getshopFloorById,
   deleteShopFloorById,
 } from "@/utility/factory-site-utility";
-import { ShopFloor } from "../pages/factory-site/types/shop-floor";
+import { ShopFloor } from "../../pages/factory-site/types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
-import EditShopFloor from "./shopFloorForms/edit-shop-floor-form";
+import EditShopFloor from "../shopFloorForms/edit-shop-floor-form";
 import { Toast } from "primereact/toast";
-import CreateShopFloor from "./shopFloorForms/create-shop-floor-form";
+import CreateShopFloor from "../shopFloorForms/create-shop-floor-form";
 import { InputText } from "primereact/inputtext";
-import "../styles/shop-floor-list.css"
+import "../../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { useTranslation } from "next-i18next";
 import { Dialog } from 'primereact/dialog';
 interface ShopfloorListProps {
-  factoryId?: string;
+  factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
   setShopfloorProp?: any;
   formViewPage?:any
@@ -148,14 +148,31 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       return;
     }
     try {
-      await deleteShopFloorById(selectedShopFloorId, factoryId);
-      setShopFloors(prevFloors => prevFloors.filter(floor => floor.id !== selectedShopFloorId));
+       if (factoryId) {
+      await deleteShopFloorById(
+        selectedShopFloorId,
+        factoryId
+      );
+      setShopFloors((prevShopFloors) =>
+        prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
+      );
+
       toast.current?.show({
         severity: "success",
         summary: "Success",
         detail: "Shop floor deleted successfully",
       });
-      onShopFloorDeleted?.(selectedShopFloorId);
+      if (onShopFloorDeleted) {
+        onShopFloorDeleted(selectedShopFloorId);
+      }
+    }
+     else{
+       toast.current?.show({
+          severity: "error",
+          summary: "Error",
+          detail: "Factory ID is undefined",
+        });
+    }
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({
@@ -181,7 +198,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-    console.log(item, "item")
+  
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";

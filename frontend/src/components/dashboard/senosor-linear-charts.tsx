@@ -317,11 +317,7 @@ function formatLabel(date:Date) {
     if (selectedAttribute== '' || selectedAttribute== undefined || selectedAttribute ==null ) {
       setSelectedAttribute(attributeLabels[0].value);
     } 
-    // else {
 
-    //   console.log("called reset")
-    //   setSelectedAttribute(attributeLabels.length > 0 ? attributeLabels[0].value : "");
-    // }
     return Object.keys(assetData)
       .filter(key => key.includes("fields"  ))
       .map(key => "eq." + key);
@@ -531,19 +527,7 @@ useEffect(() => {
         return; 
     }
 
-  //   if (chartRef.current && zoomLevel.min && zoomLevel.max) {
-  //   console.log("chartRef", chartRef)
-  //   const chartInstance = chartRef.current.chart;
-  //   if (chartInstance) {
-  //     const xAxis = chartInstance.scales['x-axis-0']; 
-  //     if (xAxis) {
-  //       xAxis.options.ticks.min = zoomLevel.min;
-  //       xAxis.options.ticks.max = zoomLevel.max;
-  //       chartInstance.update();
-  //     }
-  //   }
-  // }
-  
+
     fetchAsset(entityIdValue)
     fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime)
         .catch(console.error)

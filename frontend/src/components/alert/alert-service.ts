@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 export const getAlerts = async () => {
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -23,7 +23,7 @@ export const getAlerts = async () => {
         const response = await axios.get(url);
         return response.data;
     } catch (err) {
-        // console.log('error ',err);
+        console.log('Error From @component/alert/alert-service.ts ',err);
     }
 
 }

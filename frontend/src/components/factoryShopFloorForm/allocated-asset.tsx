@@ -80,16 +80,15 @@ const AllocatedAsset = () => {
         try {
             if (unAllocatedAssetData.length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId); // for unallocated assets
-                //console.log("fetchedAssetIds", fetchedAssetIds);
+              
                 dispatch(create(fetchedAssetIds));
             }
             const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
-           // console.log("fetchedAllocatedAssets", fetchedAllocatedAssets)
+          
             if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                 allocatedAssetsArray = fetchedAllocatedAssets;
             }
-            // setAllocatedAssets(allocatedAssetsArray);
-
+          
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
             const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
                 id: unAllocatedAssetData[key].id,

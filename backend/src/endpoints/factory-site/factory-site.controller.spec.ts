@@ -17,7 +17,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FactorySiteController } from './factory-site.controller';
 import { FactorySiteService } from './factory-site.service';
-import * as sessionService from '../session/session.service';
+import * as sessionService from '../session/token.service';
 
 jest.mock('../session/session.service');
 

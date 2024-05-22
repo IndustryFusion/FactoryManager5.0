@@ -14,24 +14,19 @@
 // limitations under the License. 
 // 
 
-import React from "react";
+import { Injectable } from '@nestjs/common';
+import { RedisService } from '../redis/redis.service';
 
-type SelectedAssetsListProps = {
-  selectedAssets: string[];
-};
-
-const SelectedAssetsList: React.FC<SelectedAssetsListProps> = ({
-  selectedAssets,
-}) => {
-  return (
-    <div style={{ display: "flex", flexDirection: "row", overflowX: "auto" }}>
-      {selectedAssets.map((asset, index) => (
-        <div key={index} style={{ marginRight: "10px" }}>
-          {asset}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default SelectedAssetsList;
+@Injectable()
+export class TokenService {
+  constructor(private readonly redisService: RedisService) {}
+  getToken = async () => {
+    try{
+      let tokenData = await this.redisService.getData('token-storage');
+      const token = tokenData['accessToken'];
+      return token;
+    }catch(err){
+      return err;
+    }
+  }
+}

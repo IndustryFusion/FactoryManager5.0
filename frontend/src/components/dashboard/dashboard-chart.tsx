@@ -131,13 +131,12 @@ const DashboardChart = () => {
                         },
                         withCredentials: true,
                     });
-                    //conditions
+              
                     setLastData(lastDataResponse.data);
-                    console.log('last data ',lastDataResponse.data);
+                  
                 }
                 setFactoryData(response.data);
                 setMachineStateData(response.data);
-                console.log('final data ',response.data);
                 //set redux values for weeks and months
                 if(selectedInterval == 'weeks'){
                     dispatch(create({
@@ -553,13 +552,11 @@ const DashboardChart = () => {
     // useEffect to handle socket receiving data
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
- 
         socket.on("connect", () => {
-            console.log('WebSocket Connected');
+            console.log('WebSocket Connected dashboard-chart.tsx');
         });
  
         socket.on("valueChangeState", (newData) => {
-            console.log('web socket for machine state change ',newData);
             if(selectedInterval == 'days'){
                 setFactoryData(newData);
             }

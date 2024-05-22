@@ -17,23 +17,24 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req } from '@nestjs/common';
 import { FactorySiteService } from './factory-site.service';
 import * as jsonData from './factory-schema.json';
-import { getSessionToken } from '../session/session.service';
-import { Request, Response } from 'express';
+import { TokenService } from '../session/token.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
+import { String } from 'aws-sdk/clients/appstream';
 
 @Controller('factory-site')
 export class FactorySiteController {
   constructor(
     private readonly factorySiteService: FactorySiteService,
     private readonly shopFloorService: ShopFloorService,
-    private readonly allocatedAssetService: AllocatedAssetService
+    private readonly allocatedAssetService: AllocatedAssetService,
+    private readonly tokenService: TokenService
     ) {}
 
   @Post()
-  async create(@Body() data, @Req() req: Request) {
+  async create(@Body() data) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.create(data, token);
       if(response['status'] == 200 || response['status'] == 201) {
         return {
@@ -60,9 +61,9 @@ export class FactorySiteController {
   }
 
   @Get()
-  async findAll(@Req() req: Request) {
+  async findAll() {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.factorySiteService.findAll(token);
     } catch (err) {
       throw new NotFoundException("Failed in factory-site/get"+err);
@@ -70,9 +71,9 @@ export class FactorySiteController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
+  async findOne(@Param('id') id: string) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       return await this.factorySiteService.findOne(id, token);
     } catch (err) {
       throw new NotFoundException();
@@ -80,9 +81,9 @@ export class FactorySiteController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data, @Req() req: Request) {
+  async update(@Param('id') id: string, @Body() data) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.update(id, data, token);
       if(response['status'] == 200 || response['status'] == 204) {
         return {
@@ -103,9 +104,9 @@ export class FactorySiteController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request) {
+  async remove(@Param('id') id: String) {
     try {
-      const token = await getSessionToken(req);
+      const token = await this.tokenService.getToken();
       const response = await this.factorySiteService.remove(id, token, this.shopFloorService);
       if(response['acknowledged']) {
         // Delete factory specific allocated assets

@@ -15,7 +15,6 @@
 // 
 
 import { useDashboard } from "@/context/dashboard-context";
-import { InputSwitch } from "primereact/inputswitch";
 import "../../styles/dashboard.css"
 import { useTranslation } from "next-i18next";
 
