@@ -42,7 +42,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
-    const toast = useRef<any>(null);
+    const toast = useRef<Toast>(null);
     const { t } = useTranslation('button');
 
     const getOnboardFormData = async () => {

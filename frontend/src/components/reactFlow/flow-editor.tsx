@@ -38,7 +38,7 @@ import axios from "axios";
 import { Toast } from "primereact/toast";
 import {
   exportElementToJPEG,
-  fetchAssetById,
+  getAssetRelationById,
 } from "@/utility/factory-site-utility";
 import { Factory } from "../../types/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -977,7 +977,7 @@ const handleExportClick = () => {
   ) => {
     if (element.type === "asset") {
       // Fetch asset details and set relations
-      fetchAssetById(element.data.id)
+      getAssetRelationById(element.data.id)
         .then(() => {
 
           setSelectedAsset(element.id);

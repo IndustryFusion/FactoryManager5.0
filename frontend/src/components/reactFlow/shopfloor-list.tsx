@@ -36,8 +36,8 @@ import { Dialog } from 'primereact/dialog';
 interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
-  setShopfloorProp?: any;
-  formViewPage?:any
+  setShopfloorProp?: string;
+  formViewPage?:string
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
@@ -279,7 +279,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                 onClick={() => {
                   setSelectedShopFloorId(floor.id);
-                  setShopFloorValue(floor)
+                 setShopFloorValue({ id: floor.id, floorName: floor.floorName });
                 }}
                 style={{
                   cursor: "pointer",

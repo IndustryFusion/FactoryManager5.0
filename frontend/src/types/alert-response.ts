@@ -14,17 +14,22 @@
 // limitations under the License. 
 // 
 
-import axios from 'axios';
+export interface Alert {
+    resource: string;
+    
+}
 
-export const getAlerts = async () => {
-    const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    try {
-        let url = API_URL + '/alerts';
-        const response = await axios.get(url);
-        console.log("alerts ", response.data)
-        return response.data;
-    } catch (err) {
-        console.log('Error From @component/alert/alert-service.ts ',err);
-    }
-
+export interface AlertsResponse {
+    alerts: Alert[];
+    autoRefresh: boolean;
+    lastTime: string;
+    message: string;
+    more: boolean;
+    page: number;
+    pageSize: number;
+    pages: number;
+    severityCounts: Record<string, number>;
+    status: string;
+    statusCounts: Record<string, number>;
+    total: number;
 }

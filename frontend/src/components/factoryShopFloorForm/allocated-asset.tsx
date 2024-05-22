@@ -52,6 +52,13 @@ interface Asset {
     [key: string]: AssetProperty | AssetRelationship | string ;
 }
 
+interface UnAllocatedAssetState {
+    [key: string]: {
+        id: string;
+        product_name: { value: string };
+        asset_category: { value: string };
+    };
+}
 
 const AllocatedAsset = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
@@ -67,7 +74,7 @@ const AllocatedAsset = () => {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
     let allocatedAssetsArray = null;
-    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
+    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as unknown as UnAllocatedAssetState;
     const dispatch = useDispatch();
     const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryIdValue, setFactoryIdValue] = useState("");
@@ -76,7 +83,7 @@ const AllocatedAsset = () => {
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
-            if (unAllocatedAssetData.length === 0) {
+            if (Object.keys(unAllocatedAssetData).length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId); // for unallocated assets
               
                 dispatch(create(fetchedAssetIds));
@@ -88,11 +95,13 @@ const AllocatedAsset = () => {
             }
           
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-            const fetchedAssets :Asset[]= Object.keys(unAllocatedAssetData).map((key:{}) => ({
+         const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
+            return {
                 id: unAllocatedAssetData[key].id,
                 product_name: unAllocatedAssetData[key].product_name?.value,
                 asset_category: unAllocatedAssetData[key].asset_category?.value,
-            }));
+            };
+        });
 
             // destructuring the asset id, product_name, asset_catagory for allocated Asset
             const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({

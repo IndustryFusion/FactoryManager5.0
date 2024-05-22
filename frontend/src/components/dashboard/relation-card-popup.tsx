@@ -28,15 +28,22 @@ interface RelationPopupProps {
     setRelationsProp: Dispatch<SetStateAction<boolean>>;
 }
 
+interface RelationData {
+    product_name: { value: string };
+    id: string;
+    asset_category: { value: string };
+    object?: string;
+    type?:string
+}
 
 
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
-    const [parentRelations, setParentRelations] = useState([]);
+    const [parentRelations, setParentRelations] = useState<RelationData[]>([]);
     const { selectedAssetData, entityIdValue } = useDashboard();
-    const [hasPropertiesArray, setHasPropertiesArray] = useState([]);
+    const [hasPropertiesArray, setHasPropertiesArray] = useState<{[key:string]:string[]}[]>([]);
 
 
-    const getAssetData = async (relationData: any) => {
+    const getAssetData = async (relationData:RelationData  ) => {
         try {
             let newArr = [];
             if (Array.isArray(relationData) && relationData.length > 0) {
@@ -46,7 +53,8 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                     newArr.push(product_name);
                 }
             }
-            else if (relationData?.object !== "json-ld-1.1") {
+             else if (relationData.object && relationData.object !== "json-ld-1.1") {
+                console.log("relationData ", relationData)
                 const response = await getAssetById(relationData?.object);
                 let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
                 newArr.push(product_name);
@@ -59,12 +67,12 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
 
 
     const getHasProperties = async () => {
-        const propertiesArray: any = [];
+        const propertiesArray: { [key: string]: string[] }[] = [];
         for (const key in selectedAssetData) {
             if (key.startsWith("has")) {
                 const propertyName = key.substring(3); // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
-                let dataValues = await getAssetData(propertyValue)
+                let dataValues = await getAssetData(propertyValue) || [];
                 propertiesArray.push({ [propertyName]: dataValues });
             }
         }

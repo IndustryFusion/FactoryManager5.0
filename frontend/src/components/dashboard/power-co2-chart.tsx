@@ -16,18 +16,14 @@
 // 
 
 import { Chart } from 'primereact/chart';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import ChartJS from 'chart.js/auto';
-import { useDashboard } from '@/context/dashboard-context';
 import { Toast, ToastMessage } from 'primereact/toast';
 import { ProgressSpinner } from "primereact/progressspinner";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
-import { BlockUI } from 'primereact/blockui';
-import socketIOClient from "socket.io-client";
 import { Asset } from "@/types/asset-types";
-import { types } from 'util';
 import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
 import { Button } from "primereact/button";
@@ -47,11 +43,6 @@ export interface Datasets {
     borderColor: string;
     tension: number;
 }
-export interface pgData {
-    observedAt: string;
-    attributeId: string;
-    value: string;
-}
 
 interface PowerConsumptionData {
     labels: string[];
@@ -66,7 +57,7 @@ const initialChartData = {
   ],
 };
 const PowerCo2Chart = () => {
-    const [chartData, setChartData] = useState({});
+    const [chartData, setChartData] = useState<PowerConsumptionData | null>(null);
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [chartOptions, setChartOptions] = useState({});
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
@@ -78,7 +69,7 @@ const PowerCo2Chart = () => {
     const [endDate, setEndDate] = useState<Date | null>(moment().toDate());
     const [startMonth, setStartMonth] = useState<Date | null>(moment().startOf('month').toDate());
     const [startYear, setStartYear] = useState<Date | null>(moment().startOf('year').toDate());
-    const toast = useRef<any>(null);
+    const toast = useRef<Toast>(null);
     const dispatch = useDispatch();
     const { t } = useTranslation(['button', 'dashboard']);
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
@@ -103,7 +94,7 @@ const PowerCo2Chart = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
     };
   
-    const fetchData = async (entityIdValue:any, selectedInterval:string, startTime: string, endTime: string) => {
+    const fetchData = async (entityIdValue:string, selectedInterval:string, startTime: string, endTime: string) => {
         try {
             setIsLoading(true);
             const response = await axios.get(`${API_URL}/power-consumption/chart`, {
@@ -142,13 +133,13 @@ const PowerCo2Chart = () => {
             }
             setIsLoading(false);
             return response.data;
-        } catch (error: any) {
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', `Power-co2-data ${error.response?.data.message}`);
             } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
+               console.error("Error:", (error as Error).message);
+               showToast('error', 'Error', (error as Error).message);
             }
         }
     }
@@ -190,7 +181,7 @@ const PowerCo2Chart = () => {
                     color: 'white',
                     align: 'end',
                     anchor: 'center',
-                    formatter: function(value: any, context: any) {
+                    formatter: function(value:number, context:{datasetIndex :number}) {
                         const datasetIndex = context.datasetIndex;
                         if (datasetIndex === 0) {
                             return `${value} kw/h`;
@@ -210,6 +201,7 @@ const PowerCo2Chart = () => {
                     }
                 },
                 y: {
+                    
                     display: true,
                     ticks: {
                         stepSize: 5,
@@ -222,9 +214,9 @@ const PowerCo2Chart = () => {
             }
         };
 
-        setChartData(data);
+        setChartData(data as unknown as PowerConsumptionData);
         setChartOptions(options);
-    }
+    };
 
     const fetchDataAndAssign = async (startTime: string, endTime: string) => {
         let attributeIds = await fetchAssets(entityIdValue);
@@ -314,8 +306,8 @@ const PowerCo2Chart = () => {
     },[entityIdValue])
 
     useEffect(() => {
-        const containerBody = document.querySelector('.containerBody');
-        if (containerBody && chartData.labels.length > 7) {
+        const containerBody = document.querySelector('.containerBody') as HTMLElement;
+        if (containerBody && chartData && chartData.labels.length > 7) {
             const newWidth = 1000 + ((chartData.labels.length - 7) * 100);
             containerBody.style.width = `${newWidth}px`;
         }
@@ -340,6 +332,7 @@ const PowerCo2Chart = () => {
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
                         style={{ width: "100%" }}
+                        appendTo="self"
                     />
                 </div>
                 {
@@ -352,6 +345,7 @@ const PowerCo2Chart = () => {
                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
                                 minDate= {minimumDate ? moment(minimumDate).toDate() : undefined}
                                 maxDate={moment().toDate()}
+                                appendTo="self" 
                             />
                         </div>
                         
@@ -362,6 +356,7 @@ const PowerCo2Chart = () => {
                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
                                 minDate={moment(startDate).toDate()}
                                 maxDate={moment().toDate()}
+                                appendTo="self"
                             />
                         </div>
                     </>
@@ -378,6 +373,7 @@ const PowerCo2Chart = () => {
                                     onChange={(e) => setSelectedWeekSubInterval(e.value)}
                                     placeholder="Select Sub Interval"
                                     style={{ width: "100%" }}
+                                    appendTo="self"
                                 />
                             </div>
                             
@@ -392,6 +388,7 @@ const PowerCo2Chart = () => {
                                             dateFormat="mm/yy"
                                             minDate= {minimumDate ? moment(minimumDate).startOf('month').toDate() : undefined}
                                             maxDate={moment().startOf('month').toDate()}
+                                            appendTo="self" 
                                         />
                                     </div>
                                 : selectedWeekSubInterval == 'all' ?
@@ -403,6 +400,7 @@ const PowerCo2Chart = () => {
                                             onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
                                             view="year" 
                                             dateFormat="yy"
+                                            appendTo="self"
                                         />
                                     </div>
                                 ) : (
@@ -414,6 +412,7 @@ const PowerCo2Chart = () => {
                                                 onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
                                                 minDate= {minimumDate ? moment(minimumDate).toDate() : undefined}
                                                 maxDate={moment().toDate()}
+                                                appendTo="self"
                                             />
                                         </div>
                                         
@@ -424,6 +423,7 @@ const PowerCo2Chart = () => {
                                                 onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
                                                 minDate={moment(startDate).toDate()}
                                                 maxDate={moment().toDate()}
+                                                appendTo="self"
                                             />
                                         </div>
                                     </>
@@ -443,6 +443,7 @@ const PowerCo2Chart = () => {
                                     onChange={(e) => setSelectedMonthSubInterval(e.value)}
                                     placeholder="Select Sub Interval"
                                     style={{ width: "100%" }}
+                                    appendTo="self"
                                 />
                             </div>
                             
@@ -510,7 +511,7 @@ const PowerCo2Chart = () => {
                 ) : (
                     <div style={{ overflowX: 'scroll', overflowY: 'hidden', maxWidth: '100%', width: '100%' }}>
                         <div className='containerBody'>
-                            <Chart type="bar" data={chartData} options={chartOptions} />
+                            <Chart type="bar" data={chartData as PowerConsumptionData} options={chartOptions} />
                         </div>
                     </div>
                 )

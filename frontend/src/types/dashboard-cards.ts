@@ -14,17 +14,15 @@
 // limitations under the License. 
 // 
 
-import axios from 'axios';
+export interface PropertyValue {
+    type: string;
+    value: string;
+    observedAt: string;
+}
 
-export const getAlerts = async () => {
-    const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    try {
-        let url = API_URL + '/alerts';
-        const response = await axios.get(url);
-        console.log("alerts ", response.data)
-        return response.data;
-    } catch (err) {
-        console.log('Error From @component/alert/alert-service.ts ',err);
-    }
-
+export interface AssetData {
+    id: string;
+    product_name: PropertyValue;
+    asset_category: PropertyValue;
+    [key: string]: any;
 }

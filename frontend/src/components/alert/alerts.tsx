@@ -20,7 +20,7 @@ import axios from "axios";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
 import AlertDetails from "./alert-details";
-
+import { Asset } from "@/types/asset-types";
 interface Alerts {
   text: string;
   resource: string;

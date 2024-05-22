@@ -45,36 +45,50 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    relation: any[]
+    relation: {}
 }
 
-
+interface UnAllocatedAssetState {
+    [key: string]: {
+        id: string;
+        product_name: { value: string };
+        asset_category: { value: string };
+    };
+}
+interface PickListEvent {
+    source: Asset[];
+    target: Asset[];
+} 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const PicklistAssets = () => {
-    const [shopFloorAssets, setShopFloorAssets] = useState([]);
-    const [source, setSource] = useState([]);
-    const [target, setTarget] = useState([]);
-    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
+    const [shopFloorAssets, setShopFloorAssets] = useState<Asset[]>([]);
+    const [source, setSource] = useState<Asset[]>([]);
+    const [target, setTarget] = useState<Asset[]>([]);
+    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as unknown as UnAllocatedAssetState;
     const dispatch = useDispatch();
     const router = useRouter();
     const { selectItems, setAsset, setSaveAllocatedAssets, shopFloorValue, saveAllocatedAssets } = useFactoryShopFloor();
-    const [factoryId, setFactoryId] = useState("");
-    const toast = useRef<any>(null);
+    const [factoryId, setFactoryId] = useState<string>("");
+    const toast = useRef<Toast>(null);
     let toastShown = false;
     let allocatedAssetsArray = null;
     const relations = useSelector((state: RootState) => state.relations.values);
 
 
     const fetchShopFloorAssets = async () => {
+        if (!shopFloorValue) {
+            return;
+        }
         try {
             const response = await getShopFloorAssets(shopFloorValue?.id);
-            const { assetsData } = response;
-         
-
-            setAsset({})
-            setShopFloorAssets(assetsData);
-            setSource(assetsData)
+            if (response && response.assetsData) {
+                setAsset({} as Asset);
+                setShopFloorAssets(response.assetsData as Asset[]);
+                setSource(response.assetsData as Asset[]);
+            } else {
+                console.error("Invalid response structure", response);
+            }
         } catch (error) {
             console.error(error)
         }
@@ -85,7 +99,7 @@ const PicklistAssets = () => {
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
-            if (unAllocatedAssetData.length === 0) {
+            if (Object.keys(unAllocatedAssetData).length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
             
                 dispatch(create(fetchedAssetIds));
@@ -142,12 +156,12 @@ const PicklistAssets = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
 
-    const onChange = (event) => {
+    const onChange = (event:PickListEvent) => {
         setSource(event.source);
         setTarget(event.target);
     };
 
-    const itemTemplate = (item) => {
+    const itemTemplate = (item:Asset) => {
         if (relations?.length > 0) {
             toastShown = true;
         }
@@ -175,6 +189,10 @@ const PicklistAssets = () => {
 
     const shopfloorAssetIds = source.map(asset => asset?.id)
     const getPayload = () => {
+        if (!shopFloorValue?.id) {
+           console.log("Shop floor ID is undefined")
+           return;
+        }
         const shopfloorObj = {
             [shopFloorValue?.id]: shopfloorAssetIds
         };
@@ -223,13 +241,10 @@ const PicklistAssets = () => {
                 dispatch(reset());
             }
           updateReactFlow(factoryId)
-        }   catch (error: any) {
+        }   catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                showToast('error', 'Error', "Saving shopFloor assets");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
             }
         }
     }
@@ -244,15 +259,12 @@ const PicklistAssets = () => {
                 showToast("success", "success", "saved to allocated assets successfully")
             }
           
-        }   catch (error: any) {
+        }   catch (error) {  
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                showToast('error', 'Error', "Saving allocated assets");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
             }
-        }
+           }
     }
 
     const headerSource = (

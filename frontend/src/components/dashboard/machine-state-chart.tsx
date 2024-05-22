@@ -43,16 +43,20 @@ export interface Datasets {
 }
 
 export interface pgData {
-    time(time: any): unknown;
-    type: any;
+    prev_value: string;
     observedAt: string;
     attributeId: string;
     value: string;
+    time: number;
+    type: string;
 }
 
 interface GroupedData {
     time: number;
     type: string;
+    prev_value?:string
+    observedAt?:string;
+    attributeId?:string, 
 }
 
 interface MachineState {
@@ -60,10 +64,16 @@ interface MachineState {
     days: Record<string, []>;
     weeks: Record<string, []>;
     months: Record<string, []>;
-    [key: string]: any; 
+    [key: string]: {}; 
 }
 
-type FinalData = Record<string, pgData[]>;
+interface MachineStateLabelContext{
+    dataset:{
+        data:[]
+    },
+    dataIndex:number
+};
+type FinalData = Record<string,   {[key: string]: any} >;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const MachineStateChart = () => {
@@ -76,7 +86,7 @@ const MachineStateChart = () => {
     const { setMachineStateData,  setAllOnlineTime } = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const machineStateData = useSelector((state: RootState) => state.machineState  as MachineState);
-    const toast = useRef<any>(null);
+    const toast = useRef<Toast>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -166,15 +176,19 @@ const MachineStateChart = () => {
                 }
             }
             setIsLoading(false);
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                console.error("Error response:", error.response?.data.message);
-                // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
+          } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    console.error("Error response:", error.response?.data.message);
+                    showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+                } else if (error instanceof Error) {
+                    console.error("Error:", error.message);
+                    showToast('error', 'Error', error.message);
+                } else {
+                    console.error("Unknown error:", error);
+                    showToast('error', 'Error', 'An unknown error occurred');
+                }
             }
-        }
+
     };
 
     const fetchAssets = async (assetId: string) => {
@@ -201,7 +215,7 @@ const MachineStateChart = () => {
         }
     };
 
-    const formatChartData = (dataset: pgData[][]) => {
+    const formatChartData = (dataset: FinalData) => {
 
         const documentStyle = getComputedStyle(document.documentElement);
         let labels = Object.keys(dataset);
@@ -236,7 +250,7 @@ const MachineStateChart = () => {
         };
     };
 
-    const groupData = (data: any) => {
+    const groupData = (data: FinalData): FinalData  => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         let lastValue = "", nextValue = "";
@@ -363,7 +377,7 @@ const MachineStateChart = () => {
         return groupedByDate;
     };
 
-    const groupByDays = (data: any) => {
+    const groupByDays =  (data: FinalData): { [key: string]: GroupedData[] } => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         let lastValue = "", nextValue = "";
@@ -537,6 +551,7 @@ const MachineStateChart = () => {
                 }
             }
         }
+
         return groupedByDate;
     };
 
@@ -562,7 +577,7 @@ const MachineStateChart = () => {
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
         socket.on("connect", () => {
-            console.log('WebSocket Connected dashboard-chart.tsx');
+            console.log('WebSocket Connected machine-state-chart.tsx');
         });
  
         socket.on("valueChangeState", (newData) => {
@@ -590,7 +605,6 @@ const MachineStateChart = () => {
     // useEffect to create chart data and when there is a update in data
     useEffect(() => {
         const documentStyle = getComputedStyle(document.documentElement);
-        const textColor = documentStyle.getPropertyValue('--text-color');
         const textColorSecondary = documentStyle.getPropertyValue(
             '--text-color-secondary'
         );
@@ -615,7 +629,7 @@ const MachineStateChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -634,7 +648,7 @@ const MachineStateChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -664,7 +678,7 @@ const MachineStateChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -688,7 +702,7 @@ const MachineStateChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -707,7 +721,7 @@ const MachineStateChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -737,7 +751,7 @@ const MachineStateChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -761,7 +775,7 @@ const MachineStateChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -780,7 +794,7 @@ const MachineStateChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -810,7 +824,7 @@ const MachineStateChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -847,6 +861,7 @@ const MachineStateChart = () => {
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
                         style={{ width: "100%", border: "none" }}
+                        appendTo="self"
                     />
                 </div>
             </div>

@@ -21,12 +21,13 @@ import "../../app/globals.css"
 import "../../styles/asset-list.css"
 import { Button } from "primereact/button";
 import { useTranslation } from "next-i18next";
+import { Asset } from "@/types/asset-types";
 interface AlertDetailsProps {
   alerts: Alerts[];
   count: number;
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  assetData: any;
+  assetData: Asset;
 }
 
 interface Alerts {

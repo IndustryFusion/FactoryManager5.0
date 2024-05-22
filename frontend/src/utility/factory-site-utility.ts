@@ -212,25 +212,6 @@ export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
   }
 };
 
-// const mapBackendDataTofactory = (backendData: any): any => {
-//   return backendData.map((item: any) => {
-//     const newItem: any = {};
-//     Object.keys(item).forEach((key) => {
-//       if (key.includes("http://www.industry-fusion.org/schema#")) {
-//         const newKey = key.replace(
-//           "http://www.industry-fusion.org/schema#",
-//           ""
-//         );
-//         newItem[newKey] =
-//           item[key].type === "Property" ? item[key].value : item[key];
-//       } else {
-//         newItem[key] = item[key];
-//       }
-//     });
-//     return newItem;
-//   });
-// };
-
 const flattenData = (data: any): any => {
   const newItem: any = {};
   Object.keys(data).forEach((key) => {
@@ -543,7 +524,7 @@ export const saveFlowchartData = async (
   }
 };
 
-export const fetchAssetById = async (assetId: string) => {
+export const getAssetRelationById = async (assetId: string) => {
   try {
     const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
       headers: {
