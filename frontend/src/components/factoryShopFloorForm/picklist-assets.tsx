@@ -17,7 +17,7 @@
 import { getShopFloorAssets, fetchAllocatedAssets, getNonShopFloorAsset } from "@/utility/factory-site-utility";
 import { PickList } from "primereact/picklist";
 import { RootState } from "@/state/store";
-import { create,reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { create, reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
@@ -64,14 +64,13 @@ const PicklistAssets = () => {
     let toastShown = false;
     let allocatedAssetsArray = null;
     const relations = useSelector((state: RootState) => state.relations.values);
+    const [firstElementClicked, setFirstElementClicked] = useState(false);
 
 
     const fetchShopFloorAssets = async () => {
         try {
             const response = await getShopFloorAssets(shopFloorValue?.id);
             const { assetsData } = response;
-         
-
             setAsset({})
             setShopFloorAssets(assetsData);
             setSource(assetsData)
@@ -79,22 +78,30 @@ const PicklistAssets = () => {
             console.error(error)
         }
     }
+
     useEffect(() => {
         fetchShopFloorAssets();
     }, [shopFloorValue?.id]);
+
+    useEffect(() => {
+        if (shopFloorAssets.length > 0) {
+            setAsset(shopFloorAssets[0]);
+        }
+    }, [shopFloorAssets]);
+
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
             if (unAllocatedAssetData.length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-            
+
                 dispatch(create(fetchedAssetIds));
             }
 
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
             const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                 const relationsArr: string[] = [];
-              
+
                 const checkHas = 'http://www.industry-fusion.org/schema#has';
 
                 Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
@@ -114,12 +121,10 @@ const PicklistAssets = () => {
             }
 
             );
-          
-            setTarget(fetchedAssets);
 
+            setTarget(fetchedAssets);
             // combined asset catagories from both allocated asset and un allocated asset
             const categories = Array.from(new Set([...fetchedAssets].map(asset => asset.asset_category))).filter(Boolean);
-
         } catch (err) {
             console.error(err)
         }
@@ -154,22 +159,28 @@ const PicklistAssets = () => {
 
         return (
             <>
-                <span className="list-items" onClick={() => {
-                    selectItems(item.product_name, item.asset_category, item?.id)//relation
-                    source.forEach(sourceItem => {
-                        if (sourceItem?.product_name === item.product_name) {
-                            setAsset(item)
-                            toastShown = true;
+                <span className="list-items"
+                      style={{ fontWeight: firstElementClicked? "normal" : item.product_name== source[0]?.product_name ? "500":"normal" }}
+                    onClick={() => {
+                        setFirstElementClicked(true);
+                        selectItems(item.product_name, item.asset_category, item?.id)//relation
+                        source.map(sourceItem => {
+                            if (sourceItem?.product_name === item.product_name) {
+                                setAsset(item)
+                                toastShown = true;
+                            }
+                        })
+                        if (!toastShown) { // Check if toast has not been shown
+                            showToast("warn", "Warning", "move asset to shopfloor assets");
                         }
-                    })
-                    if (!toastShown) { // Check if toast has not been shown
-                        showToast("warn", "Warning", "move asset to shopfloor assets");
-                    }
 
-                }}>{item.product_name}</span>
+                    }}>{item.product_name}</span>
             </>
         )
     };
+
+
+    console.log("source here", source);
 
 
 
@@ -186,7 +197,7 @@ const PicklistAssets = () => {
         const allocatedObj = {
             [factoryId]: shopfloorAssetIds
         }
-   
+
         return allocatedObj;
     }
 
@@ -217,16 +228,16 @@ const PicklistAssets = () => {
                 },
                 withCredentials: true,
             })
-        
+
             if (response.data?.status === 204 && response.data?.success === true) {
                 showToast("success", "success", "Shopfloor assets saved successfully");
                 dispatch(reset());
             }
-          updateReactFlow(factoryId)
-        }   catch (error: any) {
+            updateReactFlow(factoryId)
+        } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-               showToast('error', 'Error', "Saving shopFloor assets");
+                showToast('error', 'Error', "Saving shopFloor assets");
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
@@ -243,11 +254,11 @@ const PicklistAssets = () => {
                 setSaveAllocatedAssets(!saveAllocatedAssets)
                 showToast("success", "success", "saved to allocated assets successfully")
             }
-          
-        }   catch (error: any) {
+
+        } catch (error: any) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-               showToast('error', 'Error', "Saving allocated assets");
+                showToast('error', 'Error', "Saving allocated assets");
             } else {
                 console.error("Error:", error);
                 showToast('error', 'Error', error);
@@ -259,8 +270,8 @@ const PicklistAssets = () => {
         <div className="flex justify-content-between align-items-center gap-3">
             <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
-                handleSaveShopFloors()            
-                handleAllocatedAssets();               
+                handleSaveShopFloors()
+                handleAllocatedAssets();
             }
             }>Save</Button>
         </div>
