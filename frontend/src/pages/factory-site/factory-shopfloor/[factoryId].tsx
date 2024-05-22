@@ -15,7 +15,7 @@
 // 
 
 import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-shopfloor";
-import ShopFloorList from "@/components/shopfloor-list";
+
 import "../../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
 import { useEffect, useState } from "react";
@@ -30,28 +30,29 @@ import Footer from "@/components/navBar/footer";
 import PicklistAssets from "@/components/factoryShopFloorForm/picklist-assets";
 import Header from "@/components/factoryShopFloorForm/header";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 
 const FactoryShopFloor = () => {
 
-    const [formViewPage, setFormViewPage]= useState(true);
+    const [formViewPage, setFormViewPage] = useState(true);
 
     return (
         <>
             <div style={{ overflow: "hidden", height: "95vh" }}>
                 <HorizontalNavbar />
                 <FactoryShopFloorProvider>
-                  
+
                     <div className="factory-shopfloor-container">
                         <ShopFloorProvider>
                             <div className="shopfloor-list-container">
-                                <ShopFloorList 
-                                formViewPage={formViewPage}
+                                <ShopFloorList
+                                    formViewPage={formViewPage}
                                 />
                                 <div>
                                     <AllocatedAsset />
                                 </div>
                             </div>
-                            <div className="form-container" style={{zoom:"90%"}}>
+                            <div className="form-container" style={{ zoom: "90%" }}>
                                 < FactoryShopFloorForm />
                             </div>
                             <div className="allocated-list-container" >
@@ -69,15 +70,15 @@ const FactoryShopFloor = () => {
 
 export async function getServerSideProps({ locale }: { locale: string }) {
     return {
-      props: {
-        ...(await serverSideTranslations(locale, [
-          'header',
-          'button',
-          'placeholder',
-          'dashboard'
-        ])),
-      },
+        props: {
+            ...(await serverSideTranslations(locale, [
+                'header',
+                'button',
+                'placeholder',
+                'dashboard'
+            ])),
+        },
     }
-  }
+}
 
 export default FactoryShopFloor;

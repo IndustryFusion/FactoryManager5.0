@@ -37,7 +37,7 @@ interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
   setShopfloorProp?: any;
-  formViewPage?:any
+  formViewPage?: any
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
@@ -59,7 +59,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const [searchValue, setSearchValue] = useState<string>("");
   const { setShopFloorValue } = useFactoryShopFloor();
   const [factoryIdValue, setFactoryIdvalue] = useState("");
-  const { t } = useTranslation(['button','placeholder']);
+  const { t } = useTranslation(['button', 'placeholder']);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
 
@@ -125,7 +125,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   }, [router.query.factoryId, router.isReady, isEdit, isVisible])
 
- const confirmDelete = () => {
+  const confirmDelete = () => {
     if (selectedShopFloorId) {
       setShowConfirmDialog(true);
     } else {
@@ -148,31 +148,31 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       return;
     }
     try {
-       if (factoryId) {
-      await deleteShopFloorById(
-        selectedShopFloorId,
-        factoryId
-      );
-      setShopFloors((prevShopFloors) =>
-        prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
-      );
+      if (factoryId) {
+        await deleteShopFloorById(
+          selectedShopFloorId,
+          factoryId
+        );
+        setShopFloors((prevShopFloors) =>
+          prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
+        );
 
-      toast.current?.show({
-        severity: "success",
-        summary: "Success",
-        detail: "Shop floor deleted successfully",
-      });
-      if (onShopFloorDeleted) {
-        onShopFloorDeleted(selectedShopFloorId);
+        toast.current?.show({
+          severity: "success",
+          summary: "Success",
+          detail: "Shop floor deleted successfully",
+        });
+        if (onShopFloorDeleted) {
+          onShopFloorDeleted(selectedShopFloorId);
+        }
       }
-    }
-     else{
-       toast.current?.show({
+      else {
+        toast.current?.show({
           severity: "error",
           summary: "Error",
           detail: "Factory ID is undefined",
         });
-    }
+      }
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({
@@ -198,7 +198,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-  
+
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
@@ -211,12 +211,12 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     if (filteredShopFloors.length > 0) {
       setShopFloorValue(filteredShopFloors[0]);
     }
-  }, [filteredShopFloors]); 
+  }, [filteredShopFloors]);
 
   return (
     <>
-      <Card className={formViewPage? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
-         <Dialog
+      <Card className={formViewPage ? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
+        <Dialog
           visible={showConfirmDialog}
           style={{ width: '450px' }}
           header="Confirm Deletion"
@@ -231,7 +231,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         >
           Are you sure you want to delete this shop floor?
         </Dialog>
-        <Toast ref={toast} style={{ top: '60px' }}/>
+        <Toast ref={toast} style={{ top: '60px' }} />
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="p-input-icon-left flex align-items-center ml-4">
@@ -277,22 +277,30 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={confirmDelete}
             />
           </div>
-          <ul className={formViewPage?"list-disc":""} style={{ marginTop: "10%" }}>
+          <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: "10%" }}>
             {filteredShopFloors.map((floor, index) => (
               <li
                 key={floor.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, floor, "shopFloor")}
                 onClick={() => {
+                  if (index !== 0) {
+                    setSelectedShopFloorId(null);
+                  }
                   setSelectedShopFloorId(floor.id);
                   setShopFloorValue(floor)
                 }}
                 style={{
                   cursor: "pointer",
-                  backgroundColor: index === 0 ? "#e3e3e3a6": selectedShopFloorId === floor.id ? "#e3e3e3a6" : "#fff",
+                  backgroundColor:
+                    selectedShopFloorId === floor.id
+                      ? "#e3e3e3a6"
+                      : index === 0 && !selectedShopFloorId
+                        ? "#e3e3e3a6"
+                        : "#fff",
                   position: "relative",
                   paddingLeft: "20px",
-                  maxWidth:"93%"
+                  maxWidth: "93%"
                 }}
                 className="ml-3 mb-3 list-item"
               >
