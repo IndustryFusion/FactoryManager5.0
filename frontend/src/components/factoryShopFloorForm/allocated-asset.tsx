@@ -49,7 +49,7 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    [key: string]: AssetProperty | AssetRelationship | string | undefined;
+    [key: string]: AssetProperty | AssetRelationship | string ;
 }
 
 
@@ -88,7 +88,7 @@ const AllocatedAsset = () => {
             }
           
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-            const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
+            const fetchedAssets :Asset[]= Object.keys(unAllocatedAssetData).map((key:{}) => ({
                 id: unAllocatedAssetData[key].id,
                 product_name: unAllocatedAssetData[key].product_name?.value,
                 asset_category: unAllocatedAssetData[key].asset_category?.value,

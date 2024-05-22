@@ -37,12 +37,12 @@ interface FactoryShopFloorContextValue {
     setInputValue: React.Dispatch<React.SetStateAction<InputValue[]>>;
     assetId: string;
     setAssetId: React.Dispatch<React.SetStateAction<string>>;
-    asset: string;
-    setAsset: React.Dispatch<React.SetStateAction<string>>;
+    asset: {id:string, product_name?:string, asset_category?: string};
+    setAsset: React.Dispatch<React.SetStateAction<{ id: string; product_name?: string; asset_category?: string }>>;
     saveAllocatedAssets: boolean;
     setSaveAllocatedAssets: React.Dispatch<React.SetStateAction<boolean>>;
-    shopFloorValue: Obj;
-    setShopFloorValue: React.Dispatch<React.SetStateAction<Obj>>;
+    shopFloorValue: { id: string; floorName: string } | undefined;
+    setShopFloorValue: React.Dispatch<React.SetStateAction<{ id: string; floorName: string } | undefined>>;
 }
 
 const FactoryShopFloorContext = createContext<FactoryShopFloorContextValue | undefined>(undefined);
@@ -54,15 +54,14 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
 
     const [inputValue, setInputValue] = useState<InputValue[]>([]);
     const [assetId, setAssetId] = useState("");
-    const [asset, setAsset] = useState({});
+    const [asset, setAsset] = useState<{ id: string; product_name?: string; asset_category?: string }>({ id: "" });
     const [saveAllocatedAssets, setSaveAllocatedAssets] = useState(false);
-    const [shopFloorValue, setShopFloorValue] = useState({});
+    const [shopFloorValue, setShopFloorValue] = useState<{ id: string; floorName: string } | undefined>(undefined);
 
 
     const relations = useSelector((state: RootState) => state.relations.values);
 
     const selectItems = (item: string, assetCategory: string, id: string) => {
-        console.log("selct items relations:", item, assetCategory)
 
         for (let getRelation of relations) {
             const relation = getRelation.replace("has", "").toLowerCase();
@@ -81,7 +80,6 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                         const isEntryExists:any  = existingEntryIndex >= 0 ? updatedValue[existingEntryIndex] : null;
 
                         const isDuplicateItem = isEntryExists && isEntryExists[getRelation].includes(id);
-                        console.log("isDuplicateItem", isDuplicateItem);
                         
                       
                         if (emptyRelationindex >= 0) {                           
@@ -136,7 +134,7 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                             });
                         }
                     }
-                    console.log("updatedValue here", updatedValue);
+             
 
 
                     return updatedValue;

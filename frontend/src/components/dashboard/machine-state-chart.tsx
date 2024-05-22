@@ -43,6 +43,8 @@ export interface Datasets {
 }
 
 export interface pgData {
+    time(time: any): unknown;
+    type: any;
     observedAt: string;
     attributeId: string;
     value: string;
@@ -55,12 +57,13 @@ interface GroupedData {
 
 interface MachineState {
     id: string;
-    days: Record<string, any>;
-    weeks: Record<string, any>;
-    months: Record<string, any>;
+    days: Record<string, []>;
+    weeks: Record<string, []>;
+    months: Record<string, []>;
     [key: string]: any; 
 }
 
+type FinalData = Record<string, pgData[]>;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const MachineStateChart = () => {
@@ -114,8 +117,9 @@ const MachineStateChart = () => {
                     },
                     withCredentials: true,
                 });
+
                 let checkEmpty = true;
-                for (const value of Object.values(response.data)) {
+                for (const value of Object.values(response.data) as pgData[][]) {
                     if (value.length !== 0) {
                         checkEmpty = false;
                     }
@@ -140,7 +144,6 @@ const MachineStateChart = () => {
                 }
                 setFactoryData(response.data);
                 setMachineStateData(response.data);
-                console.log("machine state ", machineStateData)
                 //set redux values for weeks and months
                 if(selectedInterval == 'weeks'){
                     dispatch(create({
@@ -198,7 +201,8 @@ const MachineStateChart = () => {
         }
     };
 
-    const formatChartData = (dataset: any) => {
+    const formatChartData = (dataset: pgData[][]) => {
+
         const documentStyle = getComputedStyle(document.documentElement);
         let labels = Object.keys(dataset);
         const finalData = [];
@@ -536,11 +540,11 @@ const MachineStateChart = () => {
         return groupedByDate;
     };
 
-    const alignData = (data: any) => {
+    const alignData = (data:  FinalData) => {
         setLastData({});
         if(selectedInterval == 'days'){
            
-            const finalData = {};
+            const finalData:FinalData = {} ;
             for(let key in data){
                 const dateObject = moment(key, 'MMMM Do');
                 const day = moment(dateObject).format('YYYY-MM-DD');
@@ -592,7 +596,7 @@ const MachineStateChart = () => {
         );
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
         if(Object.keys(factoryData).length > 0){
-            const groupedData = alignData(factoryData);
+            const groupedData:FinalData = alignData(factoryData);
             const chartDataValue = formatChartData(groupedData);
             const {datasets} = chartDataValue;
             for(let i in datasets){
