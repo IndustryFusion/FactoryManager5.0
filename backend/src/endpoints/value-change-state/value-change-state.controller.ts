@@ -15,7 +15,6 @@
 // 
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query, NotFoundException } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { ValueChangeStateService } from './value-change-state.service';
 import { TokenService } from '../session/token.service';
 
@@ -27,7 +26,7 @@ export class ValueChangeStateController {
   ) {}
 
   @Get()
-  async findOne(@Query() queryParams: any, @Req() req: Request) {
+  async findOne(@Query() queryParams: any) {
     try {
       const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findOne(queryParams, token);
@@ -37,7 +36,7 @@ export class ValueChangeStateController {
   }
 
   @Get('/chart')
-  async findAll(@Query('asset-id') assetId: string, @Query('type') type: string, @Req() req: Request) {
+  async findAll(@Query('asset-id') assetId: string, @Query('type') type: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findAll(assetId, type, token);

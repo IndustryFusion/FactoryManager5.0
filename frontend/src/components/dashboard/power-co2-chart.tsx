@@ -84,34 +84,6 @@ const PowerCo2Chart = () => {
     let minimumDate = useSelector((state: RootState) => state.powerConsumption.minimumDate);
     let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
 
-    useEffect(() => {
-        const socket = socketIOClient(`${API_URL}/`);
-        socket.on("connect", () => {
-        });
-
-        socket.on("powerConsumptionUpdate", (newData) => {
-        setChartData((currentData) => {
-                const updatedChartData:any = { ...currentData };
-                const lastIndex = updatedChartData.chartData.labels.length - 1;
-                
-                // Ensure datasets array exists and has necessary structure
-                if (updatedChartData.datasets && updatedChartData.datasets.length >= 2 && (updatedChartData.labels[lastIndex] == newData.labels[0])) {
-                    updatedChartData.datasets[0].data[lastIndex] = newData.powerConsumption[0];
-                    updatedChartData.datasets[1].data[lastIndex] = newData.emission[0];
-                } else {
-                    console.error("Datasets are not properly initialized");
-                }
-                return updatedChartData;
-            });
-        });
-
-        // Disconnect socket on cleanup
-        return () => {
-            socket.disconnect();
-            console.log('WebSocket Disconnected');
-        };
-    }, []);
-
     const intervalButtons = [
         { label: "Days", interval: "days" },
         { label: "Weeks", interval: "weeks" },

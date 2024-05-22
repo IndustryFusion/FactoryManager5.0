@@ -23,24 +23,17 @@ import { AssetService } from '../asset/asset.service';
 import { HttpService } from '@nestjs/axios';
 import { PgRestService } from '../pgrest/pgrest.service';
 import axios, { AxiosResponse } from 'axios';
-import { TemplateDescriptionDto } from '../templates/dto/templateDescription.dto';
 import { RedisService } from '../redis/redis.service';
 import { isEqual } from 'lodash';
-import { Server } from 'socket.io';
-import { WebSocketServer } from '@nestjs/websockets';
 import { PgRestGateway } from '../pgrest/pgrest.gatway';
 import { ValueChangeStateService } from '../value-change-state/value-change-state.service';
 import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
-import { PowerConsumptionGateway } from '../power-consumption/power-consumption-gateway';
-import { PowerConsumptionService } from '../power-consumption/power-consumption.service';
-import * as moment from 'moment';
+import { TokenService } from '../session/token.service';
 
 @Injectable()
 
-export class CronService  
-// implements OnModuleInit {
-  {
-   private readonly logger = new Logger(CronService.name);
+export class CronService  {
+  private readonly logger = new Logger(CronService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly reactFlowService: ReactFlowService,
@@ -52,110 +45,63 @@ export class CronService
     private readonly pgrestGatway : PgRestGateway,
     private readonly valueChangeStateService : ValueChangeStateService,
     private readonly valueChangeStateGateway : ValueChangeStateGateway,
-    private readonly powerConsumptionGateway: PowerConsumptionGateway,
-    private readonly powerConsumptionService: PowerConsumptionService,
-    ) {}
+    private readonly tokenService: TokenService
+  ) {}
 
-private emitDataChangeToClient(data: any) {
-
-  this.pgrestGatway.sendUpdate(data);
-}
-
-@Cron(CronExpression.EVERY_5_SECONDS)
-async handleFindAllEverySecond() {
-  // Retrieve token and query parameters from Redis
-  const credentials = await this.redisService.getTokenAndEntityId();
-  if(!credentials){
-    return;
-  }
-  const { token, queryParams } = credentials;
-  await this.redisService.saveTokenAndEntityId(token, queryParams, queryParams.entityId, queryParams.attributeId);
-  // Retrieve stored data and query parameters from Redis
-  let storedData = await this.redisService.getData('storedData');
-  let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
-
-  if (storedQueryParams && storedQueryParams.intervalType !== 'live') {
-    return; // Only proceed if the interval type is 'live'
+  private emitDataChangeToClient(data: any) {
+    this.pgrestGatway.sendUpdate(data);
   }
 
-  if (!storedData || storedData.length == 0) {
-    return;
-  }
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async handleFindAllEverySecond() {
+    // Retrieve stored data and query parameters from Redis
+    let storedData = await this.redisService.getData('storedData');
+    let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
 
-  const { entityId, attributeId } = storedData[0];
-  const modifiedQueryParams = {
-    limit: 1,
-    order: 'observedAt.desc',
-    entityId: `eq.${entityId}`,
-    attributeId: `eq.${attributeId.replace('#', '%23')}` 
-  };
-
-  try {
-
-    const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
-    if (newData) {
-      this.emitDataChangeToClient(newData);
-    } else {
+    if (storedQueryParams && storedQueryParams.intervalType !== 'live') {
+      return; // Only proceed if the interval type is 'live'
     }
-  } catch (error) {
-    console.error("Error during data fetch:", error);
-  }
-}
 
-@Cron('* * * * *')
-async handleChartDataUpdate() {
-  try {
-    const credentials = await this.redisService.getTokenAndEntityId();
-    if (!credentials) {
+    if (!storedData || storedData.length == 0) {
       return;
     }
-    const { token, queryParams } = credentials;
-    const { assetId, type } = queryParams;
-    const dateToCheck = moment(queryParams.endTime);
-    const currentDate = moment().startOf('day');
-    const isCurrentDate = dateToCheck.isSame(currentDate, 'day');
-    if(type == 'days' && isCurrentDate){
-      const redisKey = `chartData:${assetId}:${type}`;
-      const previousChartData = await this.redisService.getData(redisKey);
-      const modifiedQueryParams = { ...queryParams, limit: 1  };
-      const newChartData = await this.powerConsumptionService.findOne(modifiedQueryParams, token);
-      if(previousChartData){
-        if (!isEqual(previousChartData, newChartData)) {
-          await this.redisService.saveData(redisKey, newChartData);
-          this.emitChartDataUpdate(newChartData, assetId, type);
+
+    const { entityId, attributeId } = storedData[0];
+    const modifiedQueryParams = {
+      limit: 1,
+      order: 'observedAt.desc',
+      entityId: `eq.${entityId}`,
+      attributeId: `eq.${attributeId.replace('#', '%23')}` 
+    };
+
+    try {
+      let token = await this.tokenService.getToken();
+      const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
+      if (newData) {
+        this.emitDataChangeToClient(newData);
+      }
+    } catch (error) {
+      console.error("Error during data fetch:", error);
+    }
+  }
+
+  @Cron('* * * * *')
+  async handleMachineStateRefresh(){
+    let machineStateParams = await this.redisService.getData('machine-state-params');
+    if(machineStateParams && machineStateParams.type == 'days'){
+      let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
+      let storedData = await this.redisService.getData('machine-state-data');
+      if(storedData){
+        if(!isEqual(newData, storedData)){
+          await this.redisService.saveData('machine-state-data',newData);
+          // call web socket
+          this.valueChangeStateGateway.sendUpdate(newData);
         }
       }else{
-        await this.redisService.saveData(redisKey, newChartData);
-        this.emitChartDataUpdate(newChartData, assetId, type);
-      }
-    }
-  } catch (error) {
-    this.logger.error('Error during chart data update', error);
-  }
-}
-
-private emitChartDataUpdate(chartData: any, assetId: string, type: string) {
-  this.powerConsumptionGateway.sendPowerConsumptionUpdate({ chartData, assetId, type });
-  this.logger.log(`Chart data updated for assetId=${assetId}, type=${type}`);
-}
-
-@Cron('* * * * *')
-async handleMachineStateRefresh(){
-  let machineStateParams = await this.redisService.getData('machine-state-params');
-  if(machineStateParams && machineStateParams.type == 'days'){
-    let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
-    let storedData = await this.redisService.getData('machine-state-data');
-    if(storedData){
-      if(!isEqual(newData, storedData)){
         await this.redisService.saveData('machine-state-data',newData);
-        // call web socket
-        this.valueChangeStateGateway.sendUpdate(newData);
       }
-    }else{
-      await this.redisService.saveData('machine-state-data',newData);
     }
   }
-}
 
   // Existing method that runs at the end of the day
   @Cron('0 0 * * *')

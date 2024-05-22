@@ -15,7 +15,6 @@
 // 
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { TokenService } from '../session/token.service';
 import { CronService } from './cron.service';
 
@@ -27,7 +26,7 @@ export class CronController {
     ) {}
 
     @Get()
-    async validate(@Req() req: Request) {
+    async validate() {
         try {
             const token = await this.tokenService.getToken();
             return this.cronService.validateScript(token);
@@ -35,5 +34,4 @@ export class CronController {
             throw new NotFoundException("Error fetching assets " + err);
         }
     }
-    
 }
