@@ -98,10 +98,8 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       const responseData = response.data;
-      // console.log("factory data", responseData);
       const mappedData = mapBackendDataToFactoryLists(responseData);
       setFactorySite(mappedData);
-      // console.log(mappedData, "factory response here");
     } catch (error: any) {
       if (error.response && error.response?.status === 404) {
         showToast(error, "Error","Getting factory lists" )     
@@ -144,7 +142,6 @@ const FactoryOverview = () => {
       fileInputRef.current.click();
     }
     //setAssetManageDialog(true);
-    console.log("fileInputRef.current", fileInputRef.current);
 
   };
 
@@ -161,7 +158,6 @@ const FactoryOverview = () => {
         showToast("success", "success", "Asset imported successfully")
         setAssetManageDialog(true);
       }
-      console.log("file uploaded ", response.data);
     } catch (error) {
       showToast("error", "Error", "Fetching imported asset")
       console.error("Error:", error);
@@ -203,7 +199,6 @@ const FactoryOverview = () => {
       const filtered =
         value.length > 0
           ? factorySite?.filter((factory:Factory) => {
-            console.log("factory", factory)
             return (
               factory.factory_name?.toLowerCase().includes(value.toLowerCase()) ||
               factory?.country?.toLowerCase().includes(value.toLowerCase())
@@ -269,7 +264,6 @@ const FactoryOverview = () => {
   // Confirm deletion dialog
   const confirmDeleteFactory = (factory: Factory) => {
     setVisibleDelete(true);
-    console.log("inside confirm delete");
     confirmDialog({
       message: t('overview:deleteWarning'),
       header: t('overview:confirmation'),
@@ -280,7 +274,6 @@ const FactoryOverview = () => {
 
   // Handles factory deletion
   const handleDeleteFactory = async (factoryToDelete: Factory) => {
-    console.log("inside handle delete");
     try {
       await deleteFactory(factoryToDelete);
       dispatch(reset());

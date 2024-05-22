@@ -161,7 +161,6 @@ const DashboardCards: React.FC = () => {
                     },
                     withCredentials: true,
                 });
-                console.log("relion parent ", response.data)
                 response?.data.forEach((item:AssetData) => {
                     if (item.id !== "json-ld-1.1") {
                         setRelationsCount((prev: any) => prev + 1);

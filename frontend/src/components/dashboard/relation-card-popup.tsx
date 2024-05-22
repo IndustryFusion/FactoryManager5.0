@@ -54,7 +54,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 }
             }
              else if (relationData.object && relationData.object !== "json-ld-1.1") {
-                console.log("relationData ", relationData)
                 const response = await getAssetById(relationData?.object);
                 let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
                 newArr.push(product_name);
@@ -122,7 +121,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
                             const value = property[key];
-                            console.log(key, value, "all values here");
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
                                     <div className="mb-2 relation-container">

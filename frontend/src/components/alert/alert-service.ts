@@ -21,7 +21,6 @@ export const getAlerts = async () => {
     try {
         let url = API_URL + '/alerts';
         const response = await axios.get(url);
-        console.log("alerts ", response.data)
         return response.data;
     } catch (err) {
         console.log('Error From @component/alert/alert-service.ts ',err);
