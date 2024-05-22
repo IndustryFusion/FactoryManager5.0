@@ -55,19 +55,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     fontSize: '0.2rem',
   };
 
-  // Get the alert color based on severity
-  const getAlertColor = (severity: string) => {
-    switch (severity) {
-      case 'warning':
-        return 'orange';
-      case 'danger':
-        return 'red';
-      case 'normal':
-        return 'green';
-      default:
-        return 'black';
-    }
-  };
 
   // Get the icon and color based on severity
   const getIcon = (severity: string) => {
@@ -88,27 +75,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
           color: "#ff0000"
         };
       case 'machine-error':
-        return{
+        return {
           icon: 'pi pi-times',
           color: "#ff0000"
         }
       default:
       return { icon: '', color: '' };
-    }
-  };
-
-  // Get the text color based on severity
-  const getTextColor = (severity: string) => {
-    switch (severity) {
-      default:
-      case 'ok':
-        return '#00ff00';
-      case 'warning':
-        return '#ffcc00';
-      case 'machine-warning':
-        return '#ffcc00';
-      case 'machine-error':
-        return '#ff0000';
     }
   };
 
@@ -134,19 +106,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     }
   }
 
-  const getBackgroundColor = (severity: string) => {
-    switch (severity) {
-      default:
-      case 'ok':
-        return '#f0f0f0';
-      case 'warning':
-        return '#ffeecc';
-      case 'machine-warning':
-        return '#ffeecc';
-      case 'machine-error':
-        return '#ffcccc';
-    }
-  };
 
   return (
     <>
@@ -264,7 +223,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 console.log("alertlist skip", err);
                 return null;
               }
-              
+
             }
             ).filter(component => component !== null)
           ) : (
