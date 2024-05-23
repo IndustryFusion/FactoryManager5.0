@@ -20,6 +20,7 @@ import axios from "axios";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
 import AlertDetails from "./alert-details";
+import { Asset } from "@/types/asset-types";
 interface Alerts {
   text: string;
   resource: string;
@@ -36,8 +37,8 @@ const Alerts = () => {
   const [assetData, setAssetData] = useState<any>([])
 
   // Function to map backend data to asset state
-  const mapBackendDataToAssetState = (backendData: any) => {
-    const modifiedObject: any = {};
+  const mapBackendDataToAssetState = (backendData: Asset) => {
+    const modifiedObject:any = {};
     // Iterate over the properties of the object
     Object.keys(backendData).forEach((key) => {
       if (key.includes("http://www.industry-fusion.org/schema#")) {
@@ -60,7 +61,8 @@ const Alerts = () => {
         },
         withCredentials: true,
       })
-
+      
+      console.log("ggg" ,response.data )
       return mapBackendDataToAssetState(response.data);
     } catch (error) {
       console.error("Error fetching asset data", error)
