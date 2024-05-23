@@ -144,6 +144,13 @@
     font-size: 14px;
     padding: 0;
 }
+.child-product-name{
+   font-size: 15px;
+   color: #000;
+}
+.child-content{
+    margin-left: 0.7rem;
+}
 
 .parent-key-text {
     color: #7d7d7d;
