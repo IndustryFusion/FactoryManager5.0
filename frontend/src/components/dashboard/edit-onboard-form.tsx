@@ -25,6 +25,10 @@ import { Password } from "primereact/password";
 import { Toast, ToastMessage } from "primereact/toast";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { useTranslation } from "next-i18next";
+import { OnboardData } from "@/types/onboard-form";
+
+type OnboardDataKey = keyof OnboardData;
+
 interface EditOnboardAssetProp {
     editOnboardAssetProp: {
         showEditOnboard: boolean,
@@ -33,10 +37,11 @@ interface EditOnboardAssetProp {
     }
     setEditOnboardAssetProp: Dispatch<SetStateAction<{
         showEditOnboard: boolean;
-         onboardAssetId: string;
+        onboardAssetId: string;
         successToast:boolean;
     }>>
 }
+
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -72,14 +77,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 protocol: assetProtocol
             }));
 
-        } catch (error: any) {
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', 'fetching onboarded data');
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
     }
 
@@ -90,7 +92,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-    const handleInputChange = (value: any, key: any) => {
+     const handleInputChange = (value: string | number | boolean | undefined | null, key: OnboardDataKey) => {
         if (key === "pdt_mqtt_port") {
             setOnboard({ ...onboard, [key]: Number(value) })
         }
@@ -98,10 +100,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             setOnboard({ ...onboard, [key]: value })
         }
     }
-    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
+    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: OnboardDataKey) => {
         setOnboard({ ...onboard, [key]: e.target.value })
     }
-    const handleSubmit = async (e: any) => {
+     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
         const modifiedOnboard = {
             ...onboard,
@@ -127,13 +129,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 )
             }
 
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', 'Updating onboard form');
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
             }
         }
     }
@@ -141,7 +140,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         <div>
             <div className="finish-btn">
                 <Button
-                    onClick={handleSubmit}
+                    onClick={(e) => handleSubmit(e)}
                     label={t('submit')} autoFocus />
             </div>
         </div>

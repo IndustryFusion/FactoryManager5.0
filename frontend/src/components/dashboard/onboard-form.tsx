@@ -26,11 +26,15 @@ import { Checkbox } from "primereact/checkbox";
 import { Toast, ToastMessage } from "primereact/toast";
 import "../../styles/dashboard.css"
 import { useTranslation } from "next-i18next";
+import { OnboardData } from "@/types/onboard-form";
+import { Asset } from "@/types/asset-types";
+
+type OnboardDataKey = keyof OnboardData;
 
 interface OnboardFormProps {
     showBlockerProp: boolean;
     setShowBlockerProp: Dispatch<SetStateAction<boolean>>;
-    asset: any;
+    asset: Asset;
     setBlocker: Dispatch<SetStateAction<boolean>>
     setOnboardAssetProp: Dispatch<SetStateAction<boolean>>
 }
@@ -67,13 +71,13 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
         }
     )
-    const toast = useRef<any>(null);
+    const toast = useRef<Toast>(null);
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
 
-    const handleInputChange = (value: any, key: any) => {
+    const handleInputChange = (value: string | number | boolean | undefined | null, key: OnboardDataKey) => {
         if (key === "pdt_mqtt_port") {
             setOnboardForm({ ...onboardForm, [key]: Number(value) })
         }
@@ -81,10 +85,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             setOnboardForm({ ...onboardForm, [key]: value })
         }
     }
-    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
+    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: OnboardDataKey) => {
         setOnboardForm({ ...onboardForm, [key]: e.target.value })
     }
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
         const obj = {
             ...onboardForm,
@@ -109,13 +113,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 setOnboardAssetProp(true);
                 setShowBlockerProp(false);
             }
-        } catch (error: any) {
-            console.log("onboardform error", error);
-            if (error.response.status === 404) {
-                showToast('error', "Error", "Error saving onboard form")
-            }
-            else if (error.response.status === 500) {
-                showToast('error', "Error", "Internal Server Error")
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error response:", error.response?.data.message);
+                showToast('error', 'Error', 'Updating onboard form');
             }
         }
 
