@@ -43,7 +43,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     setOnboardAssetProp
 }) => {
     const { t } = useTranslation('button');
-    const podName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
+    const productName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
+    const podName = productName.toLowerCase().replace(/ /g, '');
     const assetProtocol = asset?.asset_communication_protocol === undefined ? "" : asset?.asset_communication_protocol;
     const [onboardForm, setOnboardForm] = useState(
         {
@@ -85,12 +86,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     }
     const handleSubmit = async (e: any) => {
         e.preventDefault();
-        const modifiedOnboardForm = {
+        const obj = {
             ...onboardForm,
-            app_config: "|" + onboardForm.app_config
-        };
-
-        const payload = JSON.stringify(modifiedOnboardForm);
+            app_config: JSON.parse(onboardForm.app_config)
+        }
+        const payload = JSON.stringify(obj);
+        console.log("on submit payload", payload);
 
         try {
             const response = await axios.post(API_URL + "/onboarding-asset", payload, {
@@ -107,9 +108,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             } else if (success === false && status === 422) {
                 setOnboardAssetProp(true);
                 setShowBlockerProp(false);
-
             }
-
         } catch (error: any) {
             console.log("onboardform error", error);
             if (error.response.status === 404) {
@@ -162,7 +161,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="ip_address"
                                     value={onboardForm.ip_address}
                                     type="text"
-                                    placeholder="192.168.49.26"
+                                    placeholder="ex:192.168.49.26"
                                     onChange={(e) => handleInputChange(e.target.value, "ip_address")}
                                 />
                             </div>
@@ -173,7 +172,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                         id="main_topic"
                                         value={onboardForm.main_topic}
                                         type="text"
-                                        placeholder="airtracker-74145/relay1"
+                                        placeholder="ex:airtracker-74145/relay1"
                                         onChange={(e) => handleInputChange(e.target.value, "main_topic")}
                                     />
                                     :
@@ -181,7 +180,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                         id="main_topic"
                                         value={onboardForm.main_topic}
                                         type="text"
-                                        placeholder="airtracker-74145/relay1"
+                                       disabled
                                     />
                                 }
                             </div>
@@ -191,6 +190,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="protocol"
                                     value={onboardForm.protocol}
                                     type="text"
+                                    disabled
                                 />
                             </div>
                             <div className="field">
@@ -201,7 +201,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     rows={10}
                                     cols={30}
                                     onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-
                                 />
                             </div>
                             <div className="field">
@@ -210,6 +209,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="pod_name"
                                     value={onboardForm.pod_name}
                                     type="text"
+                                    disabled
                                 />
                             </div>
                             <div className="field">
@@ -218,7 +218,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="pdt_mqtt_hostname"
                                     value={onboardForm.pdt_mqtt_hostname}
                                     type="text"
-                                    placeholder="devalerta.industry-fusion.com"
+                                    placeholder="ex:devalerta.industry-fusion.com"
                                     onChange={(e) => handleInputChange(e.target.value, "pdt_mqtt_hostname")}
                                 />
                             </div>
@@ -226,11 +226,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 <label htmlFor="pdt_mqtt_port">Pdt Mqtt Port</label>
                                 <InputNumber
                                     id="pdt_mqtt_port"
-                                    // value={onboardForm.pdt_mqtt_port}
-                                    placeholder="8883"
+                                    value={onboardForm.pdt_mqtt_port}
+                                    placeholder="ex:8883"
                                     useGrouping={false}
                                     onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
-
                                 />
                             </div>
                             <div className="field my-4">
@@ -248,6 +247,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 <InputText
                                     id="device_id"
                                     value={onboardForm.device_id}
+                                    disabled
                                 />
                             </div>
                             <div className="field">
@@ -255,14 +255,16 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 <InputText
                                     id="gateway_id"
                                     value={onboardForm.gateway_id}
+                                    disabled
                                 />
                             </div>
                             <div className="field">
                                 <label htmlFor="keycloak_url">KeyCloak Url</label>
                                 <InputText
                                     id="keycloak_url"
+                                    autoComplete="KeyCloak Url"
                                     value={onboardForm.keycloak_url}
-                                    placeholder="https://development.industry-fusion.com/auth/realms"
+                                    placeholder="ex:https://development.industry-fusion.com/auth/realms"
                                     onChange={e => handleInputChange(e.target.value, "keycloak_url")}
                                 />
                             </div>
@@ -271,6 +273,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 <Password
                                     value={onboardForm.realm_password}
                                     toggleMask
+                                    autoComplete=""
                                     onChange={(e) => handleInputChange(e.target.value, "realm_password")}
                                 />
                             </div>
@@ -296,7 +299,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="dataservice_image_config"
                                     value={onboardForm.dataservice_image_config}
                                     onChange={e => handleInputChange(e.target.value, "dataservice_image_config")}
-                                    placeholder="fusionmqttdataservice:latest"
+                                    placeholder="ex:fusionmqttdataservice:latest"
                                 />
                             </div>
                             <div className="field">
@@ -305,10 +308,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="agentservice_image_config"
                                     value={onboardForm.agentservice_image_config}
                                     onChange={e => handleInputChange(e.target.value, "agentservice_image_config")}
-                                    placeholder="iff-iot-agent:v0.0.2"
+                                    placeholder="ex:iff-iot-agent:v0.0.2"
                                 />
-                            </div>
-
+                           </div>
                         </div>
                     </form>
                 </div>

@@ -109,14 +109,14 @@ const FactoryOverview = () => {
 
 
   useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
+    if (Cookies.get("login_flag") === "true") {
       if (router.isReady) {
-        const { } = router.query;
+        const { } = router.query;//needed
         fetchFactoryLists();
         setGlobalFilterValue("");
-      }
+      }   
+    } else {
+      router.push("/login");
     }
 
   }, [visible, isEdit, router.isReady]);

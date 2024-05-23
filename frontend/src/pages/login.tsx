@@ -53,14 +53,15 @@ const Login: React.FC = () => {
   useEffect(() => {
     if(router.isReady){
       setHasMounted(true);
-      if (typeof window !== "undefined") {
-        const loginFlag = Cookies.get("login_flag") === "true";
-
-        if (loginFlag) {
-          router.push("/factory-site/factory-overview");
+        if (typeof window !== "undefined" && hasMounted && router.isReady) {
+          const loginFlag = Cookies.get("login_flag");
+  
+          if (loginFlag === 'true') {
+            router.push("/factory-site/factory-overview");
+  
+          }
         }
       }
-    }
   }, [router.isReady, hasMounted]);
 
 
@@ -146,9 +147,6 @@ const Login: React.FC = () => {
   return (
     <div className="flex flex-row justify-content-center align-content-center surface-ground" style={{minHeight:"calc(100vh - 20px)"}}>
       <Toast ref={toast} />
-      
-      {hasMounted && (
-       Cookies.get("login_flag") === "false" ? (
         <>
         <Card className="flex login-card" style={{ marginTop:"50px", width:"500px", height:"600px"}}>
           <h1 style={{color:"white",marginLeft:"1rem"}}> Factory Manager 5.0 </h1>
@@ -207,7 +205,6 @@ const Login: React.FC = () => {
           
         </Card>
         </>
-     ):  ( <h1></h1>))}
     </div>
   );
 };
