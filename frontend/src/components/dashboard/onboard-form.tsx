@@ -34,7 +34,7 @@ type OnboardDataKey = keyof OnboardData;
 interface OnboardFormProps {
     showBlockerProp: boolean;
     setShowBlockerProp: Dispatch<SetStateAction<boolean>>;
-    asset: Asset;
+    asset: Asset | null;
     setBlocker: Dispatch<SetStateAction<boolean>>
     setOnboardAssetProp: Dispatch<SetStateAction<boolean>>
 }

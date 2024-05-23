@@ -22,7 +22,7 @@ import axios from "axios";
 import { Asset } from "@/types/asset-types";
 import { Dropdown   } from "primereact/dropdown";
 import { ProgressSpinner } from "primereact/progressspinner";
-import socketIOClient from "socket.io-client";
+import socketIOClient , { Socket}from "socket.io-client";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import "../../styles/combine-chart.css";
@@ -85,11 +85,11 @@ interface FetchDataParams {
 
 interface CustomChangeEvent {
   originalEvent: React.SyntheticEvent;
-  value: string;
+  value: string | Date ;
   target: {
     name: string | null;
     id: string | null;
-    value: string;
+    value: string | Date;
   };
 }
 const CombineSensorChart: React.FC = () => {
@@ -99,7 +99,7 @@ const [data, setChartData] = useState<ChartDataState>({
   datasets: [],
 });
 const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef< Socket | null >(null);
   const [selectedInterval, setSelectedInterval] = useState<string>("live"); // Default selected interval
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -307,10 +307,12 @@ const handleAttributeChange = (selectedValue: string) => {
     setSelectedAttribute(selectedValue);  // Set the attribute then fetch
 };
 
-const handleIntervalChange = (e: any) => {
+const handleIntervalChange = (e: CustomChangeEvent ) => {
   console.log(e,"eee")
-    const newInterval = e.value;
-    setSelectedInterval(newInterval);
+    const newInterval = e.target.value;
+    if (typeof newInterval === 'string') {
+      setSelectedInterval(newInterval);
+    } 
     setChartData({
         labels: [],
         datasets: []
@@ -389,7 +391,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
   }
 },[])
 
-const handleDateChange = async(e:any) => {
+const handleDateChange = async(e:CustomChangeEvent) => {
     setSelectedDate(e.value as Date);
 };
 
@@ -521,7 +523,7 @@ useEffect(() => {
   const socket = socketIOClient(`${API_URL}/`);
   socketRef.current = socket;
 
-    socketRef.current.on("dataUpdate", (updatedData:any) => {
+    socketRef.current.on("dataUpdate", (updatedData:[]) => {
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
         
     });
@@ -584,7 +586,7 @@ const handleLoad = async () => {
                   label,
                   value: interval,
                 }))}
-                onChange={handleIntervalChange}
+                onChange={(e)=>handleIntervalChange(e as CustomChangeEvent)}
                 placeholder="Select an Interval"
                 appendTo="self" 
                 className="w-full sm:w-14rem" 
@@ -596,7 +598,7 @@ const handleLoad = async () => {
                 <div className="date-time-flex">
                   <Calendar 
                     value={selectedDate} 
-                    onChange={(e) => handleDateChange(e)}
+                    onChange={(e) => handleDateChange(e as CustomChangeEvent)}
                     showTime={false} 
                     dateFormat="yy-mm-dd" 
                     placeholder={t('placeholder:selectDate')}
