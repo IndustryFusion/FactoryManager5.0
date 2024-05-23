@@ -46,7 +46,7 @@ const DashboardCards: React.FC = () => {
     const [hasRelations, setHasRelations] = useState<Record<string, {}>[]>([]);
     const [childCount, setChildCount] = useState(0);
     const [prevTimer, setPrevTimer] = useState('00:00:00');
-    let intervalId: any;
+    let intervalId: ReturnType<typeof setInterval>;
     const { t } = useTranslation('dashboard');
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 

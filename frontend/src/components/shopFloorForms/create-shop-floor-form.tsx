@@ -77,8 +77,8 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
       setShopFloorTemplate(response.data);
    
-    } catch (error: any) {
-      if (error.response.status === 404) {
+    } catch (error) {
+       if (axios.isAxiosError(error)) {
         showError("Fetching shopfloor template");
       }
       console.error(" Fetching shopfloor template", error);
@@ -193,8 +193,8 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       } else if (shopFloorResponse.status === 400) {
         showError("Please fill all required fields");
       }
-    } catch (error: any) {
-      if (error.response.status === 404) {
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
         showError("Error saving shop floor");
       }
       console.error("Error saving shop floor", error);
@@ -211,7 +211,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       });
     }
   };
-  const showError = (message: any) => {
+  const showError = (message: string) => {
     if (toast.current !== null) {
       toast.current.show({
         severity: "error",

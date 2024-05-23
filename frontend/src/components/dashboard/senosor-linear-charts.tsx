@@ -83,6 +83,15 @@ interface FetchDataParams {
   observedAt?: string; 
 }
 
+interface CustomChangeEvent {
+  originalEvent: React.SyntheticEvent;
+  value: string;
+  target: {
+    name: string | null;
+    id: string | null;
+    value: string;
+  };
+}
 const CombineSensorChart: React.FC = () => {
 
 const [data, setChartData] = useState<ChartDataState>({
@@ -299,6 +308,7 @@ const handleAttributeChange = (selectedValue: string) => {
 };
 
 const handleIntervalChange = (e: any) => {
+  console.log(e,"eee")
     const newInterval = e.value;
     setSelectedInterval(newInterval);
     setChartData({

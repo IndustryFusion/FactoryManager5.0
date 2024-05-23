@@ -28,7 +28,6 @@ const AutoRefresh = dynamic(() => import("@/components/dashboard/auto-refresh"),
 const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
 const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
-const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false, loading: () => <ProgressSpinner /> });
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
@@ -39,17 +38,19 @@ import Footer from '@/components/navBar/footer';
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
+interface PrefixedAssetProperty {
+  key: string;
+  value: string; 
+}
+
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
-
-  const [count, setCount] = useState(0);
-  const [machineState, setMachineState] = useState("0");
   const { layoutConfig } = useContext(LayoutContext);
   const [blocker, setBlocker]= useState(false);
   const [countDown, setCountDown] = useState(0);
   const [runTimer, setRunTimer] = useState(false);
-  const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
+const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAssetProperty[]>([]); 
   const router = useRouter();
   const toast = useRef<any>(null);
   const { t } = useTranslation('button');

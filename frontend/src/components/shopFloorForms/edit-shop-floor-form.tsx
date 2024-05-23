@@ -68,13 +68,10 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 withCredentials: true,
             })
             setShopFloorTemplate(response.data)
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "Fetching shopfloor template");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
       }
 
@@ -107,13 +104,10 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 }, {} as ShopFloor);
                 setShopFloor(flattenedData);
             }
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "Fetching shopfloor data");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         } 
     }
 
@@ -200,12 +194,9 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 } else {
                     showToast("error", "Error","Error Updating ShopFloor");
                 }
-            } catch (error: any) {
+            } catch (error) {
                 if (axios.isAxiosError(error)) {
                     showToast('error', 'Error', "saving shopfloor");
-                } else {
-                    console.error("Error:", error);
-                    showToast('error', 'Error', error);
                 }
             }
         }

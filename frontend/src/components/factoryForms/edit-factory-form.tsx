@@ -74,13 +74,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             })
             const responseData = response.data;
             setSchema(responseData);
-        } catch (error: any) {
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "fetching factory template");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
     }
 
@@ -92,7 +89,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     }, []);
 
     useEffect(() => {
-        const fetchFactoryDetails = async (factory: any) => {
+        const fetchFactoryDetails = async (factory: string) => {
             try {
                 const response = await axios.get(`${API_URL}/factory-site/${factory}`, {
                     headers: {
@@ -129,13 +126,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                 } else {
                     console.log("No factory data returned from the API");
                 }
-            }catch (error: any) {
+            }catch (error) {
                 if (axios.isAxiosError(error)) {
                     showToast('error', 'Error', "fetching factory details");
-                } else {
-                    console.error("Error:", error);
-                    showToast('error', 'Error', error);
-                }
+                } 
             }            
         };
 
@@ -243,7 +237,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             {Array.isArray(editedFactory?.[key].object)
                                 && editedFactory?.[key].object.length > 0
                                 && editedFactory?.[key].object.includes('urn')
-                                && editedFactory?.[key].object.map((shop: any, index: any) =>
+                                && editedFactory?.[key].object.map((shop: string, index: number) =>
                                     <div key={index}>
                                         <li>{shop}</li>
                                     </div>
@@ -261,20 +255,21 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
         if (selectedOption) {
             const label = selectedOption.label;
-            setEditedFactory((prev: any) => ({ ...prev, [key]: label }))
-            setUpdateData((prev: any) => ({ ...prev, [key]: label }))
+            setEditedFactory((prev) => ({ ...prev, [key]: label }))
+            setUpdateData((prev) => ({ ...prev, [key]: label }))
             setSelectedCountry(selectedOption)
         }
     };
 
     // Handle input change events to update state
-    const handleChange = (key: string, value: any) => {
+   const handleChange = (key: keyof Factory, value: string | number | undefined | null) => {
+        console.log(key, value , "lll")
         if (key === "factory_name") {
             setValidateFactory(false)
         }
 
-        setEditedFactory((prev: any) => ({ ...prev, [key]: value }));
-        setUpdateData((prev: any) => ({ ...prev, [key]: value }));
+        setEditedFactory((prev) => ({ ...prev, [key]: value }));
+        setUpdateData((prev) => ({ ...prev, [key]: value }));
     };
 
     // Handle file upload for the thumbnail field
@@ -284,11 +279,11 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         try {
             setUploading(true);
             const uploadedFileUrl = await handleUpload(file);
-            setEditedFactory((prev: any) => ({
+            setEditedFactory((prev) => ({
                 ...prev,
                 thumbnail: uploadedFileUrl,
             }));
-            setUpdateData((prev: any) => ({
+            setUpdateData((prev) => ({
                 ...prev,
                 thumbnail: uploadedFileUrl,
             }));
@@ -303,7 +298,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     };
 
     // Submit the edited factory data
-    const handleSubmit = async (event: any) => {
+    const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
 
         if (updateData.factory_name === "") {
@@ -318,11 +313,14 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             ...updateData,
         };
 
-        const transformedData: any = transformDataForBackend(dataToUpdate);
+        const transformedData: {} = transformDataForBackend(dataToUpdate);
         try {
             const response = await updateFactory(transformedData, factory!);
             if (response.success) {
                 showToast("success", "Success", "Factory edited successfully")
+                    setTimeout(() => {
+                    setIsEditProp(false);  // Close the dialog after 2 seconds
+                 }, 2000);
             }
             else {
                 if (response.message.detail === "Index 0 out of bounds for length 0") {
@@ -331,13 +329,10 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                     showToast('warn', 'warning', response.message.detail);
                 }
             }
-        } catch (error: any) {
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "Updating factory");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
     };
 

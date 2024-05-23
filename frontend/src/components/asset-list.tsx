@@ -33,12 +33,6 @@ export default function AssetDetailsCard({ asset, setShowExtraCard }: AssetDetai
     setSelectedTab(tabName);
   };
 
-  // This is a sample function that handles row selection, you should adapt it to your actual use case.
-  const handleRowSelect = (data: any) => {
-    setSelectedData(data);
-  };
-
-
   const renderGeneralContent = () => {
     return (
       <div>

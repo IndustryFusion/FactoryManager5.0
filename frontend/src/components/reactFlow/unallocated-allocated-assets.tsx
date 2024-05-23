@@ -42,7 +42,7 @@ interface Asset {
   id: string;
   product_name: string;
   asset_category: string;
- [key: string]:any,
+ [key: string]:string,
 }
 
 const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
