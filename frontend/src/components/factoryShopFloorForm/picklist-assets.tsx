@@ -196,14 +196,14 @@ const PicklistAssets = () => {
     };
 
 
-    console.log("source here", source);
+
 
 
 
     const shopfloorAssetIds = source.map(asset => asset?.id)
     const getPayload = () => {
         if (!shopFloorValue?.id) {
-           console.log("Shop floor ID is undefined")
+        
            return;
         }
         const shopfloorObj = {

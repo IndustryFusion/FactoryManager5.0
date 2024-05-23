@@ -133,14 +133,14 @@ const DashboardCards: React.FC = () => {
             const key = Object.keys(property)[0];
             const value = property[key];
             if (value.object !== "json-ld-1.1") {
-                setRelationsCount((prev: any) => prev + 1);
-                setChildCount((prev: any) => prev + 1);
+                setRelationsCount((prev) => prev + 1);
+                setChildCount((prev) => prev + 1);
             }
             if (value.length > 0) {
                 value.forEach((item:AssetData) => {
                     if (item.object !== "json-ld-1.1") {
-                        setChildCount((prev: any) => prev + 1);
-                        setRelationsCount((prev: any) => prev + 1);
+                        setChildCount((prev) => prev + 1);
+                        setRelationsCount((prev) => prev + 1);
                     }
                 })
             }
@@ -163,7 +163,7 @@ const DashboardCards: React.FC = () => {
                 });
                 response?.data.forEach((item:AssetData) => {
                     if (item.id !== "json-ld-1.1") {
-                        setRelationsCount((prev: any) => prev + 1);
+                        setRelationsCount((prev) => prev + 1);
                     }
                 })
             }

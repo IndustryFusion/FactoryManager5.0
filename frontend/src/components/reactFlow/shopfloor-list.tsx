@@ -36,8 +36,8 @@ import { Dialog } from 'primereact/dialog';
 interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
-  setShopfloorProp?: string;
-  formViewPage?:string
+  setShopfloorProp?: {};
+  formViewPage?:boolean
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
@@ -207,11 +207,15 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  useEffect(() => {
+useEffect(() => {
     if (filteredShopFloors.length > 0) {
-      setShopFloorValue(filteredShopFloors[0]);
+        setShopFloorValue({
+            id: filteredShopFloors[0].id,
+            floorName: filteredShopFloors[0].floorName,
+        });
     }
-  }, [filteredShopFloors]);
+}, [filteredShopFloors]);
+
 
   return (
     <>

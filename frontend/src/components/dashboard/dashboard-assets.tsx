@@ -53,7 +53,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const dataTableRef = useRef(null);
   const router = useRouter();
   const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
-  const toast = useRef<any>(null);
+  const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder','dashboard']);
 

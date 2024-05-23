@@ -17,20 +17,15 @@
 import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-shopfloor";
 import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 import "../../../styles/factory-shopfloor.css"
-import { Button } from "primereact/button";
-import { useEffect, useState } from "react";
-import { InputSwitch } from "primereact/inputswitch";
-import { useRouter } from "next/router";
-import Cookies from "js-cookie";
+import { useState } from "react";
 import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import Footer from "@/components/navBar/footer";
 import PicklistAssets from "@/components/factoryShopFloorForm/picklist-assets";
-import Header from "@/components/factoryShopFloorForm/header";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import ShopFloorList from "@/components/reactFlow/shopfloor-list";
+
 
 const FactoryShopFloor = () => {
 
