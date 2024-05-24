@@ -94,6 +94,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         }
         const payload = JSON.stringify(obj);
         console.log("on submit payload", payload);
+ 
 
         try {
             const response = await axios.post(API_URL + "/onboarding-asset", payload, {

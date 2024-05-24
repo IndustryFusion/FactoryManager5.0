@@ -29,7 +29,7 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
-import { create, update} from '@/state/entityId/entityIdSlice';
+import { create, update } from '@/state/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -52,12 +52,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
+  const { setMachineStateValue, setSelectedAssetData, setAssetCount } = useDashboard();
   const toast = useRef<any>(null);
   const dispatch = useDispatch();
-  const { t } = useTranslation(['placeholder','dashboard']);
-
-
+  const { t } = useTranslation(['placeholder', 'dashboard']);
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -69,20 +67,20 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
     if (rowData && rowData.product_icon && rowData.product_icon !== 'NULL') {
       return (
-          <img
-            src={rowData.product_icon}
-            style={{ width: "70px", height: "auto" }}
-          />
+        <img
+          src={rowData.product_icon}
+          style={{ width: "70px", height: "auto" }}
+        />
       );
     } else {
-        return <span>No Image</span>;
+      return <span>No Image</span>;
     }
   };
   const viewBodyTemplate = (rowData: Asset): React.ReactNode => {
     return (
       <>
         <Button
-        className="onboard-btn"
+          className="onboard-btn"
           onClick={(e) => {
             setEditOnboardAsset(() => ({
               ...editOnboardAsset,
@@ -90,16 +88,16 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               onboardAssetId: rowData?.id
             }))
           }}
-          >
-          <img src="/onboard.png" alt="" width="50px" height="50px"/>
-         </Button>
+        >
+          <img src="/onboard.png" alt="" width="50px" height="50px" />
+        </Button>
       </>
     )
   }
 
-  const rowClassName = (rowData:Asset) => {
+  const rowClassName = (rowData: Asset) => {
     return { 'selected-row': selectedRow && selectedRow.id === rowData.id };
-};
+  };
 
   const handleAsset = async () => {
     try {
@@ -126,7 +124,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     setPrefixedAssetPropertyProp(prefixedKeys);
     dispatch(update(selectedAsset?.id));
     setSelectedAssetData(selectedAsset);
-  
+
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
     } else {
@@ -138,7 +136,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   };
 
- 
+
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
@@ -150,7 +148,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     if (searchedText.length === 0) {
       setAssetData(allAssets)
     } else {
- 
+
       const filteredAssets = searchedText.length > 0 ? [...assetData].filter(ele =>
         ele?.product_name?.toLowerCase().includes(searchedAsset.toLowerCase())
       ) : allAssets;
@@ -188,9 +186,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
-            <h5 className="heading-text">Assets</h5>
-            <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
-            </div>            
+              <h5 className="heading-text">Assets</h5>
+              <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
+            </div>
             <div className="mb-5">
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
