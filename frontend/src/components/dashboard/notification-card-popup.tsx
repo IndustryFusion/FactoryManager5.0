@@ -16,8 +16,7 @@
 
 import { useDashboard } from "@/context/dashboard-context";
 import { Dialog } from "primereact/dialog";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { getAlerts } from "../alert/alert-service";
+import { Dispatch, SetStateAction } from "react";
 import { Button } from "primereact/button";
 import { useTranslation } from "next-i18next";
 
@@ -34,11 +33,13 @@ interface Notification {
   status: string,
   text: string,
   repeat: boolean,
-  origin: string
+  origin: string,
+  updateTime: string,
+  type:string
 }
 
 const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp, setNotificationProp }) => {
-  const { entityIdValue, notificationData, selectedAssetData } = useDashboard();
+  const { notificationData, selectedAssetData } = useDashboard();
   const { t } = useTranslation('button');
   
   const getStatusTextColor = (status: string) => {
@@ -82,7 +83,9 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
         return {
           icon: 'pi pi-times',
           color: "#ff0000"
-        }
+        };
+      default:
+        return undefined;
     }
   };
 
@@ -109,12 +112,13 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
               else {
                 updatedText = text;
               }
-
+              const iconData = getIcon(notification?.severity);
               return (
                 <div key={index} className="alerts-container card mb-4">
                   <div className="flex gap-3  ">
                     <div className="mt-4">
-                      <i className={getIcon(notification?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(notification?.severity).color }}></i>
+                      {/* <i className={getIcon(notification?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(notification?.severity).color }}></i> */}
+                       {iconData && <i className={iconData.icon} style={{ fontSize: '1.3rem', color: iconData.color }}></i>}
                     </div>
                     <div style={{ flex: "0 90%" }} className="data-container">
                       <div>

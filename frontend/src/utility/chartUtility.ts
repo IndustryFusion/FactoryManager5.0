@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "../types/asset-types";
 import axios from "axios";
 
 const moment = require('moment');
@@ -102,7 +102,7 @@ export const fetchAssets = async (assetId: string) => {
   }
 };
 
- export const getAllDaysOfWeek = (startDate) => {
+ export const getAllDaysOfWeek = (startDate:string) => {
   let finalDays = [];
   let daysRequired = 6;
 
@@ -118,22 +118,3 @@ export const fetchAssets = async (assetId: string) => {
 
   return finalDays;
 };
-
-
-export const getWeekHasData = (weeksArrayValue, finalDataValue) => { [{}]
-  const result = [];
-  for (const weekKey in weeksArrayValue[0]) {
-      for (const arrayDate of weeksArrayValue[0][weekKey]) {
-          if (finalDataValue[arrayDate] && finalDataValue[arrayDate].length > 0) {
-              const dateOfValue = moment(finalDataValue[arrayDate][0].observedAt).format('YYYY-MM-DD');
-              const time = finalDataValue[arrayDate][0].observedAt.split("T")[1].split(".")[0];
-              result.push({
-                  weekKey: weekKey,
-                  time: time
-              });
-          }
-      }
-      
-  }
-  return result;
-}

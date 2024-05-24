@@ -1,12 +1,10 @@
 .factory-shopfloor-container {
     display: flex;
     gap: 1rem;
-    /* height: 90vh; */
     overflow: hidden;
     zoom: 96%;
     width: 100%;
     margin-top: 4rem;
-    /* padding: 0 1rem; */
 }
 
 ul {
@@ -19,7 +17,6 @@ ul {
 
 .form-container {
     width: 100%;
-    /* margin: 1.5rem auto; */
     flex: 0 0 38%;
     border-right: 1px solid #ccc;
     padding: 10px 20px 10px 10px;
@@ -40,11 +37,6 @@ ul {
     font-size: 22px;
 }
 
-/* .checkbox-lock{
-    justify-content: center;
-    margin-top: 3rem;
-    flex: 0 0 5%; 
-} */
 
 .checkbox-lock .p-checkbox .p-checkbox-box {
     width: 30px;
@@ -89,7 +81,6 @@ ul {
 
 .asset-lists div {
     zoom: 86%;
-    /* flex: 0 0 44%; */
 }
 
 .asset-lists .p-picklist-source-controls .p-picklist-buttons,

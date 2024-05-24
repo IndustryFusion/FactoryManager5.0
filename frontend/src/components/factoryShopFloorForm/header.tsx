@@ -58,7 +58,7 @@ const Header =()=>{
                             <span>Switch View</span>
                             <InputSwitch checked={switchView} onChange={(e) => {
                                 setSwitchView(e.value);
-                                router.push(`/factory-site/shop-floor/${factoryIdValue}`)
+                                router.push(`/factory-site/factory-management/${factoryIdValue}`)
                             }} />
                         </div>
 

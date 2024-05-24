@@ -15,12 +15,10 @@
 // limitations under the License. 
 // 
 
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import { ChartData, ChartOptions } from 'chart.js';
-import type { ChartOptionsState } from '../../pages/factory-site/types/layout';
+import { useEffect, useRef, useState } from "react";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
@@ -45,30 +43,50 @@ export interface Datasets {
 }
 
 export interface pgData {
+    prev_value: string;
     observedAt: string;
     attributeId: string;
     value: string;
+    time: number;
+    type: string;
 }
 
 interface GroupedData {
     time: number;
     type: string;
+    prev_value?:string
+    observedAt?:string;
+    attributeId?:string, 
 }
 
+interface MachineState {
+    id: string;
+    days: Record<string, []>;
+    weeks: Record<string, []>;
+    months: Record<string, []>;
+    [key: string]: {}; 
+}
+
+interface MachineStateLabelContext{
+    dataset:{
+        data:[]
+    },
+    dataIndex:number
+};
+type FinalData = Record<string,   {[key: string]: any} >;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const DashboardChart = () => {
+const MachineStateChart = () => {
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
     const [factoryData, setFactoryData] = useState({});
-    const [lastData, setLastData] = useState({});
+    const [lastData, setLastData] = useState<Record<string, any>>({});
     const [noChartData, setNoChartData] = useState(false);
     const router = useRouter();
     const { setMachineStateData,  setAllOnlineTime } = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
-    const machineStateData = useSelector((state: RootState) => state.machineState);
-    const toast = useRef<any>(null);
-    const intervalId: any = useRef(null);
+    const machineStateData = useSelector((state: RootState) => state.machineState  as MachineState);
+    const toast = useRef<Toast>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [selectedInterval, setSelectedInterval] = useState<string>("days");
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -94,12 +112,10 @@ const DashboardChart = () => {
 
     const fetchData = async (attributeId: string, entityId: string) => {
         try {
-            type DataType = any;
-            const finalData: { [key: string]: DataType[] } = {};
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
-            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length == 0)){
+            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
                         'asset-id': entityId,
@@ -111,8 +127,9 @@ const DashboardChart = () => {
                     },
                     withCredentials: true,
                 });
+
                 let checkEmpty = true;
-                for (const value of Object.values(response.data)) {
+                for (const value of Object.values(response.data) as pgData[][]) {
                     if (value.length !== 0) {
                         checkEmpty = false;
                     }
@@ -159,15 +176,19 @@ const DashboardChart = () => {
                 }
             }
             setIsLoading(false);
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                console.error("Error response:", error.response?.data.message);
-                // showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
+          } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    console.error("Error response:", error.response?.data.message);
+                    showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+                } else if (error instanceof Error) {
+                    console.error("Error:", error.message);
+                    showToast('error', 'Error', error.message);
+                } else {
+                    console.error("Unknown error:", error);
+                    showToast('error', 'Error', 'An unknown error occurred');
+                }
             }
-        }
+
     };
 
     const fetchAssets = async (assetId: string) => {
@@ -194,7 +215,8 @@ const DashboardChart = () => {
         }
     };
 
-    const formatChartData = (dataset: any) => {
+    const formatChartData = (dataset: FinalData) => {
+
         const documentStyle = getComputedStyle(document.documentElement);
         let labels = Object.keys(dataset);
         const finalData = [];
@@ -228,7 +250,7 @@ const DashboardChart = () => {
         };
     };
 
-    const groupData = (data: any) => {
+    const groupData = (data: FinalData): FinalData  => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         let lastValue = "", nextValue = "";
@@ -355,7 +377,7 @@ const DashboardChart = () => {
         return groupedByDate;
     };
 
-    const groupByDays = (data: any) => {
+    const groupByDays =  (data: FinalData): { [key: string]: GroupedData[] } => {
         let groupedByDate: { [key: string]: GroupedData[] } = {};
         const keys = Object.keys(data);
         let lastValue = "", nextValue = "";
@@ -529,13 +551,15 @@ const DashboardChart = () => {
                 }
             }
         }
+
         return groupedByDate;
     };
 
-    const alignData = (data: any) => {
+    const alignData = (data:  FinalData) => {
         setLastData({});
         if(selectedInterval == 'days'){
-            const finalData = {};
+           
+            const finalData:FinalData = {} ;
             for(let key in data){
                 const dateObject = moment(key, 'MMMM Do');
                 const day = moment(dateObject).format('YYYY-MM-DD');
@@ -553,7 +577,7 @@ const DashboardChart = () => {
     useEffect(() => {
         const socket = socketIOClient(`${API_URL}/`);
         socket.on("connect", () => {
-            console.log('WebSocket Connected dashboard-chart.tsx');
+            console.log('WebSocket Connected machine-state-chart.tsx');
         });
  
         socket.on("valueChangeState", (newData) => {
@@ -581,13 +605,12 @@ const DashboardChart = () => {
     // useEffect to create chart data and when there is a update in data
     useEffect(() => {
         const documentStyle = getComputedStyle(document.documentElement);
-        const textColor = documentStyle.getPropertyValue('--text-color');
         const textColorSecondary = documentStyle.getPropertyValue(
             '--text-color-secondary'
         );
         const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
         if(Object.keys(factoryData).length > 0){
-            const groupedData = alignData(factoryData);
+            const groupedData:FinalData = alignData(factoryData);
             const chartDataValue = formatChartData(groupedData);
             const {datasets} = chartDataValue;
             for(let i in datasets){
@@ -606,7 +629,7 @@ const DashboardChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -625,7 +648,7 @@ const DashboardChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -655,7 +678,7 @@ const DashboardChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -679,7 +702,7 @@ const DashboardChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -698,7 +721,7 @@ const DashboardChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -728,7 +751,7 @@ const DashboardChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -752,7 +775,7 @@ const DashboardChart = () => {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: (context: any) => {
+                                label: (context:MachineStateLabelContext) => {
                                     const { dataset, dataIndex } = context;
                                     const value = dataset.data[dataIndex];
                                     if (value > 0) {
@@ -771,7 +794,7 @@ const DashboardChart = () => {
                             color: '#fff', // Customize the color of the labels
                             align: 'center', // Align the labels to the center of the bars
                             anchor: 'center', // Anchor the labels to the end of the bars
-                            formatter: (value: any) => {
+                            formatter: (value:number) => {
                                 const totalSeconds = value;
                                 if (!totalSeconds) {
                                     return '';
@@ -801,7 +824,7 @@ const DashboardChart = () => {
                                 suggestedMin: 0, // Assuming 0 is the minimum value
                                 suggestedMax: 24 * 3600, // Assuming 24 hours is the maximum value in seconds
                                 stepSize: 10800, // Step size in seconds (1 hour)
-                                callback: (value: any) => {
+                                callback: (value:number) => {
                                     // Convert seconds back to "hh:mm:ss" format for display
                                     const hours = Math.floor(value / 3600);
                                     const minutes = Math.floor((value % 3600) / 60);
@@ -838,6 +861,7 @@ const DashboardChart = () => {
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
                         style={{ width: "100%", border: "none" }}
+                        appendTo="self"
                     />
                 </div>
             </div>
@@ -869,4 +893,4 @@ const DashboardChart = () => {
     )
 }
 
-export default DashboardChart;
+export default MachineStateChart;

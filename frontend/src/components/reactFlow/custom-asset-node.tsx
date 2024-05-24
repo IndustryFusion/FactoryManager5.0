@@ -15,7 +15,7 @@
 // 
 
 import React, { useEffect, useState, useContext } from "react";
-import { fetchAssetById } from "@/utility/factory-site-utility";
+import { getAssetRelationById } from "@/utility/factory-site-utility";
 import { MultiSelect } from "primereact/multiselect";
 import { Handle, Position,useStore } from "reactflow";
 import "primereact/resources/themes/saga-blue/theme.css";
@@ -64,7 +64,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     const getAssetDetails = async () => {
       if (data.id) {
         try {
-          const assetDetails= await fetchAssetById(data.id) as Record<string, AssetDetail>;
+          const assetDetails= await getAssetRelationById(data.id) as Record<string, AssetDetail>;
 
           const options: RelationOption[] = Object.entries(assetDetails)
             .filter(([key, value]) => value.type === "Relationship")
@@ -79,7 +79,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           setRelationOptions(options);
 
         } catch (error) {
-          console.log("Error from fetchAssetById function from custom-asset-node.tsx", error);
+          console.log("Error from getAssetRelationById  function from custom-asset-node.tsx", error);
         }
       }
     };

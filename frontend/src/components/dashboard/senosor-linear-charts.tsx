@@ -15,37 +15,23 @@
 // limitations under the License. 
 // 
 
-import dynamic from 'next/dynamic';
-import React, { useContext, useEffect, useRef, useState ,useCallback} from "react";
-import { ChartData, ChartOptions, registerables ,TooltipItem, ChartType, ScriptableContext} from "chart.js";
+import React, { useEffect, useRef, useState ,useCallback} from "react";
+import { ChartData, ChartOptions ,TooltipItem} from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { Dropdown   } from "primereact/dropdown";
-import { Datasets, pgData, DataCache } from "../../pages/factory-site/types/combine-linear-chart";
 import { ProgressSpinner } from "primereact/progressspinner";
-import socketIOClient from "socket.io-client";
+import socketIOClient , { Socket}from "socket.io-client";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import {
-  FaIndustry,
-  FaWind,
-  FaTint,
-  FaTemperatureHigh,
-  FaCloud,
-  FaBolt,
-  FaHourglassHalf
-
-} from "react-icons/fa";
 import "../../styles/combine-chart.css";
 import { useDashboard } from "@/context/dashboard-context";
 import ChartJS from 'chart.js/auto';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
-import { format, differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths,differenceInYears ,differenceInWeeks} from 'date-fns';
-import { skip } from 'node:test';
+import { format} from 'date-fns';
 import { Calendar } from 'primereact/calendar';
-import moment from 'moment';
 import { Button } from 'primereact/button';
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
@@ -55,21 +41,11 @@ import { useTranslation } from "next-i18next";
 // Register the zoom plugin
 ChartJS.register(zoomPlugin);
 
-interface DropdownChangeEvent {
-  value: any;  // Use a more specific type if possible
-  originalEvent: React.SyntheticEvent;
-  target: {
-    name: string;
-    id: string;
-    value: any;
-  };
-}
-
 
 interface DataItem {
     observedAt: string;
     attributeId: string;
-    value: string; // Adjust the type if 'value' is expected to be a number or any other type
+    value: string; 
 }
 
 interface DataItem {
@@ -106,18 +82,16 @@ interface FetchDataParams {
   attributeId: string;
   observedAt?: string; 
 }
-const iconMapping: any = {
-  dustiness: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
-   dustiness1: <FaCloud style={{ color: "#cccccc", marginRight: "8px" }} />,
-  humidity: <FaTint style={{ color: "#00BFFF", marginRight: "8px" }} />,
-  noise: <FaWind style={{ color: "#696969", marginRight: "8px" }} />,
-  temperature: (
-    <FaTemperatureHigh style={{ color: "#FF4500", marginRight: "8px" }} />
-  ),
-  "power-consumption": <FaBolt style={{ color: "#ffd700", marginRight: "8px" }} />, 
-  "operating-hours": <FaHourglassHalf style={{ color: "#6a5acd", marginRight: "8px" }} />,
-};
 
+interface CustomChangeEvent {
+  originalEvent: React.SyntheticEvent;
+  value: string | Date ;
+  target: {
+    name: string | null;
+    id: string | null;
+    value: string | Date;
+  };
+}
 const CombineSensorChart: React.FC = () => {
 
 const [data, setChartData] = useState<ChartDataState>({
@@ -125,7 +99,7 @@ const [data, setChartData] = useState<ChartDataState>({
   datasets: [],
 });
 const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef< Socket | null >(null);
   const [selectedInterval, setSelectedInterval] = useState<string>("live"); // Default selected interval
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -333,9 +307,11 @@ const handleAttributeChange = (selectedValue: string) => {
     setSelectedAttribute(selectedValue);  // Set the attribute then fetch
 };
 
-const handleIntervalChange = (e: any) => {
-    const newInterval = e.value;
-    setSelectedInterval(newInterval);
+const handleIntervalChange = (e: CustomChangeEvent ) => {
+    const newInterval = e.target.value;
+    if (typeof newInterval === 'string') {
+      setSelectedInterval(newInterval);
+    } 
     setChartData({
         labels: [],
         datasets: []
@@ -414,7 +390,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
   }
 },[])
 
-const handleDateChange = async(e:any) => {
+const handleDateChange = async(e:CustomChangeEvent) => {
     setSelectedDate(e.value as Date);
 };
 
@@ -546,7 +522,7 @@ useEffect(() => {
   const socket = socketIOClient(`${API_URL}/`);
   socketRef.current = socket;
 
-    socketRef.current.on("dataUpdate", (updatedData:any) => {
+    socketRef.current.on("dataUpdate", (updatedData:[]) => {
             setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
         
     });
@@ -609,7 +585,7 @@ const handleLoad = async () => {
                   label,
                   value: interval,
                 }))}
-                onChange={handleIntervalChange}
+                onChange={(e)=>handleIntervalChange(e as CustomChangeEvent)}
                 placeholder="Select an Interval"
                 appendTo="self" 
                 className="w-full sm:w-14rem" 
@@ -621,7 +597,7 @@ const handleLoad = async () => {
                 <div className="date-time-flex">
                   <Calendar 
                     value={selectedDate} 
-                    onChange={(e) => handleDateChange(e)}
+                    onChange={(e) => handleDateChange(e as CustomChangeEvent)}
                     showTime={false} 
                     dateFormat="yy-mm-dd" 
                     placeholder={t('placeholder:selectDate')}

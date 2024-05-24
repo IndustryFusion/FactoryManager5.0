@@ -24,7 +24,7 @@ import { InputText } from "primereact/inputtext";
 import { Row } from "primereact/row";
 import { useEffect, useState } from "react";
 import { useTranslation } from "next-i18next";
-import { AllocatedAssetData } from "@/interfaces/allocated-asset-data";
+import { AllocatedAssetData } from "../../types/allocated-asset-data";
 
 const AllocatedAsset = () => {
   const [filters, setFilters] = useState<{

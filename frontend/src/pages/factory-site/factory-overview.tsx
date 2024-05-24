@@ -15,10 +15,10 @@
 // 
 
 import { MdLocationOn } from "react-icons/md";
-import { Factory } from "@/interfaces/factory-type";
-import axios from "axios";
+import { Factory } from "../../types/factory-type";
+import axios, { AxiosError }  from "axios";
 import { useEffect, useState, useRef } from "react";
-import { DataView, DataViewLayoutOptions } from "primereact/dataview";
+import { DataView } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 import { Button } from "primereact/button";
@@ -29,18 +29,16 @@ import { useRouter } from "next/router";
 import HorizontalNavbar from "../../components/navBar/horizontal-navbar";
 import Footer from "../../components/navBar/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
-import { Dialog } from "primereact/dialog";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
 import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
-import AssetManagement from "@/components/asset-management";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
 import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
+import { Asset } from "@/types/asset-types";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
@@ -59,7 +57,7 @@ const FactoryOverview = () => {
   const [assetManageDialog, setAssetManageDialog] = useState(false);
   const toast = useRef<Toast | null>(null);
   const dispatch = useDispatch();
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
@@ -71,7 +69,7 @@ const FactoryOverview = () => {
   };
 
   // Function to map the backend data to the factorylist structure
-  const mapBackendDataToFactoryLists = (backendData: any[]): Factory[] => {
+  const mapBackendDataToFactoryLists = (backendData: Asset[]): Factory[] => {
     return backendData.map((item: any) => {
       const newItem: any = {};
       Object.keys(item).forEach((key) => {
@@ -100,13 +98,11 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       const responseData = response.data;
-      // console.log("factory data", responseData);
       const mappedData = mapBackendDataToFactoryLists(responseData);
       setFactorySite(mappedData);
-      // console.log(mappedData, "factory response here");
-    } catch (error: any) {
-      if (error.response && error.response?.status === 404) {
-        showToast(error, "Error","Getting factory lists" )     
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error","Getting factory lists" )     
       }
     }
   };
@@ -139,7 +135,6 @@ const FactoryOverview = () => {
     }
   };
 
-  const fileInputRef = useRef(null);
   const triggerFileInput = () => {
     // Trigger the hidden file input onClick of the button
 
@@ -147,11 +142,10 @@ const FactoryOverview = () => {
       fileInputRef.current.click();
     }
     //setAssetManageDialog(true);
-    console.log("fileInputRef.current", fileInputRef.current);
 
   };
 
-  async function createAssets(body: any) {
+  async function createAssets(body: string) {
     try {
       const response = await axios.post(API_URL + "/asset", body, {
         headers: {
@@ -164,7 +158,6 @@ const FactoryOverview = () => {
         showToast("success", "success", "Asset imported successfully")
         setAssetManageDialog(true);
       }
-      console.log("file uploaded ", response.data);
     } catch (error) {
       showToast("error", "Error", "Fetching imported asset")
       console.error("Error:", error);
@@ -181,7 +174,7 @@ const FactoryOverview = () => {
         reader.onload = function (e) {
           // e.target.result contains the file's content as a text string
           try {
-            const json = JSON.parse(e.target.result); // Parse the JSON string into an object
+            const json = JSON.parse(e.target?.result as string); // Parse the JSON string into an object
             createAssets(JSON.stringify(json)); // Call createAssets with the parsed JSON data
           } catch (error) {
             console.error('Error parsing JSON:', error);
@@ -205,11 +198,9 @@ const FactoryOverview = () => {
     } else {
       const filtered =
         value.length > 0
-          ? factorySite?.filter((factory) => {
+          ? factorySite?.filter((factory:Factory) => {
             return (
-              factory?.factory_name
-                .toLowerCase()
-                .includes(value.toLowerCase()) ||
+              factory.factory_name?.toLowerCase().includes(value.toLowerCase()) ||
               factory?.country?.toLowerCase().includes(value.toLowerCase())
             );
           })
@@ -273,7 +264,6 @@ const FactoryOverview = () => {
   // Confirm deletion dialog
   const confirmDeleteFactory = (factory: Factory) => {
     setVisibleDelete(true);
-    console.log("inside confirm delete");
     confirmDialog({
       message: t('overview:deleteWarning'),
       header: t('overview:confirmation'),
@@ -284,7 +274,6 @@ const FactoryOverview = () => {
 
   // Handles factory deletion
   const handleDeleteFactory = async (factoryToDelete: Factory) => {
-    console.log("inside handle delete");
     try {
       await deleteFactory(factoryToDelete);
       dispatch(reset());
@@ -292,9 +281,9 @@ const FactoryOverview = () => {
       setVisibleDelete(false);
       showToast("success", "success", "Factory deleted successfully")
 
-    } catch (error: any) {
-      if (error.response && error.response?.status === 404) {
-        showToast(error, "Error", " deleting factory")
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error", " deleting factory")
       }
       console.error("Error deleting factory", error);
     }
@@ -343,7 +332,7 @@ const FactoryOverview = () => {
                 icon="pi pi-eye"
                 className="p-button-rounded p-button-secondary p-button-sm view-btn"
                 onClick={() =>
-                  router.push(`/factory-site/shop-floor/${data.id}`)
+                  router.push(`/factory-site/factory-management/${data.id}`)
                 }
               />
               <Button
