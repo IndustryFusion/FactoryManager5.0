@@ -81,9 +81,11 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             setOnboardForm({ ...onboardForm, [key]: value })
         }
     }
+
     const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
         setOnboardForm({ ...onboardForm, [key]: e.target.value })
     }
+
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         const modifiedOnboardForm = {
@@ -127,7 +129,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     }
 
     const headerElement = (
-        <div>
+        <div className="onboardform-header">
+            <h3>Onboard Form</h3>
             <p className="m-0"> Please onboard the asset gateway before moving to dashboard.  </p>
             <p className="m-0">Submit the form to start the Asset onboard</p>
         </div>
@@ -150,14 +153,16 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             <Dialog visible={showBlockerProp} modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '50rem' }} onHide={() => {
+                style={{ width: '50rem' }} 
+                onHide={() => {
                     setShowBlockerProp(false)
                     setOnboardAssetProp(false)
                 }
                 }
-                draggable={false} resizable={false}
+                draggable={false} 
+                resizable={false}
             >
-                <div className="card ">
+                <div className="card onboard-form">
                     <form >
                         <div className="p-fluid p-formgrid p-grid px-3">
                             <div className="field">
@@ -231,7 +236,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 <label htmlFor="pdt_mqtt_port">Pdt Mqtt Port</label>
                                 <InputNumber
                                     id="pdt_mqtt_port"
-                                    value={onboardForm.pdt_mqtt_port}
+                                    //value={onboardForm.pdt_mqtt_port}
                                     placeholder="ex:8883"
                                     useGrouping={false}
                                     onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
