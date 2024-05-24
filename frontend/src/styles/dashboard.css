@@ -11,6 +11,20 @@
     background: #ecfeff !important;
     color: #0e7490 !important;
 }
+.onboard-form input::placeholder {
+    color: #ccc;
+    font-style: italic;
+    font-size: 13px;
+  }
+.onboardform-header h3{
+    margin-bottom: 7px;
+    letter-spacing: 0.2px;
+}
+.onboardform-header p{
+    font-size: 13.5px;
+}
+ 
+  
 
 .dashboard-container {
     padding-bottom: 2.5rem;

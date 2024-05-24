@@ -25,9 +25,11 @@ import { Password } from "primereact/password";
 import { Toast, ToastMessage } from "primereact/toast";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { useTranslation } from "next-i18next";
+import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
 
 type OnboardDataKey = keyof OnboardData;
+
 
 interface EditOnboardAssetProp {
     editOnboardAssetProp: {
@@ -60,11 +62,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     },
                     withCredentials: true,
                 })
-                
+
             const productName = response.data.product_name === undefined && response.data.asset_communication_protocol === undefined
                 ? "" : `${response.data.product_name}-${response.data.asset_communication_protocol}`;
                 const podName =productName.toLowerCase();
-
             const assetProtocol = response.data.asset_communication_protocol === undefined ? "" : response.data.asset_communication_protocol;
 
         
@@ -73,7 +74,8 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 ...prevState,
                 ...response.data,
                 pod_name: podName,
-                protocol: assetProtocol
+                protocol: assetProtocol,
+                app_config: JSON.stringify(response.data.app_config)
             }));
 
         } catch (error) {
@@ -102,20 +104,25 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: OnboardDataKey) => {
         setOnboard({ ...onboard, [key]: e.target.value })
     }
+
      const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
         const modifiedOnboard = {
             ...onboard,
-            app_config: "|" + onboard.app_config
-        };
+            app_config: JSON.parse(onboard.app_config)
+        }
+        const payload = JSON.stringify(modifiedOnboard);
+
         try {
-            const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, modifiedOnboard, {
+            const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
                 },
                 withCredentials: true,
             })
+            console.log("onboard edit",response.data);
+            
             const { success, status, message } = response.data;
             if (status === 204 && success === true) {
                 setEditOnboardAssetProp(
@@ -123,9 +130,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                         ...editOnboardAssetProp,
                         showEditOnboard: false,
                         successToast:true
-
                     }
                 )
+                showToast('success', 'Success', 'onboard form updated successfully');
             }
 
         }catch (error) {
@@ -135,6 +142,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             }
         }
     }
+
     const footerContent = (
         <div>
             <div className="finish-btn">
@@ -144,9 +152,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             </div>
         </div>
     )
+
     const headerElement = (
         <p className="m-0 ml-5"> Update Onboard Form</p>
     )
+
 
     return (
         <>
@@ -163,7 +173,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 )}
                 draggable={false} resizable={false}
             >
-                <div className="card ">
+                <div className="card onboard-form">
                     <form >
                         <div className="p-fluid p-formgrid p-grid px-3">
                             <div className="field">
