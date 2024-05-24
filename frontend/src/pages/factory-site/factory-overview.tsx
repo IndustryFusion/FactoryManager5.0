@@ -16,7 +16,7 @@
 
 import { MdLocationOn } from "react-icons/md";
 import { Factory } from "../../types/factory-type";
-import axios from "axios";
+import axios, { AxiosError }  from "axios";
 import { useEffect, useState, useRef } from "react";
 import { DataView } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
@@ -38,7 +38,7 @@ import { useDispatch } from "react-redux";
 import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
+import { Asset } from "@/types/asset-types";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
@@ -69,7 +69,7 @@ const FactoryOverview = () => {
   };
 
   // Function to map the backend data to the factorylist structure
-  const mapBackendDataToFactoryLists = (backendData: any[]): Factory[] => {
+  const mapBackendDataToFactoryLists = (backendData: Asset[]): Factory[] => {
     return backendData.map((item: any) => {
       const newItem: any = {};
       Object.keys(item).forEach((key) => {
@@ -100,9 +100,9 @@ const FactoryOverview = () => {
       const responseData = response.data;
       const mappedData = mapBackendDataToFactoryLists(responseData);
       setFactorySite(mappedData);
-    } catch (error: any) {
-      if (error.response && error.response?.status === 404) {
-        showToast(error, "Error","Getting factory lists" )     
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error","Getting factory lists" )     
       }
     }
   };
@@ -145,7 +145,7 @@ const FactoryOverview = () => {
 
   };
 
-  async function createAssets(body: any) {
+  async function createAssets(body: string) {
     try {
       const response = await axios.post(API_URL + "/asset", body, {
         headers: {
@@ -281,9 +281,9 @@ const FactoryOverview = () => {
       setVisibleDelete(false);
       showToast("success", "success", "Factory deleted successfully")
 
-    } catch (error: any) {
-      if (error.response && error.response?.status === 404) {
-        showToast(error, "Error", " deleting factory")
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error", " deleting factory")
       }
       console.error("Error deleting factory", error);
     }

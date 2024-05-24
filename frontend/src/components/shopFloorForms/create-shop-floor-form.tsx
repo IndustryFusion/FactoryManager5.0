@@ -15,7 +15,7 @@
 // 
 
 import axios from "axios";
-import { useEffect, useState, ChangeEvent, useRef } from "react";
+import React, { useEffect, useState, ChangeEvent, useRef } from "react";
 import { Property, Schema } from "../../types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
@@ -33,6 +33,12 @@ import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+
+interface shopFloor {
+  id :string,
+  name:string, 
+  type:string
+}
 interface CreateShopFloorProps {
   isVisibleProp: boolean;
   setIsVisibleProp: React.Dispatch<React.SetStateAction<boolean>>;
@@ -120,7 +126,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     }
   };
 
-  const handleReset = (event: any) => {
+  const handleReset = (event: React.FormEvent) => {
     event.preventDefault();
     const newFormShopFloor = JSON.parse(JSON.stringify(shopFloor));
     newFormShopFloor.thumbnail = shopFloor.thumbnail;
@@ -183,7 +189,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       if (shopFloorResponse.status === 201) {
         showSuccess();
         setIsVisibleProp(false);
-        const newShopFloor: any = {
+        const newShopFloor: shopFloor = {
           id: response.data.id,
           name: response.data.floorName,
           type: "shopFloor",

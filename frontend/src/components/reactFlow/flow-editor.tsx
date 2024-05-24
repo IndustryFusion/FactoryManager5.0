@@ -28,7 +28,7 @@ import ReactFlow, {
   OnSelectionChangeParams,
   Node,
   ReactFlowInstance,
-  Connection, NodeMouseHandler
+  Connection, NodeMouseHandler,NodeChange, EdgeChange
 } from "reactflow";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -102,7 +102,6 @@ interface FactoryNodeData {
   type: string;
   undeletable?: boolean;
 }
-
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
@@ -327,14 +326,14 @@ const FlowEditor: React.FC<
   }, [nodes, edges, originalNodes, originalEdges]);
 
 
-  const onNodesChange = useCallback((changes: any) => {
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
     onNodesChangeProvide(changes);
     if (isRestored && checkForNewAdditionsNodesEdges()) {
       setHasChanges(true);
     }
   }, [onNodesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]);
 
-  const onEdgesChange = useCallback((changes: any) => {
+  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     onEdgesChangeProvide(changes);
     if (isRestored && checkForNewAdditionsNodesEdges()) {
       setHasChanges(true);

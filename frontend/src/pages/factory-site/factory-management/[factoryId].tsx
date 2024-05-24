@@ -52,10 +52,10 @@ const ShopFloorManager: React.FC = () => {
       : "";
 
   useEffect(() => {
-    const fetchShopFloorById = async (factoryId: any) => {
+    const fetchShopFloorById = async (factoryId: string) => {
       try {
-        const details = await getShopFloors(factoryId as any);
-        setFactoryDetails(details as any);
+        const details = await getShopFloors(factoryId);
+        setFactoryDetails(details);
       } catch (error) {
         console.error("Failed to fetch factory details", error);
       }
@@ -65,13 +65,15 @@ const ShopFloorManager: React.FC = () => {
     } else {
       if (router.isReady) {
         const { factoryId } = router.query;
+        if (typeof factoryId === 'string') {
         fetchShopFloorById(factoryId);
+      }
+
       }
     }
   }, [factoryId, router.isReady]);
   
   const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
-    console.log(`Shop floor ${deletedShopFloorId} deleted`);
     setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
   }, []);
 

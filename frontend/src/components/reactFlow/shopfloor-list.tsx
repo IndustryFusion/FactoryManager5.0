@@ -16,7 +16,6 @@
 
 import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import {
-  getShopFloors,
   getshopFloorById,
   deleteShopFloorById,
 } from "@/utility/factory-site-utility";

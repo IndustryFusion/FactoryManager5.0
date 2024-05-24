@@ -60,7 +60,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     },
                     withCredentials: true,
                 })
-                console.log("what's the response", response);
                 
             const productName = response.data.product_name === undefined && response.data.asset_communication_protocol === undefined
                 ? "" : `${response.data.product_name}-${response.data.asset_communication_protocol}`;

@@ -39,6 +39,7 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'
 import { useTranslation } from "next-i18next";
+import { CountryOption } from "../../types/factory-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -250,7 +251,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         )
     }
 
-    const changeHandler = (e: any, key: string) => {
+    const changeHandler = (e: CountryOption, key: string) => {
         const selectedOption = options.find(option => option.value === e.value);
 
         if (selectedOption) {
@@ -263,7 +264,6 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
     // Handle input change events to update state
    const handleChange = (key: keyof Factory, value: string | number | undefined | null) => {
-        console.log(key, value , "lll")
         if (key === "factory_name") {
             setValidateFactory(false)
         }

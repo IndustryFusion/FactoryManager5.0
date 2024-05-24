@@ -15,8 +15,7 @@
 // 
 
 import dynamic from 'next/dynamic';
-import { useContext, useEffect, useState,useRef } from "react";
-import { LayoutContext } from './layout/layout-context';
+import { useEffect, useState,useRef } from "react";
 import axios from "axios";
 import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import "../../styles/dashboard.css"
@@ -46,13 +45,12 @@ interface PrefixedAssetProperty {
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
-  const { layoutConfig } = useContext(LayoutContext);
   const [blocker, setBlocker]= useState(false);
   const [countDown, setCountDown] = useState(0);
   const [runTimer, setRunTimer] = useState(false);
 const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAssetProperty[]>([]); 
   const router = useRouter();
-  const toast = useRef<any>(null);
+  const toast = useRef<Toast>(null);
   const { t } = useTranslation('button');
 
   const fetchNotifications = async () => {
@@ -64,7 +62,6 @@ const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAsset
         },
         withCredentials: true,
       })
-      // console.log(response, "what i'm getting in alerts");
     } catch (error) {
       console.error("Error:", error);
     }
@@ -84,7 +81,7 @@ const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAsset
       if (router.isReady) {
         const { } = router.query;
         fetchNotifications();
-        let timerId:any;
+        let timerId: NodeJS.Timeout | undefined;
    
     // Start the timer if blocker is true and runTimer is false
     if (blocker && !runTimer) {
@@ -105,7 +102,6 @@ const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAsset
    
     // Handle countdown expiration
     if (countDown === 0 && runTimer) {
-       console.log("expired");
        setRunTimer(false);
        setCountDown(0);
        setBlocker(false);
@@ -120,9 +116,8 @@ const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAsset
     return () => clearInterval(timerId);
       }   
     }   
-  }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length, layoutConfig ])
+  }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length ])
 
-  //  console.log(prefixedAssetProperty , "prefix value here");
 
   return (
     <>

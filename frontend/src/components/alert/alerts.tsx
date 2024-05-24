@@ -61,8 +61,6 @@ const Alerts = () => {
         },
         withCredentials: true,
       })
-      
-      console.log("ggg" ,response.data )
       return mapBackendDataToAssetState(response.data);
     } catch (error) {
       console.error("Error fetching asset data", error)

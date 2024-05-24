@@ -308,7 +308,6 @@ const handleAttributeChange = (selectedValue: string) => {
 };
 
 const handleIntervalChange = (e: CustomChangeEvent ) => {
-  console.log(e,"eee")
     const newInterval = e.target.value;
     if (typeof newInterval === 'string') {
       setSelectedInterval(newInterval);

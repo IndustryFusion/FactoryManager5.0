@@ -52,7 +52,6 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
   const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,12 +106,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       setLoading(false);
 
       } catch (err) {
-
-        // setError("Failed to fetch assets");
-        // setLoading(false);
         console.log("Error : fetchNonShopFloorAssets  from @component/unallocated-asssets.tsx")
-        // allocatedAssetsArray = null;
-
         return [];
        
       }
@@ -168,7 +162,6 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
-    // console.log(`Dragging: ${data}`, data);
   }
 
   if (loading) return <div>Loading...</div>;

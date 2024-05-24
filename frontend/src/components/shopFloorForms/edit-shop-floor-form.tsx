@@ -30,6 +30,7 @@ import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
+import { CountryOption } from "../../types/factory-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -156,7 +157,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         }
     };
 
-    const handleReset = (event: any) => {
+    const handleReset = (event: React.FormEvent) => {
         event.preventDefault();
         setUpdateShopFloor({});
         setIsEdit(true);

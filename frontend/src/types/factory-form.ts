@@ -32,3 +32,9 @@ export interface Property {
     description: string;
     properties: Record<string, Property>;
   }
+
+
+export interface CountryOption {
+    value: string;
+    label: string;
+}
