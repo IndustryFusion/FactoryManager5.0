@@ -7,10 +7,6 @@
     font-family: "Inter", sans-serif !important;
 }
 
-/* .p-datatable .p-datatable-tbody >  tr.p-selectable-row.p-highlight {
-    background: #ecfeff !important;
-    color: #0e7490 !important;
-} */
 .selected-row {
     background: #ecfeff !important;
     color: #0e7490 !important;
@@ -29,19 +25,13 @@
 
 .dashboard-assets .p-datatable .p-paginator-bottom {
     left: 0;
-    /* margin-top: 7rem; */
     position: absolute;
-    /* bottom: 0; */
     top: 48rem;
     text-align: center;
     right: 0;
     padding: 0;
     zoom: 90%;
 }
-
-/* .factory-table th{
-    display: none;
-} */
 
 .factory-table table {
     border: 1px solid #8a8282;
@@ -193,7 +183,6 @@
     flex-direction: column;
     overflow-y: auto;
     height: 100%;
-    /* Adjust based on your needs */
 }
 
 .autorefresh-text {
