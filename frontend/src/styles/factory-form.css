@@ -7,9 +7,7 @@
 
 .edit-form {
   margin: 0 auto;
-  /* Centers the card */
   width: 70%;
-  /* Sets the maximum width to 50% */
   padding: 20px;
   display: flex;
   justify-content: center;
@@ -21,13 +19,12 @@
   display: block;
 }
 
-/* Adjust the margin or padding around form fields */
+
 .factory-form-container .p-inputtext,
 .factory-form-container .p-dropdown,
 .factory-form-container .p-inputnumber .p-inputtext {
-  /* margin-bottom: 1rem;  */
   width: 100%;
-  /* Keeps fields full width */
+
 }
 
 .center-button-container .small-button {
@@ -51,11 +48,6 @@
 .p-card {
   padding-top: 1rem;
 }
-
-/* .p-card .p-card-body {
-  width: 50%;
-} */
-
 .shop-floors {
   background: #efefef;
   color: #212529;
@@ -97,10 +89,6 @@ textarea {
 }
 
 .form-btn-container {
-  /* position: fixed;
-  left: 0;
-  right: 0;
-  width: 100%; */
   bottom: 0.2rem;
   padding-right: 5rem;
   z-index: 100;

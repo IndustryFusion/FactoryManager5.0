@@ -23,7 +23,7 @@ import "../../styles/asset-list.css";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/asset-types";
+import { AllocatedAssets } from "../../types/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
@@ -42,7 +42,7 @@ interface Asset {
   id: string;
   product_name: string;
   asset_category: string;
- [key: string]:any,
+ [key: string]:string,
 }
 
 const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
@@ -52,11 +52,10 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // const [selectedAssetDetails, setSelectedAssetDetails] = useState<any>(null);
   const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
+  const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAssets[]>([]);
   const [assetCategories, setAssetCategories] = useState<string[]>([]);
   const menu = useRef<Menu>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -107,12 +106,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       setLoading(false);
 
       } catch (err) {
-
-        // setError("Failed to fetch assets");
-        // setLoading(false);
         console.log("Error : fetchNonShopFloorAssets  from @component/unallocated-asssets.tsx")
-        // allocatedAssetsArray = null;
-
         return [];
        
       }
@@ -159,7 +153,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
 
   function handleDragStart(
     event: React.DragEvent,
-    data: AllocatedAsset,
+    data: AllocatedAssets,
     type: string
   ) {
     const dragData = JSON.stringify({
@@ -168,7 +162,6 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
-    // console.log(`Dragging: ${data}`, data);
   }
 
   if (loading) return <div>Loading...</div>;

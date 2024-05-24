@@ -24,7 +24,8 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { useTranslation } from "next-i18next";
-
+import { AlertsResponse } from "@/types/alert-response";
+import { AssetData } from "@/types/dashboard-cards";
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
@@ -42,10 +43,10 @@ const DashboardCards: React.FC = () => {
     const [relations, setRelations] = useState(false);
     const [difference, setDifference] = useState(localStorage.getItem("runningTime") || "00:00:00");
     const [onlineAverage, setOnlineAverage] = useState(0);
-    const [hasRelations, setHasRelations] = useState<any>([]);
+    const [hasRelations, setHasRelations] = useState<Record<string, {}>[]>([]);
     const [childCount, setChildCount] = useState(0);
     const [prevTimer, setPrevTimer] = useState('00:00:00');
-    let intervalId: any;
+    let intervalId: ReturnType<typeof setInterval>;
     const { t } = useTranslation('dashboard');
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -54,7 +55,7 @@ const DashboardCards: React.FC = () => {
 
     const fetchAllAlerts = async () => {
         try {
-            const response = await getAlerts();
+            const response:AlertsResponse = await getAlerts();
             const filteredNotifications = response.alerts.filter(({ resource }) => resource === entityIdValue);
             setNotificationData(filteredNotifications)
         } catch (error) {
@@ -132,14 +133,14 @@ const DashboardCards: React.FC = () => {
             const key = Object.keys(property)[0];
             const value = property[key];
             if (value.object !== "json-ld-1.1") {
-                setRelationsCount((prev: any) => prev + 1);
-                setChildCount((prev: any) => prev + 1);
+                setRelationsCount((prev) => prev + 1);
+                setChildCount((prev) => prev + 1);
             }
             if (value.length > 0) {
-                value.forEach(item => {
+                value.forEach((item:AssetData) => {
                     if (item.object !== "json-ld-1.1") {
-                        setChildCount((prev: any) => prev + 1);
-                        setRelationsCount((prev: any) => prev + 1);
+                        setChildCount((prev) => prev + 1);
+                        setRelationsCount((prev) => prev + 1);
                     }
                 })
             }
@@ -160,10 +161,9 @@ const DashboardCards: React.FC = () => {
                     },
                     withCredentials: true,
                 });
-   
-                response?.data.forEach(item => {
+                response?.data.forEach((item:AssetData) => {
                     if (item.id !== "json-ld-1.1") {
-                        setRelationsCount((prev: any) => prev + 1);
+                        setRelationsCount((prev) => prev + 1);
                     }
                 })
             }

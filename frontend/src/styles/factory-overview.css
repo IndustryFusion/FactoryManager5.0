@@ -75,8 +75,6 @@
 }
 
 .factory-btn {
-  /* background-color: #fff96757; */
-  /* background-color: #a7e3f985; */
   color: #000;
   border: 1px solid #ced4da;
   font-weight: 600;
@@ -86,11 +84,6 @@
 .p-dataview.p-dataview-list .p-dataview-content>.p-grid>div {
   border: none;
 }
-
-/* .factory-factory-card-content {
-  height: 180px;
-  justify-content: space-between;
-} */
 
 .zip-text {
   margin-left: 1.3rem;
@@ -143,7 +136,6 @@
 }
 
 .address-text {
-  /* margin-top: 1.5rem; */
   font-size: 14.6px;
   letter-spacing: 0.1px;
 }
@@ -160,10 +152,6 @@
 
 
 @media only screen and (min-width: 1440px) and (max-width: 1800px) {
-  /* .factory-image {
-    width: 135px;
-    height: 135px;
-  } */
 
   .factory-card-title {
     font-size: 1rem;

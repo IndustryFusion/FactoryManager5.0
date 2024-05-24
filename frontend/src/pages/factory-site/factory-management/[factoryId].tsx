@@ -15,12 +15,9 @@
 // 
 
 import React, { useState, useEffect, useRef, useCallback ,Suspense } from "react";
-import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import dynamic from 'next/dynamic'
-import { ShopFloor } from "../types/shop-floor";
-import { exportElementToJPEG } from "@/utility/factory-site-utility";
-import { Asset } from "../../../interfaces/asset-types";
+import { ShopFloor } from "../../../types/shop-floor";
 import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
 import Footer from "../../../components/navBar/footer";
 import Cookies from "js-cookie";
@@ -28,19 +25,15 @@ import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
   suspense: true
 });
-const FlowEditor = dynamic(() => import("../factories/flow-editor"), {
+const FlowEditor = dynamic(() => import("../../../components/reactFlow/flow-editor"), {
   suspense: true
 });
 const UnallocatedAssets = dynamic(() => import("../../../components/reactFlow/unallocated-allocated-assets"), {
   suspense: true
 });
 import {
-  getshopFloorById,
-  getNonShopFloorAsset,
   getShopFloors,
 } from "@/utility/factory-site-utility";
-import { any } from "prop-types";
-import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -59,10 +52,10 @@ const ShopFloorManager: React.FC = () => {
       : "";
 
   useEffect(() => {
-    const fetchShopFloorById = async (factoryId: any) => {
+    const fetchShopFloorById = async (factoryId: string) => {
       try {
-        const details = await getShopFloors(factoryId as any);
-        setFactoryDetails(details as any);
+        const details = await getShopFloors(factoryId);
+        setFactoryDetails(details);
       } catch (error) {
         console.error("Failed to fetch factory details", error);
       }
@@ -72,13 +65,15 @@ const ShopFloorManager: React.FC = () => {
     } else {
       if (router.isReady) {
         const { factoryId } = router.query;
+        if (typeof factoryId === 'string') {
         fetchShopFloorById(factoryId);
+      }
+
       }
     }
   }, [factoryId, router.isReady]);
   
   const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
-    console.log(`Shop floor ${deletedShopFloorId} deleted`);
     setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
   }, []);
 

@@ -15,7 +15,7 @@
 // 
 
 import axios from "axios";
-import { Asset } from "@/interfaces/AssetTypes";
+import { Asset } from "../types/asset-types";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -56,7 +56,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     }
   }
 
-  export const fetchFormAllocatedAsset =async(payload)=>{
+  export const fetchFormAllocatedAsset =async(payload:{})=>{
     const url = `${API_URL}/allocated-asset/form`;
     try{
       const response = await axios.post(url, payload, {

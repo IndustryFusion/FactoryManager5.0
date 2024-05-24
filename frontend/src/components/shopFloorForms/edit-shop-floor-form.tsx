@@ -16,13 +16,13 @@
 
 import axios from "axios"
 import { useEffect, useState, ChangeEvent, useRef } from "react";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Property, Schema } from "../../types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
-import { ShopFloor } from "../../pages/factory-site/types/shop-floor-form";
+import { ShopFloor } from "../../types/shop-floor-form";
 import { handleUpload } from "@/utility/factory-site-utility";
 import { Toast, ToastMessage } from "primereact/toast";
 import "../../styles/factory-form.css"
@@ -30,6 +30,7 @@ import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
+import { CountryOption } from "../../types/factory-form";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -68,13 +69,10 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 withCredentials: true,
             })
             setShopFloorTemplate(response.data)
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "Fetching shopfloor template");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
       }
 
@@ -107,13 +105,10 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 }, {} as ShopFloor);
                 setShopFloor(flattenedData);
             }
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('error', 'Error', "Fetching shopfloor data");
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         } 
     }
 
@@ -162,7 +157,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         }
     };
 
-    const handleReset = (event: any) => {
+    const handleReset = (event: React.FormEvent) => {
         event.preventDefault();
         setUpdateShopFloor({});
         setIsEdit(true);
@@ -200,12 +195,9 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 } else {
                     showToast("error", "Error","Error Updating ShopFloor");
                 }
-            } catch (error: any) {
+            } catch (error) {
                 if (axios.isAxiosError(error)) {
                     showToast('error', 'Error', "saving shopfloor");
-                } else {
-                    console.error("Error:", error);
-                    showToast('error', 'Error', error);
                 }
             }
         }

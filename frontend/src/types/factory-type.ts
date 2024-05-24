@@ -15,7 +15,7 @@
 // 
 
 export interface Factory {
-  factory_name?: string;
+  factory_name?: string | undefined ;
   street?: string;
   zip?: number | string;
   country?: string | null;

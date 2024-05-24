@@ -1,22 +1,22 @@
-/* combine-chart.css */
+
 .buttons-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center; /* Center buttons in the container */
-  gap: 10px; /* Adjust based on your spacing preference */
-  justify-content: center; /* Center buttons in the container */
+  justify-content: center; 
+  gap: 10px; 
+  justify-content: center; 
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
   .custom-button {
-    max-width: calc(50% - 10px); /* Show 2 buttons per row on smaller screens */
+    max-width: calc(50% - 10px); 
   }
 }
 
 @media (max-width: 480px) {
   .custom-button {
-    max-width: 100%; /* Stack buttons vertically on very small screens */
+    max-width: 100%; 
   }
 }
 .content {
@@ -25,30 +25,24 @@
 .custom-button {
   cursor: pointer;
   padding: 10px;
-  /* border: 1px solid #ccc; */
   border-radius: 4px;
   transition: all 0.3s;
-  width: auto; /* Remove fixed width */
-  margin-bottom: 10px; /* Space between buttons */
-  position: relative; /* Add relative positioning for absolute child */
-  display: flex; /* Ensure icon and text are displayed flexibly */
-  align-items: center; /* Align icon and text vertically */
+  width: auto; 
+  margin-bottom: 10px; 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
   border: none;
 }
 
-/* .custom-button:hover {
-  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
-} */
-
-/* Adjust icon styles */
 .button-icon {
-  margin-right: 8px; /* Add margin to the right of the icon */
+  margin-right: 8px; 
 }
 
-/* Adjust text styles */
+
 .button-text {
-  font-size: 30px; /* Adjust based on your preference */
-  padding: 5px 0; /* Give some space at the top */
+  font-size: 30px; 
+  padding: 5px 0; 
   font-weight: bold;
   justify-content: center;
   background-color: rgba(
@@ -56,51 +50,51 @@
     255,
     255,
     0.8
-  ); /* Slightly transparent background for readability */
+  ); 
 }
 
 .interval-filter-container {
   display: flex;
-  flex-direction: column; /* Stack label and dropdown vertically */
-  align-items: center; /* Center-align the items */
-  margin-bottom: 20px; /* Adjust spacing as needed */
+  flex-direction: column; 
+  align-items: center; 
+  margin-bottom: 20px; 
 }
 
 .dropdown-container {
-  width: 200px; /* Adjust width as needed */
-  margin-top: 5px; /* Provide some space between the label and dropdown */
+  width: 200px; 
+  margin-top: 5px; 
 }
 
-/* Ensure the label has a consistent style */
+
 .interval-filter-container > p {
-  margin: 0; /* Remove default margins */
-  font-size: 16px; /* Adjust the font size as needed */
-  font-weight: bold; /* Make label text bold */
-  text-align: center; /* Center-align the text */
+  margin: 0; 
+  font-size: 16px; 
+  font-weight: bold; 
+  text-align: center; 
 }
 
 
 .control-container {
   display: flex;
-  align-items: center; /* Aligns items vertically in the center */
-  justify-content: space-between; /* Distributes space between items */
-  padding: 1rem; /* Adds some padding around the items */
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 1rem; 
 }
 .attribute-dropdown-container, .interval-dropdown-container, .date-time-container {
-  flex-grow: 1; /* Allows each container to grow and take up equal space */
-  margin: 0 10px; /* Adds margin to the left and right for spacing */
+  flex-grow: 1; 
+  margin: 0 10px; 
 }
 
 .h3-container {
-  margin-left: 30px; /* Keeping your original left margin for the h3 */
-  flex-grow: 1; /* Allows h3 to take up necessary space, pushing the button to the edge */
+  margin-left: 30px; 
+  flex-grow: 1; 
 }
 
 .custom-button-container {
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  width: 100%; /* Take the full width of its parent to center content in the middle */
+  justify-content: center; 
+  align-items: center; 
+  width: 100%; 
 }
 .custom-button {
   display: flex;
@@ -109,8 +103,8 @@
 }
 
 .button-text {
-  font-size: 16px; /* Adjust the font size as needed */
-  font-weight: bold; /* Makes the text bold */
+  font-size: 16px; 
+  font-weight: bold; 
 }
 
 .interval-dropdown-container{
@@ -126,10 +120,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Your existing button styling */
+
 }
 
-/* Add responsiveness if necessary */
+
 @media (max-width: 768px) {
   .control-container {
     flex-direction: column;
@@ -139,14 +133,14 @@
 
 .control-container {
   display: flex;
-  align-items: center; /* Aligns items vertically in the center */
-  justify-content: space-between; /* Distributes space between items */
-  padding: 1rem; /* Adds some padding around the items */
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 1rem; 
 }
 .date-time-flex {
     display: flex;
     align-items: center;
-    gap: 10px;  /* Space between items */
+    gap: 10px;  
 }
 
  .p-timepicker {

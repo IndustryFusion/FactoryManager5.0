@@ -16,11 +16,10 @@
 
 import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import {
-  getShopFloors,
   getshopFloorById,
   deleteShopFloorById,
 } from "@/utility/factory-site-utility";
-import { ShopFloor } from "../../pages/factory-site/types/shop-floor";
+import { ShopFloor } from "../../types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
@@ -36,8 +35,8 @@ import { Dialog } from 'primereact/dialog';
 interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
-  setShopfloorProp?: any;
-  formViewPage?: any
+  setShopfloorProp?: {};
+  formViewPage?:boolean
 }
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
@@ -207,11 +206,15 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  useEffect(() => {
+useEffect(() => {
     if (filteredShopFloors.length > 0) {
-      setShopFloorValue(filteredShopFloors[0]);
+        setShopFloorValue({
+            id: filteredShopFloors[0].id,
+            floorName: filteredShopFloors[0].floorName,
+        });
     }
-  }, [filteredShopFloors]);
+}, [filteredShopFloors]);
+
 
   return (
     <>
@@ -288,7 +291,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                     setSelectedShopFloorId(null);
                   }
                   setSelectedShopFloorId(floor.id);
-                  setShopFloorValue(floor)
+                 setShopFloorValue({ id: floor.id, floorName: floor.floorName });
                 }}
                 style={{
                   cursor: "pointer",
