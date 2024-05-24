@@ -88,15 +88,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
-        const modifiedOnboardForm = {
+        const obj = {
             ...onboardForm,
-            app_config: "|" + onboardForm.app_config
-        };
-
-        const payload = JSON.stringify(modifiedOnboardForm);
-
+            app_config: JSON.parse(onboardForm.app_config)
+        }
+        const payload = JSON.stringify(obj);
         console.log("on submit payload", payload);
-        
 
         try {
             const response = await axios.post(API_URL + "/onboarding-asset", payload, {
@@ -113,9 +110,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             } else if (success === false && status === 422) {
                 setOnboardAssetProp(true);
                 setShowBlockerProp(false);
-
             }
-
         } catch (error: any) {
             console.log("onboardform error", error);
             if (error.response.status === 404) {
