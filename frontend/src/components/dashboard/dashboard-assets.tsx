@@ -92,6 +92,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               onboardAssetId: rowData?.id
             }))
           }}
+       title="Edit Onboard form"  
         >
           <img src="/onboard.png" alt="" width="50px" height="50px" />
         </Button>
