@@ -29,18 +29,16 @@ import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
 
 type OnboardDataKey = keyof OnboardData;
-
-
 interface EditOnboardAssetProp {
     editOnboardAssetProp: {
         showEditOnboard: boolean,
         onboardAssetId: string,
-        successToast:boolean
+        successToast: boolean
     }
     setEditOnboardAssetProp: Dispatch<SetStateAction<{
         showEditOnboard: boolean;
         onboardAssetId: string;
-        successToast:boolean;
+        successToast: boolean;
     }>>
 }
 
@@ -51,6 +49,17 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const [onboard, setOnboard] = useState<Record<string, any>>({});
     const toast = useRef<Toast>(null);
     const { t } = useTranslation('button');
+    const [validateInput, setValidateInput] = useState({
+        ip_address: false,
+        main_topic: false,
+        app_config: false,
+        pdt_mqtt_hostname: false,
+        pdt_mqtt_port: false,
+        keycloak_url: false,
+        realm_password: false,
+        dataservice_image_config: false,
+        agentservice_image_config: false
+    })
 
     const getOnboardFormData = async () => {
         try {
@@ -62,13 +71,8 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     },
                     withCredentials: true,
                 })
-
-            const productName = response.data.product_name === undefined && response.data.asset_communication_protocol === undefined
-                ? "" : `${response.data.product_name}-${response.data.asset_communication_protocol}`;
-                const podName =productName.toLowerCase();
-            const assetProtocol = response.data.asset_communication_protocol === undefined ? "" : response.data.asset_communication_protocol;
-
-        
+            const podName = response?.data?.pod_name.toLowerCase();
+            const assetProtocol = response?.data?.protocol;
             // Update the state with the new values
             setOnboard(prevState => ({
                 ...prevState,
@@ -82,7 +86,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', 'fetching onboarded data');
-            } 
+            }
         }
     }
 
@@ -93,52 +97,106 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-     const handleInputChange = (value: string | number | boolean | undefined | null, key: OnboardDataKey) => {
+    const handleInputChange = (value: string | number | boolean | undefined | null, key: OnboardDataKey) => {
         if (key === "pdt_mqtt_port") {
-            setOnboard({ ...onboard, [key]: Number(value) })
+            setOnboard({ ...onboard, [key]: Number(value) });
+            setValidateInput(prev => ({ ...prev, [key]: false }));
         }
         else {
-            setOnboard({ ...onboard, [key]: value })
+            setOnboard({ ...onboard, [key]: value });
+            setValidateInput(prev => ({ ...prev, [key]: false }));
         }
     }
     const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: OnboardDataKey) => {
-        setOnboard({ ...onboard, [key]: e.target.value })
+        setOnboard({ ...onboard, [key]: e.target.value });
+        setValidateInput(prev => ({ ...prev, [key]: false }));
     }
 
-     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
-        const modifiedOnboard = {
-            ...onboard,
-            app_config: JSON.parse(onboard.app_config)
-        }
-        const payload = JSON.stringify(modifiedOnboard);
 
-        try {
-            const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            })
-            console.log("onboard edit",response.data);
-            
-            const { success, status, message } = response.data;
-            if (status === 204 && success === true) {
-                setEditOnboardAssetProp(
-                    {
-                        ...editOnboardAssetProp,
-                        showEditOnboard: false,
-                        successToast:true
-                    }
-                )
-                showToast('success', 'Success', 'onboard form updated successfully');
+        let parsedConfig;
+        const {
+            ip_address,
+            main_topic,
+            app_config,
+            pdt_mqtt_hostname,
+            pdt_mqtt_port,
+            keycloak_url,
+            realm_password,
+            dataservice_image_config,
+            agentservice_image_config
+        } = onboard;
+
+        const onboardKeys = Object.keys(validateInput);
+        for (let onboardKey of onboardKeys) {
+            if (onboard[onboardKey] === undefined || onboard[onboardKey] === "") {
+                setValidateInput(validate => ({ ...validate, [onboardKey]: true }))
+            } else if (onboard[onboardKey] === undefined || onboard[onboardKey] === 0) {
+                setValidateInput(validate => ({ ...validate, [onboardKey]: true }))
+            } else if (onboard?.protocol !== "mqtt" || onboard?.main_topic === "") {
+                setValidateInput(validate => ({ ...validate, [onboardKey]: false }))
+            }
+        }
+
+        if (ip_address === undefined || ip_address === "" ||
+            app_config === undefined || app_config === "" ||
+            pdt_mqtt_hostname === undefined || pdt_mqtt_hostname === "" ||
+            pdt_mqtt_port === undefined || pdt_mqtt_port === 0 ||
+            keycloak_url === undefined || keycloak_url === "" ||
+            realm_password === undefined || realm_password === "" ||
+            dataservice_image_config === undefined || dataservice_image_config === "" ||
+            agentservice_image_config === undefined || agentservice_image_config === ""
+        ) {
+
+            showToast('error', "Error", "Please fill all required fields")
+        } else {
+            // Check if app_config is not empty and is valid JSON
+            try {
+                parsedConfig = JSON.parse(onboard.app_config);
+            } catch (error) {
+                console.error("Invalid JSON in app_config");
+                showToast('error', 'Error', 'Invalid JSON in app_config');
+                setValidateInput(validate => ({ ...validate, app_config: true }))
             }
 
-        }catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error', 'Updating onboard form');
+            if (typeof parsedConfig === "object") {
+                const modifiedOnboard = {
+                    ...onboard,
+                    app_config: parsedConfig
+                }
+                const payload = JSON.stringify(modifiedOnboard);
+
+                console.log("edit payload", payload);
+
+
+                try {
+                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, payload, {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        withCredentials: true,
+                    })
+
+                    const { success, status, message } = response.data;
+                    if (status === 204 && success === true) {
+                        setEditOnboardAssetProp(
+                            {
+                                ...editOnboardAssetProp,
+                                showEditOnboard: false,
+                                successToast: true
+                            }
+                        )
+                        showToast('success', 'Success', 'onboard form updated successfully');
+                    }
+
+                } catch (error) {
+                    if (axios.isAxiosError(error)) {
+                        console.error("Error response:", error.response?.data.message);
+                        showToast('error', 'Error', 'Updating onboard form');
+                    }
+                }
             }
         }
     }
@@ -157,10 +215,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         <p className="m-0 ml-5"> Update Onboard Form</p>
     )
 
-
     return (
         <>
-          <Toast ref={toast} />
+            <Toast ref={toast} />
             <Dialog
                 visible={editOnboardAssetProp.showEditOnboard} modal
                 footer={footerContent}
@@ -184,6 +241,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     type="text"
                                     placeholder="ex:192.168.49.26"
                                     onChange={(e) => handleInputChange(e.target.value, "ip_address")}
+                                    style={{ border: validateInput?.ip_address ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -195,6 +253,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                         type="text"
                                         placeholder="ex:airtracker-74145/relay1"
                                         onChange={(e) => handleInputChange(e.target.value, "main_topic")}
+                                        style={{ border: validateInput?.main_topic ? "1px solid red" : "" }}
                                     />
                                     :
                                     <InputText
@@ -223,7 +282,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     rows={10}
                                     cols={30}
                                     onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-
+                                    style={{ border: validateInput?.app_config ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -243,6 +302,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     type="text"
                                     placeholder="ex:devalerta.industry-fusion.com"
                                     onChange={(e) => handleInputChange(e.target.value, "pdt_mqtt_hostname")}
+                                    style={{ border: validateInput?.pdt_mqtt_hostname ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -253,6 +313,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     placeholder="ex:8883"
                                     useGrouping={false}
                                     onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
+                                    style={{ border: validateInput?.pdt_mqtt_port ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field my-4">
@@ -288,6 +349,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     value={onboard.keycloak_url}
                                     placeholder="ex:https://development.industry-fusion.com/auth/realms"
                                     onChange={e => handleInputChange(e.target.value, "keycloak_url")}
+                                    style={{ border: validateInput?.keycloak_url ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -296,6 +358,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     value={onboard.realm_password}
                                     toggleMask
                                     onChange={(e) => handleInputChange(e.target.value, "realm_password")}
+                                    style={{ border: validateInput?.realm_password ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -321,6 +384,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     value={onboard.dataservice_image_config}
                                     onChange={e => handleInputChange(e.target.value, "dataservice_image_config")}
                                     placeholder="ex:fusionmqttdataservice:latest"
+                                    style={{ border: validateInput?.dataservice_image_config ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -330,9 +394,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     value={onboard.agentservice_image_config}
                                     onChange={e => handleInputChange(e.target.value, "agentservice_image_config")}
                                     placeholder="ex:iff-iot-agent:v0.0.2"
+                                    style={{ border: validateInput?.agentservice_image_config ? "1px solid red" : "" }}
                                 />
                             </div>
-
                         </div>
                     </form>
                 </div>

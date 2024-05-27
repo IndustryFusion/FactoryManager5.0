@@ -36,6 +36,8 @@ import { Toast, ToastMessage } from "primereact/toast";
 import Footer from '@/components/navBar/footer';
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import BlockTimer from '@/components/dashboard/block-timer';
+import OnboardForm from '@/components/dashboard/onboard-form';
 
 interface PrefixedAssetProperty {
   key: string;
@@ -46,106 +48,35 @@ const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
   const [blocker, setBlocker]= useState(false);
-  const [countDown, setCountDown] = useState(0);
-  const [runTimer, setRunTimer] = useState(false);
-const [prefixedAssetProperty, setPrefixedAssetProperty] = useState<PrefixedAssetProperty[]>([]); 
+  const [prefixedAssetProperty, setPrefixedAssetProperty]= useState<PrefixedAssetProperty[]>([]);
   const router = useRouter();
   const toast = useRef<Toast>(null);
   const { t } = useTranslation('button');
 
-  const fetchNotifications = async () => {
-    try {
-      const response = await axios.get(ALERTA_URL + "/alerts", {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      })
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
   const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), {
     ssr: false,
    });
   
-  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 8000 });
-  };
+
 
   useEffect(() => {
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } else {
-      if (router.isReady) {
-        const { } = router.query;
-        fetchNotifications();
-        let timerId: NodeJS.Timeout | undefined;
-   
-    // Start the timer if blocker is true and runTimer is false
-    if (blocker && !runTimer) {
-       setRunTimer(true);
-       setCountDown(60 * 5); 
-       showToast('success', "Success", "Added To GitHub Successfully")
-       // Set countdown to 5 minutes
-    }
-   
-    // Manage the countdown timer
-    if (runTimer) {
-       timerId = setInterval(() => {
-         setCountDown((countDown) => countDown - 1);
-       }, 1000);
-    } else {
-       clearInterval(timerId);
-    }
-   
-    // Handle countdown expiration
-    if (countDown === 0 && runTimer) {
-       setRunTimer(false);
-       setCountDown(0);
-       setBlocker(false);
-    }
-  //   if (prefixedAssetProperty.length === 0) {
-  //     setBlocker(true);
-  //     setRunTimer(true);
-  //     setCountDown(60 * 5); // Reset countdown to 5 minutes
-  //  }
-   
-    // Cleanup function to clear the interval
-    return () => clearInterval(timerId);
+      if (router.isReady) {        
       }   
     }   
-  }, [router.isReady,blocker, runTimer, countDown, prefixedAssetProperty.length ])
+  }, [router.isReady ])
 
 
   return (
     <>
     <DashboardProvider>
       {blocker && 
-      <div className="blocker">
-        <Toast ref={toast} />
-        <div className="card blocker-card">
-          <p>Restart the Machine to finish onboarding</p>
-          <div className="loading-spinner">
-          <ProgressSpinner />
-          </div>
-          <div>
-          <p>Time Remaining:
-            <span style={{color:"red",marginRight:"5px"}}>{Math.floor(countDown / 60)}:{countDown % 60 < 10 ? '0' : ''}{countDown % 60}</span>
-              mins</p>
-          </div>
-          <div className="flex justify-content-end">
-          <Button
-                label={t('cancel')}
-                severity="danger" outlined
-                className="mr-2"
-                type="button"
-                onClick={() => setBlocker(false)}
-            />
-          </div>
-        </div>
-      </div>
+     <BlockTimer
+     setBlockerProp={setBlocker}
+     blockerProp={blocker}
+     />
       }
        <HorizontalNavbar />
       <div className="dashboard-container">      
