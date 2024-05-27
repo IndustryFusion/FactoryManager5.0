@@ -49,7 +49,7 @@ interface FlowState {
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
- const connectionNodeId = useStore(connectionNodeIdSelector);
+  const connectionNodeId = useStore(connectionNodeIdSelector);
   const isConnecting = connectionNodeId != null;
   const isConnectable = connectionNodeId !== data.id;
   const [relationOptions, setRelationOptions] = useState<RelationOption[]>([]);
@@ -77,6 +77,17 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
             }));
     
           setRelationOptions(options);
+          const dropdownPanel = document.querySelector('.custom-multiselect-panel');
+          if (dropdownPanel) {
+            dropdownPanel.addEventListener('click', handleDropdownClick as EventListener);
+          }
+
+          return () => {
+            if (dropdownPanel) {
+              dropdownPanel.removeEventListener('click', handleDropdownClick as EventListener);
+            }
+          };
+
 
         } catch (error) {
           console.log("Error from getAssetRelationById  function from custom-asset-node.tsx", error);
@@ -86,7 +97,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
     getAssetDetails();
   }, [data.id]);
-  const handleDropdownClick = (event: React.MouseEvent<HTMLDivElement>) => {
+
+  
+  const handleDropdownClick = (event: MouseEvent) => {
     event.stopPropagation();
   };
   const handleRelationsChange = (e: { value: string[] }) => {
@@ -131,14 +144,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       style={{
         padding: "10px",
         border: "1px none #ddd",
-        borderRadius: "4px",
         backgroundColor: "#caf1d8",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100px",
       }}
-      className="customNode "
+      className="customNode"
     >
       
       {!isConnecting && isConnectable && (
@@ -146,7 +158,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       )}
       <Handle className="customHandle" position={Position.Top} type="target" isConnectable={isConnectable}  style={{ zIndex: 10 }} />
       <small>{data.label}</small>
-      <div style={{ marginTop: "10px",zIndex: 20  }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ marginTop: "10px",zIndex: 20  }}>
         <MultiSelect
           value={selectedRelations}
           options={relationOptions}
@@ -155,9 +167,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           placeholder="Select Relations"
           display="chip"
           style={{ width: "100%" }}
-          onClick={handleDropdownClick}
           className="w-full sm:w-10rem"
           appendTo="self" 
+          panelClassName="custom-multiselect-panel"
         />
       </div>
     </div>

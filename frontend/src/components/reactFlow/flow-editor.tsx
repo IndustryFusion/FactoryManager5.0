@@ -181,7 +181,7 @@ const FlowEditor: React.FC<
           border: "none",
           borderRadius: "45%",
         },
-
+        type: "relation",
         data: {
           label: `${relationName}_${String(newCount).padStart(3, "0")}`,
           type: "relation",
@@ -216,7 +216,7 @@ const FlowEditor: React.FC<
     const originalWarn = console.warn;
     console.warn = (...args) => {
       const [message] = args;
-      if (!/Node type "(factory|shopFloor)" not found/.test(message)) {
+      if (!/Node type "(factory|shopFloor|relation)" not found/.test(message)) {
         originalWarn.apply(console, args);
       }
     };
