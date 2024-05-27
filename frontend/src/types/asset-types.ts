@@ -48,7 +48,7 @@ export interface Asset {
   ce_marking: string;
 }
 
-export interface AllocatedAsset {
+export interface AllocatedAssets {
   id: string;
   product_name: string;
   asset_category: string;

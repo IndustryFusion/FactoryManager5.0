@@ -11,15 +11,15 @@
 
 
 .large-button {
-  padding: 12px 24px; /* Example padding, adjust as needed */
-  font-size: 1em; /* Larger text */
+  padding: 12px 24px; 
+  font-size: 1em; 
 }
 
 .bold-button {
   font-size: 16px;
   padding: 10px 15px;
   min-width: 100px;
-  font-weight: bold; /* Makes text bold */
-  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s;
 }
 

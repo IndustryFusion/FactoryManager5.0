@@ -18,7 +18,6 @@ import React, { useState, ChangeEvent, useEffect, useRef, useMemo } from "react"
 import Select from "react-select";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
-import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import axios from "axios";
@@ -36,18 +35,13 @@ import {
 import Thumbnail from "@/components/thumbnail";
 import { useRouter } from "next/router";
 import { Toast } from "primereact/toast"
-import { Factory, FactoryFormProps } from "../../interfaces/factory-type";
+import { Factory, FactoryFormProps } from "../../types/factory-type";
 import { handleUpload } from "@/utility/factory-site-utility";
-import { Property, Schema } from "../../pages/factory-site/types/factory-form";
+import { Property, Schema } from "../../types/factory-form";
 import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
-
+import { CountryOption } from "../../types/factory-form";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-interface CountryOption {
-    value: string;
-    label: string;
-}
 
 const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibleProp, setVisibleProp }) => {
 
@@ -97,7 +91,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
    };
 
 
-    const changeHandler = (e: any, key: keyof Factory) => {
+    const changeHandler = (e: CountryOption, key: keyof Factory) => {
         // Find the corresponding label in the options array
         const selectedOption = options.find(option => option.value === e.value);
 
@@ -130,19 +124,6 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     };
 
  
-
-
-    const showWaring = (message: any) => {
-        if (toast.current !== null) {
-            toast.current.show({
-                severity: 'warn',
-                summary: 'Warning',
-                detail: message,
-                life: 2000
-            });
-        }
-    };
-
     const handleSave = async () => {
         const zipCode = typeof factory.zip === 'number' ? factory.zip.toString() : (factory.zip || "");
         let payload;
@@ -186,11 +167,10 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                     setVisibleProp(false);
                 }, 1000); 
             }
-        } catch (error: any) {
+        } catch (error) {
             console.log( "handleSave function Error from @components/factoryForms/create-factory-form",error);
-            showError("Please fill all required fields");
-            if (error.response.status === 404) {
-                showError("Error saving factory");
+            if (axios.isAxiosError(error)) {
+                showError("Please fill all required fields");
             }
         }
     };
@@ -205,7 +185,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             });
         }
     };
-    const showError = (message: any) => {
+    const showError = (message:string) => {
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'error',
@@ -217,7 +197,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     };
 
 
-    const handleReset = (event: any) => {
+    const handleReset = (event:React.FormEvent) => {
         event.preventDefault();
         const resetFactoryForm = JSON.parse(JSON.stringify(factory));
         resetFactoryForm.thumbnail = factory.thumbnail;
@@ -256,8 +236,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
             const responseData = response.data;
             setSchema(responseData);
-        } catch (error: any) {
-            if (error.response.status === 404) {
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
                 showError("getting factory template");
             }
         }
@@ -286,7 +266,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             id={key}
                             value={value}
                             placeholder={property?.description}
-                            onChange={(e: any) => setFactory({ ...factory, zip: e.value })}                           
+                            onChange={(e: Factory) => setFactory({ ...factory, zip: e.value })}                           
                             useGrouping={false}
                             onKeyDown={onKeyDownHandler}
                         />
@@ -316,7 +296,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                                 placeholder={property?.description}
                                 options={options}
                                 value={selectedCountry}
-                                onChange={(e) => changeHandler(e, key)}
+                                onChange={(e) => changeHandler(e as CountryOption, key)}
                             />
                         ) : (
 

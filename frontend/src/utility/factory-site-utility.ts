@@ -15,11 +15,11 @@
 // 
 
 import axios from "axios";
-import { Factory } from "@/interfaces/factory-type";
-import { Asset } from "@/interfaces/asset-types";
+import { Factory } from "@/types/factory-type";
+import { Asset } from "@/types/asset-types";
 import { MdQueryBuilder } from "react-icons/md";
 import html2canvas from "html2canvas";
-import { AllocatedAsset } from "@/interfaces/asset-types";
+import { AllocatedAssets } from "@/types/asset-types";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -211,25 +211,6 @@ export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
     console.error("Unexpected response status:", response.status);
   }
 };
-
-// const mapBackendDataTofactory = (backendData: any): any => {
-//   return backendData.map((item: any) => {
-//     const newItem: any = {};
-//     Object.keys(item).forEach((key) => {
-//       if (key.includes("http://www.industry-fusion.org/schema#")) {
-//         const newKey = key.replace(
-//           "http://www.industry-fusion.org/schema#",
-//           ""
-//         );
-//         newItem[newKey] =
-//           item[key].type === "Property" ? item[key].value : item[key];
-//       } else {
-//         newItem[key] = item[key];
-//       }
-//     });
-//     return newItem;
-//   });
-// };
 
 const flattenData = (data: any): any => {
   const newItem: any = {};
@@ -543,7 +524,7 @@ export const saveFlowchartData = async (
   }
 };
 
-export const fetchAssetById = async (assetId: string) => {
+export const getAssetRelationById = async (assetId: string) => {
   try {
     const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
       headers: {
@@ -655,9 +636,9 @@ export async function getShopFloorAssets(shopFloorId: string) {
       hasAsset.map((elem:{type:string, object:string})=> elem?.object) :
       hasAsset?.object ;
     assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
-    assetIds = assetIds.filter(id => id !== "json-ld-1.1");
+    assetIds = assetIds.filter((id:string) => id !== "json-ld-1.1");
    
-    let assetsData = [];
+    let assetsData:{} = [];
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
       const assetDataPromises = assetIds.map((assetId: any) =>{     

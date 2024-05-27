@@ -15,8 +15,7 @@
 // 
 
 import dynamic from 'next/dynamic';
-import { useContext, useEffect, useState,useRef } from "react";
-import { LayoutContext } from './layout/layout-context';
+import { useEffect, useState,useRef } from "react";
 import axios from "axios";
 import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import "../../styles/dashboard.css"
@@ -26,9 +25,8 @@ const CombineSensorChart = dynamic(
 );
 const AutoRefresh = dynamic(() => import("@/components/dashboard/auto-refresh"), { ssr: false });
 const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
-const DashboardChart = dynamic(() => import("@/components/dashboard/dashboard-chart"), { ssr: false });
+const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
-const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), { ssr: false, loading: () => <ProgressSpinner /> });
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
@@ -40,20 +38,21 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BlockTimer from '@/components/dashboard/block-timer';
 
+interface PrefixedAssetProperty {
+  key: string;
+  value: string; 
+}
+
 const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
-
-  const [count, setCount] = useState(0);
-  const [machineState, setMachineState] = useState("0");
-  const { layoutConfig } = useContext(LayoutContext);
   const [blocker, setBlocker]= useState(false);
-
+  const [countDown, setCountDown] = useState(0);
+  const [runTimer, setRunTimer] = useState(false);
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
   const router = useRouter();
-  const toast = useRef<any>(null);
+  const toast = useRef<Toast>(null);
   const { t } = useTranslation('button');
-
 
   const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), {
     ssr: false,
@@ -99,7 +98,7 @@ const Dashboard = () => {
           <div className="flex border-round mx-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>
-          <DashboardChart/>
+          <MachineStateChart/>
           </div>     
       </div>
       <Footer />

@@ -27,55 +27,38 @@ interface RelationPopupProps {
     relationsProp: boolean;
     setRelationsProp: Dispatch<SetStateAction<boolean>>;
 }
-type PropertyItem = {
-    name: string;
-    id: string;
-};
 
-type Property = {
-    [key: string]: PropertyItem[];
-};
-
-type ParentRelation = {
+interface ParentRelationData {
     product_name: { value: string };
     id: string;
     asset_category: { value: string };
-};
-
+    object?: string;
+    type?:string
+}
 
 
 const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
-    const [parentRelations, setParentRelations] = useState<ParentRelation[]>([]);
+    const [parentRelations, setParentRelations] = useState<ParentRelationData[]>([]);
     const { selectedAssetData, entityIdValue } = useDashboard();
-    const [hasPropertiesArray, setHasPropertiesArray] = useState<Property[]>([]);
+    const [hasPropertiesArray, setHasPropertiesArray] = useState<{[key:string]:string[]}[]>([]);
 
 
-    const getAssetData = async (relationData: any) => {
+    const getAssetData = async (relationData:ParentRelationData  ) => {
         try {
             let newArr = [];
             if (Array.isArray(relationData) && relationData.length > 0) {
                 for (let item of relationData) {
-                    const response = await getAssetById(item?.object);
+                    const response = await getAssetById(item?.object);                  
                     let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
-                    newArr.push({
-                        name: product_name,
-                        id: response?.id
-                    });
+                    newArr.push(product_name);
                 }
             }
-            else if (relationData?.object !== "json-ld-1.1") {
+             else if (relationData.object && relationData.object !== "json-ld-1.1") {
                 const response = await getAssetById(relationData?.object);
                 let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
-                newArr.push({
-                    name: product_name,
-                    id: response?.id
-                });
-                //newArr.push(product_name);
+                newArr.push(product_name);
             }
-            console.log("new Arr", newArr);
             return newArr;
-
-
         } catch (error) {
             console.error(error)
         }
@@ -83,12 +66,12 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
 
 
     const getHasProperties = async () => {
-        const propertiesArray: any = [];
+        const propertiesArray: { [key: string]: string[] }[] = [];
         for (const key in selectedAssetData) {
             if (key.startsWith("has")) {
                 const propertyName = key.substring(3); // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
-                let dataValues = await getAssetData(propertyValue);
+                let dataValues = await getAssetData(propertyValue) || [];
                 propertiesArray.push({ [propertyName]: dataValues });
             }
         }
@@ -138,7 +121,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
                             const value = property[key];
-                            console.log(value, "all values here");
                             return (
                                 <div key={index} className="mb-2 flex flex-column ">
                                     <div className="mb-2 relation-container">
@@ -146,33 +128,25 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                                             <div className="child-bullet-point"></div>
                                             <h4 className="child-key-text m-0 mb-1">{key}</h4>
                                         </div>
-                                        <div className="child-content">
-                                        <p className="ml-2 child-product-name m-0">{value?.length === 1 && value[0]?.name}</p>
-                                        <p className="ml-2 child-key-value m-0">{value?.length === 1 && value[0]?.id}</p>
-                                        </div>                                
+                                        <p className="ml-2 child-key-value m-0">{value?.length === 1 && value[0]}</p>
                                         {/* workpiece ,catridge relation */}
                                         {
                                             value?.length > 1 &&
-                                            <div>
-                                                <ul
-                                                    className="m-0 p-0"
-                                                    style={{ listStyle: "circle" }}
-                                                >
-                                                    {value?.map((item, index) => {
-                                                        return (
-                                                            <>
-                                                                <li
-                                                                    className="ml-4 child-key-value"
-                                                                    key={index}>{item?.name}</li>
-                                                                <li
-                                                                    className="ml-4 child-key-value"
-                                                                    key={index}>{item?.id}</li>
-                                                            </>
-                                                        )
-                                                    }
-                                                    )}
-                                                </ul>
-                                            </div>
+                                            <ul
+                                                className="m-0 p-0"
+                                                style={{ listStyle: "circle" }}
+                                            >
+                                                {value?.map((item, index) => {
+                                                    return (
+                                                        <>
+                                                            <li
+                                                                className="ml-4 child-key-value"
+                                                                key={index}>{item}</li>
+                                                        </>
+                                                    )
+                                                }
+                                                )}
+                                            </ul>
                                         }
                                     </div>
                                 </div>

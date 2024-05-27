@@ -26,6 +26,10 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { useTranslation } from "next-i18next";
 import "../../styles/dashboard.css"
+import { OnboardData } from "@/types/onboard-form";
+
+type OnboardDataKey = keyof OnboardData;
+
 
 interface EditOnboardAssetProp {
     editOnboardAssetProp: {
@@ -35,16 +39,17 @@ interface EditOnboardAssetProp {
     }
     setEditOnboardAssetProp: Dispatch<SetStateAction<{
         showEditOnboard: boolean;
-         onboardAssetId: string;
+        onboardAssetId: string;
         successToast:boolean;
     }>>
 }
+
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
-    const toast = useRef<any>(null);
+    const toast = useRef<Toast>(null);
     const { t } = useTranslation('button');
 
     const getOnboardFormData = async () => {
@@ -57,8 +62,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     },
                     withCredentials: true,
                 })
-              
-                              
+
             const productName = response.data.product_name === undefined && response.data.asset_communication_protocol === undefined
                 ? "" : `${response.data.product_name}-${response.data.asset_communication_protocol}`;
                 const podName =productName.toLowerCase();
@@ -74,14 +78,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 app_config: JSON.stringify(response.data.app_config)
             }));
 
-        } catch (error: any) {
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', 'fetching onboarded data');
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
-            }
+            } 
         }
     }
 
@@ -92,7 +93,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
-    const handleInputChange = (value: any, key: any) => {
+     const handleInputChange = (value: string | number | boolean | undefined | null, key: OnboardDataKey) => {
         if (key === "pdt_mqtt_port") {
             setOnboard({ ...onboard, [key]: Number(value) })
         }
@@ -100,12 +101,12 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             setOnboard({ ...onboard, [key]: value })
         }
     }
-    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: any) => {
+    const handleInputTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>, key: OnboardDataKey) => {
         setOnboard({ ...onboard, [key]: e.target.value })
     }
 
-    const handleSubmit = async (e: any) => {
-        e.preventDefault();   
+     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        e.preventDefault();
         const modifiedOnboard = {
             ...onboard,
             app_config: JSON.parse(onboard.app_config)
@@ -134,13 +135,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 showToast('success', 'Success', 'onboard form updated successfully');
             }
 
-        }catch (error: any) {
+        }catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                 showToast('error', 'Error', 'Updating onboard form');
-            } else {
-                console.error("Error:", error);
-                showToast('error', 'Error', error);
             }
         }
     }
@@ -149,7 +147,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         <div>
             <div className="finish-btn">
                 <Button
-                    onClick={handleSubmit}
+                    onClick={(e) => handleSubmit(e)}
                     label={t('submit')} autoFocus />
             </div>
         </div>

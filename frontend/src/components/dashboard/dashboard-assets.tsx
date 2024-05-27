@@ -15,7 +15,7 @@
 // 
 
 import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
-import { Asset } from "@/interfaces/asset-types";
+import { Asset } from "@/types/asset-types";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -29,13 +29,17 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
-import { create, update } from '@/state/entityId/entityIdSlice';
+import { update} from '@/state/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+interface PrefixedAssetProperty {
+  key: string;
+  value: string; 
+}
 
 interface DashboardAssetsProps {
   setBlockerProp: Dispatch<SetStateAction<boolean>>
-  setPrefixedAssetPropertyProp: any
+ setPrefixedAssetPropertyProp: Dispatch<SetStateAction<PrefixedAssetProperty[]>>;
 }
 
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
@@ -52,8 +56,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const { setMachineStateValue, setSelectedAssetData, setAssetCount } = useDashboard();
-  const toast = useRef<any>(null);
+  const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
+  const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder', 'dashboard']);
 
@@ -121,7 +125,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     const allKeys = Object.keys(selectedAsset);
     const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
 
-    setPrefixedAssetPropertyProp(prefixedKeys);
+      prefixedKeys.forEach(key => {
+      setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
+    });
     dispatch(update(selectedAsset?.id));
     setSelectedAssetData(selectedAsset);
 
@@ -141,7 +147,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
 
-  const searchAsset = (e: any) => {
+  const searchAsset = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchedText = e.target.value;
     setSearchedAsset(e.target.value);
 

@@ -17,16 +17,14 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
     getNonShopFloorAsset,
-    getNonShopFloorAssetDetails,
     fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
-// import { Asset } from "../interfaces/assetTypes";
 import "../../styles/asset-list.css";
 import { Card } from "primereact/card";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
-import { AllocatedAsset } from "@/interfaces/asset-types";
+import { AllocatedAssets } from "@/types/asset-types";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
@@ -51,9 +49,16 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    [key: string]: AssetProperty | AssetRelationship | string | undefined;
+    [key: string]: AssetProperty | AssetRelationship | string ;
 }
 
+interface UnAllocatedAssetState {
+    [key: string]: {
+        id: string;
+        product_name: { value: string };
+        asset_category: { value: string };
+    };
+}
 
 const AllocatedAsset = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
@@ -62,14 +67,14 @@ const AllocatedAsset = () => {
     const router = useRouter();
     const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAsset[]>([]);
+    const [allocatedAssets, setAllocatedAssets] = useState<AllocatedAssets[]>([]);
     const [assetCategories, setAssetCategories] = useState<string[]>([]);
     const [searchTermAllocated, setSearchTermAllocated] = useState("");
     const allocatedMenu = useRef<Menu>(null);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
     let allocatedAssetsArray = null;
-    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
+    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as unknown as UnAllocatedAssetState;
     const dispatch = useDispatch();
     const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryIdValue, setFactoryIdValue] = useState("");
@@ -78,7 +83,7 @@ const AllocatedAsset = () => {
 
     const fetchNonShopFloorAssets = async (factoryId: string) => {
         try {
-            if (unAllocatedAssetData.length === 0) {
+            if (Object.keys(unAllocatedAssetData).length === 0) {
                 const fetchedAssetIds = await getNonShopFloorAsset(factoryId); // for unallocated assets
               
                 dispatch(create(fetchedAssetIds));
@@ -90,11 +95,13 @@ const AllocatedAsset = () => {
             }
           
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-            const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => ({
+         const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
+            return {
                 id: unAllocatedAssetData[key].id,
                 product_name: unAllocatedAssetData[key].product_name?.value,
                 asset_category: unAllocatedAssetData[key].asset_category?.value,
-            }));
+            };
+        });
 
             // destructuring the asset id, product_name, asset_catagory for allocated Asset
             const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({

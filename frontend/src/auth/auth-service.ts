@@ -45,7 +45,6 @@ const login = async (username: string, password: string): Promise<LoginResponse>
     const loginUrl = API_URL + '/auth/login';
     try {
         const response: AxiosResponse<LoginResponse> = await axios.post(loginUrl as string, data, { headers });
-        console.log('response ',response.data);
         if (response.data.success) 
         {
             // Set LogIn to true
