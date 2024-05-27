@@ -37,6 +37,7 @@ import Footer from '@/components/navBar/footer';
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BlockTimer from '@/components/dashboard/block-timer';
+import OnboardForm from '@/components/dashboard/onboard-form';
 
 interface PrefixedAssetProperty {
   key: string;
@@ -47,9 +48,7 @@ const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
   const [blocker, setBlocker]= useState(false);
-  const [countDown, setCountDown] = useState(0);
-  const [runTimer, setRunTimer] = useState(false);
-  const [prefixedAssetProperty, setPrefixedAssetProperty]= useState([]);
+  const [prefixedAssetProperty, setPrefixedAssetProperty]= useState<PrefixedAssetProperty[]>([]);
   const router = useRouter();
   const toast = useRef<Toast>(null);
   const { t } = useTranslation('button');
