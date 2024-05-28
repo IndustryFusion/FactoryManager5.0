@@ -423,9 +423,9 @@ const getMongoDataFlowEditor = useCallback(async () => {
 
         setRelationCounts(updatedRelationCounts);
       }
-      //  else {
-      //   console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
-      // }
+       else {
+        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
+      }
     } catch (error) {
       console.error("Error fetching flowchart data:", error);
     } finally {
@@ -463,7 +463,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
     try {
 
       setIsOperationInProgress(true);
-      console.log("factoryData update", payLoad.factoryData.edges);
+
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
@@ -572,7 +572,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
     };
 
     try {
-      console.log("factoryData save", payLoad.factoryData.edges);
+
       setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
         headers: {
@@ -812,7 +812,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
         })),
       },
     };
-       console.log("factoryData save or update", payLoad.factoryData.edges);
+
        const reactFlowUpdateMongo=  await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
           headers: {
             "Content-Type": "application/json",

@@ -108,19 +108,15 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 
   useEffect(() => {
     if (filteredShopFloors.length > 0) {
-
-      console.log("called 1")
       setShopFloorValue({
           id: filteredShopFloors[0].id,
           floorName: filteredShopFloors[0].floorName,
       });
     }
     if (Cookies.get("login_flag") === "false") {
-        console.log("called 2")
       router.push("/login");
     } 
     if (router.isReady) {
-      console.log("called 3")
       const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
       router.query.factoryId;
       if (typeof id === 'string') {
