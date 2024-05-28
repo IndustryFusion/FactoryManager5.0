@@ -39,6 +39,7 @@ import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Asset } from "@/types/asset-types";
+import DeleteDialog from "@/components/delete-dialog";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
@@ -55,6 +56,8 @@ const FactoryOverview = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [editFactory, setEditFactory] = useState<string | undefined>("");
   const [assetManageDialog, setAssetManageDialog] = useState(false);
+  const [factoryToDelete, setFactoryToDelete] = useState<Factory | null>(null);
+  const [factoryName, setFactoryName] = useState<string>('');
   const toast = useRef<Toast | null>(null);
   const dispatch = useDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -62,7 +65,6 @@ const FactoryOverview = () => {
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
   ];
-
 
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
@@ -262,18 +264,17 @@ const FactoryOverview = () => {
   );
 
   // Confirm deletion dialog
-  const confirmDeleteFactory = (factory: Factory) => {
+  const confirmDeleteFactory = (factory: Factory) => {    
     setVisibleDelete(true);
-    confirmDialog({
-      message: t('overview:deleteWarning'),
-      header: t('overview:confirmation'),
-      icon: "pi pi-exclamation-triangle",
-      footer: footer(factory)
-    });
+    setFactoryToDelete(factory);
+    setFactoryName(factory?.factory_name ?? '')
+  
   };
 
   // Handles factory deletion
-  const handleDeleteFactory = async (factoryToDelete: Factory) => {
+  const handleDeleteFactory = async () => {
+    if (!factoryToDelete) return;
+   
     try {
       await deleteFactory(factoryToDelete);
       dispatch(reset());
@@ -357,12 +358,7 @@ const FactoryOverview = () => {
     );
   };
 
-  const footer = (factory: Factory) => (
-    <div>
-      <Button label={t('yes')} icon="pi pi-check" onClick={() => handleDeleteFactory(factory)} />
-      <Button label={t('no')} icon="pi pi-times" onClick={() => setVisibleDelete(false)} />
-    </div>
-  );
+ 
 
 
   return (
@@ -370,12 +366,7 @@ const FactoryOverview = () => {
       <Toast ref={toast} />
       <HorizontalNavbar />
       <div className="grid py-1 px-2 factory-overview " style={{ zoom: "80%" }} >
-        <div className="col-12" style={{ marginTop: "5rem" }}>
-          <ConfirmDialog
-            visible={visibleDelete}
-            onHide={() => setVisibleDelete(false)}
-           />
-          <div className="">
+        <div className="col-12" style={{ marginTop: "5rem" }}>      
           <h2 className="ml-4 mt-6">{t('overview:factoryOverview')}</h2>
             <DataView
               value={filteredValue || factorySite}
@@ -383,8 +374,7 @@ const FactoryOverview = () => {
               header={dataViewHeader}
               sortOrder={sortOrder}
               sortField={sortField}
-            />
-          </div>
+            />     
         </div>
       </div>
       {visible &&
@@ -399,6 +389,14 @@ const FactoryOverview = () => {
           isEditProp={isEdit}
           setIsEditProp={setIsEdit}
         />
+      }
+      {visibleDelete && 
+      <DeleteDialog
+      deleteDialog={visibleDelete}
+      setDeleteDialog={setVisibleDelete}
+      handleDelete ={handleDeleteFactory}
+      deleteItemName={factoryName}
+      />
       }
       <Footer />
     </>
