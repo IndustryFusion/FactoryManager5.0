@@ -107,22 +107,27 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }, [searchValue, shopFloors]);
 
   useEffect(() => {
+    if (filteredShopFloors.length > 0) {
+      setShopFloorValue({
+          id: filteredShopFloors[0].id,
+          floorName: filteredShopFloors[0].floorName,
+      });
+    }
     if (Cookies.get("login_flag") === "false") {
       router.push("/login");
-    } else {
-      if (router.isReady) {
-        const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
-          router.query.factoryId;
-        if (typeof id === 'string') {
-          fetchShopFloors(id);
-          setFactoryIdvalue(id);
-        } else {
-          console.error("factoryId is not a string or is undefined.");
-        }
-      }
+    } 
+    if (router.isReady) {
+      const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
+      router.query.factoryId;
+      if (typeof id === 'string') {
+        fetchShopFloors(id);
+        setFactoryIdvalue(id);
+      } else {
+        console.error("factoryId is not a string or is undefined.");
+      } 
     }
 
-  }, [router.query.factoryId, router.isReady, isEdit, isVisible])
+  }, [router.query.factoryId,isVisible])
 
   const confirmDelete = () => {
     if (selectedShopFloorId) {
@@ -206,14 +211,6 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-useEffect(() => {
-    if (filteredShopFloors.length > 0) {
-        setShopFloorValue({
-            id: filteredShopFloors[0].id,
-            floorName: filteredShopFloors[0].floorName,
-        });
-    }
-}, [filteredShopFloors]);
 
 
   return (
@@ -290,7 +287,7 @@ useEffect(() => {
                   if (index !== 0) {
                     setSelectedShopFloorId(null);
                   }
-                  setSelectedShopFloorId(floor.id);
+                 setSelectedShopFloorId(floor.id);
                  setShopFloorValue({ id: floor.id, floorName: floor.floorName });
                 }}
                 style={{

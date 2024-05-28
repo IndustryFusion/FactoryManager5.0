@@ -22,7 +22,7 @@ import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
 import { getAlerts } from "../alert/alert-service";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
+import { RootState } from "@/redux/store";
 import { useTranslation } from "next-i18next";
 import { AlertsResponse } from "@/types/alert-response";
 import { AssetData } from "@/types/dashboard-cards";
