@@ -25,8 +25,8 @@ import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/state/store";
-import { create, reset } from '@/state/relations/relationsSlice';
+import { RootState } from "@/redux/store";
+import { create, reset } from '@/redux/relations/relationsSlice';
 import { useTranslation } from "next-i18next";
 interface RelationObject {
     type: string;

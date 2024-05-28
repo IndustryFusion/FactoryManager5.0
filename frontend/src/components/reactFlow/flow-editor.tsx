@@ -46,7 +46,7 @@ import CustomAssetNode from "@/components/reactFlow/custom-asset-node";
 import { useShopFloor } from "@/context/shopfloor-context";
 import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
-import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
 import dagre from '@dagrejs/dagre';
 import { Dialog } from "primereact/dialog";
@@ -422,9 +422,10 @@ const getMongoDataFlowEditor = useCallback(async () => {
         });
 
         setRelationCounts(updatedRelationCounts);
-      } else {
-        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
       }
+      //  else {
+      //   console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
+      // }
     } catch (error) {
       console.error("Error fetching flowchart data:", error);
     } finally {
@@ -462,6 +463,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
     try {
 
       setIsOperationInProgress(true);
+      console.log("factoryData update", payLoad.factoryData.edges);
       const reactFlowUpdateMongo = await axios.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
@@ -570,7 +572,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
     };
 
     try {
-
+      console.log("factoryData save", payLoad.factoryData.edges);
       setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
         headers: {
@@ -810,6 +812,7 @@ const getMongoDataFlowEditor = useCallback(async () => {
         })),
       },
     };
+       console.log("factoryData save or update", payLoad.factoryData.edges);
        const reactFlowUpdateMongo=  await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
           headers: {
             "Content-Type": "application/json",
@@ -1122,7 +1125,7 @@ const handleExportClick = () => {
   );
 
 //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
- const handleBackspacePress = useCallback(() => {
+const handleBackspacePress = useCallback(() => {
   if (!selectedElements || (!selectedElements.nodes && !selectedElements.edges)) {
     toast.current?.show({
       severity: "warn",
@@ -1167,13 +1170,21 @@ const handleExportClick = () => {
     selectedElements.nodes?.map(node => node.id) ?? []
   );
 
+  // Collect edges associated with the nodes to delete
+  const additionalEdgeIdsToDelete = edges
+    .filter(edge => nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target))
+    .map(edge => edge.id);
+
+  // Combine the edge IDs to delete
+  edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
+
   // Update nodes and edges state
   const updatedNodes = nodes.filter(node => !nodeIdsToDelete.has(node.id));
   const updatedEdges = edges.filter(edge => !edgeIdsToDelete.includes(edge.id));
 
   setNodes(updatedNodes);
   setEdges(updatedEdges);
-  setSelectedElements(null); 
+  setSelectedElements(null);
 }, [
   selectedElements,
   nodes,

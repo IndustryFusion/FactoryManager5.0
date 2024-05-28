@@ -29,8 +29,8 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { Dropdown } from "primereact/dropdown";
 import socketIOClient from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import { create } from "@/state/machineState/machineStateSlice";
+import { RootState } from "@/redux/store";
+import { create } from "@/redux/machineState/machineStateSlice";
 import { useTranslation } from "next-i18next";
 
 export interface Datasets {

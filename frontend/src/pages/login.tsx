@@ -28,8 +28,8 @@ import "../styles/login.css";
 import 'primeicons/primeicons.css';
 import {  useRouter, } from 'next/router';
 import { useDispatch,useSelector  } from "react-redux";
-import { login, startTimer } from "@/state/auth/authSlice";
-import { RootState } from "@/state/store";
+import { login, startTimer } from "@/redux/auth/authSlice";
+import { RootState } from "@/redux/store";
 
 //interface for token
 interface LoginResponse {

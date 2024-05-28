@@ -29,8 +29,8 @@ import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Checkbox } from "primereact/checkbox";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import { create } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { RootState } from "@/redux/store";
+import { create } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { useTranslation } from "next-i18next";
 

@@ -35,7 +35,7 @@ import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
 import { useDispatch } from "react-redux";
-import { reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Asset } from "@/types/asset-types";

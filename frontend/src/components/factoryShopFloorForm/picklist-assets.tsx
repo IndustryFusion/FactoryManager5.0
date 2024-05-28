@@ -16,8 +16,8 @@
 
 import { getShopFloorAssets, fetchAllocatedAssets, getNonShopFloorAsset } from "@/utility/factory-site-utility";
 import { PickList } from "primereact/picklist";
-import { RootState } from "@/state/store";
-import { create, reset } from "@/state/unAllocatedAsset/unAllocatedAssetSlice";
+import { RootState } from "@/redux/store";
+import { create, reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
