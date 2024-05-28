@@ -63,7 +63,7 @@ const AllocatedAsset = () => {
 // Fetch and transform data from the backend
   const handleAllAllocatedAsset = async () => {
     try {
-      const response = await fetchAllAllocatedAssets();
+      const response = await fetchAllAllocatedAssets();      
       let transformedArray:AllocatedAssetData[] = [];
       if(Object.keys(response).length > 0){
      
@@ -117,7 +117,7 @@ const AllocatedAsset = () => {
         <Column
           field="assets"
           filter
-          body={(rowData) => rowData.assets.join(', ')}
+          body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
         >
         </Column>
       </DataTable>
