@@ -29,7 +29,7 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
-import { update} from '@/state/entityId/entityIdSlice';
+import { update} from '@/redux/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
 
 interface PrefixedAssetProperty {

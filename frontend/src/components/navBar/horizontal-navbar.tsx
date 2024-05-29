@@ -26,7 +26,7 @@ import { LuLayoutDashboard } from "react-icons/lu";
 import AssetManagementDialog from "../assetManagement/asset-management";
 import ProfileDialog from "./profile-dialog";
 import { useDispatch } from "react-redux";
-import { resetTimer, logout } from "@/state/auth/authSlice";
+import { resetTimer, logout } from "@/redux/auth/authSlice";
 import { useTranslation } from "next-i18next";
 import Language from "./language";
 import { CiViewBoard } from "react-icons/ci";

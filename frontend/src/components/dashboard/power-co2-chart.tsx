@@ -28,8 +28,8 @@ import moment from 'moment';
 import { Calendar } from 'primereact/calendar';
 import { Button } from "primereact/button";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import { create } from "@/state/powerConsumption/powerConsumptionSlice";
+import { RootState } from "@/redux/store";
+import { create } from "@/redux/powerConsumption/powerConsumptionSlice";
 import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;

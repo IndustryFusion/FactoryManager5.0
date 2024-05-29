@@ -34,7 +34,7 @@ import { format} from 'date-fns';
 import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
 import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
+import { RootState } from "@/redux/store";
 import { InputText } from 'primereact/inputtext';
 import { useTranslation } from "next-i18next";
 

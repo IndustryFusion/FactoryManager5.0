@@ -17,8 +17,8 @@
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import { startTimer } from "@/state/auth/authSlice";
+import { RootState } from "@/redux/store";
+import { startTimer } from "@/redux/auth/authSlice";
 
 
 interface ProfileDialogProps {
