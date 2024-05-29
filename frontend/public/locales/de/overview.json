@@ -2,9 +2,8 @@
     "factoryOverview": "Werksübersicht",
     "importAsset": "Asset importieren",
     "createFactory": "Fabrik erstellen",
-    "confirmation": "Bestätigung",
-    "deleteWarning": "Sind Sie sicher, dass Sie diese Fabrik löschen möchten",
-    "deleteAssetWarning": "Sind Sie sicher, dass Sie löschen möchten",
+    "confirmation": "Löschen bestätigen",
+    "deleteWarning": "Sind Sie sicher, dass Sie löschen möchten",
     "yes": "Ja",
     "no": "Nein"
 }

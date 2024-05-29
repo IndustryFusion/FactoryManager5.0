@@ -34,9 +34,7 @@ const BlockTimer: React.FC<BlockTimerProps> =({setBlockerProp, blockerProp})=>{
               return prevCountDown - 1;
             });
           }, 1000);
-        }
-        console.log("is re-rendering inside useEffect");
-      
+        }    
         return () => {
           if (timerId) {
             clearInterval(timerId);
