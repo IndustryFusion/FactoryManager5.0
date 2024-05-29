@@ -69,7 +69,7 @@ const FactoryShopFloorForm = () => {
                           
                             <div style={{ width: "88%" }}>
                                 <InputText
-                                    style={{ width: "82%" }}
+                                    style={{ width: "73%" }}
                                     className="input-content"
                                     placeholder=""
                                     value={assetValue || ""} // Use assetValue state here
