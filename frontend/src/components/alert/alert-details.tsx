@@ -44,17 +44,7 @@ interface Alerts {
 }
 
 const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData }) => {
-
   const { t } = useTranslation('button');
-
-  // Define CSS style for the badge
-  const badgeStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '-9px',
-    right: '-6px',
-    fontSize: '0.2rem',
-  };
-
 
   // Get the icon and color based on severity
   const getIcon = (severity: string) => {
@@ -126,9 +116,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 let updatedText;
                 // Regular expression to match the URL and extract the fragment
                 const urlRegex = /http:\/\/www\.industry-fusion\.org\/fields#([^ ]+)/;
-                const match = text.match(urlRegex);
-                console.log("what's the match here",Array.isArray(match));
-                
+                const match = text.match(urlRegex);           
                 if (Array.isArray(match)) {
                   const fragment = match[1];
                   updatedText = `Property #${fragment} : ${extractedTextAfterFirstPeriod}`;
