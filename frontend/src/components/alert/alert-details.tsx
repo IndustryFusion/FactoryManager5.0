@@ -114,14 +114,15 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 const extractedTextAfterFirstPeriod = parts[parts.length - 1];
 
                 let updatedText;
-                // Regular expression to match the URL and extract the fragment
-                const urlRegex = /http:\/\/www\.industry-fusion\.org\/fields#([^ ]+)/;
-                const match = text.match(urlRegex);           
-                if (Array.isArray(match)) {
-                  const fragment = match[1];
-                  updatedText = `Property #${fragment} : ${extractedTextAfterFirstPeriod}`;
+                // Regular expression to extract the URL and last text in fragment          
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const match = text.match(urlRegex);
+
+                if (Array.isArray(match) && match?.length > 0) {
+                  const fragment = match[0].toString().split("/").pop();
+                  updatedText = `Property ${fragment} : ${extractedTextAfterFirstPeriod}`;
                 } else {
-                  updatedText = text;
+                  return;
                 }
 
                 return (
