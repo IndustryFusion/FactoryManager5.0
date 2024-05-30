@@ -32,6 +32,7 @@ import "../../styles/shop-floor-list.css"
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { useTranslation } from "next-i18next";
 import { Dialog } from 'primereact/dialog';
+import DeleteDialog from "../delete-dialog";
 interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -56,8 +57,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const toast = useRef<Toast>(null);
   const [filteredShopFloors, setFilteredShopFloors] = useState<ShopFloor[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
-  const { setShopFloorValue } = useFactoryShopFloor();
+  const {shopFloorValue, setShopFloorValue } = useFactoryShopFloor();
   const [factoryIdValue, setFactoryIdvalue] = useState("");
+  const [shopFloorName, setShopFloorName] = useState("")
   const { t } = useTranslation(['button', 'placeholder']);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
@@ -74,9 +76,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   };
 
   const fetchShopFloors = async (factoryId: string) => {
-
     try {
-
       const factoryDetails = await getshopFloorById(factoryId);
       setShopFloors(
         factoryDetails.map((floor: ShopFloor) => ({
@@ -85,10 +85,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             floor["http://www.industry-fusion.org/schema#floor_name"].value,
         }))
       );
-
-
     } catch (error) {
-
       if (error instanceof Error) {
         console.error("Failed to fetch shop floors:", error);
         setError(error.message);
@@ -96,9 +93,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         console.error("Failed to fetch shop floors:", error);
         setError("An error occurred");
       }
-
     }
-
   };
 
 
@@ -132,6 +127,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const confirmDelete = () => {
     if (selectedShopFloorId) {
       setShowConfirmDialog(true);
+
     } else {
       toast.current?.show({
         severity: "warn",
@@ -141,12 +137,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     }
   };
 
-  const onConfirmDelete = async () => {
-    setShowConfirmDialog(false); // Close the dialog before performing async operations
-    await handleDelete(); // Wait for the delete operation to complete
-  };
-
-  const handleDelete = async () => {
+  const handleDeleteShopFlooor = async () => {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for deletion");
       return;
@@ -186,6 +177,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       });
     }
   };
+
+
+  
   function handleEdit() {
     if (!selectedShopFloorId) {
       console.error("No shop floor selected for editing");
@@ -196,13 +190,11 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       });
       return;
     }
-
     setEditShopFloor(selectedShopFloorId);
     setIsEdit(true);
   }
 
   function handleDragStart(event: React.DragEvent, item: {}, type: string) {
-
     const dragData = JSON.stringify({ item, type });
     event.dataTransfer.setData("application/json", dragData);
     event.dataTransfer.effectAllowed = "move";
@@ -216,21 +208,6 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   return (
     <>
       <Card className={formViewPage ? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
-        <Dialog
-          visible={showConfirmDialog}
-          style={{ width: '450px' }}
-          header="Confirm Deletion"
-          modal
-          footer={
-            <>
-              <Button label="No" icon="pi pi-times" onClick={() => setShowConfirmDialog(false)} className="p-button-text" />
-              <Button label="Yes" icon="pi pi-check" onClick={onConfirmDelete} autoFocus />
-            </>
-          }
-          onHide={() => setShowConfirmDialog(false)}
-        >
-          Are you sure you want to delete this shop floor?
-        </Dialog>
         <Toast ref={toast} style={{ top: '60px' }} />
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
@@ -324,6 +301,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           factoryId={factoryIdValue}
         />
       )}
+      {showConfirmDialog &&
+      <DeleteDialog
+      deleteDialog={showConfirmDialog}
+      setDeleteDialog={setShowConfirmDialog}
+      handleDelete={handleDeleteShopFlooor}
+      deleteItemName ={shopFloorValue?.floorName}
+      />
+      }
     </>
   );
 };

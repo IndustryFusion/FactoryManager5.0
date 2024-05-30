@@ -23,7 +23,7 @@ const CombineSensorChart = dynamic(
   () => import('@/components/dashboard/senosor-linear-charts'),
   { ssr: false }
 );
-const AutoRefresh = dynamic(() => import("@/components/dashboard/auto-refresh"), { ssr: false });
+const AutoRefresh = dynamic(() => import("@/components/dashboard/dashboard-header"), { ssr: false });
 const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
 const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });

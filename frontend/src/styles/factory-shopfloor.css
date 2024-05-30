@@ -14,6 +14,10 @@ ul {
 .form-view-height{
     height: 50%;
 }
+.picklist-asset .p-picklist-source-controls,
+.picklist-asset .p-picklist-target-controls  {
+display: none;
+}
 
 .form-container {
     width: 100%;

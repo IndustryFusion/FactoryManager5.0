@@ -22,9 +22,10 @@ import { ColumnGroup } from "primereact/columngroup";
 import { DataTable } from "primereact/datatable";
 import { InputText } from "primereact/inputtext";
 import { Row } from "primereact/row";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "next-i18next";
 import { AllocatedAssetData } from "../../types/allocated-asset-data";
+import { Toast, ToastMessage } from "primereact/toast";
 
 const AllocatedAsset = () => {
   const [filters, setFilters] = useState<{
@@ -35,6 +36,7 @@ const AllocatedAsset = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [allAllocatedAssets, setAllAllocatedAssets] =  useState<AllocatedAssetData[]>([]);
   const { t } = useTranslation(['placeholder', 'reactflow']);
+  const toast = useRef<Toast>(null);
 
   // Handle global filter change
   const onGlobalFilterChange = (e:React.ChangeEvent<HTMLInputElement>) => {
@@ -63,19 +65,27 @@ const AllocatedAsset = () => {
 // Fetch and transform data from the backend
   const handleAllAllocatedAsset = async () => {
     try {
-      const response = await fetchAllAllocatedAssets();
-      let transformedArray:AllocatedAssetData[] = [];
-      if(Object.keys(response).length > 0){
-     
-        for (let factoryName in response) {
-          let obj: AllocatedAssetData = {
-            factoryName: factoryName,
-            assets: response[factoryName]
+      const response = await fetchAllAllocatedAssets();   
+      console.log("response from allocated Asset", response);
+
+      if(response?.status === 404){
+      showToast("error", "Error", "fetching allocated assets")
+      }else{
+    
+        let transformedArray:AllocatedAssetData[] = [];
+        if(Object.keys(response).length > 0){
+       
+          for (let factoryName in response) {
+            let obj: AllocatedAssetData = {
+              factoryName: factoryName,
+              assets: response[factoryName]
+            }
+            transformedArray.push(obj);
           }
-          transformedArray.push(obj);
-        }
-           setAllAllocatedAssets(transformedArray)  
-      }  
+             setAllAllocatedAssets(transformedArray)  
+        }  
+      }
+     
      
     } catch (error) {
       console.error("Error from @components/assetManagement/allocated-asset.tsx",error)
@@ -84,7 +94,11 @@ const AllocatedAsset = () => {
 
   useEffect(() => {
     handleAllAllocatedAsset();
-  }, [])
+  }, []);
+
+  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
+    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+  };
 
 
   const headerGroup = (
@@ -98,6 +112,7 @@ const AllocatedAsset = () => {
 
   return (
     <>
+    <Toast ref={toast} />
       <h3>{t('reactflow:allocatedAsset')}</h3>
       <DataTable
         style={{ zoom: "92%" }}
@@ -117,7 +132,7 @@ const AllocatedAsset = () => {
         <Column
           field="assets"
           filter
-          body={(rowData) => rowData.assets.join(', ')}
+          body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
         >
         </Column>
       </DataTable>

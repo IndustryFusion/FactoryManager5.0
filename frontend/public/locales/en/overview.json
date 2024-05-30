@@ -2,9 +2,8 @@
     "factoryOverview": "Factory Overview",
     "importAsset": "Import Asset",
     "createFactory": "Create Factory",
-    "confirmation": "Confirmation",
-    "deleteWarning": "Are you sure you want to delete this factory",
-    "deleteAssetWarning": "Are you sure you want to delete",
+    "confirmation": "Confirm Delete",
+    "deleteWarning": "Are you sure you want to delete",
     "yes": "Yes",
     "no": "No"
 }
