@@ -58,7 +58,7 @@ interface UnAllocatedAssetState {
 interface PickListEvent {
     source: Asset[];
     target: Asset[];
-} 
+}
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const PicklistAssets = () => {
@@ -163,12 +163,12 @@ const PicklistAssets = () => {
         toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
     };
 
-    const onChange = (event:PickListEvent) => {
+    const onChange = (event: PickListEvent) => {
         setSource(event.source);
         setTarget(event.target);
     };
 
-    const itemTemplate = (item:Asset) => {
+    const itemTemplate = (item: Asset) => {
         if (relations?.length > 0) {
             toastShown = true;
         }
@@ -176,7 +176,7 @@ const PicklistAssets = () => {
         return (
             <>
                 <span className="list-items"
-                      style={{ fontWeight: firstElementClicked? "normal" : item.product_name== source[0]?.product_name ? "500":"normal" }}
+                    style={{ fontWeight: firstElementClicked ? "normal" : item.product_name == source[0]?.product_name ? "500" : "normal" }}
                     onClick={() => {
                         setFirstElementClicked(true);
                         selectItems(item.product_name, item.asset_category, item?.id)//relation
@@ -196,20 +196,15 @@ const PicklistAssets = () => {
     };
 
 
-
-
-
-
-    const shopfloorAssetIds = source.map(asset => asset?.id)
+    const shopfloorAssetIds = source.map(asset => asset?.id);
+    
     const getPayload = () => {
         if (!shopFloorValue?.id) {
-        
-           return;
+            return;
         }
         const shopfloorObj = {
             [shopFloorValue?.id]: shopfloorAssetIds
         };
-
         return shopfloorObj;
     }
 
@@ -217,7 +212,6 @@ const PicklistAssets = () => {
         const allocatedObj = {
             [factoryId]: shopfloorAssetIds
         }
-
         return allocatedObj;
     }
 
@@ -253,11 +247,11 @@ const PicklistAssets = () => {
                 showToast("success", "success", "Shopfloor assets saved successfully");
                 dispatch(reset());
             }
-          updateReactFlow(factoryId)
-        }   catch (error) {
+            updateReactFlow(factoryId)
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-               showToast('error', 'Error', "Saving shopFloor assets");
+                showToast('error', 'Error', "Saving shopFloor assets");
             }
         }
     }
@@ -271,18 +265,18 @@ const PicklistAssets = () => {
                 setSaveAllocatedAssets(!saveAllocatedAssets)
                 showToast("success", "success", "saved to allocated assets successfully")
             }
-          
-        }   catch (error) {  
+
+        } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-               showToast('error', 'Error', "Saving allocated assets");
+                showToast('error', 'Error', "Saving allocated assets");
             }
-           }
+        }
     }
 
     const headerSource = (
-        <div className="flex justify-content-between align-items-center gap-3">
-            <h3 style={{ fontSize: "16px" }}>ShopFloor Assets</h3>
+        <div className="flex justify-content-between align-items-center gap-3 ">
+            <h3 className="m-0" style={{  fontSize: "1.18rem" }}>ShopFloor Assets</h3>
             <Button onClick={() => {
                 handleSaveShopFloors()
                 handleAllocatedAssets();
@@ -291,10 +285,21 @@ const PicklistAssets = () => {
         </div>
     )
 
+    const targetSource = (
+        <>
+            <h3
+                style={{
+                    margin:0,
+                    fontSize: "1.18rem"
+                }}
+            >Unallocated Asset</h3>
+        </>
+    )
+
     return (
         <>
             <Toast ref={toast} />
-            <div className="flex ml-3 mb-3" >
+            <div className="flex ml-3 mb-6" >
                 <div className="p-input-icon-left" style={{ flex: "0 0 70%", marginLeft: "4rem" }}>
                     <i className="pi pi-search" />
                     <InputText
@@ -312,12 +317,15 @@ const PicklistAssets = () => {
                     />
                 </div>
             </div>
-            <PickList dataKey="id" source={source} target={target}
+            <PickList
+                className="picklist-asset"
+                dataKey="id"
+                source={source} target={target}
                 onChange={onChange}
                 breakpoint="1280px"
-                sourceHeader={headerSource} targetHeader="Unallocated Assets"
+                sourceHeader={headerSource} targetHeader={targetSource}
                 itemTemplate={itemTemplate}
-                sourceStyle={{ height: '21rem' }} targetStyle={{ height: '40rem' }} />
+                sourceStyle={{ height: '23rem' }} targetStyle={{ height: '40rem' }} />
         </>
     )
 }

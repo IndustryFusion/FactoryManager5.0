@@ -109,7 +109,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
             alerts.map((alert, index) => {
               try {
                 const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource));
-                const text = alert?.text;
+                const text = alert?.text;               
                 const parts = text.split('. ');
                 const extractedTextAfterFirstPeriod = parts[parts.length - 1];
 
@@ -121,8 +121,10 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 if (Array.isArray(match) && match?.length > 0) {
                   const fragment = match[0].toString().split("/").pop();
                   updatedText = `Property ${fragment} : ${extractedTextAfterFirstPeriod}`;
-                } else {
+                } else if(text === "All ok") {
                   return;
+                }else{
+                  updatedText = text;
                 }
 
                 return (
