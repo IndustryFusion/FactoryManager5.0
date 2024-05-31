@@ -18,6 +18,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ deleteDialog, setDeleteDial
     return (
         <>
             <Dialog
+            style={{width:"600px"}}
                 visible={deleteDialog}
                 onHide={() => setDeleteDialog(false)}
                 header={header}
