@@ -530,7 +530,7 @@ const FlowEditor: React.FC<
         summary: "Error in Server",
         life: 3000,
       });
-      dispatch(reset());
+      //dispatch(reset());
     } finally {
       setIsOperationInProgress(false);
     }

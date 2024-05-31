@@ -123,7 +123,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       }
     }
 
-  }, [factoryId, router.isReady, unAllocatedAssetData]);
+  }, [factoryId, router.isReady]);
 
   useEffect(() => {
     const results = assets.filter(asset => {
