@@ -158,7 +158,8 @@ export async function getServerSideProps({ locale }: { locale: string }) {
         'placeholder',
         'reactflow',
         'dashboard',
-        'placeholder'
+        'placeholder',
+        'overview'
       ])),
     },
   }
