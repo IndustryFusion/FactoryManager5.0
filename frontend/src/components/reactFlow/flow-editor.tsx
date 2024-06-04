@@ -1,20 +1,26 @@
-// 
-// Copyright (c) 2024 IB Systems GmbH 
-// 
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
-// 
-//    http://www.apache.org/licenses/LICENSE-2.0 
-// 
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
-// limitations under the License. 
-// 
+//
+// Copyright (c) 2024 IB Systems GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-import React, { useState, useEffect, useRef, useCallback, MouseEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  MouseEvent,
+} from "react";
 import { useRouter } from "next/router";
 import { useHotkeys } from "react-hotkeys-hook"; // Import the hook for handling keyboard shortcuts
 import ReactFlow, {
@@ -28,7 +34,10 @@ import ReactFlow, {
   OnSelectionChangeParams,
   Node,
   ReactFlowInstance,
-  Connection, NodeMouseHandler,NodeChange, EdgeChange
+  Connection,
+  NodeMouseHandler,
+  NodeChange,
+  EdgeChange,
 } from "reactflow";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -48,60 +57,26 @@ import { BlockUI } from "primereact/blockui";
 import { useDispatch } from "react-redux";
 import { reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { InputSwitch } from "primereact/inputswitch";
-import dagre from '@dagrejs/dagre';
+import dagre from "@dagrejs/dagre";
 import { Dialog } from "primereact/dialog";
 import "../../styles/react-flow.css";
 import { useTranslation } from "next-i18next";
+import {
+  FlowEditorProps,
+  RelationCounts,
+  ExtendedNodeData,
+  Edge,
+  ExtendedNode,
+  FactoryNodeData,
+} from "../../types/reactflow";
+import {
+  applyDagreLayout,
+  getAllConnectedNodesBelow,
+} from "../../utility/react-flow-utility";
 
 const nodeTypes = {
   asset: CustomAssetNode,
 };
-interface FlowEditorProps {
-  factory: Factory;
-  factoryId: string;
-}
-
-
-interface RelationCounts {
-  [key: string]: number;
-}
-
-interface ExtendedNodeData {
-  label: string;
-  id: string;
-  asset_category?:string
-}
-interface Edge {
-  source: string;
-  target: string;
-}
-
-interface ExtendedNode extends Node<ExtendedNodeData> {
-  width: number;
-  height: number;
-  selected: boolean;
-  dragging: boolean;
-  positionAbsolute: {
-    x: number;
-    y: number;
-  };
-
-  data:{
-    type:string,
-    label:string,
-    id:string,
-    class?:string
-    parentId?:string,
-  },
-  asset_category?: string
-
-
-}
-interface FactoryNodeData {
-  label?: string;
-  type: string;
-  undeletable?: boolean;
-}
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
@@ -109,7 +84,8 @@ const FlowEditor: React.FC<
 > = ({ factory, factoryId, deletedShopFloors }) => {
   const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
-  const [selectedElements, setSelectedElements] = useState<OnSelectionChangeParams | null>(null);
+  const [selectedElements, setSelectedElements] =
+    useState<OnSelectionChangeParams | null>(null);
   const onSelectionChange = useCallback(
     (params: OnSelectionChangeParams | null) => {
       setSelectedElements(params);
@@ -120,7 +96,8 @@ const FlowEditor: React.FC<
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
   const elementRef = useRef(null);
   const [loadedFlowEditor, setLoadedFlowEditor] = useState(false);
   const [relationCounts, setRelationCounts] = useState<Record<string, number>>(
@@ -136,11 +113,18 @@ const FlowEditor: React.FC<
   const [switchView, setSwitchView] = useState(false);
   const dispatch = useDispatch();
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(null);
-  const { t } = useTranslation(['button', 'reactflow']);
-  
+  const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(
+    null
+  );
+  const { t } = useTranslation(["button", "reactflow"]);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
-  const createRelationNodeAndEdge = (assetId: string, relationsInput: string, relationClass: string) => {
+  const createRelationNodeAndEdge = (
+    assetId: string,
+    relationsInput: string,
+    relationClass: string
+  ) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
@@ -197,9 +181,8 @@ const FlowEditor: React.FC<
       //  new edge connecting the asset node to the new relation node
       const newEdge = {
         id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${new Date().getTime()}`,
-        source: selectedAsset ?? '',
-        target: relationNodeId ?? '',
-
+        source: selectedAsset ?? "",
+        target: relationNodeId ?? "",
       };
 
       // Update state with the new node and edge
@@ -208,11 +191,7 @@ const FlowEditor: React.FC<
     });
   };
 
-
-
-
   useEffect(() => {
-
     const originalWarn = console.warn;
     console.warn = (...args) => {
       const [message] = args;
@@ -221,7 +200,7 @@ const FlowEditor: React.FC<
       }
     };
 
-    //@desc : When we create new ShopFloor 
+    //@desc : When we create new ShopFloor
     if (latestShopFloor && reactFlowInstance) {
       const factoryNodeId = `factory_${factoryId}`;
       const factoryNode = nodes.find((node) => node.id === factoryNodeId);
@@ -256,35 +235,40 @@ const FlowEditor: React.FC<
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}_${new Date().getTime()}`,
           source: factoryNodeId,
           target: shopFloorNodeId,
-
         };
 
         setEdges((eds) => [...eds, newEdge]);
       }
     }
- 
-  
+
     if (deletedShopFloors && deletedShopFloors.length > 0) {
-    let nodesUpdated = false;
+      let nodesUpdated = false;
 
-    deletedShopFloors.forEach((deletedShopFloorId) => {
-      const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
+      deletedShopFloors.forEach((deletedShopFloorId) => {
+        const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
 
-      setNodes((nodes) => {
-        const updatedNodes = nodes.filter((node) => node.id !== shopFloorNodeId);
-        if (updatedNodes.length !== nodes.length) {
-          nodesUpdated = true;
-        }
-        return updatedNodes;
+        setNodes((nodes) => {
+          const updatedNodes = nodes.filter(
+            (node) => node.id !== shopFloorNodeId
+          );
+          if (updatedNodes.length !== nodes.length) {
+            nodesUpdated = true;
+          }
+          return updatedNodes;
+        });
+
+        setEdges((edges) =>
+          edges.filter(
+            (edge) =>
+              edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
+          )
+        );
       });
 
-      setEdges((edges) => edges.filter((edge) => edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId));
-    });
-
-    if (nodesUpdated) {
-      saveOrUpdate();
+      if (nodesUpdated) {
+        saveOrUpdate();
+      }
     }
-  }
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -300,11 +284,11 @@ const FlowEditor: React.FC<
 
       setNodes((currentNodes) => [...currentNodes, factoryNode]);
       getMongoDataFlowEditor();
-      setLoadedFlowEditor(true)
+      setLoadedFlowEditor(true);
     }
     if (toastMessage) {
       toast.current?.show({
-        severity: 'success',
+        severity: "success",
         summary: toastMessage,
         life: 3000,
       });
@@ -314,130 +298,139 @@ const FlowEditor: React.FC<
     return () => {
       console.warn = originalWarn;
     };
-
-  }, [latestShopFloor, reactFlowInstance, nodes,edges,deletedShopFloors]);
-
+  }, [latestShopFloor, reactFlowInstance, nodes, edges, deletedShopFloors]);
 
   const checkForNewAdditionsNodesEdges = useCallback(() => {
-    const newNodesAdded = nodes.length > originalNodes.length || nodes.length < originalNodes.length;
-    const newEdgesAdded = edges.length > originalEdges.length || edges.length < originalEdges.length;
+    const newNodesAdded =
+      nodes.length > originalNodes.length ||
+      nodes.length < originalNodes.length;
+    const newEdgesAdded =
+      edges.length > originalEdges.length ||
+      edges.length < originalEdges.length;
 
     return newNodesAdded || newEdgesAdded;
   }, [nodes, edges, originalNodes, originalEdges]);
 
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChangeProvide(changes);
+      if (isRestored && checkForNewAdditionsNodesEdges()) {
+        setHasChanges(true);
+      }
+    },
+    [onNodesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]
+  );
 
-  const onNodesChange = useCallback((changes: NodeChange[]) => {
-    onNodesChangeProvide(changes);
-    if (isRestored && checkForNewAdditionsNodesEdges()) {
-      setHasChanges(true);
-    }
-  }, [onNodesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]);
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      onEdgesChangeProvide(changes);
+      if (isRestored && checkForNewAdditionsNodesEdges()) {
+        setHasChanges(true);
+      }
+    },
+    [onEdgesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]
+  );
 
-  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    onEdgesChangeProvide(changes);
-    if (isRestored && checkForNewAdditionsNodesEdges()) {
-      setHasChanges(true);
-    }
-  }, [onEdgesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]);
+  // @desc:
+  //@GET : the React Flow data for the specified factory ID both mongo
+  const getMongoDataFlowEditor = useCallback(async () => {
+    if (factoryId) {
+      try {
+        setIsOperationInProgress(true);
 
+        const getReactFlowMongo = await axios.get(
+          `${API_URL}/react-flow/${factoryId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            withCredentials: true,
+          }
+        );
 
-// @desc: 
-//@GET : the React Flow data for the specified factory ID both mongo 
-const getMongoDataFlowEditor = useCallback(async () => {
-  if (factoryId) {
-    try {
-      setIsOperationInProgress(true);
+        if (
+          getReactFlowMongo.data &&
+          getReactFlowMongo.data.factoryData.nodes &&
+          getReactFlowMongo.data.factoryData.edges
+        ) {
+          const dagreGraph = new dagre.graphlib.Graph();
+          dagreGraph.setGraph({
+            ranksep: 30, // @desc: Set vertical spacing between nodes
+            nodesep: 90, // @desc: Set horizontal spacing between nodes
+          });
+          dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-     
-      const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
+          // @desc: Add nodes to the dagre graph
+          getReactFlowMongo.data.factoryData.nodes.forEach((node: Node) => {
+            dagreGraph.setNode(node.id, { width: 100, height: 100 });
+          });
 
-      if (
-        getReactFlowMongo.data &&
-        getReactFlowMongo.data.factoryData.nodes &&
-        getReactFlowMongo.data.factoryData.edges
-      ) {
-        const dagreGraph = new dagre.graphlib.Graph();
-        dagreGraph.setGraph({
-          ranksep: 30,     // @desc: Set vertical spacing between nodes
-          nodesep: 90      // @desc: Set horizontal spacing between nodes
-        });
-        dagreGraph.setDefaultEdgeLabel(() => ({}));
+          // @desc: Add edges to the dagre graph
+          getReactFlowMongo.data.factoryData.edges.forEach((edge: Edge) => {
+            dagreGraph.setEdge(edge.source, edge.target);
+          });
 
-        // @desc: Add nodes to the dagre graph
-        getReactFlowMongo.data.factoryData.nodes.forEach((node:Node) => {
-          dagreGraph.setNode(node.id, { width: 100, height: 100 });
-        });
+          // @desc: Auto layout the nodes using dagre
+          dagre.layout(dagreGraph);
 
-       // @desc: Add edges to the dagre graph
-        getReactFlowMongo.data.factoryData.edges.forEach((edge:Edge) => {
-          dagreGraph.setEdge(edge.source, edge.target);
-        });
+          // @desc: Map nodes to the new positions provided by dagre
+          const layoutedNodes = getReactFlowMongo.data.factoryData.nodes.map(
+            (node: Node) => {
+              const nodeWithPosition = dagreGraph.node(node.id);
+              return {
+                ...node,
+                position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
+              };
+            }
+          );
 
-        // @desc: Auto layout the nodes using dagre
-        dagre.layout(dagreGraph);
- 
-        // @desc: Map nodes to the new positions provided by dagre
-        const layoutedNodes = getReactFlowMongo.data.factoryData.nodes.map((node:Node) => {
-          const nodeWithPosition = dagreGraph.node(node.id);
-          return {
-            ...node,
-            position: { x: nodeWithPosition.x, y: nodeWithPosition.y }
-          };
-        });
+          setNodes(layoutedNodes);
+          setEdges(getReactFlowMongo.data.factoryData.edges);
 
-     
-        setNodes(layoutedNodes);
-        setEdges(getReactFlowMongo.data.factoryData.edges);
+          // @desc: Set the original nodes and edges for comparison
+          setOriginalNodes(layoutedNodes);
+          setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
 
-        // @desc: Set the original nodes and edges for comparison
-        setOriginalNodes(layoutedNodes);
-        setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+          setIsRestored(true);
+          const updatedRelationCounts: RelationCounts = {};
 
-        setIsRestored(true);
-        const updatedRelationCounts: RelationCounts = {};
-
-        // @desc: Update relation counts based on the highest count for each relation
-        layoutedNodes.forEach((node: Node) => {
-          if (node.data.type === "relation") {
-            // node IDs follow the format "relation-relationName_count"
-            const match = node.id.match(/relation-(.+)_([0-9]+)/);
-            if (match) {
-              const [, relationName, count] = match;
-              const numericCount = parseInt(count, 10);
-              // Update the relationCounts state with the highest count for each relation
-              if (
-                !updatedRelationCounts[relationName] ||
-                updatedRelationCounts[relationName] < numericCount
-              ) {
-                updatedRelationCounts[relationName] = numericCount;
+          // @desc: Update relation counts based on the highest count for each relation
+          layoutedNodes.forEach((node: Node) => {
+            if (node.data.type === "relation") {
+              // node IDs follow the format "relation-relationName_count"
+              const match = node.id.match(/relation-(.+)_([0-9]+)/);
+              if (match) {
+                const [, relationName, count] = match;
+                const numericCount = parseInt(count, 10);
+                // Update the relationCounts state with the highest count for each relation
+                if (
+                  !updatedRelationCounts[relationName] ||
+                  updatedRelationCounts[relationName] < numericCount
+                ) {
+                  updatedRelationCounts[relationName] = numericCount;
+                }
               }
             }
-          }
-        });
+          });
 
-        setRelationCounts(updatedRelationCounts);
+          setRelationCounts(updatedRelationCounts);
+        } else {
+          console.log(
+            "Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching flowchart data:", error);
+      } finally {
+        setIsOperationInProgress(false);
       }
-       else {
-        console.log("Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor");
-      }
-    } catch (error) {
-      console.error("Error fetching flowchart data:", error);
-    } finally {
-      setIsOperationInProgress(false);
     }
-  }
-}, [setNodes, setEdges, factoryId, setRelationCounts]);
+  }, [setNodes, setEdges, factoryId, setRelationCounts]);
 
- // @desc: 
- //@PATCH : the React Flow data for the specified factory ID ( both mongo and scorpio)
+  // @desc:
+  //@PATCH : the React Flow data for the specified factory ID ( both mongo and scorpio)
   const updateMongoAndScorpio = useCallback(async () => {
- 
     const payLoad = {
       factoryId: factoryId,
 
@@ -461,7 +454,6 @@ const getMongoDataFlowEditor = useCallback(async () => {
     };
 
     try {
-
       setIsOperationInProgress(true);
 
       const reactFlowUpdateMongo = await axios.patch(
@@ -480,32 +472,35 @@ const getMongoDataFlowEditor = useCallback(async () => {
       if (reactFlowUpdateMongo.status == 200) {
         setToastMessage("Flowchart Updated successfully");
       } else {
-       toast.current?.show({
-        severity: 'warn',
-        summary: 'Flowchart not updated',
-        life: 3000,
-      });
+        toast.current?.show({
+          severity: "warn",
+          summary: "Flowchart not updated",
+          life: 3000,
+        });
       }
-      const reactAllocatedAssetScorpio = await axios.patch(`${API_URL}/allocated-asset`,
-        payLoad.factoryData.edges, {
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-    
-      if (reactAllocatedAssetScorpio.status == 200 ) {
+      const reactAllocatedAssetScorpio = await axios.patch(
+        `${API_URL}/allocated-asset`,
+        payLoad.factoryData.edges,
+        {
+          params: {
+            "factory-id": factoryId,
+          },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (reactAllocatedAssetScorpio.status == 200) {
         setToastMessage("Allocated Asset Scorpio Updated");
       } else {
         toast.current?.show({
-        severity: 'error',
-        summary: 'Alocated asset not updated',
-        life: 3000,
-      });
+          severity: "error",
+          summary: "Alocated asset not updated",
+          life: 3000,
+        });
       }
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
@@ -522,33 +517,28 @@ const getMongoDataFlowEditor = useCallback(async () => {
         setToastMessage("Scorpio updated successfully");
       } else {
         toast.current?.show({
-        severity: 'warn',
-        summary: 'Scorpio Not Updated',
-        life: 3000,
-      });
+          severity: "warn",
+          summary: "Scorpio Not Updated",
+          life: 3000,
+        });
       }
-     dispatch(reset());
-
+      dispatch(reset());
     } catch (error) {
-    console.error("Error saving flowchart:", error);
-    toast.current?.show({
-        severity: 'error',
-        summary: 'Error in Server',
+      console.error("Error saving flowchart:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error in Server",
         life: 3000,
       });
-        dispatch(reset());
-    }
-    finally {
+      //dispatch(reset());
+    } finally {
       setIsOperationInProgress(false);
-     
-
     }
   }, [nodes, edges, factoryId]);
 
-  //@desc: 
+  //@desc:
   //@POST : the React Flow data for the specified factory ID , both mongo and scorpio
   const saveMongoAndScorpio = useCallback(async () => {
-
     const payLoad = {
       factoryId: factoryId,
 
@@ -572,45 +562,51 @@ const getMongoDataFlowEditor = useCallback(async () => {
     };
 
     try {
-
       setIsOperationInProgress(true);
-      const reactFlowUpdateMongo = await axios.post(`${API_URL}/react-flow`, payLoad, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
+      const reactFlowUpdateMongo = await axios.post(
+        `${API_URL}/react-flow`,
+        payLoad,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       if (reactFlowUpdateMongo.status == 201) {
         setToastMessage("Flowchart created successfully");
       } else {
-       toast.current?.show({
-        severity: 'warn',
-        summary: 'Flowchart Not created',
-        life: 3000,
-      });
+        toast.current?.show({
+          severity: "warn",
+          summary: "Flowchart Not created",
+          life: 3000,
+        });
       }
-  
-      const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-        payLoad.factoryData.edges, {
-        params: {
-          "factory-id": factoryId,
-        },
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
+
+      const reactAllocatedAssetScorpio = await axios.post(
+        API_URL + "/allocated-asset",
+        payLoad.factoryData.edges,
+        {
+          params: {
+            "factory-id": factoryId,
+          },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
       if (reactAllocatedAssetScorpio.status == 201) {
         setToastMessage("Allocated Asset Scorpio created");
       } else {
         toast.current?.show({
-        severity: 'warn',
-        summary: 'Allocated Asset not created',
-        life: 3000,
-      });
+          severity: "warn",
+          summary: "Allocated Asset not created",
+          life: 3000,
+        });
       }
 
       const reactFlowScorpioUpdate = await axios.patch(
@@ -630,28 +626,26 @@ const getMongoDataFlowEditor = useCallback(async () => {
         setToastMessage("Scorpio updated successfully");
       } else {
         toast.current?.show({
-        severity: 'warn',
-        summary: 'Scorpio Not Updated',
-        life: 3000,
-      });
+          severity: "warn",
+          summary: "Scorpio Not Updated",
+          life: 3000,
+        });
       }
     } catch (error) {
       console.error("Error saving flowchart:", error);
       toast.current?.show({
-        severity: 'error',
-        summary: 'Server Error : Not Saved',
+        severity: "error",
+        summary: "Server Error : Not Saved",
         life: 3000,
       });
-      
-    }
-    finally {
+    } finally {
       setIsOperationInProgress(false);
     }
   }, [nodes, edges, factoryId]);
-  
+
   //@desc :
   //@DELETE : the React Flow data for the specified factory ID, both mongo and scorpio(except Factory Node and ShopFloor Node)
-  
+
   const deleteMongoAndScorpio = async () => {
     const preservedNodeTypes = new Set(["factory", "shopFloor"]);
     const preservedNodes = nodes.filter((node) =>
@@ -671,8 +665,8 @@ const getMongoDataFlowEditor = useCallback(async () => {
     const payLoad = {
       factoryId: factoryId,
       factoryData: {
-      nodes:preservedNodes,
-      edges:preservedEdges
+        nodes: preservedNodes,
+        edges: preservedEdges,
       },
     };
 
@@ -689,202 +683,19 @@ const getMongoDataFlowEditor = useCallback(async () => {
         }
       );
 
-      const allocatedAssetDeletion = await axios.delete(`${API_URL}/allocated-asset`,{
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-        params:{
-          "id": `${factoryId}:allocated-assets`
-        }
-        
-      });
-      const reactFlowScorpioUpdate =  await axios.patch(
-        `${API_URL}/shop-floor/update-react`,
-        payLoad.factoryData.edges,
+      const allocatedAssetDeletion = await axios.delete(
+        `${API_URL}/allocated-asset`,
         {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
           withCredentials: true,
-        }
-      );
-      if (allocatedAssetDeletion.status == 200 && reactFlowUpdateMongo.status == 200 && reactFlowScorpioUpdate.status == 200 ) {
-        setToastMessage( "Successfully updated");
-      }
-      else{
-        toast.current?.show({
-        severity: 'warn',
-        summary: 'Not Updated Properly',
-        life: 3000,
-      });
-      }
-      dispatch(reset());
-    } catch (error) {
-      console.log("Error from deleteMongoAndScorpio function @pages/factory-site/react-flow/flow-editor", error);
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Server Error : Not Updated',
-        life: 3000,
-      });
-    } finally {
-      setIsOperationInProgress(false);
-   
-    }
-  };
-  //@desc :
-  //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
- const refreshFromScorpio = async () => {
-  const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
-  try {
-    setIsOperationInProgress(true);  // Show a loading indicator or disable UI elements
-    const response = await axios.get(reactFlowUpdate, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
-
-    setToastMessage('Refresh Completed');
-    await getMongoDataFlowEditor(); 
-  } catch (error) {
-    console.error('Failed to update flowchart:', error);
-    toast.current?.show({
-        severity: 'error',
-        summary: 'Failed to refresh flowchart',
-        life: 3000,
-      });
-  } finally {
-    setIsOperationInProgress(false);  // Hide loading indicator or enable UI elements
-  }
-};
-
-//@desc: helps to decide when to save or update data according to different reactflow scenarios
-//@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio 
-  const saveOrUpdate = useCallback(async () => {
-  try {
-    setIsOperationInProgress(true);
-
-    // Fetch the current state from the server to determine the nature of the flowchart
-    const getReactFlowMongo = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
- 
-    // Check if the response data exists and has the necessary elements
-    const data = getReactFlowMongo.data;
-    const isEmpty = !data || Object.keys(data).length === 0 || !data.factoryData;
-
-   
-    if (isEmpty) {
-      await saveMongoAndScorpio();
-    } else {
-      // Check if edges only connect factory to shopFloor\\
-      const onlyFactoryToShopFloor = data.factoryData.edges.every((edge:Edge) => 
-        edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_")
-      );
-      const existingEdgesFactToShopFloor = edges.every((edge:Edge) => edge.source.startsWith("factory_") && edge.target.startsWith("shopFloor_"));
-      if (onlyFactoryToShopFloor ||!existingEdgesFactToShopFloor) {
-      const payLoad = {
-      factoryId: factoryId,
-
-      factoryData: {
-        nodes: nodes.map(({ id, type, position, data, style }) => ({
-          id,
-          type,
-          position,
-          data,
-          style,
-        })),
-        edges: edges.map(({ id, source, target, type, data }) => ({
-          id,
-          source,
-          target,
-
-          type,
-          data,
-        })),
-      },
-    };
-
-       const reactFlowUpdateMongo=  await axios.patch(`${API_URL}/react-flow/${factoryId}`, payLoad,{
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+          params: {
+            id: `${factoryId}:allocated-assets`,
           },
-          withCredentials: true,
-        });
-        if (reactFlowUpdateMongo.status == 200) {
-            setToastMessage("Flowchart updated");
-          } else {
-            toast.current?.show({
-              severity: 'warn',
-              summary: 'Flowchart not updated',
-              life: 3000,
-            });
-          }
-
-         const allocatedAssetAvailableOrNot = await axios.get(`${API_URL}/allocated-asset/${factoryId}`,  {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              withCredentials: true,
-            });
-
-        if(allocatedAssetAvailableOrNot.data.length==0){
-          const reactAllocatedAssetScorpio = await axios.post(API_URL + '/allocated-asset',
-                  payLoad.factoryData.edges, {
-                  params: {
-                    "factory-id": factoryId,
-                  },
-                  headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                  },
-                  withCredentials: true,
-                });
-                if (reactAllocatedAssetScorpio.status == 201) {
-                    setToastMessage("Allocated Asset in Scorpio created ");
-                  } else {
-                    toast.current?.show({
-                      severity: 'warn',
-                      summary: 'Allocated Asset Not created',
-                      life: 3000,
-                    });
-                  }
         }
-
-        else
-        {
-           const reactAllocatedAssetScorpio = await axios.patch(API_URL + '/allocated-asset',
-              payLoad.factoryData.edges, {
-              params: {
-                "factory-id": factoryId,
-              },
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              withCredentials: true,
-            });
-             if (reactAllocatedAssetScorpio.status == 200) {
-                setToastMessage("Allocated Asset Scorpio Updated");
-              } else {
-                toast.current?.show({
-                severity: 'warn',
-                summary: 'Allocated Asset Scorpio Not Updated',
-                life: 3000,
-              });
-              }
-         }
-       
+      );
       const reactFlowScorpioUpdate = await axios.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
@@ -894,127 +705,385 @@ const getMongoDataFlowEditor = useCallback(async () => {
             Accept: "application/json",
           },
           withCredentials: true,
-          params: { id: factoryId },
         }
       );
-        dispatch(reset());
-      if (reactFlowScorpioUpdate.status == 200) {
-        setToastMessage("Scorpio updated successfully");
-      } 
-      else {
+      if (
+        allocatedAssetDeletion.status == 200 &&
+        reactFlowUpdateMongo.status == 200 &&
+        reactFlowScorpioUpdate.status == 200
+      ) {
+        setToastMessage("Successfully updated");
+      } else {
         toast.current?.show({
-          severity: 'warn',
-          summary: 'Scorpio Not Updated',
+          severity: "warn",
+          summary: "Not Updated Properly",
           life: 3000,
         });
       }
-    
-      } 
-      else {
-        await updateMongoAndScorpio();
-      
-      }
+      dispatch(reset());
+    } catch (error) {
+      console.log(
+        "Error from deleteMongoAndScorpio function @pages/factory-site/react-flow/flow-editor",
+        error
+      );
+      toast.current?.show({
+        severity: "error",
+        summary: "Server Error : Not Updated",
+        life: 3000,
+      });
+    } finally {
+      setIsOperationInProgress(false);
     }
-  } catch (error) {
-    console.log("Error from saveOrUpdate function @pages/factory-site/react-flow/flow-editor", error);
-    toast.current?.show({
-          severity: 'error',
-          summary: 'Server Error',
-          life: 3000,
-        });
-  } finally {
-    setIsOperationInProgress(false);
-  }
-}, [factoryId, saveMongoAndScorpio]);
+  };
+  //@desc :
+  //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
+  const refreshFromScorpio = async () => {
+    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+    try {
+      setIsOperationInProgress(true); // Show a loading indicator or disable UI elements
+      const response = await axios.get(reactFlowUpdate, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
 
+      setToastMessage("Refresh Completed");
+      await getMongoDataFlowEditor();
+    } catch (error) {
+      console.error("Failed to update flowchart:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Failed to refresh flowchart",
+        life: 3000,
+      });
+    } finally {
+      setIsOperationInProgress(false); // Hide loading indicator or enable UI elements
+    }
+  };
 
+  //@desc: helps to decide when to save or update data according to different reactflow scenarios
+  //@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio
+  const saveOrUpdate = useCallback(async () => {
+    try {
+      setIsOperationInProgress(true);
+
+      // Fetch the current state from the server to determine the nature of the flowchart
+      const getReactFlowMongo = await axios.get(
+        `${API_URL}/react-flow/${factoryId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      // Check if the response data exists and has the necessary elements
+      const data = getReactFlowMongo.data;
+      const isEmpty =
+        !data || Object.keys(data).length === 0 || !data.factoryData;
+
+      if (isEmpty) {
+        await saveMongoAndScorpio();
+      } else {
+        // Check if edges only connect factory to shopFloor\\
+        const onlyFactoryToShopFloor = data.factoryData.edges.every(
+          (edge: Edge) =>
+            edge.source.startsWith("factory_") &&
+            edge.target.startsWith("shopFloor_")
+        );
+        const existingEdgesFactToShopFloor = edges.every(
+          (edge: Edge) =>
+            edge.source.startsWith("factory_") &&
+            edge.target.startsWith("shopFloor_")
+        );
+        if (onlyFactoryToShopFloor || !existingEdgesFactToShopFloor) {
+          const payLoad = {
+            factoryId: factoryId,
+
+            factoryData: {
+              nodes: nodes.map(({ id, type, position, data, style }) => ({
+                id,
+                type,
+                position,
+                data,
+                style,
+              })),
+              edges: edges.map(({ id, source, target, type, data }) => ({
+                id,
+                source,
+                target,
+
+                type,
+                data,
+              })),
+            },
+          };
+
+          const reactFlowUpdateMongo = await axios.patch(
+            `${API_URL}/react-flow/${factoryId}`,
+            payLoad,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            }
+          );
+          if (reactFlowUpdateMongo.status == 200) {
+            setToastMessage("Flowchart updated");
+          } else {
+            toast.current?.show({
+              severity: "warn",
+              summary: "Flowchart not updated",
+              life: 3000,
+            });
+          }
+
+          const allocatedAssetAvailableOrNot = await axios.get(
+            `${API_URL}/allocated-asset/${factoryId}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+            }
+          );
+
+          if (allocatedAssetAvailableOrNot.data.length == 0) {
+            const reactAllocatedAssetScorpio = await axios.post(
+              API_URL + "/allocated-asset",
+              payLoad.factoryData.edges,
+              {
+                params: {
+                  "factory-id": factoryId,
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                withCredentials: true,
+              }
+            );
+            if (reactAllocatedAssetScorpio.status == 201) {
+              setToastMessage("Allocated Asset in Scorpio created ");
+            } else {
+              toast.current?.show({
+                severity: "warn",
+                summary: "Allocated Asset Not created",
+                life: 3000,
+              });
+            }
+          } else {
+            const reactAllocatedAssetScorpio = await axios.patch(
+              API_URL + "/allocated-asset",
+              payLoad.factoryData.edges,
+              {
+                params: {
+                  "factory-id": factoryId,
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                withCredentials: true,
+              }
+            );
+            if (reactAllocatedAssetScorpio.status == 200) {
+              setToastMessage("Allocated Asset Scorpio Updated");
+            } else {
+              toast.current?.show({
+                severity: "warn",
+                summary: "Allocated Asset Scorpio Not Updated",
+                life: 3000,
+              });
+            }
+          }
+
+          const reactFlowScorpioUpdate = await axios.patch(
+            `${API_URL}/shop-floor/update-react`,
+            payLoad.factoryData.edges,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              withCredentials: true,
+              params: { id: factoryId },
+            }
+          );
+          dispatch(reset());
+          if (reactFlowScorpioUpdate.status == 200) {
+            setToastMessage("Scorpio updated successfully");
+          } else {
+            toast.current?.show({
+              severity: "warn",
+              summary: "Scorpio Not Updated",
+              life: 3000,
+            });
+          }
+        } else {
+          await updateMongoAndScorpio();
+        }
+      }
+    } catch (error) {
+      console.log(
+        "Error from saveOrUpdate function @pages/factory-site/react-flow/flow-editor",
+        error
+      );
+      toast.current?.show({
+        severity: "error",
+        summary: "Server Error",
+        life: 3000,
+      });
+    } finally {
+      setIsOperationInProgress(false);
+    }
+  }, [factoryId, saveMongoAndScorpio]);
 
   useEffect(() => {
-  let isRouteChangeAllowed = true; // control navigation flow
+    let isRouteChangeAllowed = true; // control navigation flow
 
-  const handleRouteChange = async (url:string) => {
-    if (hasChanges && isRouteChangeAllowed) {
-      isRouteChangeAllowed = false; // Prevent further navigation attempts while saving
-      try {
-        await saveOrUpdate(); 
-        // router.push(url); 
-      } catch (error) {
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Save Failed',
-          detail: 'Failed to save changes!'
-        });
-        console.error('Failed to save changes:', error);
-      } finally {
-        isRouteChangeAllowed = true; // Reset the navigation flag
+    const handleRouteChange = async (url: string) => {
+      if (hasChanges && isRouteChangeAllowed) {
+        isRouteChangeAllowed = false; // Prevent further navigation attempts while saving
+        try {
+          await saveOrUpdate();
+          // router.push(url);
+        } catch (error) {
+          toast.current?.show({
+            severity: "error",
+            summary: "Save Failed",
+            detail: "Failed to save changes!",
+          });
+          console.error("Failed to save changes:", error);
+        } finally {
+          isRouteChangeAllowed = true; // Reset the navigation flag
+        }
+        return false; // Block navigation until save is complete
       }
-      return false; // Block navigation until save is complete
-    }
-    return true; // Allow navigation if no changes or after save
-  };
+      return true; // Allow navigation if no changes or after save
+    };
 
-  const routeChangeHandler = (url:string) => {
-    if (!handleRouteChange(url)) {
-      router.events.emit('routeChangeError');
-      throw new Error('Route change aborted due to pending changes.');
-    }
-  };
+    const routeChangeHandler = (url: string) => {
+      if (!handleRouteChange(url)) {
+        router.events.emit("routeChangeError");
+        throw new Error("Route change aborted due to pending changes.");
+      }
+    };
 
-  router.events.on('routeChangeStart', routeChangeHandler);
+    router.events.on("routeChangeStart", routeChangeHandler);
 
-  return () => {
-    router.events.off('routeChangeStart', routeChangeHandler);
-  };
-}, [hasChanges, saveOrUpdate, router, toast]);
+    return () => {
+      router.events.off("routeChangeStart", routeChangeHandler);
+    };
+  }, [hasChanges, saveOrUpdate, router, toast]);
 
-
-
-const handleExportClick = () => {
+  const handleExportClick = () => {
     if (elementRef.current) {
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
     }
   };
 
-  const onElementClick: NodeMouseHandler = useCallback((event, element
-  ) => {
-    if (element.type === "asset") {
-      // Fetch asset details and set relations
-      getAssetRelationById(element.data.id)
-        .then(() => {
+const onElementClick: NodeMouseHandler = useCallback(
+  (event, element) => {
+    if (element.type === "asset" || element.type === "shopFloor") {
+      const isAsset = element.type === "asset";
+      const newExpandedState = isAsset
+        ? new Set(expandedAssets)
+        : new Set(expandedNodes);
 
-          setSelectedAsset(element.id);
+      setSelectedAsset(element.id);
 
-        })
-        .catch((error) =>
-          console.error("Error fetching asset details:", error)
-        );
+      if (newExpandedState.has(element.id)) {
+        newExpandedState.delete(element.id);
+      } else {
+        newExpandedState.add(element.id);
+      }
+
+      if (isAsset) {
+        setExpandedAssets(newExpandedState);
+      } else {
+        setExpandedNodes(newExpandedState);
+      }
+
+      const connectedNodeIds = getAllConnectedNodesBelow(
+        element.id,
+        nodes as [],
+        edges as []
+      );
+
+      const newNodes = nodes.map((node) => {
+        if (connectedNodeIds.has(node.id)) {
+          return { ...node, hidden: !newExpandedState.has(element.id) };
+        }
+        return node;
+      });
+
+      const newEdges = edges.map((edge) => {
+        if (
+          connectedNodeIds.has(edge.source) ||
+          connectedNodeIds.has(edge.target)
+        ) {
+          return { ...edge, hidden: !newExpandedState.has(element.id) };
+        }
+        return edge;
+      });
+
+      // Ensure unique edges to avoid duplicates
+      const uniqueEdges = newEdges.filter(
+        (edge, index, self) =>
+          index ===
+          self.findIndex(
+            (e) => e.source === edge.source && e.target === edge.target
+          )
+      );
+
+      const layoutedNodes = applyDagreLayout(
+        newNodes as [],
+        uniqueEdges as [],
+        false
+      );
+
+      setNodes(layoutedNodes);
+      setEdges(uniqueEdges);
     }
-  }, []);
+  },
+  [edges, nodes, expandedNodes, expandedAssets, setNodes, setEdges]
+);
+
 
   const connectEdgestoNode = useCallback(
     (params: Connection) => {
-
       const { source, target } = params;
 
-     
-      const sourceNode = nodes.find((node): node is ExtendedNode => node.id === source);
-      const targetNode = nodes.find((node):node is ExtendedNode => node.id === target);
-//       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
-//   sourceNode.data.class = "machine";
-//   console.log("Classified as machine:", sourceNode);
-// }
-//before logic :   if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
+      const sourceNode = nodes.find(
+        (node): node is ExtendedNode => node.id === source
+      );
+      const targetNode = nodes.find(
+        (node): node is ExtendedNode => node.id === target
+      );
+      //       if (sourceNode.asset_category.toLowerCase().includes("cartridge")) {
+      //   sourceNode.data.class = "machine";
+      //   console.log("Classified as machine:", sourceNode);
+      // }
+      //before logic :   if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
 
       if (!sourceNode || !targetNode) return;
       // Check if the source node is a relation and it already has an outgoing connection
-     if (sourceNode.data.type === "relation" && (
-      
-        sourceNode.id.includes("relation_hasCutter") ||
-        sourceNode.id.includes("relation_hasFilter") ||
-        sourceNode.id.includes("relation_hasTracker") ||
-        sourceNode.id.includes("relation_hasSource")
-    )) {
-      const alreadyHasChild = edges.some((edge) => edge.source === source);
+      if (
+        sourceNode.data.type === "relation" &&
+        (sourceNode.id.includes("relation_hasCutter") ||
+          sourceNode.id.includes("relation_hasFilter") ||
+          sourceNode.id.includes("relation_hasTracker") ||
+          sourceNode.id.includes("relation_hasSource"))
+      ) {
+        const alreadyHasChild = edges.some((edge) => edge.source === source);
         if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
@@ -1028,7 +1097,6 @@ const handleExportClick = () => {
         sourceNode.data.type === "shopFloor" &&
         targetNode.data.type === "asset"
       ) {
-
         setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
       } else if (
         sourceNode.data.type === "asset" &&
@@ -1036,9 +1104,7 @@ const handleExportClick = () => {
       ) {
         setNodes((nds) =>
           nds.map((node) =>
-            node.id === target
-              ? { ...node, data: { ...node.data } }
-              : node
+            node.id === target ? { ...node, data: { ...node.data } } : node
           )
         );
 
@@ -1047,29 +1113,28 @@ const handleExportClick = () => {
         sourceNode.data.type === "relation" &&
         targetNode.data.type === "asset"
       ) {
-
-
-
         const newRelationNodeId = `${sourceNode.id}`;
         // access the asset_category and split it.
-        const assetCategoryPart = targetNode.asset_category?.split(" ")[1] || "";
+        const assetCategoryPart =
+          targetNode.asset_category?.split(" ")[1] || "";
         const assetCategory = assetCategoryPart.toLowerCase();
-      
 
         // relation label is like "hasTracker_001", extract "Tracker" and normalize
         const relationType = sourceNode.data.label
           .split("_")[0]
           .replace("has", "")
           .toLowerCase();
-    
+
         // Check if the asset category === the relation type
         if (assetCategory !== relationType) {
           toast.current?.show({
             severity: "warn",
             summary: "Connection not allowed",
-            detail: `Assets of category '${targetNode.asset_category
-              }' can only connect to 'has${assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)
-              }' relations.`,
+            detail: `Assets of category '${
+              targetNode.asset_category
+            }' can only connect to 'has${
+              assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)
+            }' relations.`,
           });
           return; // Prevent the connection
         }
@@ -1102,17 +1167,13 @@ const handleExportClick = () => {
 
         setNodes(updatedNodes);
         setEdges([...updatedEdges, newEdge]);
-
-       
       } else if (
         sourceNode.data.type === "factory" &&
         targetNode.data.type === "shopFloor"
       ) {
         setEdges((prevEdges) => addEdge(params, prevEdges)); // Add edge
-       
       } else {
         if (toast) {
-       
           toast.current?.show({
             severity: "error",
             summary: "Connection not allowed",
@@ -1124,76 +1185,88 @@ const handleExportClick = () => {
     [nodes, setNodes, setEdges, toast]
   );
 
-//@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
-const handleBackspacePress = useCallback(() => {
-  if (!selectedElements || (!selectedElements.nodes && !selectedElements.edges)) {
-    toast.current?.show({
-      severity: "warn",
-      summary: "No selection",
-      detail: "Please select an edge or node to delete.",
-      life: 3000,
-    });
-    return;
-  }
+  //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
+  const handleBackspacePress = useCallback(() => {
+    if (
+      !selectedElements ||
+      (!selectedElements.nodes && !selectedElements.edges)
+    ) {
+      toast.current?.show({
+        severity: "warn",
+        summary: "No selection",
+        detail: "Please select an edge or node to delete.",
+        life: 3000,
+      });
+      return;
+    }
 
-  // Initialize deletable edge IDs
-  let edgeIdsToDelete: string[] = [];
+    // Initialize deletable edge IDs
+    let edgeIdsToDelete: string[] = [];
 
-  // Filter edges that are not connecting a factory to a shopFloor
-  if (selectedElements.edges) {
-    edgeIdsToDelete = selectedElements.edges
-      .filter(edge => {
-        const sourceNode = nodes.find(node => node.id === edge.source);
-        const targetNode = nodes.find(node => node.id === edge.target);
-        return !(sourceNode?.data.type === "factory" && targetNode?.data.type === "shopFloor");
-      })
-      .map(edge => edge.id);
-  }
+    // Filter edges that are not connecting a factory to a shopFloor
+    if (selectedElements.edges) {
+      edgeIdsToDelete = selectedElements.edges
+        .filter((edge) => {
+          const sourceNode = nodes.find((node) => node.id === edge.source);
+          const targetNode = nodes.find((node) => node.id === edge.target);
+          return !(
+            sourceNode?.data.type === "factory" &&
+            targetNode?.data.type === "shopFloor"
+          );
+        })
+        .map((edge) => edge.id);
+    }
 
-  // Exclude the factory and shopFloor nodes from deletion
-  const containsNonDeletableNodes = selectedElements.nodes?.some(
-    (node: Node<any>) => node.data.type === "factory" || node.data.type === "shopFloor"
-  );
+    // Exclude the factory and shopFloor nodes from deletion
+    const containsNonDeletableNodes = selectedElements.nodes?.some(
+      (node: Node<any>) =>
+        node.data.type === "factory" || node.data.type === "shopFloor"
+    );
 
-  if (containsNonDeletableNodes) {
-    toast.current?.show({
-      severity: "warn",
-      summary: "Deletion Not Allowed",
-      detail: "Cannot delete factory or shopFloor nodes.",
-      life: 3000,
-    });
-    return;
-  }
+    if (containsNonDeletableNodes) {
+      toast.current?.show({
+        severity: "warn",
+        summary: "Deletion Not Allowed",
+        detail: "Cannot delete factory or shopFloor nodes.",
+        life: 3000,
+      });
+      return;
+    }
 
-  // Collect IDs of nodes to delete
-  const nodeIdsToDelete = new Set<string>(
-    selectedElements.nodes?.map(node => node.id) ?? []
-  );
+    // Collect IDs of nodes to delete
+    const nodeIdsToDelete = new Set<string>(
+      selectedElements.nodes?.map((node) => node.id) ?? []
+    );
 
-  // Collect edges associated with the nodes to delete
-  const additionalEdgeIdsToDelete = edges
-    .filter(edge => nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target))
-    .map(edge => edge.id);
+    // Collect edges associated with the nodes to delete
+    const additionalEdgeIdsToDelete = edges
+      .filter(
+        (edge) =>
+          nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
+      )
+      .map((edge) => edge.id);
 
-  // Combine the edge IDs to delete
-  edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
+    // Combine the edge IDs to delete
+    edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
 
-  // Update nodes and edges state
-  const updatedNodes = nodes.filter(node => !nodeIdsToDelete.has(node.id));
-  const updatedEdges = edges.filter(edge => !edgeIdsToDelete.includes(edge.id));
+    // Update nodes and edges state
+    const updatedNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
+    const updatedEdges = edges.filter(
+      (edge) => !edgeIdsToDelete.includes(edge.id)
+    );
 
-  setNodes(updatedNodes);
-  setEdges(updatedEdges);
-  setSelectedElements(null);
-}, [
-  selectedElements,
-  nodes,
-  edges,
-  setNodes,
-  setEdges,
-  setSelectedElements,
-  toast,
-]);
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+    setSelectedElements(null);
+  }, [
+    selectedElements,
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    setSelectedElements,
+    toast,
+  ]);
 
   useHotkeys(
     "backspace",
@@ -1204,30 +1277,29 @@ const handleBackspacePress = useCallback(() => {
     [handleBackspacePress]
   );
 
-//@desc : 1) on shopFloor node double click navigate to dashboard 
-//        2) on factory node double click show dialog          
-const onNodeDoubleClick: NodeMouseHandler = useCallback(
+  //@desc : 1) on shopFloor node double click navigate to dashboard
+  //        2) on factory node double click show dialog
+  const onNodeDoubleClick: NodeMouseHandler = useCallback(
     async (event, node) => {
-      
-        if (node.type == "factory") {
-           const cleanedFactoryId = node.id.replace("factory_", "");
-            setSelectedFactoryId(cleanedFactoryId);
-            setDialogVisible(true);
-          }
+      if (node.type == "factory") {
+        const cleanedFactoryId = node.id.replace("factory_", "");
+        setSelectedFactoryId(cleanedFactoryId);
+        setDialogVisible(true);
+      }
 
-        if (node.type === "shopFloor") {
-            if (hasChanges) {
-                // Save or update changes before navigating if there are any changes
-                await saveOrUpdate();
-            }
-            // Navigate to the dashboard after handling the save or update
-            router.push("/factory-site/dashboard");
-        }
+      // if (node.type === "shopFloor") {
+      //     if (hasChanges) {
+      //         // Save or update changes before navigating if there are any changes
+      //         await saveOrUpdate();
+      //     }
+      //     // Navigate to the dashboard after handling the save or update
+      //     router.push("/factory-site/dashboard");
+      // }
     },
     [hasChanges, saveOrUpdate, router] // Include all dependencies used in the callback
-);
+  );
 
-//@desc : drag and drop asset from unallocated-allocated-asset.tsx component
+  //@desc : drag and drop asset from unallocated-allocated-asset.tsx component
 
   const assetNodeDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -1281,7 +1353,7 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
                   type: type,
                   label,
                   id: item.id,
-                }
+                },
               };
 
               setNodes((nds) => [...nds, assetNode]);
@@ -1296,22 +1368,17 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
         console.error("Failed to parse dragged data", error);
       }
     },
-    [
-      reactFlowInstance,
-      setNodes,
-    ]
+    [reactFlowInstance, setNodes]
   );
 
+  //@desc : Drag Event for Asset/ shopFloor nodes
 
- //@desc : Drag Event for Asset/ shopFloor nodes
- 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-
-//@desc :  set react flow instance
+  //@desc :  set react flow instance
   const onInit = useCallback((instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
   }, []);
@@ -1319,57 +1386,66 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
   return (
     <>
       <ReactFlowProvider>
-        <Dialog header="Factory Details" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: '50vw' }}>
-          <hr style={{ margin: '0' }} />
+        <Dialog
+          header="Factory Details"
+          visible={dialogVisible}
+          onHide={() => setDialogVisible(false)}
+          style={{ width: "50vw" }}
+        >
+          <hr style={{ margin: "0" }} />
           <p>
-            <span className="bold-text">Factory ID:  </span> <span>{selectedFactoryId}</span>
+            <span className="bold-text">Factory ID: </span>{" "}
+            <span>{selectedFactoryId}</span>
           </p>
-       </Dialog>
+        </Dialog>
 
         <EdgeAddContext.Provider value={{ createRelationNodeAndEdge }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
-          
+
           <div className="flex justify-content-between">
             <div className="mt-2">
               <Button
-                label={t('button:saveAndUpdate')}
+                label={t("button:saveAndUpdate")}
                 onClick={saveOrUpdate}
                 className="m-2 bold-text"
                 raised
               />
               <Button
-                label={t('button:undo')}
+                label={t("button:undo")}
                 onClick={getMongoDataFlowEditor}
                 className="p-button-secondary m-2 bold-text"
                 raised
               />
-               <Button
-                label={t('button:refresh')}
+              <Button
+                label={t("button:refresh")}
                 onClick={refreshFromScorpio}
                 className="m-2 bold-text"
                 severity="help"
                 raised
               />
               <Button
-                label={t('button:reset')}
+                label={t("button:reset")}
                 onClick={deleteMongoAndScorpio}
                 className="p-button-danger m-2 bold-text"
                 raised
               />
               <Button
-                label={t('button:exportJPEG')}
+                label={t("button:exportJPEG")}
                 className="m-2 bold-text"
                 onClick={handleExportClick}
-                  severity="info"
+                severity="info"
               />
             </div>
             <div className="flex align-items-center gap-2 mt-2">
-              <span>{t('reactflow:switchView')}</span>
-              <InputSwitch checked={switchView} onChange={(e) => {
-                setSwitchView(e.value);
-                saveOrUpdate();
-                router.push(`/factory-site/factory-shopfloor/${factoryId}`)
-              }} />
+              <span>{t("reactflow:switchView")}</span>
+              <InputSwitch
+                checked={switchView}
+                onChange={(e) => {
+                  setSwitchView(e.value);
+                  saveOrUpdate();
+                  router.push(`/factory-site/factory-shopfloor/${factoryId}`);
+                }}
+              />
             </div>
             <Toast ref={toast} />
           </div>
@@ -1380,7 +1456,6 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
             onDrop={assetNodeDrop}
             onDragOver={onDragOver}
           >
-
             <ReactFlow
               nodesDraggable={true}
               nodes={nodes}
@@ -1403,12 +1478,9 @@ const onNodeDoubleClick: NodeMouseHandler = useCallback(
             </ReactFlow>
             {/* <BlockUI/> */}
           </div>
-
         </EdgeAddContext.Provider>
-
-      </ReactFlowProvider></>
-
-
+      </ReactFlowProvider>
+    </>
   );
 };
 
