@@ -29,11 +29,10 @@ import { useDispatch } from "react-redux";
 import { resetTimer, logout } from "@/redux/auth/authSlice";
 import { useTranslation } from "next-i18next";
 import Language from "./language";
-import { CiViewBoard } from "react-icons/ci";
-import { RiTranslate } from "react-icons/ri";
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import '@/styles/navbar.css'
 
 const HorizontalNavbar: React.FC = () => {
   const router = useRouter();
@@ -70,7 +69,7 @@ const HorizontalNavbar: React.FC = () => {
     fontFamily: "Inter",
     fontSize: "21px"
   }
-
+ 
   const navigateToIndustryFusion = () => {
     router.push("https://industry-fusion.org/de");
   };
@@ -92,7 +91,7 @@ const HorizontalNavbar: React.FC = () => {
         <p style={logoText}>Factory Manager</p>
       </div>
       <div className="flex  justify-content-between align-items-center" >
-        <div className="mr-3">
+        <div className="mr-3 language-dropdown">
           <Language />
         </div>
         <Button label={t('aboutUs')} link onClick={navigateToIndustryFusion}

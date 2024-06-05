@@ -35,13 +35,13 @@ interface Notification {
   repeat: boolean,
   origin: string,
   updateTime: string,
-  type:string
+  type: string
 }
 
 const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp, setNotificationProp }) => {
   const { notificationData, selectedAssetData } = useDashboard();
   const { t } = useTranslation('button');
-  
+
   const getStatusTextColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -94,7 +94,8 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
   return (
     <>
       <Dialog
-        header={notificationData.length > 0 ? "Notifications" : "No Notifications"}
+
+        header={notificationData.length > 0 ? <h3>Notifications</h3> : <h3>No Notifications</h3>}
         visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
         <div className="alerts-container">
           {notificationData.length > 0 ?
@@ -118,7 +119,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                   <div className="flex gap-3  ">
                     <div className="mt-4">
                       {/* <i className={getIcon(notification?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(notification?.severity).color }}></i> */}
-                       {iconData && <i className={iconData.icon} style={{ fontSize: '1.3rem', color: iconData.color }}></i>}
+                      {iconData && <i className={iconData.icon} style={{ fontSize: '1.3rem', color: iconData.color }}></i>}
                     </div>
                     <div style={{ flex: "0 90%" }} className="data-container">
                       <div>
@@ -161,7 +162,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                             <p className="label-text">Origin</p>
                           </div>
                         </div>
-                        <div className="flex align-center  mb-2" style={{gap: "16.8rem" }}>
+                        <div className="flex align-center  mb-2" style={{ gap: "16.8rem" }}>
                           <div> <p className="ml-2 "> {notification?.severity}</p>
                             <p className="label-text ml-2">Severity</p>
                           </div>

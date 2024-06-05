@@ -101,7 +101,8 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     <>
       <Dialog
         visible={visible}
-        header={<span style={{ fontWeight: 600 }}>Notifications</span>}
+      
+        header={<h3>Notifications</h3>}
         onHide={() => { setVisible(false) }} style={{ width: '50vw' }}
       >
         {
