@@ -49,5 +49,5 @@ jobs:
       S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
       HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
       GATEWAY_TOKEN: ${{ secrets.GATEWAY_TOKEN }}
-      ALERTA_KEY: ${{ secrets.ALERTA_KEY }}
-      FACTORY_MONGO_URL: ${{ secrets.FACTORY_MONGO_URL }}
+      ALERTA_KEY_DEV: ${{ secrets.ALERTA_KEY_DEV }}
+      FACTORY_MONGO_URL_DEV: ${{ secrets.FACTORY_MONGO_URL_DEV }}
