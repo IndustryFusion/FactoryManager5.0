@@ -39,7 +39,7 @@ async function clearRelation() {
         for(let i = 0; i < factoryData.length; i++) {
             let eachFactory = factoryData[i];
             let hasShopFloorKey = Object.keys(eachFactory).find(key => key.includes("has"));
-            eachFactory[hasShopFloorKey] = "";
+            eachFactory[hasShopFloorKey].object = "";
             await factoryService.removeScript(eachFactory.id, token);
             await axios.post(scorpioUrl, eachFactory, {headers});
 
@@ -48,7 +48,7 @@ async function clearRelation() {
             for(let i = 0; i < shopFloorData.length; i++) {
                 let eachShopFloor = shopFloorData[i];
                 let hasAssetKey = Object.keys(eachShopFloor).find(key => key.includes("has"));
-                eachShopFloor[hasAssetKey] = "";
+                eachShopFloor[hasAssetKey].object = "";
                 await shopFloorService.remove(eachShopFloor.id, token);
                 await axios.post(scorpioUrl, eachShopFloor, {headers});
             }
@@ -62,7 +62,7 @@ async function clearRelation() {
             let eachAsset = assetData[i];
             Object.keys(eachAsset).map(key => {
                 if(key.includes("has")) {
-                    eachAsset[key] = "";
+                    eachAsset[key].object = "";
                 }
             })
             await assetService.deleteAssetById(eachAsset.id, token);
