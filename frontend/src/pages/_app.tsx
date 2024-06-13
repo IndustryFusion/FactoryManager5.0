@@ -22,13 +22,16 @@ import "primeicons/primeicons.css";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import { appWithTranslation } from "next-i18next";
+import withAuth from "@/app/withAuth";
 
 // Import your custom components or layout components
-function MyApp({ Component, pageProps }:AppProps) {
+function MyApp({ Component, pageProps, router }:AppProps) {
   // Additional setup or global configurations can be added here
+
+  const AuthComponent = router.pathname === '/login' ? Component : withAuth(Component)
   return (
     <Provider store={store}>
-      <Component {...pageProps} />
+      <AuthComponent {...pageProps} />
     </Provider>
   );
 }
