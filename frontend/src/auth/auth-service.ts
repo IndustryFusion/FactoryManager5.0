@@ -47,8 +47,14 @@ const login = async (username: string, password: string): Promise<LoginResponse>
         const response: AxiosResponse<LoginResponse> = await axios.post(loginUrl as string, data, { headers });
         if (response.data.success) 
         {
-            // Set LogIn to true
-            Cookies.set('login_flag', "true", { expires: 86400 });
+            //Testing for 15 seconds
+            // const expires = new Date(new Date().getTime() + 15 * 1000); 
+            // Cookies.set('login_flag', "true", { expires });
+
+
+            //for 24 hours
+            const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); 
+            Cookies.set('login_flag', "true", { expires });
         }
         return response.data;
     } catch (error) {

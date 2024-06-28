@@ -56,10 +56,11 @@ const Login: React.FC = () => {
         if (typeof window !== "undefined" && hasMounted && router.isReady) {
           const loginFlag = Cookies.get("login_flag");
   
-          if (loginFlag === 'true') {
-            router.push("/factory-site/factory-overview");
-  
-          }
+        if (!loginFlag || loginFlag !== 'true') {
+          router.push("/login");
+        } else {
+          router.push("/factory-site/factory-overview");
+        }
         }
       }
   }, [router.isReady, hasMounted]);
