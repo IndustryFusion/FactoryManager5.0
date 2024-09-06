@@ -22,6 +22,7 @@ import { AllocatedAssetService } from '../allocated-asset/allocated-asset.servic
 @Injectable()
 export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
+  private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
 
   async getAssetData(token: string) {
     try {
@@ -160,6 +161,37 @@ export class AssetService {
       }
       return assetData;
     }catch(err){
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+  
+  async getOwnerAssets(id: string, token: string) {
+    try {
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      
+      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${id}`);
+      if(!(companyData.data.length)) {
+        return {
+          status: 404,
+          message: 'No company found with the provided ID'
+        };
+      }
+      
+      const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`);
+      const result = [];
+      for(let i = 0; i < response.data.length; i++) {
+        const assetId = response.data[i].asset_ifric_id;
+        const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
+        if(scorpioResponse.data) {
+          result.push(scorpioResponse.data);
+        }
+      }
+      return result;
+    } catch(err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
   }
