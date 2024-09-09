@@ -71,7 +71,6 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       try {
         if (unAllocatedAssetData.length === 0) {
           const fetchedAssetIds = await getNonShopFloorAsset(factoryId);
-    
           dispatch(create(fetchedAssetIds));
         }
         
@@ -123,7 +122,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       }
     }
 
-  }, [factoryId, router.isReady]);
+  }, [factoryId, router.isReady, unAllocatedAssetData]);
 
   useEffect(() => {
     const results = assets.filter(asset => {

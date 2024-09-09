@@ -61,6 +61,16 @@ export class AssetController {
     }
   }
 
+  @Get('/get-owner-asset/:id')
+  async getOwnerAssets(@Param('id') id: string) {
+    try {
+      const token = await this.tokenService.getToken();
+      return await this.assetService.getOwnerAssets(id, token);
+    } catch(err) {
+      throw new NotFoundException();
+    }
+  }
+
   @Get(':id')
   async getAssetDataById(@Param('id') id: string) {
     try {

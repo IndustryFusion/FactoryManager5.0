@@ -190,7 +190,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
         type: "asset",
         position: { x: xPos, y: yPos },
         data: {
-            label: assetData['http://www.industry-fusion.org/schema#product_name']?.value || "Asset",
+            label: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value || "Asset",
             type: "asset",
             id: asset.id,
         },
@@ -211,14 +211,14 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
     // Determine horizontal start position for relations
     let relationXPos = xPos - (Object.keys(assetData).filter(key => key.includes('#has')).length - 1) * horizontalSpacing / 2;
     for (const [key, value] of Object.entries(assetData)) {
-        if (key.startsWith("http://www.industry-fusion.org/schema#has")) {
+        if (key.includes("has")) {
 
       
             let relationValues = Array.isArray(value) ? value : [value];
             relationValues = relationValues.filter(rv => rv.object && rv.object.startsWith("urn:"));
 
             for (let i = 0; i < relationValues.length; i++) {
-                const relationType = key.split("#").pop();
+                const relationType = key.split("/").pop();
                 const relationId = `relation_${relationType}_${Math.floor(100 + Math.random() * 900)}`;
                 
                 // For same assets, place relation nodes in the same x-axis

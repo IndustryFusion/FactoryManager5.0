@@ -20,20 +20,6 @@ import axios from "axios";
 const moment = require('moment');
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-export const mapBackendDataToAssetState = (backendData: any) => {
-  const modifiedObject: any = {};
-  // Iterate over the properties of the object
-  Object.keys(backendData).forEach((key) => {
-    if (key.includes("http://www.industry-fusion.org/fields#")) {
-      const newKey = key.replace("http://www.industry-fusion.org/fields#", "");
-      modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
-    } else {
-      modifiedObject[key] = backendData[key];
-    }
-  });
-  return modifiedObject;
-};
-
 export function convertToSecondsTime(time: string) {
   if (typeof time !== 'string') {
     console.error('Expected a string, but received:', time);

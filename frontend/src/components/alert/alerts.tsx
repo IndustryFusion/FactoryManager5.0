@@ -41,8 +41,8 @@ const Alerts = () => {
     const modifiedObject:any = {};
     // Iterate over the properties of the object
     Object.keys(backendData).forEach((key) => {
-      if (key.includes("http://www.industry-fusion.org/schema#")) {
-        const newKey = key.replace("http://www.industry-fusion.org/schema#", "");
+      if (key.includes("/")) {
+        const newKey = key.split('/').pop() || '';
         modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
       } else {
         modifiedObject[key] = backendData[key];

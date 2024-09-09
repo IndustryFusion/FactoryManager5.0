@@ -311,13 +311,9 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
   return backendData.map((item: any) => {
     const newItem: any = {};
     Object.keys(item).forEach((key) => {
-      if (key.includes("http://www.industry-fusion.org/schema#")) {
-        const newKey = key.replace(
-          "http://www.industry-fusion.org/schema#",
-          ""
-        );
-        newItem[newKey] =
-          item[key].type === "Property" ? item[key].value : item[key];
+      if (key.includes("/")) {
+        const newKey = key.split('/').pop() || '';
+        newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
       } else {
         newItem[key] = item[key];
       }
@@ -469,28 +465,27 @@ export async function getShopFloorAndAssetData(factoryId: string) {
 
 export function extractHasRelations(assetData: { [key: string]: any }): ExtractedRelations {
   const hasRelations: ExtractedRelations = {};
-  const prefixToRemove = "http://www.industry-fusion.org/schema#";
 
   Object.entries(assetData).forEach(([key, value]) => {
-    // Check if the key starts with the required prefix and the value is either an object or an array
-    if (key.startsWith(prefixToRemove) && (typeof value === "object" || Array.isArray(value))) {
+    // Check if the key includes with the required value and the value is either an object or an array
+    if (key.includes('/') && (typeof value === "object" || Array.isArray(value))) {
       // Initialize an array to hold all objects related to this relationship
-      let objects = [];
+      let objects: any[] = [];
 
       // Check if value is an array, if so, iterate through it
-      if (Array.isArray(value)) {
-        value.forEach((val) => {
-          if (val.type === "Relationship") {
+      if (key.includes('has')) {
+        if(Array.isArray(value)) {
+          value.forEach((val) => {
             objects.push(val.object);
-          }
-        });
-      } else if (value.type === "Relationship") { // Single object case
-        objects.push(value.object);
+          });
+        } else {
+          objects.push(value.object);
+        }
       }
-
+  
       if (objects.length > 0) {
         // Remove the prefix from the key
-        const cleanedKey = key.replace(prefixToRemove, "");
+        const cleanedKey = key.split('/').pop() || '';
         // Create or update the relationship in the hasRelations object
         hasRelations[cleanedKey] = {
           type: value.type || 'Relationship',
@@ -602,10 +597,12 @@ export const fetchAssetDetailById = async(assetId:string)=>{
       withCredentials: true,
     });
     const responseData = response.data;
+    const productKey = Object.keys(responseData).find(key => key.includes("product_name"));
+    const assetCategoryKey = Object.keys(responseData).find(key => key.includes("asset_category"));
     const mappedData = {
-      id: responseData.id,
-      product_name: responseData['http://www.industry-fusion.org/schema#product_name']?.value,
-      asset_category: responseData['http://www.industry-fusion.org/schema#asset_category']?.value,
+      id: responseData.id, 
+      product_name: productKey ? responseData[productKey]?.value : undefined,
+      asset_category: assetCategoryKey ? responseData[assetCategoryKey]?.value : undefined,
     
     };
     return mappedData;
@@ -655,15 +652,15 @@ export async function getShopFloorAssets(shopFloorId: string) {
       const assetsResponses = await Promise.all(assetDataPromises);
       
       assetsData = assetsResponses.map((response) =>{
+        const productKey = Object.keys(response.data).find(key => key.includes("product_name"));
+        const assetCategoryKey = Object.keys(response.data).find(key => key.includes("asset_category"))  
+        const filteredObject = {
+          id: response.data.id,
+          product_name: productKey ? response.data[productKey]?.value : undefined,
+          asset_category: assetCategoryKey ? response.data[assetCategoryKey]?.value : undefined,
         
-         const filteredObject = {
-        id: response.data.id,
-        product_name: response.data['http://www.industry-fusion.org/schema#product_name']?.value,
-        asset_category: response.data['http://www.industry-fusion.org/schema#asset_category']?.value,
-      
-      };
-      return filteredObject;
-
+        };
+        return filteredObject;
       } );
       
     }

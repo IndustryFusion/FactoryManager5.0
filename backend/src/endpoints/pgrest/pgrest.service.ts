@@ -32,7 +32,7 @@ export class PgRestService {
       };
       const queryString = Object.keys(queryParams)
             .map(key => key + '=' + queryParams[key])
-            .join('&').replace('#','%23');
+            .join('&');
 
       const url = this.timescaleUrl + '/entityhistory?' + queryString;
       const response = await axios.get(url, {headers});
@@ -97,7 +97,7 @@ export class PgRestService {
     const startTimeFormatted = startTime.utc().format("YYYY-MM-DDTHH:mm:ss") + "-00:00";
     const endTimeFormatted = endTime.utc().format("YYYY-MM-DDTHH:mm:ss") + "-00:00";
 
-    const attributeId = `attributeId=eq.http://www.industry-fusion.org/fields%23${queryParams.attributeId.split('eq.')[1]}`;
+    const attributeId = `attributeId=${queryParams.attributeId}`;
     const entityId = `entityId=${queryParams.entityId}`;
     const observedAt = `observedAt=gte.${startTimeFormatted}&observedAt=lte.${endTimeFormatted}`;
     const order = `order=${queryParams.order}`;
