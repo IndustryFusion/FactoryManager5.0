@@ -1,5 +1,5 @@
 name: Nigthly-Prod
-
+on:
   workflow_dispatch:
 
 jobs:
