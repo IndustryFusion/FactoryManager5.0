@@ -22,6 +22,7 @@ import { AllocatedAssetService } from '../allocated-asset/allocated-asset.servic
 @Injectable()
 export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
+  private readonly context = process.env.CONTEXT;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
 
   async getAssetData(token: string) {
@@ -35,7 +36,7 @@ export class AssetService {
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
-      typeArr = Array.isArray(typeArr) ? typeArr : [];
+      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
         const url = this.scorpioUrl + '?type=' + type;
@@ -120,7 +121,7 @@ export class AssetService {
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
-      typeArr = Array.isArray(typeArr) ? typeArr : [];
+      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
         const url = this.scorpioUrl + '?type=' + type;
@@ -144,9 +145,12 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
+      let assetValue = await this.getAssetDataById(assetId, token);
       assetCategory = assetCategory.split(" ").pop(); 
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1); 
-      let relationKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
+      let splitData = assetValue.type.split('/');
+      splitData[splitData.length-1] = assetCategory;
+      let relationKey = splitData.join('/');
       let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`;
       const response = await axios.get(url, {headers});
       let assetData = [];
@@ -154,8 +158,8 @@ export class AssetService {
         response.data.forEach(data => {
           assetData.push({
               id: data['id'],
-              product_name: data['http://www.industry-fusion.org/schema#product_name'],
-              asset_category: data['http://www.industry-fusion.org/schema#asset_category']
+              product_name: data[Object.keys(data).find(key => key.includes("product_name"))], 
+              asset_category: data[Object.keys(data).find(key => key.includes("asset_category"))] 
           });
         });
       }
@@ -164,7 +168,7 @@ export class AssetService {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
   }
-  
+
   async getOwnerAssets(id: string, token: string) {
     try {
       const headers = {
@@ -247,7 +251,7 @@ export class AssetService {
 
   async updateAssetById(id: string, data, token: string) {
     try {
-      data['@context'] = "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld";
+      data['@context'] = this.context;
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
@@ -276,7 +280,7 @@ export class AssetService {
         const assetData = await this.getAssetDataById(key, token);
         let relationData = data[key];
         for (let relationKey in relationData) {
-          let finalKey = 'http://www.industry-fusion.org/schema#' + relationKey;
+          let finalKey = Object.keys(assetData).find(key => key.includes(relationKey))
           let relationArray = relationData[relationKey];
           if(relationArray.length > 0){
             assetData[finalKey] = [];
@@ -388,11 +392,12 @@ export class AssetService {
 
       // Delete Asset From Scorpio
       let assetData = await this.getAssetDataById(assetId, token);
-      let assetCategory = assetData["http://www.industry-fusion.org/schema#asset_category"].value.split(" ").pop(); 
+      let assetCategory = assetData[Object.keys(assetData).find(key => key.includes("asset_category"))].value.split(" ").pop(); 
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
-      let urlKey = `http://www.industry-fusion.org/schema%23has${assetCategory}`;
-      let relationKey = `http://www.industry-fusion.org/schema#has${assetCategory}`;
-      let url = `${this.scorpioUrl}?q=${urlKey}==%22${assetId}%22`; 
+      let splitData = assetData.type.split('/');
+      splitData[splitData.length-1] = assetCategory;
+      let relationKey = splitData.join('/');
+      let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`; 
       const response = await axios.get(url, {headers});
       if(response.data.length > 0) {
         // Delete Asset From Parents Relation

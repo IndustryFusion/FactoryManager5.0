@@ -219,9 +219,9 @@ const PowerCo2Chart = () => {
     };
 
     const fetchDataAndAssign = async (startTime: string, endTime: string) => {
-        let attributeIds = await fetchAssets(entityIdValue);
+        let attributeId = await fetchAssets(entityIdValue);
         setNoChartData(false);
-        if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#power-consumption")) {
+        if (entityIdValue && attributeId && attributeId.length > 0) {
             const obj = await fetchData(entityIdValue, selectedInterval, startTime, endTime);
     
             // check if there is data or not 
@@ -237,7 +237,7 @@ const PowerCo2Chart = () => {
 
     const fetchAssets = async (assetId: string) => {
         try {
-            const attributeIds: string[] = [];
+            let attributeId: string = '';
             const response = await axios.get(API_URL + `/asset/${assetId}`, {
                 headers: {
                     "Content-Type": "application/json",
@@ -248,12 +248,11 @@ const PowerCo2Chart = () => {
             const assetData: Asset = response.data;
 
             Object.keys(assetData).map((key) => {
-                if (key.includes("fields")) {
-                    const newKey = 'eq.' + key;
-                    attributeIds.push(newKey);
+                if (key.includes("power-consumption")) {
+                    attributeId = 'eq.' + key;
                 }
             });
-            return attributeIds;
+            return attributeId;
         } catch (error) {
             console.error("Error fetching asset data:", error);
         }

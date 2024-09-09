@@ -98,8 +98,6 @@ export const FactoryShopFloorProvider: React.FC<{ children: ReactNode }> = ({
                                     [`${getRelation}_asset`]: [...isEntryExists[`${getRelation}_asset`], item]
                                 };
                                 updatedValue[existingEntryIndex] = updatedEntry;
-                            }else{
-                                
                             }
                         }
                      

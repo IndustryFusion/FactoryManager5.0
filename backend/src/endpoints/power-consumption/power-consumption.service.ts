@@ -38,7 +38,7 @@ export class PowerConsumptionService {
                   return key + '=' + queryParams[key] 
                 }
               })
-            .join('&').replace('#','%23');
+            .join('&');
       const url = this.timescaleUrl + '/power_emission_entries_days?' + queryString;
       const response = await axios.get(url, {headers});
       if(response.data.length > 0){

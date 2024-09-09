@@ -134,8 +134,8 @@ export class AllocatedAssetService {
           const assetData = await this.assetService.getAssetDataById(id, token);
           const finalData = {
             id,
-            product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
-            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
+            product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value, 
+            asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
           };
           finalArray.push(finalData);
         }
@@ -143,8 +143,8 @@ export class AllocatedAssetService {
         const assetData = await this.assetService.getAssetDataById(assetIds, token);
         const finalData = {
           id: assetIds,
-          product_name: assetData['http://www.industry-fusion.org/schema#product_name']?.value,
-          asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']?.value
+          product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value,
+          asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
         };
         finalArray.push(finalData);
       }
@@ -192,12 +192,12 @@ export class AllocatedAssetService {
         if(Array.isArray(factorySpecificAssets)){
           for(let i = 0; i < factorySpecificAssets.length; i++){
             let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i], token);
-            let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
+            let productName = assetData[Object.keys(factoryData).find(key => key.includes("product_name"))].value;
             finalData[factoryName].push(productName);
           }
         } else if(factorySpecificAssets !== "json-ld-1.1") {
           let assetData = await this.assetService.getAssetDataById(factorySpecificAssets, token);
-          let productName = assetData["http://www.industry-fusion.org/schema#product_name"].value;
+          let productName = assetData[Object.keys(factoryData).find(key => key.includes("product_name"))].value;
           finalData[factoryName].push(productName);
         }
       }

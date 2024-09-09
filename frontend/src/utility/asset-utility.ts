@@ -23,13 +23,9 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     return backendData.map((item: any) => {
       const newItem: any = {};
       Object.keys(item).forEach((key) => {
-        if (key.includes("http://www.industry-fusion.org/schema#")) {
-          const newKey = key.replace(
-            "http://www.industry-fusion.org/schema#",
-            ""
-          );
-          newItem[newKey] =
-            item[key].type === "Property" ? item[key].value : item[key];
+        if (key.includes("/")) {
+          const newKey = key.split('/').pop() || '';
+          newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
         } else {
           newItem[key] = item[key];
         }

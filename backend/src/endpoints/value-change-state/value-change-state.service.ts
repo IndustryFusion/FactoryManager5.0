@@ -40,7 +40,7 @@ export class ValueChangeStateService {
                   return key + '=' + queryParams[key] 
                 }
               })
-            .join('&').replace('#','%23');
+            .join('&');
       const url = this.timescaleUrl + '/value_change_state_entries?' + queryString;
       const response = await axios.get(url, {headers});
       if (response.data) {
@@ -55,7 +55,7 @@ export class ValueChangeStateService {
     }
   }
 
-  async findAll(assetId: string, type: string, token: string){
+  async findAll(assetId: string, attributeId: string, type: string, token: string){
     try {
       const headers = {
         Authorization: 'Bearer ' + token
@@ -76,7 +76,7 @@ export class ValueChangeStateService {
           let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
           let key = day.format('MMMM Do');
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             finalData[key].push(...response.data);
@@ -94,7 +94,7 @@ export class ValueChangeStateService {
       
           let key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             finalData[key].push(...response.data);
@@ -112,7 +112,7 @@ export class ValueChangeStateService {
       
           const key = moment(startOfMonth).format('MMMM');
           finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=eq.http://www.industry-fusion.org/fields%23machine-state&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
+          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
           const response = await axios.get(url, {headers});
           if(response.data.length > 0){
             finalData[key].push(...response.data);

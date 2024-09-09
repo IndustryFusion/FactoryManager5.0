@@ -40,8 +40,8 @@ export class NonShopFloorAssetsService {
             );
             const filteredObject = {
               id,
-              product_name: assetData['http://www.industry-fusion.org/schema#product_name'],
-              asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']
+              product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))], 
+              asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))] 
             };
             for (const key in assetData) {
               if (key.includes('has')) {
@@ -65,8 +65,8 @@ export class NonShopFloorAssetsService {
           );
           const filteredObject = {
             id,
-            product_name: assetData['http://www.industry-fusion.org/schema#product_name'],
-            asset_category: assetData['http://www.industry-fusion.org/schema#asset_category']
+            product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))],
+            asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]
           };
           for (const key in assetData) {
             if (key.includes('has')) {

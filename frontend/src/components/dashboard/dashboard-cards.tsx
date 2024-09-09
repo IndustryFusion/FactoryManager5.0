@@ -26,6 +26,8 @@ import { RootState } from "@/redux/store";
 import { useTranslation } from "next-i18next";
 import { AlertsResponse } from "@/types/alert-response";
 import { AssetData } from "@/types/dashboard-cards";
+import { Asset } from "@/types/asset-types";
+
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
@@ -50,9 +52,6 @@ const DashboardCards: React.FC = () => {
     const { t } = useTranslation('dashboard');
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-
-
-
     const fetchAllAlerts = async () => {
         try {
             const response:AlertsResponse = await getAlerts();
@@ -63,38 +62,61 @@ const DashboardCards: React.FC = () => {
         }
     }
 
-   
-
     const fetchData = async () => {
         try {
             setDifference("00:00:00");
-            let response = await axios.get(API_URL + '/value-change-state', {
-                params: {
-                    attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
-                    entityId: 'eq.' + entityIdValue,
-                    order: "observedAt.desc",
-                    limit: '1'
-                },
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            })
-
-
-            if (Array.isArray(response.data) && response.data.length > 0) {
-                if (response.data[0]?.value === "2") {
-                    const timeValueReceived = findDifference(response.data[0]?.observedAt);
-                    setDifference(timeValueReceived);
-                    setPrevTimer(timeValueReceived); //set intial timer value
-                }
+            let attributeId: string | undefined = await fetchAssets(entityIdValue);
+            if (entityIdValue && attributeId && attributeId.length > 0) {
+                let response = await axios.get(API_URL + '/value-change-state', {
+                    params: {
+                        attributeId,
+                        entityId: 'eq.' + entityIdValue,
+                        order: "observedAt.desc",
+                        limit: '1'
+                    },
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                }) 
+    
+                if (Array.isArray(response.data) && response.data.length > 0) {
+                    if (response.data[0]?.value === "2") {
+                        const timeValueReceived = findDifference(response.data[0]?.observedAt);
+                        setDifference(timeValueReceived);
+                        setPrevTimer(timeValueReceived); //set intial timer value
+                    }
+                } 
             } 
         }
         catch (error) {
             console.log("Error From fetchData function from @components/dashboard/dashboard-cards.tsx",error);
         }
     }
+
+    const fetchAssets = async (assetId: string) => {
+        try {
+            let attributeId: string = '';
+            const response = await axios.get(API_URL + `/asset/${assetId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+            const assetData: Asset = response.data;
+
+            Object.keys(assetData).map((key) => {
+                if (key.includes("machine_state")) {
+                    attributeId = 'eq.' + key;
+                }
+            });
+            return attributeId;
+        } catch (error) {
+            console.error("Error fetching asset data:", error);
+        }
+    };
 
     const runningSince = () => {
         fetchData();
@@ -147,6 +169,7 @@ const DashboardCards: React.FC = () => {
         })
 
     }
+
     const relationParent = async () => {
         try {
             if (Object.keys(selectedAssetData).length > 0) {
@@ -171,8 +194,6 @@ const DashboardCards: React.FC = () => {
             console.error(error)
         }
     }
-
-
 
     useEffect(() => {
         if (machineStateValue === "2") {
@@ -202,9 +223,6 @@ const DashboardCards: React.FC = () => {
         relationParent();
         fetchAllAlerts();
     }, [entityIdValue])
-
-
-
 
     return (
         <>

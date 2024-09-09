@@ -103,7 +103,8 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
 
               const text = notification?.text;
               let updatedText;
-              if (text && text.includes("http://www.industry-fusion.org/fields#noise")) {
+              let noiseKey = Object.keys(text).find(key => key.includes('noise'));
+              if (text && noiseKey) {
                 const regex = /Value.*$/;
                 const match = text.match(regex);
                 if (match) {
