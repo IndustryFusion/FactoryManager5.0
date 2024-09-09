@@ -1,3 +1,5 @@
+
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
 .language-dropdown .p-dropdown {
     border: none;
     width: 3.6rem !important;
@@ -6,3 +8,12 @@
 .language-dropdown .p-dropdown .p-dropdown-trigger {
     display: none;
 }
+.factory-navbar {
+    padding: 0 24px;
+    font-family: "League Spartan";
+    border-bottom: 1px solid #e6e6e6;
+}
+.nav-header{
+    margin-left: 8px  !important;
+    margin: 0 ;
+  }
