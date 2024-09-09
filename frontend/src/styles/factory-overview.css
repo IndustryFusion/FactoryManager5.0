@@ -141,7 +141,7 @@ body{
 .p-button .p-button-label,
 .p-dropdown .p-dropdown-label.p-placeholder,
 .p-inputtext {
-  font-family: "Inter", sans-serif !important;
+  font-family: "League Spartan" !important;
 }
 
 .p-button .p-button-label {
@@ -161,7 +161,28 @@ body{
   align-items: center;
  
 }
+.factory-overview-header{
+  padding: 16px 24px;
+}
+.search-container {
+  position: relative;
+}
+.search-container img {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.6rem;
+}
 
+.search-input {
+  /* padding: 6px 0px 3px 28px; */
+  width: 356px;
+  border: 2px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 0;
+  padding-left: 28px;
+  padding-top: 10px;
+  padding-bottom: 9px;
+}
 /* .factory-card {
   background: #ffffff;
   border: 1px solid #dfe7ef;
@@ -180,7 +201,7 @@ body{
   border-radius: 16px;
   border: 2px solid  #E6E6E6;
   background:  #FFF;
-  width: 500px;
+  width: 470px;
   margin-top: 20px;
   margin-left: 24px;
   padding: 12px 13px 17px;
@@ -217,10 +238,62 @@ body{
   margin: 0;
 }
 .factory-card-progressbar{
-  flex: 0 40%;
+  flex: 0 60%;
 }
 .factory-card-content{
-   flex: 0 60%;
+   flex: 0 50%;
+}
+.asset-values{
+  color:  #2B2B2B;
+  font-family: "League Spartan";
+  font-size: 30.043px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+.assets-text{
+color: #95989A;
+font-family: "League Spartan";
+font-size: 15.266px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+}
+.card-text-container{
+  margin-top: 18px;
+}
+.card-text{
+  color:  #95989A;
+  font-family: "League Spartan";
+  font-size: 13.8px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+.pass-value,
+.twin-value{
+  color: #2B2B2B;
+  font-family: "League Spartan";
+  font-size: 13.518px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+.pass-percent{
+  color: #FCA82B;
+  font-family: "League Spartan";
+  font-size: 13.518px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+.twin-percent{
+  color: #478FB7;
+  font-family: "League Spartan";
+  font-size: 13.518px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
 }
 /**factory-card:end**/
 
