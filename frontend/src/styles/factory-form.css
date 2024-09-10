@@ -1,6 +1,8 @@
+
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
+
 .factory-form-container {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "League Spartan", sans-serif!important;
   width: 70%;
   margin: 0rem auto;
 }
@@ -19,14 +21,30 @@
   display: block;
 }
 
-
+/** form input ,dialog style:start **/
 .factory-form-container .p-inputtext,
 .factory-form-container .p-dropdown,
 .factory-form-container .p-inputnumber .p-inputtext {
   width: 100%;
-
+  border-radius: 10px;
+  border: 1px solid #ced4da !important;
+  background: var(--white);
+  font-family: "League Spartan";
+  padding: 14px 0px 11px 16px;
 }
-
+.p-dialog-header {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom: 1px solid #e6e6e6;
+}
+.p-dialog .p-dialog-content:last-of-type, .p-dialog .p-dialog-footer {
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.p-button{
+  border-radius: 8px
+}
+/** form input ,dialog style:end **/
 .center-button-container .small-button {
   margin: auto;
   display: block;
@@ -57,7 +75,7 @@
 
 ul li {
   list-style: none;
-  padding: 10px;
+  padding: 0px;
 }
 
 textarea {

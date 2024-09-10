@@ -316,9 +316,11 @@ const PowerCo2Chart = () => {
     return (
         <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
             <Toast ref={toast} />
-            <h3 style={{ marginLeft: "30px", fontSize: "20px" }}>Power Consumption and Co2 Emission</h3>
+            <h3 style={{ marginLeft: "30px", fontSize: "22px" }}>Power Consumption and Co2 Emission</h3>
             <div className="interval-filter-container">
-                <p>{t('dashboard:filterInterval')}</p>
+                <p
+                style={{fontSize:"19px"}}
+                >{t('dashboard:filterInterval')}</p>
             </div>
             <div className="flex align-items-center justify-content-center" >
                 <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>

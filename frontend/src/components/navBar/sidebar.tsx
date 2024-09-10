@@ -56,10 +56,9 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               <p className="m-0">Factory Flow</p>
             </div>
           </div>
-
           <div>
-            <div className="pass-quota-container mt-7">
-              <h3 className="m-0">Product Pass Quota</h3>
+            <div className="pass-quota-container ">
+              <h3 className="m-0">Product  Quota</h3>
               <img
                 src="/usage-bar.jpg"
                 alt="progress-bar"
@@ -67,16 +66,7 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               />
               <p className="progress-value m-0">Quota remaining: 9,159</p>
               <p className="progress-value m-0">Total quota: 10,000</p>
-
               <p className="upgrade-text">Upgrade Plan</p>
-            </div>
-            <div className="flex align-items-center item-container">
-              <img src="/book.jpg" alt="docs-icon" className="mr-2" />
-              <h3 className="item-heading">Helpcenter</h3>
-            </div>
-            <div className="flex align-items-center item-container">
-              <img src="/settings.jpg" alt="settings-icon" className="mr-2" />
-              <h3 className="item-heading">Settings</h3>
             </div>
           </div>
         </>
@@ -124,18 +114,6 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
                 alt="menu-item-icon"
                 width="100%"
                 height="100%"
-              />
-            </div>
-            <div className="flex flex-column gap-4 last-items ">
-              <img
-                src="/dashboard-collapse/book.svg"
-                alt="docs-icon"
-                className="mr-2"
-              />
-              <img
-                src="/dashboard-collapse/settings.svg"
-                alt="settings-icon"
-                className="mr-2"
               />
             </div>
           </div>

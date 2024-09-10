@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
 @import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
 
 body{
@@ -197,6 +197,32 @@ body{
 } */
 
 /**factory-card:start**/
+
+.p-contextmenu {
+  box-shadow: 0px 0px 8px 3px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+}
+.p-contextmenu .p-menuitem-link {
+  margin: 0 8px;
+}
+.p-contextmenu .p-menuitem-link .p-menuitem-text {
+  color: var(--black-primary);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-left: 8px;
+}
+.p-contextmenu .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover {
+  background-color: transparent;
+}
+.p-contextmenu .p-menuitem-link:not(.p-disabled):hover,
+.p-contextmenu .p-menuitem-link:not(.p-disabled):hover .p-menuitem-text {
+  background: #e6e6e6;
+  border-radius: 10px;
+  color: #138ab6;
+}
 .factory-card{
   border-radius: 16px;
   border: 2px solid  #E6E6E6;
@@ -425,6 +451,7 @@ line-height: normal;
 }
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item {
   margin-bottom: 3px;
+  padding: 6px;
 }
 .sort-dropdown.p-dropdown .p-dropdown-trigger {
   display: none;

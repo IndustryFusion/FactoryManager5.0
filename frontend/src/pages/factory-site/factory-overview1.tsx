@@ -20,6 +20,9 @@ import { deleteFactory } from "@/utility/factory-site-utility";
 import { reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import axios from "axios";
 import { Asset } from "@/types/asset-types";
+import { FiCopy, FiEdit3 } from "react-icons/fi";
+import { RiDeleteBinLine } from "react-icons/ri";
+import { IoEyeOutline } from "react-icons/io5";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -28,6 +31,7 @@ const FactoryOverview = () => {
   const router = useRouter();
   const { t } = useTranslation(['overview', 'placeholder']);
   const [factorySite, setFactorySite] = useState<Factory[]>([]);
+  const [factoryCount, setFactoryCount] = useState(0);
   const [sortKey, setSortKey] = useState(null);
   const [sortOrder, setSortOrder] = useState<0 | 1 | -1 | null>(null);
   const [sortField, setSortField] = useState("");
@@ -42,7 +46,6 @@ const FactoryOverview = () => {
   const [factoryName, setFactoryName] = useState<string>('');
   const toast = useRef<Toast | null>(null);
   const dispatch = useDispatch();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sortOptions = [
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
@@ -151,6 +154,50 @@ const FactoryOverview = () => {
       }
     };
 
+    async function createAssets(body: string) {
+      try {
+        const response = await axios.post(API_URL + "/asset", body, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        });
+        if (response.data?.status === 201 && response.data?.success === true) {
+          showToast("success", "success", "Asset imported successfully")
+          setAssetManageDialog(true);
+        }
+      } catch (error) {
+        showToast("error", "Error", "Fetching imported asset")
+        console.error("Error:", error);
+      }
+    }
+
+    const menuModel =[
+      {
+      label:"Edit",
+      icon:<FiEdit3 />,
+      command:()=>{
+        setEditFactory(data.id);
+        setIsEdit(true)
+      }
+      },
+      {
+        label:"Delete",
+        icon: <RiDeleteBinLine />,
+        command:()=>{
+          confirmDeleteFactory(data)
+        }
+      },
+      {
+        label:"View",
+        icon:<IoEyeOutline />,
+        command:()=>{
+          router.push(`/factory-site/factory-management/${data.id}`)
+        }
+      }
+    ];
+
   return (
     <>
       <div className="flex">
@@ -168,7 +215,12 @@ const FactoryOverview = () => {
         >
           <Navbar navHeader={t("overview:factoryOverview")} />
           <div>
-            <OverviewHeader />
+            <OverviewHeader
+            factoryCount={factoryCount}
+            setVisible={setVisible}
+            assetManageDialog={assetManageDialog}
+            setAssetManageDialog={setAssetManageDialog}
+            />
           </div>
           <div>
             <div className="factory-overview-header flex justify-content-between">
@@ -186,7 +238,6 @@ const FactoryOverview = () => {
                   <img
                     src="/sort_icon.jpg"
                     alt="sort-icon"
-                    
                   />
                   <Dropdown
                   className="sort-dropdown"
@@ -198,7 +249,9 @@ const FactoryOverview = () => {
                 </div>
               </div>
             </div>
-            <FactoryCard />
+            <FactoryCard
+            menuModel={menuModel}
+            />
           </div>
         </div>
       </div>

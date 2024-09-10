@@ -68,7 +68,7 @@
 
 .interval-filter-container > p {
   margin: 0; 
-  font-size: 16px; 
+  font-size: 17px; 
   font-weight: bold; 
   text-align: center; 
 }
@@ -103,10 +103,15 @@
 }
 
 .button-text {
-  font-size: 16px; 
+  font-size: 23px; 
   font-weight: bold; 
 }
-
+.attribute-dropdown-container p,
+.date-time-container p ,
+.interval-dropdown-container p,
+.input-with-label label{
+font-size : 18px;
+ }
 .interval-dropdown-container{
   position: block;
   

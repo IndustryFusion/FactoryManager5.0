@@ -161,6 +161,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             });
       
             const responseData = response.data;
+            console.log("on submit of factory", responseData);
+            
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
                   setTimeout(() => {
@@ -364,22 +366,22 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     return (
         <>
-            <div className=" flex justify-content-center">
+            <div className=" flex justify-content-center create-factory-form">
                 <Button label={t('show')} icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
                 <Dialog visible={visibleProp} modal footer={footerContent}
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
                     <Toast ref={toast} />
-                    <div className="p-fluid p-formgrid p-grid ">
+                    <div className="p-fluid p-formgrid p-grid factory-form-container">
                         <h2 className="form-title">Create Factory</h2>
-                        <Card className="factory-form-container mt-4 center-button-container ">
+                        {/* <Card className="factory-form-container mt-4 center-button-container "> */}
                             {schema &&
                                 schema?.properties &&
                                 Object.keys(schema.properties).map((key) =>
                                     <div key={key}> {renderFields(key, schema.properties[key])}</div>
                                    
                                 )}
-                        </Card>
+                        {/* </Card> */}
                     </div>
                 </Dialog>
             </div>

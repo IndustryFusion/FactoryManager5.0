@@ -1,12 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
 
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
 
 .dashboard-container,
 .dashboard-assets,
 .assets-table {
-    font-family: "Inter", sans-serif !important;
+    font-family: "League Spartan", sans-serif!important;
 }
-
+.dashboard-card-text{
+    font-size: 19px;
+}
 .selected-row {
     background: #ecfeff !important;
     color: #0e7490 !important;
@@ -24,8 +26,6 @@
     font-size: 13.5px;
 }
  
-  
-
 .dashboard-container {
     padding-bottom: 2.5rem;
     zoom: 95%;
@@ -36,7 +36,10 @@
     margin-top: 0.6rem;
     height: auto;
 }
-
+ 
+.dashboard-assets.p-datatable .p-datatable-thead > tr > th {
+    font-size : 19px;
+    }
 .dashboard-assets .p-datatable .p-paginator-bottom {
     left: 0;
     position: absolute;
@@ -86,6 +89,10 @@
     font-size: 1.2rem;
     margin: 16px;
 }
+.asset-table-heading{
+    font-size: 1.7rem;
+    margin: 16px;
+}
 
 .relation-text {
     padding: 4px;
@@ -119,7 +126,7 @@
 .dashboard-card-container {
     gap: 1.2rem;
     justify-content: center;
-    margin-top: 12rem;
+    /* margin-top: 12rem; */
 }
 
 .autorefresh-btn {
@@ -250,7 +257,6 @@ textarea {
 }
 
 @media screen and (min-width: 1550px) {
-
     .chart-content,
     .assets-content {
         width: 34.4%
@@ -261,7 +267,7 @@ textarea {
     }
 
     .dashboard-card-container {
-        gap: 6rem;
+        gap: 2rem;
     }
 }
 
