@@ -1,0 +1,50 @@
+#leftSidebarAssistant {
+    text-align: center; 
+    padding: 15px;
+    background-color: #fff;
+    position: relative;
+    padding-top: 3px;
+  }
+  
+  #leftSidebarAssistantOuterCircle {
+    height: 106px;
+    width: 106px;
+    transform: rotate(-90deg);
+  }
+  
+  #leftSidebarAssistantInnerCircle {
+    height: 74px;
+    width: 74px;
+    transform: rotate(-90deg);
+    position: absolute;
+    left: 31px;
+    top: 46px;
+  }
+  
+  .progress-bar__background {
+    fill: none;
+    stroke: #D3DCE9;
+    stroke-width: 2px;
+  }
+  
+  .progress-bar__progress {
+    fill: none;
+    stroke: #D3DCE9;
+    stroke: #EF2B2B;
+    stroke-dasharray: 100 100;
+    stroke-dashoffset: 100;
+    stroke-linecap: round;
+    stroke-width: 2px;
+    -webkit-transition: stroke-dashoffset 1s ease-in-out;
+    transition: stroke-dashoffset 1s ease-in-out;
+  }
+  .progressbar-value{
+    color:  #2B2B2B;
+text-align: center;
+font-family: "League Spartan";
+font-size: 11.6px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+margin-bottom: 4px;
+  }
