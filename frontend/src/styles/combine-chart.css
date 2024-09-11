@@ -114,11 +114,14 @@ font-size : 18px;
  }
 .interval-dropdown-container{
   position: block;
-  
 }
 
 .date-time-container{
   margin-right: 200px;
+}
+.date-time-container p ,
+.input-with-label label{
+  margin-top: 0;
 }
 
 .custom-button {

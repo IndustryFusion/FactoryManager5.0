@@ -40,6 +40,7 @@ import { Dialog } from "primereact/dialog";
 import countryList from 'react-select-country-list'
 import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
+import { Dropdown } from "primereact/dropdown";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -185,14 +186,22 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             {property.title}
                         </label>
                         {key === "country" ?
-                            <Select
-                                id="country"
-                                value={selectedCountry}
-                                options={options}
-                                onChange={(e) => changeHandler(e, key)}
-                                placeholder={property?.description}
-
-                            /> :
+                             <div className="flex justify-content-between align-items-center country-dropdown">
+                             <Dropdown
+                               appendTo="self"
+                               id="country"
+                               name="country"
+                               placeholder={property?.description}
+                               options={options}
+                               value={selectedCountry?.value}
+                                 onChange={(e) => changeHandler(e, key)}
+                             />
+                             <img
+                               className="dropdown-icon-img"
+                               src="/dropdown-icon.svg"
+                               alt="dropdown-icon"
+                             />
+                           </div> :
                             <InputText
                                 id={key}
                                 value={editedFactory?.[key]}
@@ -372,16 +381,23 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         </div>
     )
 
+  const header =()=>{
+    return(
+        <h2 className="form-title">Edit Factory</h2>
+    )
+  }
+
     return (
         <>
             <div className="  flex justify-content-center">
-                <Dialog visible={isEditProp} modal footer={footerContent}
+                <Dialog 
+                header={header}
+                visible={isEditProp} modal footer={footerContent}
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
                     <Toast ref={toast} />
-                    <h2 className="form-title mb-3">Edit Factory</h2>
-                    <div className="p-fluid p-formgrid p-grid factory-form-container">
-                        <Card className="edit-form ">
+                    
+                    <div className="p-fluid p-formgrid p-grid factory-form-container">                       
                             <div className="align-center">
                                 <p className=" mb-3 mt-0"
                                     style={{
@@ -403,8 +419,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                                 <div className="field mb-3">
                                     <label>No Shop Floors</label>
                                 </div>
-                            )}
-                        </Card>
+                            )}        
                     </div>
                 </Dialog>
             </div>

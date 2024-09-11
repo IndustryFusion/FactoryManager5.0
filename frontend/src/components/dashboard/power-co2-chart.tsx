@@ -314,212 +314,379 @@ const PowerCo2Chart = () => {
     }, [chartData]);
 
     return (
-        <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
-            <Toast ref={toast} />
-            <h3 style={{ marginLeft: "30px", fontSize: "22px" }}>Power Consumption and Co2 Emission</h3>
-            <div className="interval-filter-container">
-                <p
-                style={{fontSize:"19px"}}
-                >{t('dashboard:filterInterval')}</p>
-            </div>
-            <div className="flex align-items-center justify-content-center" >
-                <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                    <p>{t('dashboard:type')}</p>
-                    <Dropdown
-                        value={selectedInterval}
-                        options={intervalButtons.map(({ label, interval }) => ({
-                            label,
-                            value: interval,
-                        }))}
-                        onChange={(e) => setSelectedInterval(e.value)}
-                        placeholder="Select an Interval"
-                        style={{ width: "100%" }}
-                        appendTo="self"
-                    />
-                </div>
-                {
-                    selectedInterval == 'days' ? 
-                    <>
-                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <p>{t('dashboard:startTime')}</p>
-                            <Calendar
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
-                                minDate= {minimumDate ? moment(minimumDate).toDate() : undefined}
-                                maxDate={moment().toDate()}
-                                appendTo="self" 
-                            />
-                        </div>
-                        
-                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                            <p>{t('dashboard:endTime')}</p>
-                            <Calendar
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
-                                minDate={moment(startDate).toDate()}
-                                maxDate={moment().toDate()}
-                                appendTo="self"
-                            />
-                        </div>
-                    </>
-                    : selectedInterval == 'weeks' ? (
-                        <>
-                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                                <p>{t('dashboard:interval')}</p>
-                                <Dropdown
-                                    value={selectedWeekSubInterval}
-                                    options={weekSubIntervalButtons.map(({ label, interval }) => ({
-                                        label,
-                                        value: interval,
-                                    }))}
-                                    onChange={(e) => setSelectedWeekSubInterval(e.value)}
-                                    placeholder="Select Sub Interval"
-                                    style={{ width: "100%" }}
-                                    appendTo="self"
-                                />
-                            </div>
-                            
-                            {
-                                selectedWeekSubInterval == 'months' ? 
-                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>{t('dashboard:months')}</p>
-                                        <Calendar
-                                            value={startMonth}
-                                            onChange={(e) => setStartMonth(e.value ? moment(e.value).toDate() : null)}
-                                            view="month" 
-                                            dateFormat="mm/yy"
-                                            minDate= {minimumDate ? moment(minimumDate).startOf('month').toDate() : undefined}
-                                            maxDate={moment().startOf('month').toDate()}
-                                            appendTo="self" 
-                                        />
-                                    </div>
-                                : selectedWeekSubInterval == 'all' ?
-                                (
-                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>{t('dashboard:years')}</p>
-                                        <Calendar
-                                            value={startYear}
-                                            onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
-                                            view="year" 
-                                            dateFormat="yy"
-                                            appendTo="self"
-                                        />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>{t('dashboard:startTime')}</p>
-                                            <Calendar
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
-                                                minDate= {minimumDate ? moment(minimumDate).toDate() : undefined}
-                                                maxDate={moment().toDate()}
-                                                appendTo="self"
-                                            />
-                                        </div>
-                                        
-                                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>{t('dashboard:endTime')}</p>
-                                            <Calendar
-                                                value={endDate}
-                                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
-                                                minDate={moment(startDate).toDate()}
-                                                maxDate={moment().toDate()}
-                                                appendTo="self"
-                                            />
-                                        </div>
-                                    </>
-                                )
-                            }
-                        </>
-                    ) : (
-                        <>
-                            <div className="dropdown-container custom-button" style={{ marginRight: "30px", flexDirection: "column", alignItems: "center" }}>
-                                <p>{t('dashboard:interval')}</p>
-                                <Dropdown
-                                    value={selectedMonthSubInterval}
-                                    options={monthSubIntervalButtons.map(({ label, interval }) => ({
-                                        label,
-                                        value: interval,
-                                    }))}
-                                    onChange={(e) => setSelectedMonthSubInterval(e.value)}
-                                    placeholder="Select Sub Interval"
-                                    style={{ width: "100%" }}
-                                    appendTo="self"
-                                />
-                            </div>
-                            
-                            {
-                                selectedMonthSubInterval == 'all' ?
-                                (
-                                    <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p>{t('dashboard:years')}</p>
-                                        <Calendar
-                                            value={startYear}
-                                            onChange={(e) => setStartYear(e.value ? moment(e.value).toDate() : null)}
-                                            view="year" 
-                                            dateFormat="yy"
-                                        />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="start-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>{t('dashboard:startTime')}</p>
-                                            <Calendar
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.value ? moment(e.value).toDate() : null)}
-                                                minDate= {minimumDate ? moment(minimumDate).toDate() : undefined}
-                                                maxDate={moment().toDate()}
-                                            />
-                                        </div>
-                                        
-                                        <div className="end-time-calendar" style={{ marginRight: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                            <p>{t('dashboard:endTime')}</p>
-                                            <Calendar
-                                                value={endDate}
-                                                onChange={(e) => setEndDate(e.value ? moment(e.value).toDate() : null)}
-                                                minDate={moment(startDate).toDate()}
-                                                maxDate={moment().toDate()}
-                                            />
-                                        </div>
-                                    </>
-                                )
-                            }
-                        </>
-                    )
-                }
-                <Button label={t('button:submit')} severity="info" onClick={onButtonSelect} style={{ marginTop: "3rem"}}/>   
-            </div>
-            {
-                noChartData ?
-                <div className="flex flex-column justify-content-center align-items-center"
-                    style={{ marginTop: "5rem" }}
-                >
-                    <p>{t('dashboard:nochartData')}</p>
-                    <img src="/no-chart-data.png" alt="" width="5%" height="5%"  />
-                </div>
-                :
-                isLoading ? (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            height: "60vh",
-                        }}
-                    >
-                        <ProgressSpinner />
-                    </div>
-                ) : (
-                    <div style={{ overflowX: 'scroll', overflowY: 'hidden', maxWidth: '100%', width: '100%' }}>
-                        <div className='containerBody'>
-                            <Chart type="bar" data={chartData as PowerConsumptionData} options={chartOptions} />
-                        </div>
-                    </div>
-                )
-            }
+      <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
+        <Toast ref={toast} />
+        <h3 style={{ marginLeft: "30px", fontSize: "22px" }}>
+          Power Consumption and Co2 Emission
+        </h3>
+        <div className="interval-filter-container">
+          <p style={{ fontSize: "19px" }}>{t("dashboard:filterInterval")}</p>
         </div>
-    )
+        <div className="flex align-items-center justify-content-center">
+          <div
+            className="dropdown-container custom-button mb-0 p-0"
+            style={{
+              marginRight: "30px",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <p>{t("dashboard:type")}</p>
+            <div
+              className="flex justify-content-between align-items-center dashboard-dropdown mb-0"
+              style={{ width: "100px" }}
+            >
+              <Dropdown
+                value={selectedInterval}
+                options={intervalButtons.map(({ label, interval }) => ({
+                  label,
+                  value: interval,
+                }))}
+                onChange={(e) => setSelectedInterval(e.value)}
+                placeholder="Select an Interval"
+                appendTo="self"
+              />
+              <img
+                className="dropdown-icon-img"
+                src="/dropdown-icon.svg"
+                alt="dropdown-icon"
+              />
+            </div>
+          </div>
+          {selectedInterval == "days" ? (
+            <>
+              <div
+                className="start-time-calendar"
+                style={{
+                  marginRight: "30px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <p>{t("dashboard:startTime")}</p>
+                <Calendar
+                  value={startDate}
+                  onChange={(e) =>
+                    setStartDate(e.value ? moment(e.value).toDate() : null)
+                  }
+                  minDate={
+                    minimumDate ? moment(minimumDate).toDate() : undefined
+                  }
+                  maxDate={moment().toDate()}
+                  appendTo="self"
+                />
+              </div>
+
+              <div
+                className="end-time-calendar"
+                style={{
+                  marginRight: "30px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <p>{t("dashboard:endTime")}</p>
+                <Calendar
+                  value={endDate}
+                  onChange={(e) =>
+                    setEndDate(e.value ? moment(e.value).toDate() : null)
+                  }
+                  minDate={moment(startDate).toDate()}
+                  maxDate={moment().toDate()}
+                  appendTo="self"
+                />
+              </div>
+            </>
+          ) : selectedInterval == "weeks" ? (
+            <>
+              <div
+                className="dropdown-container custom-button mb-0 p-0"
+                style={{
+                  marginRight: "30px",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <p>{t("dashboard:interval")}</p>
+                <div
+                  className="flex justify-content-between align-items-center dashboard-dropdown mb-0"
+                  style={{ width: "100px" }}
+                >
+                  <Dropdown
+                    value={selectedWeekSubInterval}
+                    options={weekSubIntervalButtons.map(
+                      ({ label, interval }) => ({
+                        label,
+                        value: interval,
+                      })
+                    )}
+                    onChange={(e) => setSelectedWeekSubInterval(e.value)}
+                    placeholder="Select Sub Interval"
+                    appendTo="self"
+                  />
+                  <img
+                    className="dropdown-icon-img"
+                    src="/dropdown-icon.svg"
+                    alt="dropdown-icon"
+                  />
+                </div>
+              </div>
+              {selectedWeekSubInterval == "months" ? (
+                <div
+                  className="start-time-calendar"
+                  style={{
+                    marginRight: "30px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <p>{t("dashboard:months")}</p>
+                  <Calendar
+                    value={startMonth}
+                    onChange={(e) =>
+                      setStartMonth(e.value ? moment(e.value).toDate() : null)
+                    }
+                    view="month"
+                    dateFormat="mm/yy"
+                    minDate={
+                      minimumDate
+                        ? moment(minimumDate).startOf("month").toDate()
+                        : undefined
+                    }
+                    maxDate={moment().startOf("month").toDate()}
+                    appendTo="self"
+                  />
+                </div>
+              ) : selectedWeekSubInterval == "all" ? (
+                <div
+                  className="start-time-calendar"
+                  style={{
+                    marginRight: "30px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <p>{t("dashboard:years")}</p>
+                  <Calendar
+                    value={startYear}
+                    onChange={(e) =>
+                      setStartYear(e.value ? moment(e.value).toDate() : null)
+                    }
+                    view="year"
+                    dateFormat="yy"
+                    appendTo="self"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="start-time-calendar"
+                    style={{
+                      marginRight: "30px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p>{t("dashboard:startTime")}</p>
+                    <Calendar
+                      value={startDate}
+                      onChange={(e) =>
+                        setStartDate(e.value ? moment(e.value).toDate() : null)
+                      }
+                      minDate={
+                        minimumDate ? moment(minimumDate).toDate() : undefined
+                      }
+                      maxDate={moment().toDate()}
+                      appendTo="self"
+                    />
+                  </div>
+
+                  <div
+                    className="end-time-calendar"
+                    style={{
+                      marginRight: "30px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p>{t("dashboard:endTime")}</p>
+                    <Calendar
+                      value={endDate}
+                      onChange={(e) =>
+                        setEndDate(e.value ? moment(e.value).toDate() : null)
+                      }
+                      minDate={moment(startDate).toDate()}
+                      maxDate={moment().toDate()}
+                      appendTo="self"
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <div
+                className="dropdown-container custom-button"
+                style={{
+                  marginRight: "30px",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <p>{t("dashboard:interval")}</p>
+                <div
+                className="dropdown-container custom-button mb-0 p-0"
+                style={{
+                  marginRight: "30px",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+               
+                <div
+                  className="flex justify-content-between align-items-center dashboard-dropdown mb-0"
+                  style={{ width: "100px" }}
+                >
+                  <Dropdown
+                  value={selectedMonthSubInterval}
+                  options={monthSubIntervalButtons.map(
+                    ({ label, interval }) => ({
+                      label,
+                      value: interval,
+                    })
+                  )}
+                  onChange={(e) => setSelectedMonthSubInterval(e.value)}
+                  placeholder="Select Sub Interval"
+                  appendTo="self"
+                />
+                  <img
+                    className="dropdown-icon-img"
+                    src="/dropdown-icon.svg"
+                    alt="dropdown-icon"
+                  />
+                </div>
+              </div>
+              </div>
+
+              {selectedMonthSubInterval == "all" ? (
+                <div
+                  className="start-time-calendar"
+                  style={{
+                    marginRight: "30px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <p>{t("dashboard:years")}</p>
+                  <Calendar
+                    value={startYear}
+                    onChange={(e) =>
+                      setStartYear(e.value ? moment(e.value).toDate() : null)
+                    }
+                    view="year"
+                    dateFormat="yy"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="start-time-calendar"
+                    style={{
+                      marginRight: "30px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p>{t("dashboard:startTime")}</p>
+                    <Calendar
+                      value={startDate}
+                      onChange={(e) =>
+                        setStartDate(e.value ? moment(e.value).toDate() : null)
+                      }
+                      minDate={
+                        minimumDate ? moment(minimumDate).toDate() : undefined
+                      }
+                      maxDate={moment().toDate()}
+                    />
+                  </div>
+
+                  <div
+                    className="end-time-calendar"
+                    style={{
+                      marginRight: "30px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p>{t("dashboard:endTime")}</p>
+                    <Calendar
+                      value={endDate}
+                      onChange={(e) =>
+                        setEndDate(e.value ? moment(e.value).toDate() : null)
+                      }
+                      minDate={moment(startDate).toDate()}
+                      maxDate={moment().toDate()}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          <Button
+            label={t("button:submit")}
+            severity="info"
+            onClick={onButtonSelect}
+            style={{ marginTop: "3rem" }}
+          />
+        </div>
+        {noChartData ? (
+          <div
+            className="flex flex-column justify-content-center align-items-center"
+            style={{ marginTop: "5rem" }}
+          >
+            <p>{t("dashboard:nochartData")}</p>
+            <img src="/no-chart-data.png" alt="" width="5%" height="5%" />
+          </div>
+        ) : isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "60vh",
+            }}
+          >
+            <ProgressSpinner />
+          </div>
+        ) : (
+          <div
+            style={{
+              overflowX: "scroll",
+              overflowY: "hidden",
+              maxWidth: "100%",
+              width: "100%",
+            }}
+          >
+            <div className="containerBody">
+              <Chart
+                type="bar"
+                data={chartData as PowerConsumptionData}
+                options={chartOptions}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
 };
 
 export default PowerCo2Chart;

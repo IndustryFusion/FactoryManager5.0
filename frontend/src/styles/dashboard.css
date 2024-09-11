@@ -3,7 +3,8 @@
 
 .dashboard-container,
 .dashboard-assets,
-.assets-table {
+.assets-table,
+.p-dialog-title {
     font-family: "League Spartan", sans-serif!important;
 }
 .dashboard-card-text{
@@ -25,12 +26,10 @@
 .onboardform-header p{
     font-size: 13.5px;
 }
- 
 .dashboard-container {
     padding-bottom: 2.5rem;
     zoom: 95%;
 }
-
 .dashboard-assets {
     min-height: 45rem;
     margin-top: 0.6rem;
@@ -49,7 +48,77 @@
     padding: 0;
     zoom: 90%;
 }
+/** dialog style:start**/
+.p-dialog-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom: 1px solid #e6e6e6;
+}
+.p-dialog .p-dialog-content:last-of-type, .p-dialog .p-dialog-footer {
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+.alerts-container{
+    margin-top: 1rem;
+}
+.alerts-container p {
+    font-family: "League Spartan", sans-serif;
+}
+/** dialog style:end**/
+/** dropdown style:start **/
+.dashboard-dropdown {
+    background: var(--white);
+    padding: 2px 10px;
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+    margin-bottom: 25px;
+  }
+  
+  .dashboard-dropdown .p-dropdown .p-dropdown-trigger {
+    display: none;
+  }
+  .dropdown-icon-img{
+    margin-top: 8px;
+    width: 6px;
+    cursor: pointer;
+  }
+  .dashboard-dropdown .p-dropdown {
+    background: transparent;
+    border: none;
+      width: 100%;
+  }
+  .dashboard-dropdown .p-dropdown .p-inputtext{
+    padding: 8px 0 8px
+  }
+  .dashboard-dropdown .p-dropdown-label {
+    color:var(--grey-primary)
+  }
+  .p-drodown:focus{
+    border:none
+  }
+  .p-dropdown:not(.p-disabled).p-focus{
+    border-color: none;
+    box-shadow: none;
+  }
+  .dashboard-dropdown .p-dropdown-panel{
+    border-radius: 8px;
+    background: var(--White, #FFF);
+    box-shadow: 0px 0px 8px 3px rgba(0, 0, 0, 0.25);
+  
+  }
 
+  .dashboard-container .p-inputtext,
+  .dashboard-container .p-inputnumber .p-inputtext {
+  width: 100%;
+  border-radius: 10px;
+  /* border: 1px solid #ced4da !important; */
+  background: var(--white);
+  font-family: "League Spartan"; 
+}
+.p-calendar .p-inputtext{
+   padding:14px 6px 10px;
+}
+/** dropdown style:end **/
 .factory-table table {
     border: 1px solid #8a8282;
 }
@@ -173,7 +242,6 @@
 }
 
 .p-dialog .p-dialog-header {
-    border-bottom: none;
     padding: 1rem 1.5rem;
 }
 

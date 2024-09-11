@@ -178,7 +178,7 @@ const FactoryOverview = () => {
       label:"Edit",
       icon:<FiEdit3 />,
       command:()=>{
-        setEditFactory(data.id);
+        //setEditFactory(data.id);
         setIsEdit(true)
       }
       },
