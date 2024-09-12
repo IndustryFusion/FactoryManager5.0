@@ -35,7 +35,7 @@ export class AssetService {
       const assetData = [];
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
@@ -120,7 +120,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
@@ -209,7 +209,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].object;
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       let uniqueType = [];
       // sending multiple requests to scorpio to save the asset array
@@ -235,11 +235,11 @@ export class AssetService {
           throw err;
         }
       }
-      if(uniqueType.length > 0){
-        typeData.data["http://www.industry-fusion.org/schema#type-data"].object = [...typeArr, ...uniqueType];
-        await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
-        await axios.post(this.scorpioUrl, typeData.data, {headers});
-      }
+      // if(uniqueType.length > 0){
+      //   typeData.data["http://www.industry-fusion.org/schema#type-data"].object = [...typeArr, ...uniqueType];
+      //   await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
+      //   await axios.post(this.scorpioUrl, typeData.data, {headers});
+      // }
       return {
         status: response.status,
         statusText: response.statusText
