@@ -735,6 +735,7 @@ const CombineSensorChart: React.FC = () => {
                   severity="info"
                   disabled={selectedInterval !== "custom"}
                   style={{ width: "100px" }}
+                  className="load-btn"
                   onClick={handleLoad} // Call the handleLoad function when the button is clicked
                 />
               </div>

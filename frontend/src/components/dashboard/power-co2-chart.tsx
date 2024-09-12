@@ -645,6 +645,7 @@ const PowerCo2Chart = () => {
             label={t("button:submit")}
             severity="info"
             onClick={onButtonSelect}
+            className='submit-btn'
             style={{ marginTop: "3rem" }}
           />
         </div>
