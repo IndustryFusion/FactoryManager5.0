@@ -39,7 +39,9 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               />
               <p className="m-0">Dashboard</p>
             </div>
-            <div className="flex align-items-center sidebar-dashboard-text">
+            <div className="flex align-items-center sidebar-dashboard-text"
+             onClick={() => router.push("/factory-site/factory-overview")}
+            >
               <img
                 src="/ai-browser.jpg"
                 alt="asset-series-icon"
