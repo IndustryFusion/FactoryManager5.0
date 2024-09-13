@@ -102,8 +102,7 @@ const CombineSensorChart: React.FC = () => {
   const [selectedInterval, setSelectedInterval] = useState<string>("live"); // Default selected interval
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const [noChartData, setNoChartData] = useState(false);
-  const { setEntityIdValue, selectedAssetData } = useDashboard();
+  const [noChartData, setNoChartData] = useState(false)
   const entityIdValue = useSelector((state: RootState) => state.entityId.id);
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
   const [selectedAttribute, setSelectedAttribute] = useState("");
@@ -120,6 +119,7 @@ const CombineSensorChart: React.FC = () => {
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [chartInstance, setChartInstance] = useState(null);
+  const [selectedAssetData, setSelectedAssetData] = useState<Asset>();
   const intervalButtons = [
     { label: "Live", interval: "live" },
     { label: "10 Min", interval: "10min" },
@@ -274,43 +274,34 @@ const CombineSensorChart: React.FC = () => {
       });
 
       const assetData: Asset = response.data;
-      const creationDate =
-        assetData["http://www.industry-fusion.org/schema#creation_date"]?.value;
-      if (creationDate) {
-        const [month, day, year] = creationDate.split(".");
+      setSelectedAssetData(assetData);
+      const productKey = Object.keys(assetData).find(key => key.includes("product_name")); 
+      const creationKey = Object.keys(assetData).find(key => key.includes("creation_date")); 
+      const creationDate = creationKey ? assetData[creationKey]?.value : undefined;
+       if (creationDate) {
+        const [month, day, year] = creationDate.split('.');
         setMinDate(new Date(year, month - 1, day));
       }
-      const productName =
-        assetData["http://www.industry-fusion.org/schema#product_name"]
-          ?.value || "Unknown Product";
+      const productName = productKey ? (assetData[productKey]?.value || "Unknown Product") : undefined;
       setProductName(productName); // Set the product name in the state
 
       const attributeLabels: AttributeOption[] = Object.keys(assetData)
-        .filter((key) => key.includes("fields"))
-        .map((key) => {
+        .filter(key => key.includes("fields"))
+        .map(key => {
           let index = 0;
-          const label = key.split("#")[1] || key;
-          return { label, value: label, selectedDatasetIndex: index + 1 };
+          const label = key.split("/").pop() || key;
+          return { label, value: label, selectedDatasetIndex:index+1 };
         })
-        .filter((attribute) => attribute.value !== "machine-state");
+        .filter(attribute => attribute.value !== "machine_state"); 
 
       setAttributes(attributeLabels);
-      const existingAttribute = attributeLabels.find(
-        (attr) => attr.value == selectedAttribute
-      );
+      const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 
-      if (
-        selectedAttribute == "" ||
-        selectedAttribute == undefined ||
-        selectedAttribute == null
-      ) {
+      if (selectedAttribute== '' || selectedAttribute== undefined || selectedAttribute ==null ) {
         setSelectedAttribute(attributeLabels[0].value);
-      }
-
-      return Object.keys(assetData)
-        .filter((key) => key.includes("fields"))
-        .map((key) => "eq." + key);
-    } catch (error) {
+      } 
+    }
+    catch (error) {
       setAttributes([]);
       setSelectedAttribute(""); // Reset if an error occurs or no attributes are available
     }
@@ -343,17 +334,17 @@ const CombineSensorChart: React.FC = () => {
         labels: [],
         datasets: [],
       });
-      setLoading(true); // Start loading
-      if (!entityIdValue) {
-        return;
-      }
-
-      const params: FetchDataParams = {
-        intervalType: selectedInterval,
-        order: "observedAt.desc",
-        entityId: `eq.${entityIdValue}`,
-        attributeId: `eq.${attributeId}`,
-      };
+  setLoading(true); // Start loading
+  if (!entityIdValue) {
+    return;
+  }
+  let attributeKey = selectedAssetData ? Object.keys(selectedAssetData).find(key => key.includes(attributeId)) : undefined;
+  const params:FetchDataParams = {
+    intervalType: selectedInterval,
+    order: "observedAt.desc",
+    entityId: `eq.${entityIdValue}`,
+    attributeId: `eq.${attributeKey}`,
+  };
 
       // Customize parameters for custom intervals
       if (
@@ -481,16 +472,13 @@ const CombineSensorChart: React.FC = () => {
     newData.forEach((dataItem) => {
       const { observedAt, attributeId, value } = dataItem;
 
-      // Clean the attributeId by removing the URL prefix
-      const cleanAttributeId = attributeId.replace(
-        "http://www.industry-fusion.org/fields#",
-        ""
-      );
+    // Clean the attributeId by removing the URL prefix
+    const cleanAttributeId = attributeId.split('/').pop();
 
-      // Skip updates for the machine-state attribute
-      if (cleanAttributeId === "machine-state") {
-        return;
-      }
+    // Skip updates for the machine_state attribute
+    if (cleanAttributeId === 'machine_state') {
+      return;
+    }
 
       // Attempt to find the dataset with the cleaned attributeId
       const datasetIndex = newChartData.datasets.findIndex(

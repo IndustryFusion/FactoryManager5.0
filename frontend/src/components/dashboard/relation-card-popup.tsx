@@ -48,14 +48,16 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
             let newArr = [];
             if (Array.isArray(relationData) && relationData.length > 0) {
                 for (let item of relationData) {
-                    const response = await getAssetById(item?.object);                  
-                    let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
+                    const response = await getAssetById(item?.object);  
+                    const productKey = Object.keys(response).find(key => key.includes("product_name"));                
+                    let product_name = productKey ? response[productKey]?.value : undefined;
                     newArr.push(product_name);
                 }
             }
              else if (relationData.object && relationData.object !== "json-ld-1.1") {
                 const response = await getAssetById(relationData?.object);
-                let product_name = response["http://www.industry-fusion.org/schema#product_name"]?.value;
+                const productKey = Object.keys(response).find(key => key.includes("product_name"));
+                let product_name = productKey ? response[productKey]?.value : undefined;
                 newArr.push(product_name);
             }
             return newArr;

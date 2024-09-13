@@ -71,7 +71,7 @@ export class CronService  {
       limit: 1,
       order: 'observedAt.desc',
       entityId: `eq.${entityId}`,
-      attributeId: `eq.${attributeId.replace('#', '%23')}` 
+      attributeId: `eq.${attributeId}` 
     };
 
     try {
@@ -89,7 +89,7 @@ export class CronService  {
   async handleMachineStateRefresh(){
     let machineStateParams = await this.redisService.getData('machine-state-params');
     if(machineStateParams && machineStateParams.type == 'days'){
-      let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.type, machineStateParams.token);
+      let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.attributeId, machineStateParams.type, machineStateParams.token);
       let storedData = await this.redisService.getData('machine-state-data');
       if(storedData){
         if(!isEqual(newData, storedData)){
@@ -166,7 +166,6 @@ export class CronService  {
             for(let j = 0; j < assetData.length; j++){
               for(let key in assetData[j]) {
                 if(key.includes('has')){
-                  let templateKey: string = key.split('http://www.industry-fusion.org/schema#').pop();
                   if(Array.isArray(assetData[j][key]) ){
                     let materialArr = assetData[j][key];
                     let count = 0;

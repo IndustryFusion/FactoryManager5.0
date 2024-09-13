@@ -117,13 +117,10 @@ const PicklistAssets = () => {
             // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
             const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
                 const relationsArr: string[] = [];
-
-                const checkHas = 'http://www.industry-fusion.org/schema#has';
-
                 Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
                     // Check if the innerKey starts with the specified string
-                    if (innerKey.startsWith(checkHas)) {
-                        const modifiedKey = innerKey.replace('http://www.industry-fusion.org/schema#', '');
+                    if (innerKey.includes('has')) {
+                        const modifiedKey = innerKey.split('/').pop() || '';
                         relationsArr.push(modifiedKey);
                     }
                 });

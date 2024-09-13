@@ -122,9 +122,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
 
   const handleClick = (selectedAsset: Asset) => {
-    const prefix = "http://www.industry-fusion.org/fields#";
     const allKeys = Object.keys(selectedAsset);
-    const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
+    const prefixedKeys = allKeys.filter(key => key.includes('fields'));
 
       prefixedKeys.forEach(key => {
       setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
@@ -137,9 +136,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     } else {
       setShowBlocker(true);
     }
-
-    if (prefix) {
-      setMachineStateValue(selectedAsset["http://www.industry-fusion.org/fields#machine-state"]?.value)
+    const machineStateKey = Object.keys(selectedAsset).find(key => key.includes('machine_state'));
+    if (machineStateKey) {
+      setMachineStateValue(selectedAsset[machineStateKey]?.value)
     }
   };
 
