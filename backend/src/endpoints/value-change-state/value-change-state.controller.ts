@@ -36,7 +36,7 @@ export class ValueChangeStateController {
   }
 
   @Get('/chart')
-  async findAll(@Query('asset-id') assetId: string, @Query('attributeId') attributeId: string,  @Query('type') type: string) {
+  async findAll(@Query('asset-id') assetId: string, @Query('attributeId') attributeId: string, @Query('type') type: string) {
     try {
       const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findAll(assetId, attributeId, type, token);

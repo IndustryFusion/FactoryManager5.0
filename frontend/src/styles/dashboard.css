@@ -96,7 +96,13 @@
 .onboard-btn {
     background-color: transparent;
     border: none;
-    padding: 0;
+    padding: 5;
+}
+
+.onboard-btn-new {
+    background-color: transparent;
+    border: none;
+    padding: 10;
 }
 
 .active-state {

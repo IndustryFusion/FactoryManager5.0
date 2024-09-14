@@ -115,6 +115,7 @@ const MachineStateChart = () => {
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
+           
             if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {

@@ -275,15 +275,26 @@ function formatLabel(date:Date) {
       }
       const productName = productKey ? (assetData[productKey]?.value || "Unknown Product") : undefined;
       setProductName(productName); // Set the product name in the state
+      
+      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+  
+      // Collect keys where the segment is 'realtime'
+      const prefixedKeys = Object.keys(temp.data.properties).filter(
+        (key) => temp.data.properties[key].segment === 'realtime'
+      );
 
-      const attributeLabels: AttributeOption[] = Object.keys(assetData)
-        .filter(key => key.includes("fields"))
-        .map(key => {
+      const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
           let index = 0;
           const label = key.split("/").pop() || key;
           return { label, value: label, selectedDatasetIndex:index+1 };
         })
-        .filter(attribute => attribute.value !== "machine_state"); 
+        .filter(attribute => attribute.value !== "machine_state");
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
