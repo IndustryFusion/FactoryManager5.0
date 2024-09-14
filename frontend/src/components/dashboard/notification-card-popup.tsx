@@ -95,7 +95,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
     <>
       <Dialog
 
-        header={notificationData.length > 0 ? <h3>Notifications</h3> : <h3>No Notifications</h3>}
+        header={notificationData.length > 0 ? <h3 className="m-0">Notifications</h3> : <h3 className="m-0">No Notifications</h3>}
         visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
         <div className="alerts-container">
           {notificationData.length > 0 ?

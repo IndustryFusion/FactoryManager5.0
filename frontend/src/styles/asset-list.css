@@ -87,17 +87,17 @@ li {
   height:150px; 
 }
 
-.p-tabview-panels{
+/* .p-tabview-panels{
   height: 100vh;
   overflow-y: scroll;
-}
+} */
 
-.p-tabview .p-tabview-panels {
+/* .p-tabview .p-tabview-panels {
   height: 78vh; 
-}
+} */
 .p-tabview .p-tabview-nav-link {
     text-decoration: none !important; /* Removes underline */
-    border: none !important; /* Removes any borders that might be considered as underlines */
+    /* border: none !important;  */
 }
 
 /* Specific handling for active tabs to remove any underline or border used as underline */

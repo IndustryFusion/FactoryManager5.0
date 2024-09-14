@@ -38,6 +38,9 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BlockTimer from '@/components/dashboard/block-timer';
 import OnboardForm from '@/components/dashboard/onboard-form';
+import Sidebar from '@/components/navBar/sidebar';
+import Navbar from '@/components/navBar/navbar';
+import "../../styles/factory-overview.css"
 
 interface PrefixedAssetProperty {
   key: string;
@@ -48,6 +51,7 @@ const ALERTA_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const Dashboard = () => {
   const [blocker, setBlocker]= useState(false);
+  const [isSidebarExpand, setSidebarExpand] = useState(true);
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState<PrefixedAssetProperty[]>([]);
   const router = useRouter();
   const toast = useRef<Toast>(null);
@@ -78,11 +82,24 @@ const Dashboard = () => {
      blockerProp={blocker}
      />
       }
-       <HorizontalNavbar />
+        <div className="flex">
+        <div
+          className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
+        >
+          <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
+        </div>
+        <div
+          className={
+            isSidebarExpand
+              ? "factory-container"
+              : "  factory-container-collpase"
+          }
+        >
+          <Navbar navHeader="Dashboard" />
       <div className="dashboard-container">      
        <AutoRefresh />
         <DashboardCards  />
-        <div className="flex flex-column md:flex-row my-3 gap-2" style={{height:"80%", width:"100%" }}>
+        <div className="flex flex-column md:flex-row my-3 gap-2 mx-4" style={{height:"80%", width:"97%" }}>
           <div className="flex border-round m-2" style={{width:"77%"}}>
             <div className="card h-auto" style={{width:"100%"}} >
               <CombineSensorChart />
@@ -93,12 +110,14 @@ const Dashboard = () => {
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
         </div>
-        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5" style={{height:"100%", width:"100%"}}>
+        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5 mx-4" style={{height:"100%", width:"97%"}}>
           <div className="flex border-round mx-2" style={{width:"65%", margin: 0}}>
             <PowerCo2Chart />
           </div>
           <MachineStateChart/>
           </div>     
+      </div>
+      </div>
       </div>
       <Footer />
     </DashboardProvider>

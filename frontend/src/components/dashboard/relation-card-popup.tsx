@@ -66,7 +66,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
         }
     }
 
-
     const getHasProperties = async () => {
         const propertiesArray: { [key: string]: string[] }[] = [];
         for (const key in selectedAssetData) {
@@ -101,7 +100,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     }
 
     const Header = (
-        <h3 className="pl-4">Relations</h3>
+        <h3 className="pl-3 m-0 dialog-heading-text">Relations</h3>
     )
 
     useEffect(() => {
@@ -115,11 +114,10 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     return (
         <>
             <Dialog header={Header}
-
                 visible={relationsProp} style={{ width: '45vw' }} onHide={() => setRelationsProp(false)}>
                 <div className="flex gap-3 relation-dialog">
                     <div style={{ flex: "40%" }}>
-                        <h4 className="m-0 mb-3 child-heading">Child</h4>
+                        <h4 className=" mb-3 child-heading">Child</h4>
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
                             const value = property[key];
@@ -159,7 +157,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         <img src="/parent_child2.png" alt="" width="50px" height="auto" />
                     </div>
                     <div style={{ flex: "40%" }}>
-                        <h4 className="m-0 mb-3 parent-heading">Parent</h4>
+                        <h4 className=" mb-3 parent-heading">Parent</h4>
                         {parentRelations.map((item, index) => {
                             const { product_name, id, asset_category } = item;
                             return (
@@ -180,7 +178,6 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         }
                     </div>
                 </div>
-
             </Dialog>
         </>
     )

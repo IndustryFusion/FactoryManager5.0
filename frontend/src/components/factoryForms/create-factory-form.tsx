@@ -41,6 +41,7 @@ import { Property, Schema } from "../../types/factory-form";
 import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
+import { Dropdown } from "primereact/dropdown";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibleProp, setVisibleProp }) => {
@@ -93,8 +94,11 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     const changeHandler = (e: CountryOption, key: keyof Factory) => {
         // Find the corresponding label in the options array
+        console.log("selected value here", e.value);
+        
         const selectedOption = options.find(option => option.value === e.value);
-
+        console.log("selectedOption", selectedOption);
+        
         if (selectedOption) {
             const label = selectedOption.label;
            
@@ -103,6 +107,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         }
     };
 
+    console.log("selectedCountry?.label outside", selectedCountry?.label);
+    
 
     const handleFileUpload = async (e: { files: File[] }) => {
         const file = e.files[0];
@@ -161,6 +167,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             });
       
             const responseData = response.data;
+            console.log("on submit of factory", responseData);
+            
             if (responseData.success && responseData.status === 201) {
                 showSuccess();
                   setTimeout(() => {
@@ -292,12 +300,22 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             {property.title}
                         </label>
                         {key === "country" ? (
-                            <Select
-                                placeholder={property?.description}
-                                options={options}
-                                value={selectedCountry}
-                                onChange={(e) => changeHandler(e as CountryOption, key)}
-                            />
+                             <div className="flex justify-content-between align-items-center country-dropdown">
+                             <Dropdown
+                               appendTo="self"
+                               id="country"
+                               name="country"
+                               placeholder={property?.description}
+                               options={options}
+                               value={selectedCountry?.value}
+                               onChange={(e) => changeHandler(e as CountryOption, key)}
+                             />
+                             <img
+                               className="dropdown-icon-img"
+                               src="/dropdown-icon.svg"
+                               alt="dropdown-icon"
+                             />
+                           </div>
                         ) : (
 
                             <InputText
@@ -360,26 +378,32 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             />
         </div>
     );
+    const header=()=>{
+        return(
+            <h2 className="form-title">Create Factory</h2>
+        )
+    }
 
 
     return (
         <>
-            <div className=" flex justify-content-center">
+            <div className=" flex justify-content-center create-factory-form">
                 <Button label={t('show')} icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
-                <Dialog visible={visibleProp} modal footer={footerContent}
+                <Dialog 
+                header={header}
+                visible={visibleProp} modal footer={footerContent}
                     draggable={false} resizable={false}
                     style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
                     <Toast ref={toast} />
-                    <div className="p-fluid p-formgrid p-grid ">
-                        <h2 className="form-title">Create Factory</h2>
-                        <Card className="factory-form-container mt-4 center-button-container ">
+                    <div className="p-fluid p-formgrid p-grid factory-form-container">       
+                        {/* <Card className="factory-form-container mt-4 center-button-container "> */}
                             {schema &&
                                 schema?.properties &&
                                 Object.keys(schema.properties).map((key) =>
                                     <div key={key}> {renderFields(key, schema.properties[key])}</div>
                                    
                                 )}
-                        </Card>
+                        {/* </Card> */}
                     </div>
                 </Dialog>
             </div>
