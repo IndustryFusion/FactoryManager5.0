@@ -192,7 +192,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
-              <h5 className="heading-text">Assets</h5>
+              <h5 className="asset-table-heading">Assets</h5>
               <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
             </div>
             <div className="mb-5">

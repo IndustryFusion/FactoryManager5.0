@@ -1,4 +1,5 @@
 
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
 
 .asset-list {
   list-style-type: none;
@@ -16,6 +17,7 @@
   color: #25b9c9;
   letter-spacing: 0.3px;
   font-style: italic;
+  margin-top: 10px;
 }
 
 .parent-heading {
@@ -23,6 +25,7 @@
   color: #7d7d7d;
   letter-spacing: 0.3px;
   font-style: italic;
+  margin-top: 10px;
 }
 
 .parent-child-icon {
@@ -49,6 +52,10 @@
 }
 .relation-dialog{
 padding: 0 1rem 1rem 1rem !important;
+font-family: "League Spartan", sans-serif!important;
+}
+.dialog-heading-text{
+  font-family: "League Spartan", sans-serif!important;  
 }
 .relation-container{
   border-bottom: 1px solid #f7f4f4;
