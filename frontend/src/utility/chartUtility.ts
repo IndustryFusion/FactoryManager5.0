@@ -20,20 +20,6 @@ import axios from "axios";
 const moment = require('moment');
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-export const mapBackendDataToAssetState = (backendData: any) => {
-  const modifiedObject: any = {};
-  // Iterate over the properties of the object
-  Object.keys(backendData).forEach((key) => {
-    if (key.includes("http://www.industry-fusion.org/fields#")) {
-      const newKey = key.replace("http://www.industry-fusion.org/fields#", "");
-      modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
-    } else {
-      modifiedObject[key] = backendData[key];
-    }
-  });
-  return modifiedObject;
-};
-
 export function convertToSecondsTime(time: string) {
   if (typeof time !== 'string') {
     console.error('Expected a string, but received:', time);
@@ -50,18 +36,18 @@ export const convertSecondsToTime = (seconds: number) => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-export const findDifference = (givenDateTime: any) => {
+export const findDifference = (givenDateTime:any) => {
   //2024-03-31T11:45:10.573+00:00 
-  const givenMoment = moment(givenDateTime);
-  const currentMoment = moment();
-  const differenceInMilliseconds = currentMoment.diff(givenMoment);
-  const duration = moment.duration(differenceInMilliseconds);
-
-  // Extract hours, minutes, and seconds
-  const hours = Math.trunc(duration.asHours());
-  const minutes = Math.trunc(duration.minutes());
-  const seconds = Math.trunc(duration.seconds());
-  const totalTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+ const givenMoment = moment(givenDateTime);
+ const currentMoment = moment();
+ const differenceInMilliseconds = currentMoment.diff(givenMoment);
+ const duration = moment.duration(differenceInMilliseconds);
+  
+ // Extract hours, minutes, and seconds
+ const hours = Math.trunc(duration.asHours());
+ const minutes = Math.trunc(duration.minutes());
+ const seconds = Math.trunc(duration.seconds());
+ const totalTime =  `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   return totalTime;
 
 }
@@ -78,44 +64,45 @@ export const findOnlineAverage = (onlineTime: any) => {
 
 
 export const fetchAssets = async (assetId: string) => {
-
+ 
   try {
-    const attributeIds: string[] = [];
-    const response = await axios.get(API_URL + `/asset/${assetId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
-    const assetData: Asset = response.data;
+      const attributeIds: string[] = [];
+      const response = await axios.get(API_URL + `/asset/${assetId}`, {
+          headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+          },
+          withCredentials: true,
+      });
+      const assetData: Asset = response.data;
 
-    const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
-    });
+      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+  
+      // Collect keys where the segment is 'realtime'
+      const prefixedKeys = Object.keys(temp.data.properties).filter(
+        (key) => temp.data.properties[key].segment === 'realtime'
+      );
 
-    // Collect keys where the segment is 'realtime'
-    const prefixedKeys = Object.keys(temp.data.properties).filter(
-      (key) => temp.data.properties[key].segment === 'realtime'
-    );
-
-    prefixedKeys.forEach((key) => {
-      if (key) {
-        const newKey = 'eq.' + key;
-        attributeIds.push(newKey);
-      }
-    });
-    return attributeIds;
+      prefixedKeys.forEach((key) => {
+          if (key) {
+              const newKey = 'eq.' + key;
+              attributeIds.push(newKey);
+          }
+      });
+      
+      return attributeIds;
   } catch (error) {
-    console.error("Error fetching asset data:", error);
+      console.error("Error fetching asset data:", error);
   }
 };
 
-export const getAllDaysOfWeek = (startDate: string) => {
+ export const getAllDaysOfWeek = (startDate:string) => {
   let finalDays = [];
   let daysRequired = 6;
 
@@ -123,10 +110,10 @@ export const getAllDaysOfWeek = (startDate: string) => {
   let currentDay = moment(startDate, 'YYYY-MM-DD');
   finalDays.push(currentDay.format('YYYY-MM-DD'));
   for (let i = 0; i < daysRequired; i++) {
-    // Add one day to the current day in each iteration
-    let day = currentDay.add(1, 'days');
-    // Push the formatted date string into the finalDays array
-    finalDays.push(day.format('YYYY-MM-DD'));
+      // Add one day to the current day in each iteration
+      let day = currentDay.add(1, 'days');
+      // Push the formatted date string into the finalDays array
+      finalDays.push(day.format('YYYY-MM-DD'));
   }
 
   return finalDays;

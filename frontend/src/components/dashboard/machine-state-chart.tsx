@@ -101,10 +101,10 @@ const MachineStateChart = () => {
     ];
 
     const fetchDataAndAssign = async () => {
-        let attributeIds: string[] | undefined = await fetchAssets(entityIdValue);
+        let attributeId: string | undefined = await fetchAssets(entityIdValue);
         setNoChartData(false);
-        if (entityIdValue && attributeIds && attributeIds.length > 0 && attributeIds.includes("eq.http://www.industry-fusion.org/fields#machine-state")) {
-            await fetchData("eq.http://www.industry-fusion.org/fields#machine-state", `eq.${entityIdValue}`);
+        if (entityIdValue && attributeId && attributeId.length > 0) {
+            await fetchData(attributeId, `eq.${entityIdValue}`);
         } else {
             setNoChartData(true);
         }
@@ -115,9 +115,11 @@ const MachineStateChart = () => {
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
+           
             if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
+                        attributeId,
                         'asset-id': entityId,
                         'type': selectedInterval
                     },
@@ -127,17 +129,18 @@ const MachineStateChart = () => {
                     },
                     withCredentials: true,
                 });
-
+        
                 let checkEmpty = true;
                 for (const value of Object.values(response.data) as pgData[][]) {
                     if (value.length !== 0) {
                         checkEmpty = false;
                     }
                 }
+                
                 if (checkEmpty) {
                     let lastDataResponse = await axios.get(API_URL + `/value-change-state`, {
                         params: {
-                            attributeId: attributeId,
+                            attributeId,
                             entityId: entityId,     
                             order: "observedAt.desc",
                             limit: '1'
@@ -148,8 +151,12 @@ const MachineStateChart = () => {
                         },
                         withCredentials: true,
                     });
-              
-                    setLastData(lastDataResponse.data);
+                    if(Object.keys(lastDataResponse.data).length > 0 || lastDataResponse.data.length > 0){
+                        setLastData(lastDataResponse.data);
+                    } else {
+                        setNoChartData(true);
+                    }
+                    
                   
                 }
                 setFactoryData(response.data);
@@ -193,7 +200,7 @@ const MachineStateChart = () => {
 
     const fetchAssets = async (assetId: string) => {
         try {
-            const attributeIds: string[] = [];
+            let attributeId: string = '';
             const response = await axios.get(API_URL + `/asset/${assetId}`, {
                 headers: {
                     "Content-Type": "application/json",
@@ -204,12 +211,11 @@ const MachineStateChart = () => {
             const assetData: Asset = response.data;
 
             Object.keys(assetData).map((key) => {
-                if (key.includes("fields")) {
-                    const newKey = 'eq.' + key;
-                    attributeIds.push(newKey);
+                if (key.includes("machine_state")) {
+                    attributeId = 'eq.' + key;
                 }
             });
-            return attributeIds;
+            return attributeId;
         } catch (error) {
             console.error("Error fetching asset data:", error);
         }
@@ -558,7 +564,6 @@ const MachineStateChart = () => {
     const alignData = (data:  FinalData) => {
         setLastData({});
         if(selectedInterval == 'days'){
-           
             const finalData:FinalData = {} ;
             for(let key in data){
                 const dateObject = moment(key, 'MMMM Do');
@@ -848,11 +853,15 @@ const MachineStateChart = () => {
             <h5 className="heading-text">Machine State Overview</h5>
             <div className="interval-filter-container">
                 <p>{t('filterInterval')}</p>
-                <div
+                {/* <div
                     className="dropdown-container custom-button"
-                    style={{ padding: "0" }}
-                >
-                    <Dropdown
+                    style={{ padding: "0" , width:"100px"}}
+                > */}
+                     <div className="flex justify-content-between align-items-center dashboard-dropdown"
+                     style={{width: "100px",
+                        marginTop: "1rem"}}
+                     >
+                <Dropdown
                         value={selectedInterval}
                         options={intervalButtons.map(({ label, interval }) => ({
                             label,
@@ -860,10 +869,16 @@ const MachineStateChart = () => {
                         }))}
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
-                        style={{ width: "100%", border: "none" }}
+                      
                         appendTo="self"
                     />
-                </div>
+                <img
+                  className="dropdown-icon-img"
+                  src="/dropdown-icon.svg"
+                  alt="dropdown-icon"
+                />
+              </div>
+                {/* </div> */}
             </div>
             {
                  noChartData ?

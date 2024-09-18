@@ -26,6 +26,8 @@ import { RootState } from "@/redux/store";
 import { useTranslation } from "next-i18next";
 import { AlertsResponse } from "@/types/alert-response";
 import { AssetData } from "@/types/dashboard-cards";
+import { Asset } from "@/types/asset-types";
+
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
@@ -63,14 +65,37 @@ const DashboardCards: React.FC = () => {
         }
     }
 
-   
+    const fetchAssets = async (assetId: string) => {
+        try {
+            let attributeId: string = '';
+            const response = await axios.get(API_URL + `/asset/${assetId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                withCredentials: true,
+            });
+            const assetData: Asset = response.data;
+
+            Object.keys(assetData).map((key) => {
+                if (key.includes("machine_state")) {
+                    attributeId = 'eq.' + key;
+                }
+            });
+            return attributeId;
+        } catch (error) {
+            console.error("Error fetching asset data:", error);
+        }
+    };
 
     const fetchData = async () => {
         try {
             setDifference("00:00:00");
+            let attributeId: string | undefined = await fetchAssets(entityIdValue);
+            if (entityIdValue && attributeId && attributeId.length > 0) {
             let response = await axios.get(API_URL + '/value-change-state', {
                 params: {
-                    attributeId: "eq.http://www.industry-fusion.org/fields#machine-state",
+                    attributeId,
                     entityId: 'eq.' + entityIdValue,
                     order: "observedAt.desc",
                     limit: '1'
@@ -91,11 +116,12 @@ const DashboardCards: React.FC = () => {
                 }
             } 
         }
-        catch (error) {
+        }
+        catch(error) {
             console.log("Error From fetchData function from @components/dashboard/dashboard-cards.tsx",error);
         }
     }
-
+    
     const runningSince = () => {
         fetchData();
         intervalId = setInterval(() => {
