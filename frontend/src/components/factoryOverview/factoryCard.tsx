@@ -11,6 +11,8 @@ const FactoryCard:React.FC<any> = ({menuModel}) => {
     cm.current.show(event); 
 };
 
+
+
   return (
     <>
     {showContextMenu && 
