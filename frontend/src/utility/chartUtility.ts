@@ -76,8 +76,21 @@ export const fetchAssets = async (assetId: string) => {
       });
       const assetData: Asset = response.data;
 
-      Object.keys(assetData).map((key) => {
-          if (key.includes("fields")) {
+      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+
+      // Collect keys where the segment is 'realtime'
+      const prefixedKeys = Object.keys(temp.data.properties).filter(
+        (key) => temp.data.properties[key].segment === 'realtime'
+      );
+
+      prefixedKeys.forEach((key) => {
+          if (key) {
               const newKey = 'eq.' + key;
               attributeIds.push(newKey);
           }

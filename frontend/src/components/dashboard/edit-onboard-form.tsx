@@ -27,6 +27,7 @@ import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } fr
 import { useTranslation } from "next-i18next";
 import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
+import YAML from 'yaml';
 
 type OnboardDataKey = keyof OnboardData;
 interface EditOnboardAssetProp {
@@ -79,7 +80,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 ...response.data,
                 pod_name: podName,
                 protocol: assetProtocol,
-                app_config: JSON.stringify(response.data.app_config)
+                app_config: YAML.stringify(response.data.app_config)
             }));
 
         } catch (error) {
@@ -153,10 +154,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         } else {
             // Check if app_config is not empty and is valid JSON
             try {
-                parsedConfig = JSON.parse(onboard.app_config);
+                parsedConfig = YAML.parse(onboard.app_config);
             } catch (error) {
-                console.error("Invalid JSON in app_config");
-                showToast('error', 'Error', 'Invalid JSON in app_config');
+                console.error("Invalid YAML in app_config");
+                showToast('error', 'Error', 'Invalid YAML in app_config');
                 setValidateInput(validate => ({ ...validate, app_config: true }))
             }
 
@@ -165,13 +166,13 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     ...onboard,
                     app_config: parsedConfig
                 }
-                const payload = JSON.stringify(modifiedOnboard);
-
-                console.log("edit payload", payload);
+                const payload = YAML.stringify(modifiedOnboard);
+                const newpayload = YAML.parse(payload);
+                console.log("edit payload", newpayload);
 
 
                 try {
-                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, payload, {
+                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",

@@ -62,6 +62,8 @@ import { ValueChangeStateGateway } from './endpoints/value-change-state/value-ch
 import { PowerConsumptionGateway } from './endpoints/power-consumption/power-consumption-gateway';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { TokenService } from './endpoints/session/token.service';
+import { MongodbTemplatesService } from './endpoints/mongodb-templates/mongodb-templates.service';
+import { MongodbTemplatesController } from './endpoints/mongodb-templates/mongodb-templates.controller';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -96,7 +98,8 @@ const mongoURI = process.env.MONGO_URL;
     PowerConsumptionController,
     CronController,
     ValueChangeStateController,
-    OnboardingAssetController
+    OnboardingAssetController,
+    MongodbTemplatesController
   ],
   providers: [
     AppService,
@@ -121,7 +124,8 @@ const mongoURI = process.env.MONGO_URL;
     RedisService,
     ValueChangeStateGateway,
     PowerConsumptionGateway,
-    TokenService
+    TokenService,
+    MongodbTemplatesService
   ]
 })
 export class AppModule {
