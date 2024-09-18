@@ -28,6 +28,7 @@ import "../../styles/dashboard.css"
 import { useTranslation } from "next-i18next";
 import { OnboardData } from "@/types/onboard-form";
 import { Asset } from "@/types/asset-types";
+import YAML from 'yaml';
 
 type OnboardDataKey = keyof OnboardData;
 
@@ -170,10 +171,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
             // Check if app_config is not empty and is valid JSON
             try {
-                parsedConfig = JSON.parse(onboardForm.app_config);
+                parsedConfig = YAML.parse(onboardForm.app_config);
             } catch (error) {
-                console.error("Invalid JSON in app_config");
-                showToast('error', 'Error', 'Invalid JSON in app_config');
+                console.error("Invalid YAML in app_config");
+                showToast('error', 'Error', 'Invalid YAML in app_config');
                 setValidateInput(validate => ({ ...validate, app_config: true }))
             }
             if (typeof parsedConfig === "object") {
@@ -181,11 +182,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     ...onboardForm,
                     app_config: parsedConfig
                 }
-                const payload = JSON.stringify(obj);
-                console.log("payload here", payload);
+                const payload = YAML.stringify(obj);
+                const newPayload = YAML.parse(payload);
+                console.log("payload here", newPayload);
 
                 try {
-                    const response = await axios.post(API_URL + "/onboarding-asset", payload, {
+                    const response = await axios.post(API_URL + "/onboarding-asset", newPayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",

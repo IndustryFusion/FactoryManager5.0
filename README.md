@@ -52,6 +52,64 @@ curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
         "object": ["default"]
     }
 }'
+
+curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
+--header 'Content-Type: application/ld+json' \
+--header 'Accept: application/ld+json' \
+--data-raw '{
+    "id": "urn:ngsi-ld:asset-type-store",
+    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
+    "http://www.industry-fusion.org/schema#type-data": [
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/filterCatridge"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/gasController"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/laserCutter"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/plasmaCutter"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/powerSource"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/airTracker"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/airFilter"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/bendingMachine"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/common"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/deburringMachine"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/laserCooler"
+        },
+        {
+            "type": "Property",
+            "value": "https://industry-fusion.org/base/v0.1/metalWorkpiece"
+        }
+    ]
+}'
 ```
 
 Aftr the above assets are created, it is also important to create custom functions in PDT Postgres to use in data dashboards. Using, Kubectl enter the acid-cluster pod in PDT. Then using below command, login to Postgres DB.

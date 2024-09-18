@@ -31,6 +31,7 @@ import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
 import { update} from '@/redux/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
+import axios from "axios";
 
 interface PrefixedAssetProperty {
   key: string;
@@ -60,6 +61,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder', 'dashboard']);
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -100,6 +102,22 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     )
   }
 
+  const viewBodyTemplateNew = (rowData: Asset): React.ReactNode => {
+    return (
+      <>
+        <Button
+          className="onboard-btn-new"
+          onClick={(e) => {
+              setShowBlocker(true);
+          }}
+          title="Onboard form"
+        >
+          <img src="/link.png" alt="" width="30px" height="30px" />
+        </Button>
+      </>
+    )
+  }
+
   const rowClassName = (rowData: Asset) => {
     return { 'selected-row': selectedRow && selectedRow.id === rowData.id };
   };
@@ -121,12 +139,21 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   }
 
 
-  const handleClick = (selectedAsset: Asset) => {
-    const prefix = "http://www.industry-fusion.org/fields#";
-    const allKeys = Object.keys(selectedAsset);
-    const prefixedKeys = allKeys.filter(key => key.startsWith(prefix));
+  const handleClick = async (selectedAsset: Asset) => {
+    const response = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
 
-      prefixedKeys.forEach(key => {
+    // Collect keys where the segment is 'realtime'
+    const prefixedKeys = Object.keys(response.data.properties).filter(
+      (key) => response.data.properties[key].segment === 'realtime'
+    );
+
+    prefixedKeys.forEach(key => {
       setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
     });
     dispatch(update(selectedAsset?.id));
@@ -134,8 +161,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
-    } else {
-      setShowBlocker(true);
     }
 
     if (prefix) {
@@ -194,9 +219,9 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
               <h5 className="heading-text">Assets</h5>
-              <img src="/refresh.png" alt="table-icon" width="30px" height="30px" />
+              {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
             </div>
-            <div className="mb-5">
+            <div className="mb-5" style={{paddingLeft: "15px"}}>
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText
@@ -235,6 +260,12 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                 header={t('dashboard:assetType')}
                 field="asset_type"
                 body={assetTypeBodyTemplate}
+              />
+              <Column
+                header={t('dashboard:onboard')}
+                style={{ width: '10%' }}
+                body={viewBodyTemplateNew}
+
               />
               <Column
                 header={t('dashboard:view')}

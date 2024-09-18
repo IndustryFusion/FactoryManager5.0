@@ -26,6 +26,7 @@
     "formik": "^2.4.5",
     "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
+    "js-yaml": "^4.1.0",
     "jspdf": "^2.5.1",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
