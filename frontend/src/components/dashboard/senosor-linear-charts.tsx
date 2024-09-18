@@ -334,6 +334,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
     return;
   }
   let attributeKey = selectedAssetData ? Object.keys(selectedAssetData).find(key => key.includes(attributeId)) : undefined;
+  console.log("ibis", attributeKey, attributeId, selectedAssetData);
   const params:FetchDataParams = {
     intervalType: selectedInterval,
     order: "observedAt.desc",
