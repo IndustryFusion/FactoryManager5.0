@@ -18,11 +18,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { RedisService } from '../redis/redis.service';
 import * as moment from 'moment';
+import { AssetService } from '../asset/asset.service';
 @Injectable()
 export class PgRestService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
   constructor(
-    private redisService: RedisService
+    private redisService: RedisService,
+    private readonly assetService: AssetService
   ) {}
 
   async findLiveData(token : string, queryParams: any) {    
@@ -96,29 +98,40 @@ export class PgRestService {
 
     const startTimeFormatted = startTime.utc().format("YYYY-MM-DDTHH:mm:ss") + "-00:00";
     const endTimeFormatted = endTime.utc().format("YYYY-MM-DDTHH:mm:ss") + "-00:00";
+    
+    const assetId = queryParams.entityId.split("eq.").pop();
+    const assetData = await this.assetService.getAssetDataById(assetId, token);
+    
+    let actualKey = "";
+    let attributeKey = queryParams.attributeId.split("eq.").pop();
+    
+    // fetch actual key from asset data 
+    if(assetData) {
+      actualKey = Object.keys(assetData).find(key => key.includes(attributeKey));
+      
+      const attributeId = `attributeId=eq.${actualKey}`;
+      const entityId = `entityId=${queryParams.entityId}`;
+      const observedAt = `observedAt=gte.${startTimeFormatted}&observedAt=lte.${endTimeFormatted}`;
+      const order = `order=${queryParams.order}`;
+      // const value = `value=neq.0`;
 
-    const attributeId = `attributeId=${queryParams.attributeId}`;
-    const entityId = `entityId=${queryParams.entityId}`;
-    const observedAt = `observedAt=gte.${startTimeFormatted}&observedAt=lte.${endTimeFormatted}`;
-    const order = `order=${queryParams.order}`;
-    const value = `value=neq.0`;
+      const queryString = [entityId, attributeId, observedAt, order].join('&');
+      const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
+      
+      try {
+        const response = await axios.get(url, { headers });
+        await this.redisService.saveData("storedDataQueryParams", queryParams);
+        await this.redisService.saveData("storedData", null);
 
-    const queryString = [attributeId, entityId, observedAt, order, value].join('&');
-    const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
-
-    try {
-      const response = await axios.get(url, { headers });
-      await this.redisService.saveData("storedDataQueryParams", queryParams);
-      await this.redisService.saveData("storedData", null);
-
-      if (queryParams.intervalType == "live" ) {
-        // Store data in Redis only if the intervalType is 'live'
-        await this.redisService.saveData("storedData", response.data);
-        return response.data ;
+        if (queryParams.intervalType == "live" ) {
+          // Store data in Redis only if the intervalType is 'live'
+          await this.redisService.saveData("storedData", response.data);
+          return response.data ;
+        }
+      return response.data ;
+      } catch (err) {
+        return [];
       }
-    return response.data ;
-    } catch (err) {
-      return [];
     }
   }
 }

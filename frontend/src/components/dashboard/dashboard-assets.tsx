@@ -63,6 +63,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const { t } = useTranslation(['placeholder', 'dashboard']);
 
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const templateUrl = process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL;
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -141,7 +142,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
 
   const handleClick = async (selectedAsset: Asset) => {
-    const response = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
+    const response = await axios.get(templateUrl + `/templates/mongo-templates/type/${btoa(selectedAsset.type)}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

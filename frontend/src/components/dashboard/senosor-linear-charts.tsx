@@ -55,7 +55,7 @@ interface DataItem {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
+const templateUrl = process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL;
 type AttributeOption = {
   selectedDatasetIndex:number,
   label: string;
@@ -120,7 +120,7 @@ const { t } = useTranslation(['button', 'placeholder', 'dashboard']);
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [chartInstance, setChartInstance] = useState(null);
-  const [selectedAssetData, setSelectedAssetData] = useState<Asset>();
+  const {selectedAssetData } = useDashboard();
   const intervalButtons = [
     { label: "Live", interval: "live" },
     { label: "10 Min", interval: "10min" },
@@ -254,9 +254,20 @@ function formatLabel(date:Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
 
-  const fetchAsset = async (entityIdValue: string) => {
+  const fetchAsset = async () => {
     try {
-      const response = await axios.get(`${API_URL}/asset/${entityIdValue}`, {
+      const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name")); 
+      const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date")); 
+      const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;
+       if (creationDate) {
+        const [month, day, year] = creationDate.split('.');
+        setMinDate(new Date(year, month - 1, day));
+      }
+      const productName = productKey ? (selectedAssetData[productKey]?.value || "Unknown Product") : undefined;
+      setProductName(productName); // Set the product name in the state
+      
+      // fetch templates from template sandbox
+      const temp = await axios.get(templateUrl + `/templates/mongo-templates/type/${btoa(selectedAssetData.type)}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -264,31 +275,12 @@ function formatLabel(date:Date) {
         withCredentials: true,
       });
       
-      const assetData: Asset = response.data;
-      setSelectedAssetData(assetData);
-      const productKey = Object.keys(assetData).find(key => key.includes("product_name")); 
-      const creationKey = Object.keys(assetData).find(key => key.includes("creation_date")); 
-      const creationDate = creationKey ? assetData[creationKey]?.value : undefined;
-       if (creationDate) {
-        const [month, day, year] = creationDate.split('.');
-        setMinDate(new Date(year, month - 1, day));
-      }
-      const productName = productKey ? (assetData[productKey]?.value || "Unknown Product") : undefined;
-      setProductName(productName); // Set the product name in the state
+      // Collect keys where the segment is 'realtime'and remove eclass in the key if present
+      const prefixedKeys = Object.keys(temp.data.properties)
+      .filter((key: string) => temp.data.properties[key].segment === 'realtime')
+      .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
 
-      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-
-      // Collect keys where the segment is 'realtime'
-      const prefixedKeys = Object.keys(temp.data.properties).filter(
-        (key) => temp.data.properties[key].segment === 'realtime'
-      );
-
+      
       const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
           let index = 0;
           const label = key.split("/").pop() || key;
@@ -323,8 +315,7 @@ const handleIntervalChange = (e: CustomChangeEvent ) => {
         datasets: []
     });
 };
-const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdValue:string, selectedInterval:string, selectedDate?:Date, startTime?:Date,endTime?:Date) => {
-
+const fetchDataForAttribute =  async (attributeId:string, entityIdValue:string, selectedInterval:string, selectedDate?:Date, startTime?:Date,endTime?:Date) => {
   setChartData({
         labels:[],
         datasets: []
@@ -333,8 +324,9 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
   if (!entityIdValue) {
     return;
   }
+  
   let attributeKey = selectedAssetData ? Object.keys(selectedAssetData).find(key => key.includes(attributeId)) : undefined;
-  console.log("ibis", attributeKey, attributeId, selectedAssetData);
+  
   const params:FetchDataParams = {
     intervalType: selectedInterval,
     order: "observedAt.desc",
@@ -351,7 +343,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
     endDate.setHours(endTime.getHours(), endTime.getMinutes());
     params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
   }
-
+  
   try {
     const response = await axios.get(`${API_URL}/pgrest`, {
       params,
@@ -361,6 +353,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
       },
       withCredentials: true,
     });
+    
     const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
     const labels = factoryData.map((data:DataItem) => formatLabel(new Date(data.observedAt)));
     const dataPoints = factoryData.map((data:DataItem) => data.value ? Number(data.value) : null);
@@ -394,7 +387,7 @@ const fetchDataForAttribute =  useCallback(async (attributeId:string, entityIdVa
     console.error("Error fetching data for attribute:", error);
     setNoChartData(true);
   }
-},[])
+}
 
 const handleDateChange = async(e:CustomChangeEvent) => {
     setSelectedDate(e.value as Date);
@@ -499,28 +492,21 @@ useEffect(() => {
     setSelectedAttribute("");
 }, [entityIdValue]);  
 
+const fetchData = async() => {
+  await fetchAsset();
+  await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime);
+}
 
 useEffect(() => {
    if (Cookies.get("login_flag") === "false") {
       router.push("/login");
     } 
-    let isMounted = true; // Flag to track mount status
+
     if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
         return; 
     }
-
-
-    fetchAsset(entityIdValue)
-    fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime)
-        .catch(console.error)
-        .then(() => {
-            if (!isMounted) return; // Prevent state updates if component is unmounted
-            
-        });
-    
-
-    return () => { isMounted = false; }; // Cleanup function to set mount flag false
-}, [selectedAttribute, entityIdValue, selectedInterval, router.isReady,zoomLevel]);
+    fetchData();
+}, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady,zoomLevel]);
 
 
 useEffect(() => {
