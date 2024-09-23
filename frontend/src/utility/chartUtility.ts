@@ -19,7 +19,7 @@ import axios from "axios";
 
 const moment = require('moment');
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const templateUrl = process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL;
+
 export function convertToSecondsTime(time: string) {
   if (typeof time !== 'string') {
     console.error('Expected a string, but received:', time);
@@ -76,7 +76,7 @@ export const fetchAssets = async (assetId: string) => {
       });
       const assetData: Asset = response.data;
 
-      const temp = await axios.get(templateUrl + `/templates/mongo-templates/type/${btoa(assetData.type)}`, {
+      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

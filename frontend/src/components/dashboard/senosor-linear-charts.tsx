@@ -55,7 +55,7 @@ interface DataItem {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const templateUrl = process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL;
+
 type AttributeOption = {
   selectedDatasetIndex:number,
   label: string;
@@ -267,7 +267,7 @@ function formatLabel(date:Date) {
       setProductName(productName); // Set the product name in the state
       
       // fetch templates from template sandbox
-      const temp = await axios.get(templateUrl + `/templates/mongo-templates/type/${btoa(selectedAssetData.type)}`, {
+      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAssetData.type)}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
