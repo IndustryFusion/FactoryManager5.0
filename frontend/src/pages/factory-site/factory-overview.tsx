@@ -40,6 +40,7 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Asset } from "@/types/asset-types";
 import DeleteDialog from "@/components/delete-dialog";
+import { getAccessGroupData } from "@/utility/auth";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
@@ -69,6 +70,29 @@ const FactoryOverview = () => {
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
+
+  const setIndexedDb = async (token: string) => {
+    try {
+      await getAccessGroupData(token);
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error response:", error.response?.data.message);
+        showToast("error", "Error", "Fetching assets");
+      } else {
+        console.error("Error:", error);
+        showToast("error", "Error", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) {
+      setIndexedDb(token);
+    }
+  }, []);
 
   // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: Asset[]): Factory[] => {

@@ -149,6 +149,25 @@
   margin-top: 8px;
 }
 
+.clone-label {
+  margin-bottom: 5px;
+  color: #2b2b2b;
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.clone-dialog .p-dialog-content {
+  padding-top: 17px;
+}
+.clone-dialog .p-button.p-button-danger.p-button-outlined,
+ .p-dialog .p-dialog-footer button {
+  border-radius: 8px;
+  font-family: "League Spartan";
+}
+
 
 
 @media only screen and (min-width: 1440px) and (max-width: 1800px) {
