@@ -24,6 +24,7 @@ import { jwtDecode, JwtPayload } from "jwt-decode";
 import { storeAccessGroup } from "./indexed-db";
 
 const REGISTRY_API_URL =process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface CustomJwtPayload extends JwtPayload {
     user: string;  
@@ -273,21 +274,11 @@ export const getAccessGroupData = async(token: string) => {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
         };
-        const decodedToken = jwtDecode<CustomJwtPayload>(token); 
-        const response = await axios.post(`${REGISTRY_API_URL}/auth/get-indexed-db-data`,{
-            company_id: decodedToken?.sub,
-            email: decodedToken?.user,
-            product_name: "Factory Manager"
-        }, {
+        const response = await axios.post(`${BACKEND_URL}/auth/get-indexed-db-data`, {token, product_name: "Fleet Manager"}, {
             headers: registryHeader
         });
         await storeAccessGroup(response.data.data)
     } catch(error: any) {
-        console.log('err from update company twin',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
         throw error;
-        }
     }
 }

@@ -18,3 +18,8 @@ export interface TokenDto {
     access_token: string;
     refresh_token: string;
 }
+
+export interface FindIndexedDbAuthDto {
+    token: string;
+    product_name: string;
+}
