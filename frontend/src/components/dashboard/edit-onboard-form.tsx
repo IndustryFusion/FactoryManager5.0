@@ -149,7 +149,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             dataservice_image_config === undefined || dataservice_image_config === "" ||
             agentservice_image_config === undefined || agentservice_image_config === ""
         ) {
-
             showToast('error', "Error", "Please fill all required fields")
         } else {
             // Check if app_config is not empty and is valid JSON
@@ -169,8 +168,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 const payload = YAML.stringify(modifiedOnboard);
                 const newpayload = YAML.parse(payload);
                 console.log("edit payload", newpayload);
-
-
+              
                 try {
                     const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
                         headers: {

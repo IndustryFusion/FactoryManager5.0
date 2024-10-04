@@ -102,7 +102,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
       <Dialog
         visible={visible}
       
-        header={<h3>Notifications</h3>}
+        header={<h3 className="m-0">Notifications</h3>}
         onHide={() => { setVisible(false) }} style={{ width: '50vw' }}
       >
         {
@@ -130,7 +130,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
 
                 return (
                   <>
-                    <div key={index} className="alerts-container card mb-4">
+                    <div key={index} className="alerts-container  card mb-4">
                       <div className="flex gap-3  ">
                         <div className="mt-4">
                           <i className={getIcon(alert?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(alert?.severity).color }}></i>
@@ -215,7 +215,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
             }
             ).filter(component => component !== null)
           ) : (
-            <div className="notification notification--empty flex flex-row gap-3 items-center">
+            <div className="notification mt-2 notification--empty flex flex-row gap-3 items-center">
               <Avatar icon="pi pi-inbox" shape="circle"></Avatar>
               <div className="flex flex-col text-sm">
                 <span className="font-semibold" style={{ paddingTop: '5px' }}>No notifications</span>

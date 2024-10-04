@@ -231,7 +231,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0">
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">{t('machineState')}</span>
+                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('machineState')}</span>
                                 <div className="text-900 font-medium text-xl">{machineStateValue == "2" ? "Online" : "Offline"}</div>
 
                             </div>
@@ -248,7 +248,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0 d">
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">{t('runningSince')}</span>                              
+                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('runningSince')}</span>                              
                                 <div className="text-900 font-medium text-xl">{difference}</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
@@ -263,7 +263,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0 " onClick={() => setRelations(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">{t('relations')}</span>
+                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('relations')}</span>
                                 <div className="flex gap-1">
                                     <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
                                     <span className="text-900 font-medium text-xl"
@@ -288,7 +288,7 @@ const DashboardCards: React.FC = () => {
                     <div className="card mb-0" onClick={() => setNotification(true)}>
                         <div className="flex justify-content-between mb-3">
                             <div>
-                                <span className="block text-500 font-medium mb-3">{t('notifications')}</span>
+                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('notifications')}</span>
                                 <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
                             </div>
                             <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>

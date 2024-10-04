@@ -83,27 +83,10 @@ const HorizontalNavbar: React.FC = () => {
 
 
   return (
-    <div style={navbarStyle}>
-      <div className="flex align-items-center gap-1 logo-container cursor-pointer"
-        onClick={() => router.push("/factory-site/factory-overview")}
-      >
-        <img src="/industryFusion_icon-removebg-preview.png" alt="Logo" style={logoStyle} />
-        <p style={logoText}>Factory Manager</p>
-      </div>
       <div className="flex  justify-content-between align-items-center" >
         <div className="mr-3 language-dropdown">
           <Language />
         </div>
-        <Button label={t('aboutUs')} link onClick={navigateToIndustryFusion}
-          style={{
-            fontFamily: "Segoe UI",
-            fontSize: "14px", fontWeight: "bold", color: "#615e5e"
-          }} />
-        <Button label={t('contactUs')} link onClick={navigateToIndustryFusion}
-          style={{
-            fontFamily: "Segoe UI",
-            fontSize: "14px", fontWeight: "bold", color: "#615e5e"
-          }} />
         <Button icon="pi pi-warehouse" link
           style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
           tooltip="Asset Management"
@@ -117,15 +100,21 @@ const HorizontalNavbar: React.FC = () => {
           onClick={() => router.push("/factory-site/dashboard")}
         />
         <Alerts />
-        <Button icon="pi pi-user" link
+        <Button  link
+            style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
+            tooltip="Profile Details"
+            tooltipOptions={{ position: 'bottom' }}
+          
+        >
+         <img
+            src="/profile-icon.jpg"
+            alt="profile-icon"
+            onClick={() => setProfileDetail(true)}
+          />
+          </Button>
+        {/* <Button onClick={handleLogout} icon="pi pi-sign-out" link
           style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
-          tooltip="Profile Details"
-          tooltipOptions={{ position: 'bottom' }}
-          onClick={() => setProfileDetail(true)}
-        />
-        <Button onClick={handleLogout} icon="pi pi-sign-out" link
-          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
-          tooltip="logout" tooltipOptions={{ position: 'bottom' }} />
+          tooltip="logout" tooltipOptions={{ position: 'bottom' }} /> */}
         {assetManage && <AssetManagementDialog
           assetManageDialogProp={assetManage}
           setAssetManageDialogProp={setAssetManage}
@@ -135,7 +124,6 @@ const HorizontalNavbar: React.FC = () => {
           setProfileDetailProp={setProfileDetail}
         />}
       </div>
-    </div>
   );
 };
 

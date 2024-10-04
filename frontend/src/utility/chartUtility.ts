@@ -84,6 +84,7 @@ export const fetchAssets = async (assetId: string) => {
         withCredentials: true,
       });
 
+
       // Collect keys where the segment is 'realtime'
       const prefixedKeys = Object.keys(temp.data.properties)
       .filter((key: string) => temp.data.properties[key].segment === 'realtime')
@@ -95,6 +96,7 @@ export const fetchAssets = async (assetId: string) => {
               attributeIds.push(newKey);
           }
       });
+      
       return attributeIds;
   } catch (error) {
       console.error("Error fetching asset data:", error);

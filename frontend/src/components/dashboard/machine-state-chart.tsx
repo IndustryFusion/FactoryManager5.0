@@ -115,6 +115,7 @@ const MachineStateChart = () => {
             setLastData({});
             setFactoryData({});
             setIsLoading(true);
+           
             if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
@@ -852,11 +853,15 @@ const MachineStateChart = () => {
             <h5 className="heading-text">Machine State Overview</h5>
             <div className="interval-filter-container">
                 <p>{t('filterInterval')}</p>
-                <div
+                {/* <div
                     className="dropdown-container custom-button"
-                    style={{ padding: "0" }}
-                >
-                    <Dropdown
+                    style={{ padding: "0" , width:"100px"}}
+                > */}
+                     <div className="flex justify-content-between align-items-center dashboard-dropdown"
+                     style={{width: "100px",
+                        marginTop: "1rem"}}
+                     >
+                <Dropdown
                         value={selectedInterval}
                         options={intervalButtons.map(({ label, interval }) => ({
                             label,
@@ -864,10 +869,16 @@ const MachineStateChart = () => {
                         }))}
                         onChange={(e) => setSelectedInterval(e.value)}
                         placeholder="Select an Interval"
-                        style={{ width: "100%", border: "none" }}
+                      
                         appendTo="self"
                     />
-                </div>
+                <img
+                  className="dropdown-icon-img"
+                  src="/dropdown-icon.svg"
+                  alt="dropdown-icon"
+                />
+              </div>
+                {/* </div> */}
             </div>
             {
                  noChartData ?

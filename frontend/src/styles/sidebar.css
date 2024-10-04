@@ -1,0 +1,235 @@
+@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
+
+:root {
+  --black-primary: #2b2b2b;
+  --blue-new: #478fb7;
+  --blue: #138ab6;
+  --white: #fff;
+  --grey-primary: #5f5f5f;
+  --grey-secondary: #95989a;
+  --grey-box: #f3f3f5;
+}
+
+.sidebar {
+  font-family: "League Spartan";
+}
+
+.logo-container {
+  padding: 23px 0px 0 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-heading {
+  color: var(--grey-secondary);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+.nav-list {
+  margin: 0;
+  padding: 0;
+}
+.sidebar-dashboard-active{
+background-color: var(--grey-box);
+border-radius: 8px;
+padding: 11px 6px 11px 11px;
+cursor: pointer;
+}
+.sidebar-dashboard-text {
+    color: var(--black-primary);
+    font-family: "League Spartan";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    list-style: none;
+    margin-bottom: 6px;
+    cursor: pointer;
+    padding: 8px 11px 8px !important;
+  }
+.nav-list li {
+  color: var(--black-primary);
+  font-family: "League Spartan";
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  list-style: none;
+  padding: 8px 11px 8px !important;
+}
+
+.nav-list li:hover ,
+.sidebar-dashboard-item:hover{
+  border-radius: 8px;
+  background-color: var(--grey-box);
+  cursor: pointer;
+}
+
+.item-heading {
+  color: var(--grey-secondary);
+  font-family: "League Spartan";
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.item-container {
+  margin-bottom: 28px;
+}
+.sidebar-dashboard-item {
+  margin: 82px 0 20px 0;
+}
+
+.sidebar-search-container {
+  margin: 46px 0;
+  position: relative;
+}
+
+.sidebar-search-container img {
+  position: absolute;
+  top: 0.8rem;
+  left: 1rem;
+}
+
+.second-item {
+  margin-top: 40px;
+  margin-bottom: 47px;
+}
+
+.pass-quota-container {
+  background-color: var(--grey-box);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  width: 240px;
+  margin-top: 15rem;
+}
+
+.pass-quota-container h3 {
+  color: var(--black-primary);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.progress-value {
+  color: var(--grey-secondary);
+  font-family: "League Spartan";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.upgrade-text {
+  color: var(--black-primary);
+  font-family: "League Spartan";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-decoration-line: underline;
+  margin-top: 10px !important;
+}
+
+.progress-bar {
+  margin: 12px 0;
+}
+
+.nav-search-input {
+  width: 238px;
+  border: 2px solid #e6e6e6;
+  border-radius: 8px;
+  font-family: "League Spartan";
+  padding: 10px 0 12px 30px;
+}
+.sidebar-items,
+.sidebar-second-items{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebar-items img,
+.sidebar-second-items img {
+  width: 23px;
+  height: auto;
+  cursor: pointer;
+}
+.sidebar-second-items {
+  margin-top: 74px;
+}
+.sidebar-icon-container{
+  position: absolute;
+  top: 4rem;
+  left: 3rem;
+}
+.sidebar-collpase-icon{
+  width: 25px;
+  cursor: pointer;
+}
+.last-items{
+  margin-top: 11rem;
+  margin-bottom: 27px;
+  justify-content: center;
+  align-items: center;
+}
+.last-items img{
+  cursor: pointer;
+  width: 23px;
+}
+.dashboard-menu{
+  margin-bottom: 65px;
+  margin-top: 7rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+.collapse-sidebar-menu {
+  margin-top: 35px;
+  margin-bottom: 104px;
+}
+.collapse-nav-heading{
+  color: var(--grey-secondary);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-transform: uppercase;
+  margin: 0;
+}
+.new-tag {
+  color: var(--White, #fff);
+  font-family: "League Spartan";
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  border-radius: 9px;
+  background: var(--Blue, #138ab6);
+  padding: 5px 8px 4px 8px;
+  text-transform: uppercase;
+  margin-top: -7px;
+}
+.settings-icon{
+  color:var(--grey-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 19px;
+}
+.ifric-org-logo-icon{
+  cursor: pointer;
+}

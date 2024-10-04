@@ -29,18 +29,18 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
 import { useDispatch } from "react-redux";
-import { update} from '@/redux/entityId/entityIdSlice';
+import { update } from '@/redux/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
 import axios from "axios";
 
 interface PrefixedAssetProperty {
   key: string;
-  value: string; 
+  value: string;
 }
 
 interface DashboardAssetsProps {
   setBlockerProp: Dispatch<SetStateAction<boolean>>
- setPrefixedAssetPropertyProp: Dispatch<SetStateAction<PrefixedAssetProperty[]>>;
+  setPrefixedAssetPropertyProp: Dispatch<SetStateAction<PrefixedAssetProperty[]>>;
 }
 
 const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPrefixedAssetPropertyProp }) => {
@@ -57,10 +57,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const {setMachineStateValue, setSelectedAssetData,setAssetCount } = useDashboard();
+  const { setMachineStateValue, setSelectedAssetData, setAssetCount } = useDashboard();
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder', 'dashboard']);
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -95,7 +96,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
               onboardAssetId: rowData?.id
             }))
           }}
-       title="Edit Onboard form"  
+          title="Edit Onboard form"
         >
           <img src="/onboard.png" alt="" width="50px" height="50px" />
         </Button>
@@ -154,7 +155,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       (key) => response.data.properties[key].segment === 'realtime'
     );
 
-      prefixedKeys.forEach(key => {
+    prefixedKeys.forEach(key => {
       setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
     });
     dispatch(update(selectedAsset?.id));
@@ -163,6 +164,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
     }
+
     const machineStateKey = Object.keys(selectedAsset).find(key => key.includes('machine_state'));
     if (machineStateKey) {
       setMachineStateValue(selectedAsset[machineStateKey]?.value)
@@ -230,7 +232,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   value={searchedAsset}
                   onChange={searchAsset}
                   placeholder={t('placeholder:searchByProduct')}
-                  className="mb-10" style={{ borderRadius: "10px", width: "460px" }} />
+                  className="mb-10" style={{ borderRadius: "10px", width: "460px"}} />
               </span>
             </div>
             <DataTable
