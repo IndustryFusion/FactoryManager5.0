@@ -23,6 +23,7 @@ import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import { appWithTranslation } from "next-i18next";
 import withAuth from "@/app/withAuth";
+import { UnauthorizedPopup } from '../utility/jwt';
 
 // Import your custom components or layout components
 function MyApp({ Component, pageProps, router }:AppProps) {
@@ -32,6 +33,7 @@ function MyApp({ Component, pageProps, router }:AppProps) {
   return (
     <Provider store={store}>
       <AuthComponent {...pageProps} />
+      <UnauthorizedPopup />
     </Provider>
   );
 }

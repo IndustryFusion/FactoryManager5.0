@@ -183,10 +183,11 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     app_config: parsedConfig
                 }
                 const payload = YAML.stringify(obj);
-                console.log("payload here", payload);
+                const newpayload = JSON.stringify(YAML.parse(payload));
+                console.log("payload here", newpayload);
 
                 try {
-                    const response = await axios.post(API_URL + "/onboarding-asset", payload, {
+                    const response = await axios.post(API_URL + "/onboarding-asset", newpayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",

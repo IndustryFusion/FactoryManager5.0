@@ -248,7 +248,7 @@ const PowerCo2Chart = () => {
             const assetData: Asset = response.data;
 
             Object.keys(assetData).map((key) => {
-                if (key.includes("power-consumption")) {
+                if (key.includes("power_consumption")) {
                     attributeId = 'eq.' + key;
                 }
             });

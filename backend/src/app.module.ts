@@ -62,8 +62,9 @@ import { ValueChangeStateGateway } from './endpoints/value-change-state/value-ch
 import { PowerConsumptionGateway } from './endpoints/power-consumption/power-consumption-gateway';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { TokenService } from './endpoints/session/token.service';
-import { MongodbTemplatesController } from './endpoints/mongodb-templates/mongodb-templates.controller';
 import { MongodbTemplatesService } from './endpoints/mongodb-templates/mongodb-templates.service';
+import { MongodbTemplatesController } from './endpoints/mongodb-templates/mongodb-templates.controller';
+
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;

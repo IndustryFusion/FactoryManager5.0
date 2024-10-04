@@ -63,6 +63,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const { t } = useTranslation(['placeholder', 'dashboard']);
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
   };
@@ -118,7 +120,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     )
   }
 
-
   const rowClassName = (rowData: Asset) => {
     return { 'selected-row': selectedRow && selectedRow.id === rowData.id };
   };
@@ -141,7 +142,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
 
   const handleClick = async (selectedAsset: Asset) => {
-
     const response = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
       headers: {
         "Content-Type": "application/json",
@@ -162,7 +162,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     setSelectedAssetData(selectedAsset);
 
     if (prefixedKeys.length > 0) {
-     setShowBlocker(false);
+      setShowBlocker(false);
     }
 
     const machineStateKey = Object.keys(selectedAsset).find(key => key.includes('machine_state'));

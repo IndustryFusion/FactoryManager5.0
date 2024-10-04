@@ -14,12 +14,15 @@
 // limitations under the License. 
 // 
 
-import { Controller, Post, Delete, Session, Req } from '@nestjs/common';
+import { Controller, Post, Delete, Session, Req, Body } from '@nestjs/common';
 import { TokenService } from '../session/token.service';
+import { FindIndexedDbAuthDto } from './dto/token.dto';
+import { AuthService } from './auth.service';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly tokenService: TokenService
+    private readonly tokenService: TokenService,
+    private readonly authService: AuthService
   ){}
 
   @Post('login')
@@ -44,6 +47,15 @@ export class AuthController {
         status: err.response.status,
         message: err.response.data 
       }
+    }
+  }
+
+  @Post('get-indexed-db-data')
+  getIndexedData(@Body() data: FindIndexedDbAuthDto) {
+    try {
+      return this.authService.getIndexedData(data);
+    } catch (err) {
+      throw err;
     }
   }
 }
