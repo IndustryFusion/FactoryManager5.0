@@ -14,8 +14,10 @@
 // limitations under the License. 
 // 
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
+import { FindIndexedDbAuthDto } from './dto/token.dto';
+import * as jwt from 'jsonwebtoken';
 
 /**
  * Retrieves tokens from the keylock service.
@@ -29,6 +31,9 @@ import axios from 'axios';
 export class AuthService {
     private readonly API_URL = process.env.API_URL;
     private readonly CLIENT_ID = process.env.CLIENT_ID;
+    private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
+    private readonly SECRET_KEY = process.env.JWT_SECRET_KEY;
+
   async login(username: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const headers = {
@@ -54,6 +59,40 @@ export class AuthService {
       }
     } catch (error) {
       throw new Error('Failed to fetch access token ' + error);
+    }
+  }
+
+  async getIndexedData(data: FindIndexedDbAuthDto) {
+    try {
+      const decoded = jwt.verify(data.token, this.SECRET_KEY);
+
+      // Check if there's an inner token
+      if (decoded.token) {
+        const decodedToken = jwt.decode(decoded.token);
+
+        const registryHeader = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${decoded.token}`
+        };
+        const response = await axios.post(`${this.registryUrl}/auth/get-indexed-db-data`,{
+            company_id: decodedToken?.sub,
+            email: decodedToken?.user,
+            product_name: data.product_name
+        }, {
+          headers: registryHeader
+        });
+        return response.data;
+      }
+      
+    }catch(err) {
+      if (err instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException('Token has expired');
+      }
+      if(err?.response?.status == 401) {
+        throw new UnauthorizedException();
+      }
+      throw new NotFoundException(`Failed to fetch indexed data: ${err.message}`);
     }
   }
 }

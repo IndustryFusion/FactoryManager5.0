@@ -83,11 +83,12 @@ export const fetchAssets = async (assetId: string) => {
         },
         withCredentials: true,
       });
-  
+
+
       // Collect keys where the segment is 'realtime'
-      const prefixedKeys = Object.keys(temp.data.properties).filter(
-        (key) => temp.data.properties[key].segment === 'realtime'
-      );
+      const prefixedKeys = Object.keys(temp.data.properties)
+      .filter((key: string) => temp.data.properties[key].segment === 'realtime')
+      .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
 
       prefixedKeys.forEach((key) => {
           if (key) {

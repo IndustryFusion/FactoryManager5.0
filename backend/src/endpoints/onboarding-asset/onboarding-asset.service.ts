@@ -26,10 +26,11 @@ export class OnboardingAssetService {
   async create(data: any) {
     try {
       let fileName = `${data['device_id']}.yaml`;
+      fileName = encodeURIComponent(fileName);
       const fileContent = YAML.dump(data);
       const headers = {
         Authorization: 'Bearer ' + this.token,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/vnd.github+json',
       };
       let url = this.gatwayUrl + '/' + fileName;
       const response = await axios.put(url,

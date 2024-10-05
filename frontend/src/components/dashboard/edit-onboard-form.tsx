@@ -166,12 +166,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     app_config: parsedConfig
                 }
                 const payload = YAML.stringify(modifiedOnboard);
-
-                console.log("edit payload", payload);
-
-
+                const newpayload = YAML.parse(payload);
+                console.log("edit payload", newpayload);
+              
                 try {
-                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, payload, {
+                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",
