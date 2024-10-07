@@ -60,8 +60,7 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
   const fetchCertificate = async (companyId: string) => {
     try {
       const response = await fetchCompanyCertificates(companyId);
-      console.log("certificate response here", response?.data);
-      
+     
       setCertificateData(response?.data);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -95,8 +94,6 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
   const fetchData = async () => {
     try {
       const companyId = await fetchAccessGroup();
-      console.log("companyId here", companyId);
-      
       if (companyId) {
         await fetchCertificate(companyId);
       }

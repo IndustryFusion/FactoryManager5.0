@@ -3,7 +3,7 @@ import axios from "axios";
 import api from "./jwt";
 import { updatePopupVisible } from './update-popup';
 
-const FLEET_BACKEND_URL = process.env.NEXT_PUBLIC_FLEET_MANAGER_BACKEND_URL;
+const FACTORY_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const IFRIC_REGISTRY_BACKEND_URL = process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 
 
@@ -15,7 +15,7 @@ export const generateAssetCertificate = async (assetData: {
 }) => {
   try {
     const response = await api.post(
-      `${FLEET_BACKEND_URL}/certificate/create-asset-certificate`,
+      `${FACTORY_BACKEND_URL}/certificate/create-asset-certificate`,
       assetData,
       {
         headers: {
@@ -23,7 +23,7 @@ export const generateAssetCertificate = async (assetData: {
         },
       }
     );
-    console.log("assetData",assetData)
+    
     return response.data;
   } catch (error:any) {
     console.error("Error generating asset certificate:", error);
@@ -39,7 +39,7 @@ export const generateAssetCertificate = async (assetData: {
 export const fetchAssetCertificates = async (assetIfricId: string, companyIfricId: string) => {
   try {   
     const response = await api.get(
-      `${FLEET_BACKEND_URL}/certificate/get-asset-certificates`,
+      `${FACTORY_BACKEND_URL}/certificate/get-asset-certificates`,
       {
         params: {
           asset_ifric_id: assetIfricId,
@@ -47,6 +47,8 @@ export const fetchAssetCertificates = async (assetIfricId: string, companyIfricI
         }
       }
     );
+    console.log("response.data in asset cert", response.data);
+    
     return response.data;
   } catch (error:any) {
     console.error("Error fetching asset certificates:", error);
@@ -61,7 +63,7 @@ export const fetchAssetCertificates = async (assetIfricId: string, companyIfricI
 
 export const fetchCompanyCertificates = async (companyId: string) => {
   try {
-    return await api.get(`${FLEET_BACKEND_URL}/certificate/get-company-certificates/${companyId}`);
+    return await api.get(`${FACTORY_BACKEND_URL}/certificate/get-company-certificates/${companyId}`);
   } catch (error:any) {
     console.error("Error fetching company certificates:", error);
     if (error?.response && error?.response?.status === 401) {
@@ -74,7 +76,7 @@ export const fetchCompanyCertificates = async (companyId: string) => {
 
 export const generateCompanyCertificate = async (generateCertificateData: Record<string, any>) => {
   try {
-    return await api.post(`${FLEET_BACKEND_URL}/certificate/create-company-certificate`, generateCertificateData);
+    return await api.post(`${FACTORY_BACKEND_URL}/certificate/create-company-certificate`, generateCertificateData);
   } catch (error:any) {
     console.error("Error generating asset certificate:", error);
     if (error?.response && error?.response?.status === 401) {
