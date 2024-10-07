@@ -63,8 +63,6 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const { t } = useTranslation(['placeholder', 'dashboard']);
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
   };
