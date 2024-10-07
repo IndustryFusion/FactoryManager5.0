@@ -65,6 +65,8 @@ import { TokenService } from './endpoints/session/token.service';
 import { MongodbTemplatesService } from './endpoints/mongodb-templates/mongodb-templates.service';
 import { MongodbTemplatesController } from './endpoints/mongodb-templates/mongodb-templates.controller';
 
+import { CertificateController } from './endpoints/certificate/certificate.controller';
+import { CertificateService } from './endpoints/certificate/certificate.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -100,7 +102,8 @@ const mongoURI = process.env.MONGO_URL;
     CronController,
     ValueChangeStateController,
     OnboardingAssetController,
-    MongodbTemplatesController
+    MongodbTemplatesController,
+    CertificateController
   ],
   providers: [
     AppService,
@@ -126,7 +129,8 @@ const mongoURI = process.env.MONGO_URL;
     ValueChangeStateGateway,
     PowerConsumptionGateway,
     TokenService,
-    MongodbTemplatesService
+    MongodbTemplatesService,
+    CertificateService
   ]
 })
 export class AppModule {
