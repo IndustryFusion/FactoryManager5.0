@@ -26,7 +26,6 @@
   .certificates-content-wrapper {
     margin: 1.5rem 0rem 1.5rem 1.6rem;
     height: 100vh;
-    overflow: auto;
   }
   .certificates-content-wrapper .p-inline-message {
     border-radius: 8px;
