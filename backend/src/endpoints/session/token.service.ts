@@ -14,17 +14,41 @@
 // limitations under the License. 
 // 
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
+import { AuthService } from "../auth/auth.service";
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly authService: AuthService,
+  ) {}
+  private readonly username = process.env.USERNAME;
+  private readonly password = process.env.PASSWORD;
   getToken = async () => {
     try{
       let tokenData = await this.redisService.getData('token-storage');
-      const token = tokenData['accessToken'];
-      return token;
+      if(!tokenData) {
+        const token = await this.authService.login(this.username, this.password);
+        let tokenKey = 'token-storage';
+        await this.redisService.saveData(tokenKey, token);
+        return token.accessToken;
+      } else {
+        // verify the expiry
+        const decodedToken = await jwt.decode(tokenData.accessToken);
+        if(decodedToken && decodedToken.exp) {
+          const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+          if (decodedToken.exp > currentTime) {
+            return tokenData.accessToken;
+          } else {
+            throw new UnauthorizedException('Token has expired');
+          }
+        } else {
+          throw new UnauthorizedException('Invalid token');
+        }
+      }
     }catch(err){
       return err;
     }
