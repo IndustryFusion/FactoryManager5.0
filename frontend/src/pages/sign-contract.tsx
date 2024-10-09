@@ -122,7 +122,7 @@ const AddContractPage: React.FC = () => {
                                     consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
                                     consumer_company_country: response.data[0].country,
                                     consumer_company_zip: response.data[0].zip,
-                                    contract_start_date: new Date(contractResponse.data[0].created_at).toLocaleDateString('en-US', {
+                                    contract_start_date: new Date(contractResponse.data[0].meta_data.created_at).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',

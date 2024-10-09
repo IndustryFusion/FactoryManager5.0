@@ -19,6 +19,7 @@ import axios from 'axios';
 import { ImportAssetDto } from './dto/importAsset.dto';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
+import { Request } from 'express';
 @Injectable()
 export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -145,6 +146,7 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
+
       let assetValue = await this.getAssetDataById(assetId, token);
       assetCategory = assetCategory.split(" ").pop(); 
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1); 
@@ -169,15 +171,20 @@ export class AssetService {
     }
   }
 
-  async getOwnerAssets(id: string, token: string) {
+  async getOwnerAssets(company_ifric_id: string, token: string, req: Request) {
     try {
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
+      const registryHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': req.headers['authorization']
+      };
       
-      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${id}`);
+      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`,{headers: registryHeaders});
       if(!(companyData.data.length)) {
         return {
           status: 404,
@@ -185,13 +192,17 @@ export class AssetService {
         };
       }
       
-      const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`);
+      const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`,{headers: registryHeaders});
       const result = [];
       for(let i = 0; i < response.data.length; i++) {
         const assetId = response.data[i].asset_ifric_id;
-        const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
-        if(scorpioResponse.data) {
-          result.push(scorpioResponse.data);
+        try {
+          const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
+          if(scorpioResponse.data) {
+            result.push(scorpioResponse.data);
+          }
+        } catch(err) {
+          continue;
         }
       }
       return result;
