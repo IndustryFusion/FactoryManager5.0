@@ -64,9 +64,12 @@ import { LoggerMiddleware } from './utils/logger.middleware';
 import { TokenService } from './endpoints/session/token.service';
 import { MongodbTemplatesService } from './endpoints/mongodb-templates/mongodb-templates.service';
 import { MongodbTemplatesController } from './endpoints/mongodb-templates/mongodb-templates.controller';
-
 import { CertificateController } from './endpoints/certificate/certificate.controller';
 import { CertificateService } from './endpoints/certificate/certificate.service';
+import { ContractController } from './endpoints/contract/contract.controller';
+import { ContractService } from './endpoints/contract/contract.service';
+import { BindingController } from './endpoints/binding/binding.controller';
+import { BindingService } from './endpoints/binding/binding.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -103,7 +106,9 @@ const mongoURI = process.env.MONGO_URL;
     ValueChangeStateController,
     OnboardingAssetController,
     MongodbTemplatesController,
-    CertificateController
+    CertificateController,
+    ContractController,
+    BindingController
   ],
   providers: [
     AppService,
@@ -130,7 +135,9 @@ const mongoURI = process.env.MONGO_URL;
     PowerConsumptionGateway,
     TokenService,
     MongodbTemplatesService,
-    CertificateService
+    CertificateService,
+    ContractService,
+    BindingService
   ]
 })
 export class AppModule {
