@@ -40,17 +40,8 @@ const Certificates = () => {
 
   return (
     <div>
-        <div className="flex">
-        <div
-          className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
-        >
-          <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-        </div>
-          <div  className={
-            isSidebarExpand
-              ? "factory-container"
-              : "  factory-container-collpase"
-          }>
+        
+  
         <div className="navbar_wrapper">
             <Navbar navHeader="Certificates"/>
             <div className="certificates-content-wrapper">
@@ -98,8 +89,7 @@ const Certificates = () => {
         </div>
 		 </div>
      </div>
-	 </div>
-    </div>
+	
   )
 }
 
