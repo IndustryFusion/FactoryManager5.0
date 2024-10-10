@@ -55,6 +55,16 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               />
               <p className="m-0">Factory Flow</p>
             </div>
+            <div className="flex align-items-center sidebar-dashboard-text "
+            onClick={() => router.push("/certificates")}
+            >
+              <img
+                src="/ai-browser.jpg"
+                alt="asset-series-icon"
+                className="mr-2"
+              />
+              <p className="m-0">Certificates</p>
+            </div>
           </div>
           <div>
             <div className="pass-quota-container ">
