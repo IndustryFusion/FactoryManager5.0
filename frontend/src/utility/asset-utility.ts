@@ -16,6 +16,8 @@
 
 import axios from "axios";
 import { Asset } from "../types/asset-types";
+import { getAccessGroup } from "./indexed-db";
+import api from "./jwt";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -47,6 +49,27 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
           const mappedData = mapBackendDataToAsset(responseData);
           return mappedData;
 
+    }catch(error){
+        console.error("Error:", error)
+    }
+  }
+
+  export const fetchAssetManagement = async()=>{
+    try{
+      const userData = await getAccessGroup();
+      if (userData && userData.company_ifric_id) {
+        const response = await api.get(API_URL + `/asset/asset-management/${userData.company_ifric_id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        });
+        const responseData = response.data; 
+        console.log("responseData ",responseData);
+        const mappedData = mapBackendDataToAsset(responseData);
+        return mappedData;
+      }
     }catch(error){
         console.error("Error:", error)
     }
