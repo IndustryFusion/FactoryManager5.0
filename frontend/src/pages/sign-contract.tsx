@@ -53,6 +53,7 @@ const AddContractPage: React.FC = () => {
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [companyIfricId, setCompanyIfricId] = useState(null);
     const [assetVerified, setAssetVerified] = useState<boolean | null>(null);
+    const [userName, setUserName] = useState<string>("");
 
     useEffect(() => {
         fetchData();
@@ -67,6 +68,7 @@ const AddContractPage: React.FC = () => {
             const userData = await getAccessGroup();
             if (userData && userData.jwt_token) {
                 setCompanyIfricId(userData.company_ifric_id);
+                setUserName(userData.user_name)
                 // Fetch template data (from backend)
                 const templateResponse = await getTemplateByName("predictiveMaintenance_laserCutter");
                 const template = templateResponse?.data[0];
@@ -312,22 +314,27 @@ const AddContractPage: React.FC = () => {
 
             if(!selectedAsset) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please select an asset' });
+                return;
             }
 
             if(!formData.binding_end_date) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please choose binding end date' });
+                return;
             }
 
             if(assetVerified === null) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please create certificate for selected asset' });
+                return;
             }
 
             if(assetVerified === false) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'asset certificate is expired so please create new one' });
+                return;
             }
 
             if(!formData.provider_company_certificate_data) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please create company certificate' });
+                return;
             }
 
             const result = {
@@ -339,7 +346,12 @@ const AddContractPage: React.FC = () => {
                 asset_certificate_data: formData.asset_certificate_data,
                 provider_company_certificate_data: formData.provider_company_certificate_data,
                 contract_ifric_id: formData.contract_ifric_id,
-                binding_datetime_string: new Date()
+                binding_datetime_string: new Date(),
+                meta_data: {
+                    create_at: new Date(),
+                    last_updated_at: new Date(),
+                    created_user: userName
+                }
             }
             console.log("result ",result);
             const response = await createBinding(result);

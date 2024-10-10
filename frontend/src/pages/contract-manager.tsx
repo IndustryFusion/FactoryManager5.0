@@ -22,11 +22,16 @@ const ContractManager = () => {
             const response = await getAllContract(userData.company_ifric_id);
             console.log("response for getAllContract ",response);
           } else {
-              toast.current?.show({ severity: 'error', summary: 'Error', detail: 'User data or JWT not found' });
+            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'User data or JWT not found' });
           }
-      } catch (error) {
-          console.error('Error fetching data:', error);
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to load necessary data' });
+      } catch (error: any) {
+        console.error('Error fetching data:', error);
+        if (error?.response?.message) {
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error.response.message });
+        } else {
+          // For manually thrown errors
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error.message || 'Unknown error occurred' });
+        }
       }
   };
 
