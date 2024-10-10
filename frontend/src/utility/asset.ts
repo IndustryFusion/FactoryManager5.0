@@ -33,7 +33,7 @@ import { Toast } from "primereact/toast";
 import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_FLEET_MANAGER_BACKEND_URL;
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const getCompanyIfricId = (): string => {
   if (
@@ -137,7 +137,7 @@ export const postFile = async (formData: FormData) => {
 
 export const getAssetById = async (assetId: string): Promise<Asset | null> => {
   try {
-    const response = await api.get(`${BACKEND_API_URL}/asset/getAssetById/${assetId}`, {
+    const response = await api.get(`${BACKEND_API_URL}/asset/${assetId}`, {
       headers: {
         "Content-Type": "application/ld+json",
         Accept: "application/ld+json",
