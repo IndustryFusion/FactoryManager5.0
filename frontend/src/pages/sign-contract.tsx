@@ -15,6 +15,8 @@ import { getCompanyDetailsById } from '../utility/auth';
 import { getTemplateByName, getCompanyCertificate, getContractByType, getAssetByType, getAssetCertificateById, createBinding } from '@/utility/contract';
 import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
+import Navbar from '@/components/navBar/navbar';
+import { Dialog } from 'primereact/dialog';
 
 interface PropertyDefinition {
     type: string;
@@ -48,12 +50,13 @@ const AddContractPage: React.FC = () => {
     const [selectedAssetProperties, setSelectedAssetProperties] = useState<string[]>([]);
     const toast = useRef<Toast>(null);
     const [certificateExpiry, setCertificateExpiry] = useState<Date | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
     const [assetOptions, setAssetOptions] = useState<{ label: string; value: string }[]>([]);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [companyIfricId, setCompanyIfricId] = useState(null);
     const [assetVerified, setAssetVerified] = useState<boolean | null>(null);
     const [userName, setUserName] = useState<string>("");
+    const [visible, setVisible] = useState<Boolean>(false);
+    const [consumerName, setConsumerName] = useState<string>("");
 
     useEffect(() => {
         fetchData();
@@ -87,7 +90,8 @@ const AddContractPage: React.FC = () => {
                     const companyCert = companyCertResponse.data[0];
                     setFormData(prevState => ({
                         ...prevState,
-                        provider_company_certificate_data: companyCert.certificate_data
+                        provider_company_certificate_data: companyCert.certificate_data,
+                        binding_end_date: new Date(companyCert.expiry_on)
                     }));
 
                     setCertificateExpiry(new Date(companyCert.expiry_on));
@@ -111,39 +115,40 @@ const AddContractPage: React.FC = () => {
                 if(template) {
                     // fetch contract details
                     const contractResponse = await getContractByType(btoa(template.type));
+                    setConsumerName(contractResponse?.data[13].meta_data.created_user || '');
                     if(contractResponse?.data) {
                         // Fetch producer company details
                         if (userData.company_ifric_id) {
-                            const response = await fetchCompanyDetails(contractResponse.data[0].data_consumer_company_ifric_id);
+                            const response = await fetchCompanyDetails(contractResponse.data[13].data_consumer_company_ifric_id);
                             if (response?.data) {
                                 setFormData(prevState => ({
                                     ...prevState,
-                                    contract_title : contractResponse.data[0].contract_name,
+                                    contract_title : contractResponse.data[13].contract_name,
                                     consumer_company_name: response.data[0].company_name,
                                     consumer_company_address: response.data[0].address_1,
                                     consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
                                     consumer_company_country: response.data[0].country,
                                     consumer_company_zip: response.data[0].zip,
-                                    contract_start_date: new Date(contractResponse.data[0].meta_data.created_at).toLocaleDateString('en-US', {
+                                    contract_start_date: new Date(contractResponse.data[13].meta_data.created_at).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',
                                     }),
-                                    contract_end_date: new Date(contractResponse.data[0].contract_valid_till).toLocaleDateString('en-US', {
+                                    contract_end_date: new Date(contractResponse.data[13].contract_valid_till).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',
                                     }),
-                                    interval: contractResponse.data[0].interval ? contractResponse.data[0].interval : "",
-                                    data_consumer_company_ifric_id: contractResponse.data[0].data_consumer_company_ifric_id,
-                                    contract_ifric_id: contractResponse.data[0].contract_ifric_id
+                                    interval: contractResponse.data[13].interval ? contractResponse.data[13].interval : "",
+                                    data_consumer_company_ifric_id: contractResponse.data[13].data_consumer_company_ifric_id,
+                                    contract_ifric_id: contractResponse.data[13].contract_ifric_id
                                 }));
                             }
                         }
                     }
-                    console.log("asset_properties ",contractResponse?.data[0])
+                    console.log("asset_properties ",contractResponse?.data[13])
                     // set selected asset properties
-                    const selectedProperties = contractResponse?.data[0].asset_properties ? contractResponse.data[0].asset_properties.map((value: string) => value.split("/").pop()) : [];
+                    const selectedProperties = contractResponse?.data[13].asset_properties ? contractResponse.data[13].asset_properties.map((value: string) => value.split("/").pop()) : [];
                     console.log("selectedProperties ",selectedProperties);
                     setSelectedAssetProperties(selectedProperties);
 
@@ -266,7 +271,8 @@ const AddContractPage: React.FC = () => {
     const renderContractClauses = () => {
         const clauses = templateData?.properties.contract_clauses.enums || [];
         return (
-            <Card title="Contract Clauses">
+            <div className='contract_clauses_wrapper'>
+                <div className='contract_form_subheader'>Contract Clauses</div>
                 <ul>
                     {clauses.map((clause: string, index: number) => {
                         // Split the clause based on [consumer] and [provider] placeholders
@@ -294,7 +300,7 @@ const AddContractPage: React.FC = () => {
                         );
                     })}
                 </ul>
-            </Card>
+            </div>
         );
     };
 
@@ -308,8 +314,9 @@ const AddContractPage: React.FC = () => {
         </Card>
     );
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
+        console.log("submitting..")
         try {
 
             if(!selectedAsset) {
@@ -393,48 +400,85 @@ const AddContractPage: React.FC = () => {
             asset_type: assetType,
         }));
     };
+    const renderDataTypeList = ()=> {
+        const dataTypes = formData.data_type
+        return(
+            <div className='datatype_chips_wrapper'>
+                {dataTypes.map((dataType:string) => (
+                    <div className='datatype_chip'>{dataType}</div>
+                ))}
+            </div>
+        )
+    }
+    const renderDialogHeader = () => {
+        return (
+            <div className="flex align-items-center justify-content-between">
+                <h3 className='contract_dialog_heading'>Signing Contract</h3>
+            </div>
+        );
+    };
+    const renderDialogFooter = () => {
+        return (
+            <div>
+                <Button label="Cancel" icon="pi pi-times" onClick={() => setVisible(false)} className="custom-cancel-btn" />
+                <Button label="Agree and Sign" icon="pi pi-check" className='custom-add-btn sign_button' onClick={handleSubmit} autoFocus />
+            </div>
+        );
+    };
 
     if (!templateData) return <div>Loading...</div>;
 
     return (
         <div className="flex">
             <div className="main_content_wrapper">
+            <div className="navbar_wrapper">
+                    <Navbar navHeader={"Sign Contract"} />
+                </div>
                 <div className="create-contract-form-container">
                     <Toast ref={toast} />
                     <div className="create-contract-form-grid">
                         <div className="create-contract-form-wrapper">
-                            <h1 className="template-form-heading">{templateData?.title}</h1>
+                            <h1 className="template-form-heading">{formData.contract_title ?? ''}</h1>
                             <form onSubmit={handleSubmit}>
                                     <div className="form-grid">
-                                        <div className="contract_title_group">
-                                            <label htmlFor="contract_title" className="contract_form_field field_title">{formData.contract_title ?? ''}</label>
-                                        </div>
                                         <div className="contract_form_field_column">
                                         <div className="field">
                                             <label htmlFor="contract_type">Contract Type</label>
-                                            <label htmlFor="contract_type" className='pt-2'>{formData.contract_type ?? ''}</label>
+                                            <div className='text_large_bold'>{formData.contract_type ? formData.contract_type.split('/').pop() : ''}</div>
                                         </div>
                                         <div className="field half-width-field">
                                             <label htmlFor="asset_type">Asset Type</label>
-                                            <label htmlFor="asset_type" className='pt-2'>{formData.asset_type ?? ''}</label>
+                                            <div className='text_large_bold'>{formData.asset_type ? formData.asset_type.split('/').pop() : ''}</div>
                                         </div>
                                         </div>
                                         <div className='contract_form_subheader'>Contract Time</div>
                                         <div className="contract_form_field_column">
                                             <div className="field">
                                                 <label htmlFor="contract_start_date">Contract Start Date</label>
-                                                <label htmlFor="contract_start_date" className='pt-2'>{formData.contract_start_date}</label>
+                                                <div className='text_large_bold'>{new Date(formData.contract_start_date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })}</div>
                                             </div>
                                             <div className="field">
                                                 <label htmlFor="contract_end_date">Contract End Date</label>
-                                                <label htmlFor="contract_start_date" className='pt-2'>{formData.contract_end_date}</label>
+                                                <div className='text_large_bold'>{new Date(formData.contract_end_date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })}</div>
                                             </div>
                                         </div>
                                         <div className='contract_form_subheader'>Binding Time</div>
                                         <div className="contract_form_field_column">
                                             <div className="field">
                                                 <label htmlFor="contract_start_date">Binding Start Date</label>
-                                                <label htmlFor="contract_start_date" className='pt-2'>{formData.binding_start_date}</label>
+                                                <div className='text_large_bold'>{new Date(formData.binding_start_date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })}</div>
                                             </div>
                                             <div className="field">
                                                 <label htmlFor="binding_end_date" className="required-field">Binding End Date</label>
@@ -444,11 +488,15 @@ const AddContractPage: React.FC = () => {
                                                     onChange={(e) => handleInputChange(e, 'binding_end_date')}
                                                     showIcon
                                                     required
-                                                    maxDate={certificateExpiry ? new Date(certificateExpiry.getTime()) : undefined} className='contract_form_field'
+                                                    maxDate={certificateExpiry ? new Date(certificateExpiry.getTime()) : undefined} className='contract_form_field' dateFormat="MM dd, yy"
                                                 />
                                                 {certificateExpiry && (
-                                                    <small className="p-error">
-                                                        Contract end date must be before {new Date(certificateExpiry.getTime()).toLocaleDateString()}
+                                                    <small>
+                                                        Contract end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    })}
                                                     </small>
                                                 )}
                                             </div>
@@ -456,20 +504,37 @@ const AddContractPage: React.FC = () => {
                                         <div className='contract_form_subheader'>Parties</div>
                                             <div className="contract_form_field_column">
                                             <div className="field">
-                                                <label htmlFor="consumer_company_name">Data Consumer</label>
-                                                <label htmlFor="consumer_company_name" className='pt-2'>{formData.consumer_company_name ?? ''}</label>
-                                                <label htmlFor="consumer_company_address" className='pt-2'>{formData.consumer_company_address ?? ''}</label>
-                                                <label htmlFor="consumer_company_city" className='pt-2'>{formData.consumer_company_city ?? ''}</label>
-                                                <label htmlFor="consumer_company_country" className='pt-2'>{formData.consumer_company_country ?? ''}</label>
-                                                <label htmlFor="consumer_company_zip" className='pt-2'>{formData.consumer_company_zip ?? ''}</label>
+                                            <div className="consumer_details_wrapper">
+                                                <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                                <div>
+                                                    <label htmlFor="provider_company_name">Data Consumer</label>
+                                                    <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                        <div className='text_large_bold'>{formData.consumer_company_name ?? ''}</div>
+                                                    </div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.consumer_company_address ?? ''}</div>
+                                                        {/* <div style={{ marginTop: "4px" }}>{formData.data_consumer_company_ifric_id}</div> */}
+                                                        <div style={{ marginTop: "4px" }}>{formData.consumer_company_city ?? ''}</div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.consumer_company_country ?? ''}</div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.consumer_company_zip ?? ''}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             </div>
                                             <div className="field">
-                                                <label htmlFor="provider_company_name">Data Provider</label>
-                                                <label htmlFor="provider_company_name" className='pt-2'>{formData.provider_company_name ?? ''}</label>
-                                                <label htmlFor="provider_company_address" className='pt-2'>{formData.provider_company_address ?? ''}</label>
-                                                <label htmlFor="provider_company_city" className='pt-2'>{formData.provider_company_city ?? ''}</label>
-                                                <label htmlFor="provider_company_country" className='pt-2'>{formData.provider_company_country ?? ''}</label>
-                                                <label htmlFor="provider_company_zip" className='pt-2'>{formData.provider_company_zip ?? ''}</label>
+                                            <div className="consumer_details_wrapper">
+                                                <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                                <div>
+                                                    <label htmlFor="provider_company_name">Data Provider</label>
+                                                    <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                        <div className='text_large_bold'>{formData.provider_company_name ?? ''}</div>
+                                                    </div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.provider_company_address ?? ''}</div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.provider_company_city ?? ''}</div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.provider_company_country ?? ''}</div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.provider_company_zip ?? ''}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             </div>
                                         </div>
                                         <div className='contract_form_subheader'>Asset Data</div>
@@ -506,21 +571,26 @@ const AddContractPage: React.FC = () => {
                                         <div className='contract_form_subheader'>Shared Data</div>
                                         <div className="contract_form_field_column">
                                         <div className="field half-width-field">
-                                            <label htmlFor="interval" className="required-field">Interval</label>
-                                            <label htmlFor="interval" className='pt-2'>{formData.interval ?? ''}</label>
+                                            <label htmlFor="interval">Interval</label>
+                                            <div className='text_large_bold'>{formData.interval ?? ''}</div>
+                                            {templateData?.properties.data_type && (
+                                                <div className='data_types_field_wrapper'>
+                                                    <label htmlFor="">Data type</label>
+                                                    {renderDataTypeList()}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="field half-width-field">
-                                            <label htmlFor="asset_properties" className="required-field">Asset Properties</label>
-                                            <ul>
+                                            <label htmlFor="asset_properties">Asset Properties</label>
+                                            <div className='datatype_chips_wrapper' style={{marginTop: "0px"}}>
                                                 {selectedAssetProperties.map((property, index) => (
-                                                    <li key={`property-${index}`}>{property}</li>
+                                                    <div className='datatype_chip' key={`property-${index}`}>{property}</div>
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                         </div>
                                     </div>
                                 {renderContractClauses()}
-                                {renderSelectedAssetProperties()}
                                 <div className="form-btn-container">
                                     <Button
                                         type="button"
@@ -536,10 +606,10 @@ const AddContractPage: React.FC = () => {
                                         icon="pi pi-refresh"
                                     />
                                     <Button
-                                        type="submit"
-                                        label="Add Contract"
+                                        label="Sign Contract"
                                         className="p-button-primary custom-add-btn"
                                         icon="pi pi-check"
+                                        onClick={(e) => {e.preventDefault(); setVisible(true)}}
                                     />
                                 </div>
                             </form>
@@ -547,6 +617,46 @@ const AddContractPage: React.FC = () => {
                         <div className="asset-type-list-cover">
                             {renderAssetTypeList()}
                         </div>
+                            <Dialog header={renderDialogHeader} visible={visible} style={{width:"100%", maxWidth: '550px' }}  draggable={false} footer={renderDialogFooter} onHide={() => {if (!visible) return; setVisible(false); }} className='contract_dialog_cover'>
+                            <div className='contract_dialog_content'>
+                                <div className="contract_dialog_company_details">
+                                    <div className="consumer_details_wrapper">
+                                        <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                        <div>
+                                            <label htmlFor="provider_company_name">Data Consumer</label>
+                                            <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                <div className='text_large_bold'>{formData.consumer_company_name ?? ''}</div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="consumer_details_wrapper">
+                                        <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                        <div>
+                                            <label htmlFor="provider_company_name">Data Provider</label>
+                                            <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                <div className='text_large_bold'>{formData.provider_company_name ?? ''}</div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className='contract_form_field_column' style={{marginTop: "15px", padding: "0px"}}>
+                                    <div className="field representative_highlight">
+                                        <label htmlFor="contract_start_date">Representative name</label>
+                                        <div className='text_large_bold'>
+                                            {consumerName}
+                                        </div>
+                                    </div>
+                                    <div className="field representative_highlight">
+                                        <label htmlFor="contract_start_date">Representative name</label>
+                                        <div className='text_large_bold'>
+                                            {userName}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Dialog>
                     </div>
                 </div>
             </div>
