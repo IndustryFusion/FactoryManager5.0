@@ -17,8 +17,10 @@
 
 import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
+import moment from 'moment';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_PLATFORM_BACKEND_URL;
  
 export const getTemplateByName = async (templateName: string) => {
     try {
@@ -77,7 +79,14 @@ export const getCompanyCertificate = async (company_ifric_id: string) => {
 
 export const getContractByType = async (type: string) => {
     try {
-      return await api.get(`${BACKEND_API_URL}/contract/get-contract-by-type/${type}`, {
+      // return await api.get(`${BACKEND_API_URL}/contract/get-contract-by-type/${type}`, {
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Accept: "application/json"
+      //   },
+      // });
+      console.log("type ",type);
+      return await api.get(`${IFX_BACKEND_URL}/contract/get-contract-by-type/${type}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json"
@@ -91,6 +100,24 @@ export const getContractByType = async (type: string) => {
         throw error;
       }
     }
+};
+
+export const getContractByAssetType = async (type: string) => {
+  try {
+    return await api.get(`${IFX_BACKEND_URL}/contract/get-contract-by-asset-type/${type}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
 };
 
 export const getAssetByType = async (type: string) => {
@@ -135,9 +162,46 @@ export const getAssetCertificateById = async (asset_ifric_id: string, company_if
 export const createBinding = async (data: Record<string, any>) => {
   try {
     return await api.post(
-      `${BACKEND_API_URL}/binding`,
+      `${IFX_BACKEND_URL}/binding`,
       data
     );
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+export const getAllContract = async (company_ifric_id: string) => {
+  try {
+    const certificateResponse = await getCompanyCertificate(company_ifric_id);
+    console.log("certificateResponse ",certificateResponse?.data);
+    if(certificateResponse?.data) {
+      const lastCertificateExpiry = moment(certificateResponse.data[0].expiry_on);
+      const currentTime = moment();
+      if(lastCertificateExpiry.isAfter(currentTime)) {
+        const contract = [];
+        const response = await api.get(`${BACKEND_API_URL}/asset/get-owner-asset/${company_ifric_id}`);
+        if(response.data.length) {
+          const assetData: Record<string,any>[] = response.data;
+          const uniqueTypes: string[] = [...new Set(assetData.map((item: Record<string, any>) => item.type as string))];
+          for(let i = 0; i < uniqueTypes.length; i++) {
+            const contractResponse = await getContractByAssetType(btoa(uniqueTypes[i]));
+            if(contractResponse?.data) {
+              contract.push(...contractResponse.data);
+            }
+          }
+        }
+        return contract;
+      } else {
+        throw new Error("Certificate has expired and is no longer valid.");
+      }
+    } else {
+      throw new Error("No Company Certificate available, please create one");
+    }
   } catch (error: any) {
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
