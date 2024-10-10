@@ -79,12 +79,6 @@ export const getCompanyCertificate = async (company_ifric_id: string) => {
 
 export const getContractByType = async (type: string) => {
     try {
-      // return await api.get(`${BACKEND_API_URL}/contract/get-contract-by-type/${type}`, {
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Accept: "application/json"
-      //   },
-      // });
       console.log("type ",type);
       return await api.get(`${IFX_BACKEND_URL}/contract/get-contract-by-type/${type}`, {
         headers: {

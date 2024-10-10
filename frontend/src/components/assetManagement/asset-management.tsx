@@ -32,6 +32,8 @@ import axios from "axios";
 import { Toast, ToastMessage } from "primereact/toast";
 import { useTranslation } from "next-i18next";
 import DeleteDialog from "../delete-dialog";
+import { fetchAssetManagement } from "@/utility/asset-utility";
+import { ProgressSpinner } from "primereact/progressspinner"
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -60,10 +62,9 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   const router = useRouter();
   const { t } = useTranslation(['button', 'placeholder', 'dashboard', 'overview']);
 
-
   const handleAsset = async () => {
     try {
-      const response = await fetchAsset();
+      const response = await fetchAssetManagement();
       if (response !== undefined) {
         setIsLoading(false);
         const sortedAssets = [...response].sort((a, b) => {
@@ -125,12 +126,16 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
     }
   };
   const manufacturerDataTemplate = (rowData: Asset): React.ReactNode => {
-    return (
-      <div className="flex flex-column">
-        <img src={rowData?.logo_manufacturer} alt="maufacturer_logo" className="w-4rem shadow-2 border-round" />
-        <p className="m-0 mt-1">{rowData?.asset_manufacturer_name}</p>
-      </div>
-    )
+    if (rowData && rowData.logo_manufacturer && rowData.logo_manufacturer !== 'NULL') {
+      return (
+        <div className="flex flex-column">
+          <img src={rowData?.logo_manufacturer} alt="maufacturer_logo" className="w-4rem shadow-2 border-round" />
+          <p className="m-0 mt-1">{rowData?.asset_manufacturer_name}</p>
+        </div>
+      )
+    } else {
+      return <span>No Image</span>;
+    }
   }
   const actionItemsTemplate = (rowData: Asset): React.ReactNode => {
     return (
@@ -201,7 +206,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
               <div className="flex flex-column justify-content-center align-items-center"
                 style={{}}
               >
-                <p> Loading... Assets</p>
+                <ProgressSpinner />
                 <img src="/table.png" alt="" width="12%" height="12%" />
               </div>
               :
