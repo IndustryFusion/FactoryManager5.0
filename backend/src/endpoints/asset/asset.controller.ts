@@ -19,6 +19,7 @@ import { AssetService } from './asset.service';
 import { TokenService } from '../session/token.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
+import { Request } from 'express';
 @Controller('asset')
 export class AssetController {
   constructor(
@@ -33,7 +34,7 @@ export class AssetController {
     try {
       const token = await this.tokenService.getToken();
       if (type) {
-        return this.getAssetByType(type, token);
+        return this.assetService.getAssetByType(type, token);
       } else {
         return await this.assetService.getAssetData(token);
       }
@@ -42,10 +43,11 @@ export class AssetController {
     }
   }
 
-  @Get('type=:type')
-  async getAssetByType(type: string, token: string) {
+  @Get('/type/:type')
+  async getAssetByType(@Param('type') type: string) {
     try {
-      return await this.assetService.getAssetByType(type, token);
+      const token = await this.tokenService.getToken();
+      return await this.assetService.getAssetByType(atob(type), token);
     } catch (err) {
       throw new NotFoundException();
     }
@@ -61,11 +63,11 @@ export class AssetController {
     }
   }
 
-  @Get('/get-owner-asset/:id')
-  async getOwnerAssets(@Param('id') id: string) {
+  @Get('/get-owner-asset/:company_ifric_id')
+  async getOwnerAssets(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {
       const token = await this.tokenService.getToken();
-      return await this.assetService.getOwnerAssets(id, token);
+      return await this.assetService.getOwnerAssets(company_ifric_id, token, req);
     } catch(err) {
       throw new NotFoundException();
     }

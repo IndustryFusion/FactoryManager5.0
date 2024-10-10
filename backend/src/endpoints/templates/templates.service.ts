@@ -64,6 +64,7 @@ export class TemplatesService {
               id: Buffer.from(parsedContent.$id).toString('base64'),
               title: parsedContent.title,
               description: parsedContent.description,
+              templateId: parsedContent.properties['iffs:ifric_template_id'].default
             });
           }
         }
@@ -89,7 +90,7 @@ export class TemplatesService {
   async getTemplateById(id: string): Promise<TemplateDescriptionDto[]> {
     try {
       const decodedId = Buffer.from(id, 'base64').toString('ascii');
-      let path = decodedId.split('/')[5];
+      let path = decodedId.split('/').pop();
       
       if (path) {
         path = `${path.replace(/-/g, '_')}_schema.json`;
@@ -122,6 +123,44 @@ export class TemplatesService {
       } else {
         throw new NotFoundException('Path is undefined');
       }
+    } catch (err) {
+      throw new NotFoundException(
+        `Failed to fetch repository data: ${err.message}`,
+      );
+    }
+  }
+
+  async getTemplateByName(name: string): Promise<TemplateDescriptionDto[]> {
+    try {
+
+      const fileName = `${name}.json`;
+      const url = `${this.baseUrl}/${fileName}`;
+      const templateDescriptions: TemplateDescriptionDto[] = [];
+      const headers = {
+        'Authorization': 'Bearer ' + this.token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
+
+      const response = await axios.get(url, {
+        headers
+      });
+
+      if (response.data.encoding === 'base64' && response.data.content) {
+        // Decode Base64 content to UTF-8 string
+        const decodedContent = Buffer.from(
+          response.data.content,
+          'base64',
+        ).toString('utf-8');
+        const parsedContent = JSON.parse(decodedContent);
+        templateDescriptions.push({
+          type: parsedContent.$id,
+          title: parsedContent.title,
+          description: parsedContent.description,
+          properties: parsedContent.properties,
+        });
+      }
+      return templateDescriptions;
     } catch (err) {
       throw new NotFoundException(
         `Failed to fetch repository data: ${err.message}`,

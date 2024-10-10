@@ -216,6 +216,7 @@ export class CertificateService {
           headers: registryHeaders
         }
       );
+      console.log("response ",response.data);
       return response.data;
     } catch (error: any) {
       if (error?.response && error?.response?.status === 401) {
