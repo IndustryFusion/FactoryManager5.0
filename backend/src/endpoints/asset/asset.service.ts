@@ -85,12 +85,15 @@ export class AssetService {
           const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
           result.push(scorpioResponse.data);
         } catch(err) {
-          const pdtScorpioResponse = await axios.get(`${this.pdtScorpioUrl}/${assetId}`, {headers});
-          if(pdtScorpioResponse.data) {
-            await axios.post(this.scorpioUrl, pdtScorpioResponse.data, {headers});
-            result.push(pdtScorpioResponse.data);
+          try {
+            const pdtScorpioResponse = await axios.get(`${this.pdtScorpioUrl}/${assetId}`, {headers});
+            if(pdtScorpioResponse.data) {
+              await axios.post(this.scorpioUrl, pdtScorpioResponse.data, {headers});
+              result.push(pdtScorpioResponse.data);
+            }
+          } catch(err) {
+            continue;
           }
-          continue;
         }
       }
       return result;
