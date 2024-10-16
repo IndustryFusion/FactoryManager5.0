@@ -21,7 +21,6 @@ import { create, reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { Button } from "primereact/button";
 import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
@@ -144,9 +143,7 @@ const PicklistAssets = () => {
     };
 
     useEffect(() => {
-        if (Cookies.get("login_flag") === "false") {
-            router.push("/login");
-        } else if (router.isReady) {
+        if (router.isReady) {
             const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
                 router.query.factoryId;
             if (typeof id === 'string') {

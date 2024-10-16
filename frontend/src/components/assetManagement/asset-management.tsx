@@ -19,7 +19,6 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import "../../styles/dashboard.css"
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { fetchAsset } from "@/utility/asset-utility";
 import { Asset } from "@/types/asset-types";
@@ -182,14 +181,10 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
 
 
   useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {
-        handleAsset();
-      }
+    if (router.isReady) {
+      handleAsset();
     }
-  }, [])
+  }, [router.isReady])
 
 
   return (

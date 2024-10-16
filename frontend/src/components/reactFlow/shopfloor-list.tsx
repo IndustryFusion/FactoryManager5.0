@@ -23,7 +23,6 @@ import { ShopFloor } from "../../types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
 import { Card } from "primereact/card";
-import Cookies from "js-cookie";
 import EditShopFloor from "../shopFloorForms/edit-shop-floor-form";
 import { Toast } from "primereact/toast";
 import CreateShopFloor from "../shopFloorForms/create-shop-floor-form";
@@ -108,9 +107,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
           floorName: filteredShopFloors[0].floorName,
       });
     }
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } 
+
     if (router.isReady) {
       const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
       router.query.factoryId;

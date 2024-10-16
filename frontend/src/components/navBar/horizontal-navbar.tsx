@@ -20,7 +20,6 @@ import { ColorPicker } from "primereact/colorpicker";
 import { useState } from "react";
 import { CSSProperties } from "react";
 import { useRouter } from "next/router";
-import Cookies from 'js-cookie';
 import Alerts from "../alert/alerts";
 import { LuLayoutDashboard } from "react-icons/lu";
 import AssetManagementDialog from "../assetManagement/asset-management";
@@ -75,7 +74,6 @@ const HorizontalNavbar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    Cookies.set("login_flag", "false");
     router.push("/login", undefined, {locale: 'en'});
     dispatch(resetTimer());
     dispatch(logout());

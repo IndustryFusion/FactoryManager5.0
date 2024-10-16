@@ -20,7 +20,6 @@ import dynamic from 'next/dynamic'
 import { ShopFloor } from "../../../types/shop-floor";
 import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
 import Footer from "../../../components/navBar/footer";
-import Cookies from "js-cookie";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
   suspense: true
@@ -60,15 +59,11 @@ const ShopFloorManager: React.FC = () => {
         console.error("Failed to fetch factory details", error);
       }
     };
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {
-        const { factoryId } = router.query;
-        if (typeof factoryId === 'string') {
-        fetchShopFloorById(factoryId);
-      }
 
+    if (router.isReady) {
+      const { factoryId } = router.query;
+      if (typeof factoryId === 'string') {
+        fetchShopFloorById(factoryId);
       }
     }
   }, [factoryId, router.isReady]);

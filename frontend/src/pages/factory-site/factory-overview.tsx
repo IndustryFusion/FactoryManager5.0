@@ -31,7 +31,6 @@ import Footer from "../../components/navBar/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
 import EditFactory from "@/components/factoryForms/edit-factory-form";
-import Cookies from 'js-cookie';
 import { Toast, ToastMessage } from "primereact/toast";
 import AssetManagementDialog from "@/components/assetManagement/asset-management";
 import { useDispatch } from "react-redux";
@@ -111,16 +110,11 @@ const FactoryOverview = () => {
 
 
   useEffect(() => {
-    if (Cookies.get("login_flag") === "true") {
-      if (router.isReady) {
-        const { } = router.query;//needed
-        fetchFactoryLists();
-        setGlobalFilterValue("");
-      }   
-    } else {
-      router.push("/login");
-    }
-
+    if (router.isReady) {
+      const { } = router.query;//needed
+      fetchFactoryLists();
+      setGlobalFilterValue("");
+    }   
   }, [visible, isEdit, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {

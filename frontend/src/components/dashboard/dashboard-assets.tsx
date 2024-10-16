@@ -21,7 +21,6 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
-import Cookies from "js-cookie";
 import { useDashboard } from "@/context/dashboard-context";
 import OnboardForm from "./onboard-form";
 import EditOnboardForm from "./edit-onboard-form";
@@ -192,15 +191,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
 
   useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {
+    if (router.isReady) {
         handleAsset();
         if (editOnboardAsset.successToast) {
           showToast("success", "success", "onboard updated successfully")
         }
-      }
     }
   }, [router.isReady, editOnboardAsset.successToast])
 
