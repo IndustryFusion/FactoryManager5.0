@@ -15,7 +15,6 @@
 // 
 
 import axios, { AxiosResponse } from 'axios';
-import Cookies from 'js-cookie';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -49,12 +48,10 @@ const login = async (username: string, password: string): Promise<LoginResponse>
         {
             //Testing for 15 seconds
             // const expires = new Date(new Date().getTime() + 15 * 1000); 
-            // Cookies.set('login_flag', "true", { expires });
 
 
             //for 24 hours
             const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); 
-            Cookies.set('login_flag', "true", { expires });
         }
         return response.data;
     } catch (error) {
@@ -81,7 +78,6 @@ const logout = async () => {
     const logoutUrl = API_URL + '/auth/logout';
     const response = await axios.delete(logoutUrl as string);
     // Clear tokens and other data from cookies
-    Cookies.set('login_flag', "false");
 };
 
 export default {

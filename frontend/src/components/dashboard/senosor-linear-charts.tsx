@@ -22,7 +22,6 @@ import { Asset } from "@/types/asset-types";
 import { Dropdown } from "primereact/dropdown";
 import { ProgressSpinner } from "primereact/progressspinner";
 import socketIOClient, { Socket } from "socket.io-client";
-import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import "../../styles/combine-chart.css";
 import "../../styles/factory-form.css";
@@ -530,10 +529,6 @@ const fetchData = async() => {
 }
 
   useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } 
-
     if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
         return; 
     }

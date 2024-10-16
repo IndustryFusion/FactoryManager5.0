@@ -20,7 +20,6 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Toast } from "primereact/toast";
 import authService from "@/auth/auth-service";
-import Cookies from 'js-cookie';
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "primeflex/primeflex.css";
 import { Password } from 'primereact/password';
@@ -49,21 +48,6 @@ const Login: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [hasMounted, setHasMounted] = useState(false); 
-  
-  useEffect(() => {
-    if(router.isReady){
-      setHasMounted(true);
-        if (typeof window !== "undefined" && hasMounted && router.isReady) {
-          const loginFlag = Cookies.get("login_flag");
-  
-        if (!loginFlag || loginFlag !== 'true') {
-          router.push("/login");
-        } else {
-          router.push("/factory-site/factory-overview");
-        }
-        }
-      }
-  }, [router.isReady, hasMounted]);
 
 
   // validate username, it should be  Alpha Numeric includes underscore _

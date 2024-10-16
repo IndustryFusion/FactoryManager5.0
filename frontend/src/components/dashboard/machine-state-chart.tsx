@@ -19,7 +19,6 @@ import { useEffect, useRef, useState } from "react";
 import { Chart } from "primereact/chart";
 import axios from "axios";
 import { Asset } from "@/types/asset-types";
-import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
@@ -597,12 +596,8 @@ const MachineStateChart = () => {
 
     // useEffect to handle changes related to selectedIntervals
     useEffect(() => {
-        if (Cookies.get("login_flag") === "false") {
-            router.push("/login");
-        } else {
-            if (router.isReady) {              
-                fetchDataAndAssign();                
-            }
+        if (router.isReady) {              
+            fetchDataAndAssign();                
         }
        
     }, [router.isReady, entityIdValue, selectedInterval])

@@ -17,7 +17,6 @@
 import { useRouter } from "next/router";
 import { InputSwitch } from "primereact/inputswitch";
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import "../../styles/factory-shopfloor.css"
 import { fetchFactoryDetails, getShopFloorAssets } from "@/utility/factory-site-utility";
 
@@ -39,9 +38,7 @@ const Header =()=>{
     }
 
     useEffect(() => {
-        if (Cookies.get("login_flag") === "false") {
-            router.push("/login");
-        } else if (router.isReady) {
+        if (router.isReady) {
             // Use TypeScript's non-null assertion operator to assert that `id` is not undefined
             const id: string = Array.isArray(router.query.factoryId) ? router.query.factoryId[0]! : router.query.factoryId!;
             getFactoryDetails(id);
