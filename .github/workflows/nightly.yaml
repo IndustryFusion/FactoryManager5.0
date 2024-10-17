@@ -56,3 +56,4 @@ jobs:
       GATEWAY_TOKEN: ${{ secrets.GATEWAY_TOKEN }}
       ALERTA_KEY_DEV: ${{ secrets.ALERTA_KEY_DEV }}
       FACTORY_MONGO_URL_DEV: ${{ secrets.FACTORY_MONGO_URL_DEV }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
