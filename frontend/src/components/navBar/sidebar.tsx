@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import { Dispatch, SetStateAction } from "react";
 import "../../styles/sidebar.css";
+import { Tooltip } from 'primereact/tooltip';
 
 interface SideBarProps {
   isOpen?: boolean;
@@ -30,40 +31,21 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
           <div className="sidebar-dashboard-item">
             <div
               className="flex align-items-center sidebar-dashboard-text "
-              onClick={() => router.push("/factory-site/dashboard")}
+              onClick={() => router.push("/factory-site/factory-overview")}
             >
-              <img
-                src="/dashboard.jpg"
-                alt="asset-series-icon"
-                className="mr-2"
-              />
-              <p className="m-0">Dashboard</p>
+              <i className="pi pi-building mr-2" style={{ fontSize: '1.2rem' }} />
+              <p className="m-0">Factory Site</p>
             </div>
-            <div className="flex align-items-center sidebar-dashboard-text">
-              <img
-                src="/ai-browser.jpg"
-                alt="asset-series-icon"
-                className="mr-2"
-              />
-              <p className="m-0">Overview</p>
-            </div>
-            <div className="flex align-items-center sidebar-dashboard-text ">
-              <img
-                src="/ai-browser.jpg"
-                alt="asset-series-icon"
-                className="mr-2"
-              />
-              <p className="m-0">Factory Flow</p>
+            <div className="flex align-items-center sidebar-dashboard-text"
+               onClick={() => router.push("/asset-management")}>
+              <i className="pi pi-box mr-2" style={{ fontSize: '1.2rem' }} />
+              <p className="m-0">Factory assets</p>
             </div>
             <div className="flex align-items-center sidebar-dashboard-text "
-            onClick={() => router.push("/certificates")}
+              onClick={() => router.push("/certificates")}
             >
-              <img
-                src="/ai-browser.jpg"
-                alt="asset-series-icon"
-                className="mr-2"
-              />
-              <p className="m-0">Certificates</p>
+              <i className="pi pi-verified mr-2" style={{ fontSize: '1.2rem' }} />
+              <p className="m-0">Certificate Manager </p>
             </div>
           </div>
           <div>
@@ -96,7 +78,7 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               onClick={() => setIsOpen(!isOpen)}
             >
               <img
-                className="sidebar-collpase-icon"
+                className="sidebar-collpase-icon p-1"
                 src="/dashboard-collapse/sidebar-right.svg"
                 alt="menu-item-icon"
                 width="100%"
@@ -104,29 +86,30 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               />
             </div>
             <div className="dashboard-menu sidebar-items">
-              <img
-                onClick={() => router.push("/factory-site/dashboard")}
-                src="/dashboard-collapse/dashboard.svg"
-                alt="menu-item-icon"
-                width="100%"
-                height="100%"
+              <i 
+                className="pi pi-building"
+                onClick={() => router.push("/factory-site/factory-overview")}
+                style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                data-pr-tooltip="Factory Site"
+                data-pr-position="right"
               />
-              <img
-                onClick={() => router.push("/dashboard")}
-                src="/ai-browser.jpg"
-                alt="menu-item-icon"
-                width="100%"
-                height="100%"
+              <i 
+                className="pi pi-box"
+                onClick={() => router.push("/asset-management")}
+                style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                data-pr-tooltip="Factory Assets"
+                data-pr-position="right"
               />
-              <img
-                onClick={() => router.push("/dashboard")}
-                src="/ai-browser.jpg"
-                alt="menu-item-icon"
-                width="100%"
-                height="100%"
+              <i 
+                className="pi pi-verified"
+                onClick={() => router.push("/certificates")}
+                style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                data-pr-tooltip="Certificate Manager"
+                data-pr-position="right"
               />
             </div>
           </div>
+          <Tooltip target=".sidebar-items > i" />
           <div></div>
         </div>
       )}

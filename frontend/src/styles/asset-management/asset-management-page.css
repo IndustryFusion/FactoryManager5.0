@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;600;700&display=swap');
+
+:root {
+  --primary-color: #388cba;
+  --secondary-color: #f50057;
+  --text-color: #333333;
+  --background-color: #f5f5f5;
+  --card-background: #ffffff;
+}
+
+body {
+  font-family: "League Spartan", sans-serif;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.p-card {
+  background-color: var(--card-background);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Updated Tab Styles */
+.asset-tabs.p-tabview .p-tabview-nav {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  padding: 0 1.5rem !important;
+}
+
+.asset-tabs.p-tabview .p-tabview-nav li {
+  margin-right: 0.5rem !important;
+}
+
+.asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  padding: 1rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link:hover {
+  color: var(--primary-color) !important;
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+.asset-tabs.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: transparent !important;
+  color: var(--primary-color) !important;
+  border-bottom: 3px solid var(--primary-color) !important;
+}
+
+.custom-tab-header {
+  padding: 1rem 1.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+}
+
+.p-button {
+  font-family: "League Spartan", sans-serif;
+  font-weight: 600;
+}
+
+.p-datatable {
+  font-family: "League Spartan", sans-serif;
+}
+
+.p-datatable .p-datatable-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  font-size: 0.9rem;
+}
+
+/* Layout styles */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .custom-tab-header {
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  .p-card-title {
+    font-size: 1.25rem;
+  }
+
+  .p-datatable .p-datatable-header {
+    font-size: 1rem;
+  }
+
+  .p-datatable .p-datatable-thead > tr > th {
+    font-size: 0.9rem;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.85rem;
+  }
+
+  .md\:p-4 {
+    padding: 1rem;
+  }
+
+  .md\:p-3 {
+    padding: 0.75rem;
+  }
+}
+
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --primary-color: #000000;
+    --secondary-color: #ffffff;
+    --text-color: #000000;
+    --background-color: #ffffff;
+    --card-background: #f0f0f0;
+  }
+
+  .p-card {
+    border: 1px solid #000000;
+  }
+
+  .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    border: 1px solid #000000;
+  }
+}
+
+/* Additional utility classes */
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
+}

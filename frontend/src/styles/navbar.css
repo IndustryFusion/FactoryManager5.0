@@ -1,19 +1,80 @@
-
-@import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
-.language-dropdown .p-dropdown {
-    border: none;
-    width: 3.6rem !important;
+.custom-icon-button {
+  background-image: url("/qrCodeCreatorIcon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 1.5em;
+  height: 1.5em;
+  display: inline-block;
+  vertical-align: middle;
+  background-color: white;
+  border: none;
+  opacity: 0.5;
+}
+.nav-breadcrumb {
+  margin-top: 5px !important;
+  padding: 0px !important;
+}
+.nav-header {
+  margin-left: 8px !important;
+  margin: 0;
+}
+/* .nav-items img {
+  cursor: pointer;
+} */
+.qr_nav_icon {
+  width: 24px;
+  height: 24px;
+  /* margin-top: 8px; */
+}
+.current-page .p-menuitem-text {
+  color: #2196f3 !important;
+}
+.dashboard-user-name {
+  margin: 0;
+  color: var(--Black, #2b2b2b);
+  font-family: "League Spartan";
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
 }
 
-.language-dropdown .p-dropdown .p-dropdown-trigger {
-    display: none;
+.user-company-name {
+  margin: 0;
+  color: var(--grey-primary);
+  font-family: "League Spartan";
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
 }
-.factory-navbar {
-    padding: 0 24px;
-    font-family: "League Spartan";
-    border-bottom: 1px solid #e6e6e6;
+.add-user-item .p-menuitem-text,
+.user-details-item .p-menuitem-text {
+  color: #2196f3 !important;
 }
-.nav-header{
-    margin-left: 3.5rem  !important;
-    margin: 0 ;
-  }
+.sidebar-right-icon {
+  position: absolute;
+  left: 2.8rem;
+  top: 5.4rem;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.nav_icon_button {
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  background-color: white;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.nav_icon_button:hover,
+.nav_icon_button:focus {
+  background-color: #f3f3f5;
+}
