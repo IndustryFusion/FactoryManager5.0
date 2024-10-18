@@ -34,7 +34,7 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               onClick={() => router.push("/factory-site/factory-overview")}
             >
               <i className="pi pi-building mr-2" style={{ fontSize: '1.2rem' }} />
-              <p className="m-0">Factory Site</p>
+              <p className="m-0">Factory Sites</p>
             </div>
             <div className="flex align-items-center sidebar-dashboard-text"
                onClick={() => router.push("/asset-management")}>
@@ -46,6 +46,12 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
             >
               <i className="pi pi-verified mr-2" style={{ fontSize: '1.2rem' }} />
               <p className="m-0">Certificate Manager </p>
+            </div>
+            <div className="flex align-items-center sidebar-dashboard-text "
+              // onClick={() => router.push("/contracts")}
+            >
+               <i className="pi pi-file-edit mr-2" style={{ fontSize: '1.2rem' }} />
+              <p className="m-0">Contract Manager </p>
             </div>
           </div>
           <div>
@@ -105,6 +111,13 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
                 onClick={() => router.push("/certificates")}
                 style={{ fontSize: '1.5rem', cursor: 'pointer' }}
                 data-pr-tooltip="Certificate Manager"
+                data-pr-position="right"
+              />
+                <i 
+                className="pi pi-file-edit "
+                // onClick={() => router.push("/certificates")}
+                style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                data-pr-tooltip="Contract Manager Coming Soon"
                 data-pr-position="right"
               />
             </div>
