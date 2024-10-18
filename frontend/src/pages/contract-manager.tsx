@@ -4,7 +4,7 @@ import ContractHeader from '@/components/contractManager/contract-header';
 import { InputText } from 'primereact/inputtext';
 import { Tree } from 'primereact/tree';
 import { NodeService } from '@/service/NodeService';
-import ContractCards from '@/components/contractManager/contract-cards';
+import ContractCards from '@/components/contractManager/contract-folders';
 import { Checkbox } from 'primereact/checkbox';
 import { getAllContract } from '@/utility/contract';
 import { getAccessGroup } from "../utility/indexed-db";
@@ -67,7 +67,6 @@ const ContractManager = () => {
             </div>
             </div>
             <div className='mt-6'>
-            <h3 className='m-0 ml-1 folder-heading'>Simple Lawfirm Members</h3>
             <div className='flex gap-3'>
                 <p className='card-label-grey' style={{textDecoration:"underline"}}>Select All</p>
                 <p className='card-label-grey' style={{textDecoration:"underline"}}>Unselect All</p>

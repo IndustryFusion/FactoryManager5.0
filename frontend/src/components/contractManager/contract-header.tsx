@@ -84,7 +84,7 @@ const ContractHeader = () => {
             className="contract-btn flex justify-content-center align-items-center border-none black_button_hover"
             onClick={handleAddContract}
           >
-            Add Contract
+            Create Binding
             <img
               src="/plus_icon.svg"
               width="24"

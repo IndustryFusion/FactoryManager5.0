@@ -12,6 +12,39 @@
     grid-template-columns: 1fr 250px;
     background-color: white;
 }
+.delete-text{
+    margin-bottom: 5px;
+    color: #2b2b2b;
+    font-family: League Spartan;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.review_lists li{
+    list-style: none;
+    padding: 10px ;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: 180px;
+}
+.review_lists li:hover{
+    background: #eeeff0a6;
+    border-radius: 8px;
+}
+.review-btn{
+      display: flex;
+      justify-content: center;
+      color: #fff;
+      background-color: #025802;
+      padding: 10px;
+      border-radius: 8px;
+      margin:  10px ;
+      font-size: 18px;
+      margin-top: 1.8rem;
+}
 
 /* Asset Type List Styling */
 .asset-type-list-cover {

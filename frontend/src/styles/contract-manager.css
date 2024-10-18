@@ -65,7 +65,7 @@
   padding: 1.5rem 26px;
 }
 .contract-right-container {
-  flex: 0 70%;
+  flex: 0 77%;
 }
 .search-expand {
   position: absolute;
@@ -208,4 +208,10 @@
 }
 .contract-tabs.p-tabview .p-tabview-nav-content {
   border-bottom: 2px solid #e1e8ed;
+}
+.main_content_wrapper {
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
 }
