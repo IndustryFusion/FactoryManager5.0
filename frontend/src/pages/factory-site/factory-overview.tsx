@@ -26,7 +26,8 @@ import "../../styles/factory-overview.css";
 import { ConfirmDialog } from "primereact/confirmdialog";
 import { confirmDialog } from "primereact/confirmdialog";
 import { useRouter } from "next/router";
-import HorizontalNavbar from "../../components/navBar/horizontal-navbar";
+import Navbar from "../../components/navBar/navbar";
+import Sidebar from '@/components/navBar/sidebar';
 import Footer from "../../components/navBar/footer";
 import { deleteFactory } from "@/utility/factory-site-utility";
 import CreateFactory from "@/components/factoryForms/create-factory-form";
@@ -64,7 +65,8 @@ const FactoryOverview = () => {
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
   ];
-
+  const [isSidebarExpand, setSidebarExpand] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
@@ -356,44 +358,50 @@ const FactoryOverview = () => {
 
 
   return (
-    <>
-      <Toast ref={toast} />
-      <HorizontalNavbar />
-      <div className="grid py-1 px-2 factory-overview " style={{ zoom: "80%" }} >
-        <div className="col-12" style={{ marginTop: "5rem" }}>      
-          <h2 className="ml-4 mt-6">{t('overview:factoryOverview')}</h2>
-            <DataView
-              value={filteredValue || factorySite}
-              itemTemplate={itemTemplate}
-              header={dataViewHeader}
-              sortOrder={sortOrder}
-              sortField={sortField}
-            />     
+    <div className="flex">
+      <div className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}>
+        <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
+      </div>
+      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
+        <Navbar navHeader="Factory Overview" />
+        <div className="dashboard-container">
+          <Toast ref={toast} />
+          <div className="grid py-1 px-2 factory-overview">
+            <div className="col-12">
+              <DataView
+                value={filteredValue || factorySite}
+                itemTemplate={itemTemplate}
+                header={dataViewHeader}
+                sortOrder={sortOrder}
+                sortField={sortField}
+              />
+            </div>
+          </div>
+          {visible && (
+            <CreateFactory
+              visibleProp={visible}
+              setVisibleProp={setVisible}
+            />
+          )}
+          {isEdit && (
+            <EditFactory
+              factory={editFactory}
+              isEditProp={isEdit}
+              setIsEditProp={setIsEdit}
+            />
+          )}
+          {visibleDelete && (
+            <DeleteDialog
+              deleteDialog={visibleDelete}
+              setDeleteDialog={setVisibleDelete}
+              handleDelete={handleDeleteFactory}
+              deleteItemName={factoryName}
+            />
+          )}
         </div>
       </div>
-      {visible &&
-        <CreateFactory
-          visibleProp={visible}
-          setVisibleProp={setVisible}
-        />
-      }
-      {isEdit &&
-        <EditFactory
-          factory={editFactory}
-          isEditProp={isEdit}
-          setIsEditProp={setIsEdit}
-        />
-      }
-      {visibleDelete && 
-      <DeleteDialog
-      deleteDialog={visibleDelete}
-      setDeleteDialog={setVisibleDelete}
-      handleDelete ={handleDeleteFactory}
-      deleteItemName={factoryName}
-      />
-      }
       <Footer />
-    </>
+    </div>
   );
 };
 

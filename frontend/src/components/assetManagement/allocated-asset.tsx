@@ -113,7 +113,6 @@ const AllocatedAsset = () => {
   return (
     <>
     <Toast ref={toast} />
-      <h3>{t('reactflow:allocatedAsset')}</h3>
       <DataTable
         style={{ zoom: "92%" }}
         className="factory-table"
