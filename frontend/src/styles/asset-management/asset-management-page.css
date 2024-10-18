@@ -98,7 +98,32 @@ body {
 }
 
 .h-screen {
-  height: 100vh;
+  height: 60vh;
+}
+.p-datatable-wrapper {
+  position: relative;
+  height: calc(100vh - 300px); /* Adjust based on your layout */
+  overflow-y: auto;
+}
+
+.sticky-pagination {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--black-primary);
+  z-index: 1;
+  padding: 1rem 0;
+  border-radius: 0 0 10px 10px;
+}
+
+.p-paginator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-range-display {
+  color: var(--white);
+  margin-right: 1rem;
 }
 
 .overflow-hidden {
