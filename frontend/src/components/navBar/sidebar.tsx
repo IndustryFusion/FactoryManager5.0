@@ -117,7 +117,7 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
                 className="pi pi-file-edit "
                 // onClick={() => router.push("/certificates")}
                 style={{ fontSize: '1.5rem', cursor: 'pointer' }}
-                data-pr-tooltip="Contract Manager Coming Soon"
+                data-pr-tooltip="Contract Manager"
                 data-pr-position="right"
               />
             </div>
