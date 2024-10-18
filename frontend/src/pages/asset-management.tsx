@@ -9,10 +9,14 @@ import Footer from '@/components/navBar/footer';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Card } from 'primereact/card';
 import '@/styles/asset-management/asset-management-page.css'
+import { setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const dispatch = useDispatch();
+  const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
   const { t } = useTranslation(['common', 'button']);
 
   return (
@@ -33,7 +37,7 @@ const AssetManagementPage = () => {
         <div className="dashboard-container -mt-3">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
-              <TabView activeIndex={activeIndex} onTabChange={(e) => setActiveIndex(e.index)} className="asset-tabs">
+              <TabView activeIndex={activeIndex} onTabChange={(e) => dispatch(setActiveTabIndex(e.index))} className="asset-tabs">
                 <TabPanel header="Asset Table">
                   <div className="p-2 md:p-3">
                     <AssetManagement />

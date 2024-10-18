@@ -1,30 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
-import { fetchAssetManagement } from '@/utility/asset-utility'; 
 import { Toast } from 'primereact/toast';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { FilterMatchMode } from 'primereact/api';
 import { useRouter } from 'next/router';
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem } from 'primereact/menuitem';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
+import { fetchAssets, setSelectedAssets, Asset } from '@/redux/assetManagement/assetManagementSlice';
+import { Button } from 'primereact/button';
 import '../../styles/asset-management/asset-management-table.css'; 
 
-interface Asset {
-  id: string;
-  asset_serial_number: string;
-  type: string;
-  product_name: string;
-  asset_manufacturer_name: string;
-}
-
 const AssetManagement: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const dispatch = useDispatch<AppDispatch>();
+  const { assets, loading, selectedAssets } = useSelector((state: RootState) => state.assetManagement);
   const [globalFilterValue, setGlobalFilterValue] = useState<string>('');
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [selectedAssets, setSelectedAssets] = useState<Asset[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Asset | null>(null);
   const cm = useRef<ContextMenu>(null);
   const toast = useRef<Toast>(null);
@@ -39,27 +33,16 @@ const AssetManagement: React.FC = () => {
     asset_manufacturer_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
   });
 
-  useEffect(() => {
-    const loadAssets = async () => {
-      try {
-        const data = await fetchAssetManagement();
-        setAssets(data );
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching assets:', error);
-        setLoading(false);
-      }
-    };
-
-    loadAssets();
-  }, []);
-
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     let _filters = { ...filters };
     _filters['global'] = { value: value, matchMode: FilterMatchMode.CONTAINS };
     setFilters(_filters);
     setGlobalFilterValue(value);
+  };
+
+  const handleRefresh = () => {
+    dispatch(fetchAssets());
   };
 
   const renderHeader = () => {
@@ -74,6 +57,14 @@ const AssetManagement: React.FC = () => {
             className="p-inputtext-sm search-input"
           />
         </span>
+        <Button 
+          icon="pi pi-refresh" 
+          onClick={handleRefresh} 
+          className="p-button-outlined p-button-sm" 
+          tooltip="Refresh Assets"
+          tooltipOptions={{ position: 'left' }}
+          label='Refresh Assets Table'
+        />
       </div>
     );
   };
@@ -104,7 +95,7 @@ const AssetManagement: React.FC = () => {
     );
   };
 
- const menuModel: MenuItem[] = [
+  const menuModel: MenuItem[] = [
     {
       label: 'Contracts',
       icon: 'pi pi-file-edit',
@@ -145,7 +136,7 @@ const AssetManagement: React.FC = () => {
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           setSelectedProduct(rowData);
-          cm.current?.show(e.nativeEvent);
+          cm.current?.show(e);
         }}
         style={{ background: 'none', border: 'none', cursor: 'pointer' }}
       >
@@ -190,17 +181,17 @@ const AssetManagement: React.FC = () => {
           className="p-datatable-sm custom-row-padding asset-dynamic-table"
           selectionMode="multiple"
           selection={selectedAssets}
-          onSelectionChange={(e) => setSelectedAssets(e.value)}
+          onSelectionChange={(e) => dispatch(setSelectedAssets(e.value as Asset[]))}
           scrollable
           scrollHeight="calc(100vh - 10px)"
           onContextMenu={(e) => cm.current?.show(e.originalEvent)}
-          contextMenuSelection={selectedProduct}
-          onContextMenuSelectionChange={(e) => setSelectedProduct(e.value)}
+          contextMenuSelection={selectedProduct as any}
+          onContextMenuSelectionChange={(e) => setSelectedProduct(e.value as any)}
         >
           <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
           <Column field="id" header="Asset ID" body={(rowData) => renderExpandableCell(rowData, 'id')} />
           <Column field="asset_serial_number" header="Machine Serial Number" />
-          <Column field="type" header="Asset Type" body={(rowData) => rowData.type.split('/').pop()}  />
+          <Column field="type" header="Asset Type" body={(rowData: Asset) => rowData.type.split('/').pop()}  />
           <Column field="product_name" header="Product Name" />
           <Column field="asset_manufacturer_name" header="Manufacturer" />
           <Column body={actionItemsTemplate} header="Action" />
