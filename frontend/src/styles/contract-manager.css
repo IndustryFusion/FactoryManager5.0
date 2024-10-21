@@ -115,6 +115,7 @@
   padding: 1.5rem;
   background-color: #fff;
   border-radius: 16px;
+  cursor: pointer;
 }
 .card-label-grey {
   color: #95989a;

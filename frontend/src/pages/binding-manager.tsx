@@ -16,6 +16,7 @@ import { Toast, ToastMessage } from "primereact/toast";
 import axios from "axios";
 import { fetchBindingsRedux } from "@/redux/binding/bindingsSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/router";
 
 const BindingManager = () => {
   const [nodes, setNodes] = useState([]);
@@ -29,11 +30,14 @@ const BindingManager = () => {
   const [loading, setLoading] = useState(false);
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
+  const router = useRouter();
 
-  // Access the contracts data from Redux
+  // Access the bindings data from Redux
   const bindingsData = useSelector((state: any) => state.bindings.bindings);
 
   console.log("bindingsData here", bindingsData);
+  console.log("contracts original",contractsOriginal);
+  
   
 
 
@@ -58,7 +62,10 @@ const BindingManager = () => {
     try {
     const details = await getAccessGroup();
     setCompanyIfricId(details.company_ifric_id);
-    dispatch(fetchBindingsRedux(companyIfricId));
+    const ifricId = details.company_ifric_id;
+    if (ifricId) {
+      dispatch(fetchBindingsRedux(ifricId));
+    }
     } catch(error: any) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
@@ -73,6 +80,7 @@ const BindingManager = () => {
   useEffect(() => {
     getCompanyId();
   },[companyIfricId]);
+
 
   const handleFilterContracts = () => {
     setLoading(true);
@@ -93,6 +101,10 @@ const BindingManager = () => {
       handleFilterContracts();
     }
   }, [filterContracts]);
+
+  const handleCreateClick = () => {
+    router.push("/create-binding");
+  };
 
   return (
     <>
@@ -154,7 +166,9 @@ const BindingManager = () => {
                 </div>
               </div>
               <div className="contract-right-container">
-                <ContractHeader />
+                <ContractHeader 
+                handleCreateClick={handleCreateClick}
+                />
                 <div className="contract-cards-container">
                   <ContractFolders
                     setFilterContracts={setFilterContracts}

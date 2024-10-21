@@ -1,6 +1,8 @@
+import axios from "axios";
 import api from "./jwt";
 import { updatePopupVisible } from "./update-popup"
-const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_BACKEND_URL
+import { Asset } from "@/types/asset-types";
+const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_PLATFORM_BACKEND_URL
 
 export const getBindings =async(companyIfricId: string)=>{
     try{
@@ -12,28 +14,44 @@ export const getBindings =async(companyIfricId: string)=>{
         if (error?.response && error?.response?.status === 401) {
           updatePopupVisible(true);
         } else {
-          throw new Error(error.response?.data?.message || "Error getting contracts");
+          throw new Error(error.response?.data?.message || "Error getting bindings");
         }
       }
     }
     
-    export const getContractDetails = async(contractIfricId:string)=>{
+    export const getBindingDetails = async(bindingIfricId:string)=>{
     try{
-        const response = await api.get(`${IFX_BACKEND_URL}/contract/${contractIfricId}`)
+        const response = await api.get(`${IFX_BACKEND_URL}/binding/${bindingIfricId}`)
         return response.data
     }catch (error:any) {
         console.error("Error getting contracts:", error);
         if (error?.response && error?.response?.status === 401) {
           updatePopupVisible(true);
         } else {
-          throw new Error(error.response?.data?.message || "Error getting contracts");
+          throw new Error(error.response?.data?.message || "Error getting binding details");
+        }
+      }
+    }
+
+    export const getContractData = async(contractId:string)=>{
+      console.log("contractId in utility", contractId);
+      
+      try{
+      const response = await axios.get(`${IFX_BACKEND_URL}/contract/get-contract-by-record/${contractId}`);
+      return response.data;
+      }catch (error:any) {
+        console.error("Error getting contract:", error);
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+        } else {
+          throw new Error(error.response?.data?.message || "Error getting contract details");
         }
       }
     }
     
-    export const updateContractDetails = async(contractIfricId:string,dataToSend: Record<string,any>)=>{
+    export const updateBindingDetails = async(bindingIfricId:string,dataToSend: Record<string,any>)=>{
         try{
-            const response = await api.patch(`${IFX_BACKEND_URL}/contract/${contractIfricId}`,dataToSend,{
+            const response = await api.patch(`${IFX_BACKEND_URL}/binding/${bindingIfricId}`,dataToSend,{
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -41,25 +59,25 @@ export const getBindings =async(companyIfricId: string)=>{
             })
             return response.data
         }catch (error:any) {
-            console.error("Error updating contracts:", error);
+            console.error("Error updating binding:", error);
             if (error?.response && error?.response?.status === 401) {
               updatePopupVisible(true);
             } else {
-              throw new Error(error.response?.data?.message || "Error updating contracts");
+              throw new Error(error.response?.data?.message || "Error updating binding");
             }
           }
         }
     
-    export const deleteContract = async(contractIfricId:string)=>{
+    export const deleteBinding = async(bindingIfricId:string)=>{
       try{
-        const response = await api.delete(`${IFX_BACKEND_URL}/contract/${contractIfricId}`);
+        const response = await api.delete(`${IFX_BACKEND_URL}/binding/${bindingIfricId}`);
         return response.data;
       }catch (error:any) {
-            console.error("Error updating contracts:", error);
+            console.error("Error deleting binding:", error);
             if (error?.response && error?.response?.status === 401) {
               updatePopupVisible(true);
             } else {
-              throw new Error(error.response?.data?.message || "Error deleteing contracts");
+              throw new Error(error.response?.data?.message || "Error deleting binding");
             }
           }
         }

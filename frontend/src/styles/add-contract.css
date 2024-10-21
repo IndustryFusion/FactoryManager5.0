@@ -21,6 +21,9 @@
     font-weight: 400;
     line-height: normal;
 }
+.review_lists{
+    padding-left: 40px;
+}
 
 .review_lists li{
     list-style: none;
@@ -29,6 +32,7 @@
     align-items: center;
     cursor: pointer;
     width: 180px;
+    font-size: 1rem;
 }
 .review_lists li:hover{
     background: #eeeff0a6;
@@ -45,7 +49,31 @@
       font-size: 18px;
       margin-top: 1.8rem;
 }
-
+.cancel-btn {
+    text-align: center;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background-color: #c5c4c4;
+    color: rgb(5, 3, 3);
+    box-shadow: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .action-btn-save {
+    text-align: center;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #2b2b2b;
+    box-shadow: none;
+    color: white;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+ 
 /* Asset Type List Styling */
 .asset-type-list-cover {
     height: 100%;
