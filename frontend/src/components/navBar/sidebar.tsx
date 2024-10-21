@@ -48,7 +48,7 @@ const Sidebar: React.FC<SideBarProps> = ({ isOpen, setIsOpen }) => {
               <p className="m-0">Certificate Manager </p>
             </div>
             <div className="flex align-items-center sidebar-dashboard-text "
-              // onClick={() => router.push("/contracts")}
+               onClick={() => router.push("/contract-manager")}
             >
                <i className="pi pi-file-edit mr-2" style={{ fontSize: '1.2rem' }} />
               <p className="m-0">Contract Manager </p>

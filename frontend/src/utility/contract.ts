@@ -205,3 +205,84 @@ export const getAllContract = async (company_ifric_id: string) => {
     }
   }
 };
+
+export const getContracts =async(companyIfricId: string)=>{
+  try{
+   const response = await api.get(`${IFX_BACKEND_URL}/contract/get-company-contract/${companyIfricId}`)
+   return response.data
+  }
+  catch (error:any) {
+      console.error("Error getting contracts:", error);
+      if (error?.response && error?.response?.status === 401) {
+        updatePopupVisible(true);
+      } else {
+        throw new Error(error.response?.data?.message || "Error getting contracts");
+      }
+    }
+  }
+
+  export const createContract = async (dataToSend: Record<string,any>) => {
+    try{
+        return await api.post(`${IFX_BACKEND_URL}/contract`, dataToSend,{
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },  
+        })
+    }
+    catch (error: any) {
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+          return null;
+        } else {
+          throw error;
+        }
+      }
+}
+
+export const deleteContract = async(contractIfricId:string)=>{
+  try{
+    const response = await api.delete(`${IFX_BACKEND_URL}/contract/${contractIfricId}`);
+    return response.data;
+  }catch (error:any) {
+        console.error("Error updating contracts:", error);
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+        } else {
+          throw new Error(error.response?.data?.message || "Error deleteing contracts");
+        }
+      }
+    }
+
+export const updateContractDetails = async (contractIfricId: string, dataToSend: Record<string, any>) => {
+  try {
+    const response = await api.patch(`${IFX_BACKEND_URL}/contract/${contractIfricId}`, dataToSend, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+    return response.data
+  } catch (error: any) {
+    console.error("Error updating contracts:", error);
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+    } else {
+      throw new Error(error.response?.data?.message || "Error updating contracts");
+    }
+  }
+}
+
+export const getContractDetails = async (contractIfricId: string) => {
+  try {
+    const response = await api.get(`${IFX_BACKEND_URL}/contract/${contractIfricId}`)
+    return response.data
+  } catch (error: any) {
+    console.error("Error getting contracts:", error);
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+    } else {
+      throw new Error(error.response?.data?.message || "Error getting contracts");
+    }
+  }
+}
