@@ -2,52 +2,55 @@ import { useTranslation } from "next-i18next";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction } from "react";
-
+import "../styles/add-contract.css"
 
 interface DeleteDialogProps {
-    deleteDialog: boolean;
-    setDeleteDialog: Dispatch<SetStateAction<boolean>>;
-    handleDelete?: () => void;
-    deleteItemName?: string;
+  deleteDialog: boolean;
+  setDeleteDialog: Dispatch<SetStateAction<boolean>>;
+  handleDelete: () => void;
+  deleteItemName?: React.ReactNode;
+  id: string
 }
 
-const DeleteDialog: React.FC<DeleteDialogProps> = ({ deleteDialog, setDeleteDialog, handleDelete, deleteItemName }) => {
-    const { t } = useTranslation('overview'); 
-    const header = () => <h3>{t('overview:confirmation')}</h3>
-    return (
-        <>
-            <Dialog
-            style={{width:"600px"}}
-                visible={deleteDialog}
-                onHide={() => setDeleteDialog(false)}
-                header={header}
-            >
-                <div className="mb-6">
-                    <span>{t('overview:deleteWarning')}</span>
-                    <span style={{ textTransform: "capitalize", fontWeight: "bold" }}> {deleteItemName}</span>
-                </div>
+const DeleteDialog: React.FC<DeleteDialogProps> = ({
+  deleteDialog,
+  setDeleteDialog,
+  handleDelete,
+  deleteItemName,
+  id
+}) => {
+  const { t } = useTranslation("overview");
+  const header = () => <h4 className="m-0">Confirm Delete</h4>;
 
+  const footerContent =(
+    <div>
+      <Button
+        className="cancel-btn"
+        label="Cancel"
+        onClick={() => setDeleteDialog(false)}
+      />
+      <Button
+      className="action-btn-save"
+      label="Save" onClick={() => handleDelete(id)} autoFocus />
+    </div>
+  );
 
-                <div className="flex justify-content-end">
-                    <Button
-                        label={t('yes')}
-                        icon="pi pi-check"
-                        className="mr-2"
-                        onClick={handleDelete}
-                    >
-                    </Button>
-                    <Button
-                        label={t('no')}
-                        icon="pi pi-times"
-                        severity="danger" outlined
-                        className="ml-3"
-                        onClick={() => setDeleteDialog(false)}
-                    ></Button>
-                </div>
-
-            </Dialog>
-        </>
-    )
-}
+  return (
+    <>
+      <Dialog
+        style={{ width: "600px" }}
+        visible={deleteDialog}
+        onHide={() => setDeleteDialog(false)}
+        header={header}
+        footer={footerContent}
+      >
+        <div className="mb-4 mt-5">
+          {deleteItemName}
+        </div>
+      
+      </Dialog>
+    </>
+  );
+};
 
 export default DeleteDialog;
