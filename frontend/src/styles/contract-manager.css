@@ -206,13 +206,19 @@ font-weight: 500;
 line-height: normal;
 padding-left: 10px !important;
 }
+.contract-tabs.p-tabview .p-tabview-nav {
+  margin-bottom: 0 !important;
+}
+.contract-tabs.p-tabview .p-tabview-nav li{
+  padding: 5px 5px 0 5px !important;
+}
 .contract-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
 padding: 0;
 margin-right: 2rem;
 }
 .contract-tabs.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-border-color: var(--blue-new);
-color: var(--black-primary);
+border-color: #478fb7;
+color: #2b2b2b;
 border-width: 0 0 5px 0;
 width: 80%;
 }
@@ -224,4 +230,18 @@ border-bottom: 2px solid #e1e8ed;
   position: relative;
   overflow: hidden;
   width: 100%;
+}
+.back-btn {
+  background-color: #2b2b2b;
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 11px 7px 5px;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 10px 0;
+  cursor: pointer;
+  font-family: "League Spartan";
+}
+.not-found-text{
+  color: #95989a;
 }

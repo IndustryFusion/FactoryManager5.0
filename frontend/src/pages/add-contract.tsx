@@ -439,7 +439,7 @@ const AddContractPage: React.FC = () => {
                                                 maxDate={certificateExpiry ? new Date(certificateExpiry) : undefined} className='contract_form_field' placeholder='Choose an end date' dateFormat="MM dd, yy"
                                             />
                                             {certificateExpiry && (
-                                                <small>
+                                                <small className="ml-3 mt-2">
                                                     Contract end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
                                                         year: 'numeric',
                                                         month: 'short',

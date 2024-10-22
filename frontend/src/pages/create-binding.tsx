@@ -494,7 +494,7 @@ const CreateBinding: React.FC = () => {
                                                     maxDate={certificateExpiry ? new Date(certificateExpiry.getTime()) : undefined} className='contract_form_field' dateFormat="MM dd, yy"
                                                 />
                                                 {certificateExpiry && (
-                                                    <small>
+                                                    <small className="ml-3 mt-2">
                                                         Contract end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
                                                         year: 'numeric',
                                                         month: 'short',

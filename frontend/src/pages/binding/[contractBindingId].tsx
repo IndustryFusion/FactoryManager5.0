@@ -128,10 +128,8 @@ const CreateBindingPage: React.FC = () => {
       const [binding] = response;
       if(binding){
         setBindingData(binding);
-        setInitialBindingData({
-            ...binding,
-            contract_valid_till: binding.contract_binding_valid_till ? new Date(binding.contract_binding_valid_till) : null
-        });
+        setInitialBindingData({ binding});
+
         fetchContractData(binding?.contract_id)
         fetchAssetDetails(binding?.asset_ifric_id)
       }
@@ -517,7 +515,7 @@ const CreateBindingPage: React.FC = () => {
       }
 
       const dataToSend = {
-        contract_binding_valid_till: bindingData?.contract_binding_valid_till,
+        contract_binding_valid_till: moment(bindingData?.contract_binding_valid_till).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
       };
 
         const response = await updateBindingDetails(bindingData?.contract_binding_ifric_id, dataToSend)
@@ -633,9 +631,9 @@ const CreateBindingPage: React.FC = () => {
           <Toast ref={toast} />
           <div className="create-contract-form-grid">
             <div className="create-contract-form-wrapper">
-              <h1 className="template-form-heading">
+              <h2 className="template-form-heading ml-3">
                 {contractData.contract_name ?? ""}
-              </h1>
+              </h2>
               <form onSubmit={handleSubmit}>
                 <div className="form-grid">
                   <div className="contract_form_field_column">
@@ -728,13 +726,11 @@ const CreateBindingPage: React.FC = () => {
                         disabled={isEdit ? false : true}
                         placeholder={
                             bindingData?.contract_binding_valid_till &&
-                            moment(bindingData?.contract_binding_valid_till).format(
-                              "MMMM D, YYYY"
-                            )
+                           moment(bindingData?.contract_binding_valid_till).utc().format("MMMM D, YYYY")
                           }
                       />
                       {certificateExpiry  && isEdit && (
-                        <small>
+                        <small className="ml-3 mt-2">
                           Contract end date must be before{" "}
                           {new Date(certificateExpiry).toLocaleDateString(
                             "en-US",
