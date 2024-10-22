@@ -25,7 +25,8 @@ export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   private readonly context = process.env.CONTEXT;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
-  private readonly pdtScorpioUrl = process.env.PDT_SCORPIO_URL;
+  //private readonly pdtScorpioUrl = process.env.PDT_SCORPIO_URL;
+  private readonly ifxurl = process.env.IFX_PLATFORM_BACKEND_URL;
 
   async getAssetData(token: string) {
     try {
@@ -68,6 +69,7 @@ export class AssetService {
         'Authorization': req.headers['authorization']
       };
       
+      // we need to remove registry company twin call Factory server as each factory has its own scorpio
       const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`,{headers: registryHeaders});
       if(!(companyData.data.length)) {
         return {
@@ -85,18 +87,11 @@ export class AssetService {
           const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
           result.push(scorpioResponse.data);
         } catch(err) {
-          try {
-            const pdtScorpioResponse = await axios.get(`${this.pdtScorpioUrl}/${assetId}`, {headers});
-            if(pdtScorpioResponse.data) {
-              await axios.post(this.scorpioUrl, pdtScorpioResponse.data, {headers});
-              result.push(pdtScorpioResponse.data);
-            }
-          } catch(err) {
+            console.log("Error fetching asset", i, err)
             continue;
-          }
+        } 
         }
-      }
-      return result;
+        return result;
     } catch(err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
@@ -219,7 +214,7 @@ export class AssetService {
     }
   }
 
-  async getOwnerAssets(company_ifric_id: string, token: string, req: Request) {
+  async setFactoryOwnerAssets(company_ifric_id: string, token: string, req: Request) {
     try {
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -232,24 +227,24 @@ export class AssetService {
         'Authorization': req.headers['authorization']
       };
       
-      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`,{headers: registryHeaders});
-      if(!(companyData.data.length)) {
-        return {
-          status: 404,
-          message: 'No company found with the provided ID'
-        };
-      }
       
-      const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`,{headers: registryHeaders});
+      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
       const result = [];
       for(let i = 0; i < response.data.length; i++) {
         const assetId = response.data[i].asset_ifric_id;
         try {
-          const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
-          if(scorpioResponse.data) {
-            result.push(scorpioResponse.data);
+          const checkAssetResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
+          if(checkAssetResponse.data.status != 201){
+            const scorpioResponse = await axios.post(this.scorpioUrl, response.data[i], {headers});
+            if(scorpioResponse.data.status!=201) {
+                console.log("Fcatory Asset Post error", assetId, scorpioResponse.data)
+            }
+          } else {
+              console.log("Asset arealdy present", checkAssetResponse.data);
           }
+          
         } catch(err) {
+          console.log("Fcatory Asset Post error", assetId, err)
           continue;
         }
       }
