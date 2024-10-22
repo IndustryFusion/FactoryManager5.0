@@ -17,6 +17,8 @@ import axios from "axios";
 import { fetchBindingsRedux } from "@/redux/binding/bindingsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
+import BindingCard from "@/components/contractManager/binding-card";
+import BindingHeader from "@/components/contractManager/binding-header";
 
 const BindingManager = () => {
   const [nodes, setNodes] = useState([]);
@@ -166,7 +168,7 @@ const BindingManager = () => {
                 </div>
               </div>
               <div className="contract-right-container">
-                <ContractHeader 
+                <BindingHeader 
                 handleCreateClick={handleCreateClick}
                 />
                 <div className="contract-cards-container">
@@ -212,9 +214,9 @@ const BindingManager = () => {
                         </div>
                       )}
                       {contractsOriginal &&
-                        bindingsData.map((contract) => (
-                          <div key={contract._id}>
-                            <ContractCard contract={contract} />
+                        bindingsData.map((binding) => (
+                          <div key={binding._id}>
+                            <BindingCard binding={binding} />
                           </div>
                         ))}
                     </>

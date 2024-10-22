@@ -84,6 +84,7 @@ const CreateBindingPage: React.FC = () => {
   const [bindingDelete, setBindingDelete] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [contractNameExists, setContractNameExists] = useState(false);
+  const [initialBindingData,setInitialBindingData]=useState({})
   const bindingsData = useSelector((state: any) => state.bindings.bindings);
   const [allBindings, setAllBindings] = useState([]);
 
@@ -92,7 +93,6 @@ const CreateBindingPage: React.FC = () => {
   const fetchContractData =async(contractId:string)=>{
     try{
         const response = await getContractData(contractId);
-        console.log("contract data through id", response);
         const [contract] = response;
         setContractData({
             ...contract,
@@ -126,9 +126,12 @@ const CreateBindingPage: React.FC = () => {
     try {
       const response = await getBindingDetails(bindingIfricId);
       const [binding] = response;
-      console.log("binding here", binding);
       if(binding){
         setBindingData(binding);
+        setInitialBindingData({
+            ...binding,
+            contract_valid_till: binding.contract_binding_valid_till ? new Date(binding.contract_binding_valid_till) : null
+        });
         fetchContractData(binding?.contract_id)
         fetchAssetDetails(binding?.asset_ifric_id)
       }
@@ -149,7 +152,6 @@ const CreateBindingPage: React.FC = () => {
 
   useEffect(() => {
     if (contractBindingId) {
-      console.log("Contract binding ID:", contractBindingId);
       fetchBindingDetails(contractBindingId);
     }
   }, [contractBindingId]);
@@ -165,7 +167,6 @@ const CreateBindingPage: React.FC = () => {
           "predictiveMaintenance_laserCutter"
         );
         const template = templateResponse?.data[0];
-        console.log("template here",template);
         setTemplateData(template);
         initializeFormData(template.properties);
         setFormData((prevState) => ({
@@ -257,21 +258,19 @@ const CreateBindingPage: React.FC = () => {
               }
             }
           }
-          console.log("asset_properties ", contractResponse?.data[0]);
+
           // set selected asset properties
           const selectedProperties = contractResponse?.data[0].asset_properties
             ? contractResponse.data[0].asset_properties.map((value: string) =>
                 value.split("/").pop()
               )
             : [];
-          console.log("selectedProperties ", selectedProperties);
           setSelectedAssetProperties(selectedProperties);
 
           // fetch assets of template type
           const assetResponse = await getAssetByType(
             btoa(template.properties.asset_type.default)
           );
-          console.log("assetResponse ", assetResponse?.data);
           if (assetResponse?.data) {
             const options = assetResponse.data.map((value: { id: string }) => ({
               label: value.id,
@@ -392,7 +391,7 @@ const CreateBindingPage: React.FC = () => {
           value >= templateData.properties[field].minimum &&
           value <= templateData.properties[field].maximum
         ) {
-          setFormData({ ...formData, [field]: value });
+          setBindingData({ ...bindingData, [field]: value });
         } else {
           toast.current?.show({
             severity: "warn",
@@ -404,7 +403,7 @@ const CreateBindingPage: React.FC = () => {
       return;
     }
 
-    setFormData({ ...formData, [field]: value });
+    setBindingData({ ...bindingData, [field]: value });
   };
 
   const fetchCompanyDetails = async (companyId: string) => {
@@ -472,16 +471,16 @@ const CreateBindingPage: React.FC = () => {
     e.preventDefault();
     console.log("submitting..");
     try {
-      if (!selectedAsset) {
-        toast.current?.show({
-          severity: "warn",
-          summary: "Warning",
-          detail: "Please select an asset",
-        });
-        return;
-      }
+    //   if (!selectedAsset) {
+    //     toast.current?.show({
+    //       severity: "warn",
+    //       summary: "Warning",
+    //       detail: "Please select an asset",
+    //     });
+    //     return;
+    //   }
 
-      if (!formData.binding_end_date) {
+      if (!bindingData?.contract_binding_valid_till) {
         toast.current?.show({
           severity: "warn",
           summary: "Warning",
@@ -490,23 +489,23 @@ const CreateBindingPage: React.FC = () => {
         return;
       }
 
-      if (assetVerified === null) {
-        toast.current?.show({
-          severity: "warn",
-          summary: "Warning",
-          detail: "Please create certificate for selected asset",
-        });
-        return;
-      }
+    //   if (assetVerified === null) {
+    //     toast.current?.show({
+    //       severity: "warn",
+    //       summary: "Warning",
+    //       detail: "Please create certificate for selected asset",
+    //     });
+    //     return;
+    //   }
 
-      if (assetVerified === false) {
-        toast.current?.show({
-          severity: "warn",
-          summary: "Warning",
-          detail: "asset certificate is expired so please create new one",
-        });
-        return;
-      }
+    //   if (assetVerified === false) {
+    //     toast.current?.show({
+    //       severity: "warn",
+    //       summary: "Warning",
+    //       detail: "asset certificate is expired so please create new one",
+    //     });
+    //     return;
+    //   }
 
       if (!formData.provider_company_certificate_data) {
         toast.current?.show({
@@ -518,17 +517,13 @@ const CreateBindingPage: React.FC = () => {
       }
 
       const dataToSend = {
-        asset_ifric_id: selectedAsset,
-        contract_binding_valid_till: new Date(formData.binding_end_date),
+        contract_binding_valid_till: bindingData?.contract_binding_valid_till,
       };
-      
+
         const response = await updateBindingDetails(bindingData?.contract_binding_ifric_id, dataToSend)
         if(response){
-            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Contract updated successfully' });
+            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding updated successfully' });
         }
-       console.log("response from edit here", response);
-       
-   
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.current?.show({
@@ -606,12 +601,13 @@ const CreateBindingPage: React.FC = () => {
     );
   };
 
-  const handleReset = () => {};
+  const handleReset = () => {
+   setBindingData({ ...bindingData, contract_binding_valid_till: initialBindingData?.contract_binding_valid_till });
+  };
 
   const handleDelete = async (bindingIfricId: string) => {
     try {
       const response = await deleteBinding(bindingIfricId);
-      console.log("delete response here", response);
       if (response?.acknowledged) {
         toast.current?.show({
           severity: "error",
@@ -699,7 +695,7 @@ const CreateBindingPage: React.FC = () => {
                       </label>
                       <div className="text_large_bold">
                         {new Date(
-                          formData.binding_start_date
+                          bindingData?.meta_data?.created_at
                         ).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
@@ -716,9 +712,9 @@ const CreateBindingPage: React.FC = () => {
                       </label>
                       <Calendar
                         id="binding_end_date"
-                        value={formData.binding_end_date ?? null}
+                        value={bindingData?.contract_binding_valid_till ?? null}
                         onChange={(e) =>
-                          handleInputChange(e, "binding_end_date")
+                          handleInputChange(e, "contract_binding_valid_till")
                         }
                         showIcon
                         required
@@ -730,6 +726,12 @@ const CreateBindingPage: React.FC = () => {
                         className="contract_form_field"
                         dateFormat="MM dd, yy"
                         disabled={isEdit ? false : true}
+                        placeholder={
+                            bindingData?.contract_binding_valid_till &&
+                            moment(bindingData?.contract_binding_valid_till).format(
+                              "MMMM D, YYYY"
+                            )
+                          }
                       />
                       {certificateExpiry  && isEdit && (
                         <small>
@@ -751,7 +753,7 @@ const CreateBindingPage: React.FC = () => {
                     <div className="field">
                       <div className="consumer_details_wrapper">
                         <Image
-                          src="company_icon.svg"
+                          src="/add-contract/company_icon.svg"
                           width={24}
                           height={24}
                           alt="company icon"
@@ -788,7 +790,7 @@ const CreateBindingPage: React.FC = () => {
                     <div className="field">
                       <div className="consumer_details_wrapper">
                         <Image
-                          src="company_icon.svg"
+                          src="/add-contract/company_icon.svg"
                           width={24}
                           height={24}
                           alt="company icon"
@@ -837,10 +839,7 @@ const CreateBindingPage: React.FC = () => {
                         className="contract_form_field"
                         disabled={isEdit ? false : true}
                       /> */}
-                      <InputText 
-                     value={productName}
-                     onChange={(e)=>setProductName(e.target.value)}
-                      />
+                      <p className="text_large_bold">{productName}</p>
                     </div>
                     {assetVerified == true && (
                       <div className="asset_verified_group">
@@ -960,7 +959,7 @@ const CreateBindingPage: React.FC = () => {
                 <div className="contract_dialog_company_details">
                   <div className="consumer_details_wrapper">
                     <Image
-                      src="company_icon.svg"
+                      src="/add-contract/company_icon.svg"
                       width={24}
                       height={24}
                       alt="company icon"
@@ -980,7 +979,7 @@ const CreateBindingPage: React.FC = () => {
                   </div>
                   <div className="consumer_details_wrapper">
                     <Image
-                      src="company_icon.svg"
+                      src="/add-contract/company_icon.svg"
                       width={24}
                       height={24}
                       alt="company icon"

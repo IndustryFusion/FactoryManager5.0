@@ -1,20 +1,19 @@
 import moment from "moment";
 import { useRouter } from "next/router";
-import React from "react";
 import { GiAlarmClock } from "react-icons/gi";
 import { MdLockOpen, MdLockOutline } from "react-icons/md";
 
-const ContractCard:React.FC<any> = ({ contract }) => {
-    const formattedDate = moment(contract?.meta_data?.create_at).format("DD MMM YYYY");
+const BindingCard:React.FC<any> =({binding})=>{
+    const formattedDate = moment(binding?.meta_data?.created_at).format("DD MMM YYYY");
     const router =useRouter();
 
   return (
     <div 
-    onClick={()=>router.push(`contract/${contract?.contract_ifric_id}`)}
+   onClick={()=>router.push(`binding/${binding?.contract_binding_ifric_id}`)}
     className="flex contract-card mt-4" style={{ gap: "3rem" }}>
       <div className="flex gap-2 folder-heading align-items-center">
         <i className="pi pi-file-import" style={{ fontSize: "22px" }}></i>
-        <h3 className="m-0 contract-card-heading">{contract?.contract_name}</h3>
+        <h3 className="m-0 binding-card-heading">{binding?.contract_binding_ifric_id}</h3>
       </div>
       <div>
         <div>
@@ -26,7 +25,7 @@ const ContractCard:React.FC<any> = ({ contract }) => {
         <div className="mt-3">
           <p className="card-label-grey">Created by:</p>
           <p className="mt-1 card-label-black">
-            {contract?.meta_data?.created_user}
+            {binding?.meta_data?.created_user}
           </p>
         </div>
       </div>
@@ -71,6 +70,5 @@ const ContractCard:React.FC<any> = ({ contract }) => {
       
     </div>
   );
-};
-
-export default ContractCard;
+}
+export default BindingCard;

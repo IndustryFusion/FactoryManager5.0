@@ -130,6 +130,11 @@
   font-size: 20px;
   color: #2b2b2b;
 }
+.binding-card-heading {
+  font-weight: 500;
+  font-size: 16px;
+  color: #2b2b2b;
+}
 .folder-heading {
   width: 250px;
   text-align: left;
