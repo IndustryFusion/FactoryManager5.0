@@ -176,8 +176,10 @@ cursor: pointer;
   left: 3rem;
 }
 .sidebar-collpase-icon{
-  width: 25px;
+  width: 23px;
   cursor: pointer;
+  padding: auto;
+  margin-left: -10px;
 }
 .last-items{
   margin-top: 11rem;
