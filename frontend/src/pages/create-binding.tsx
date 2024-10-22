@@ -441,7 +441,7 @@ const CreateBinding: React.FC = () => {
                     <Toast ref={toast} />
                     <div className="create-contract-form-grid">
                         <div className="create-contract-form-wrapper">
-                            <h1 className="template-form-heading">{formData.contract_title ?? ''}</h1>
+                            <h2 className="template-form-heading ml-3">{formData.contract_title ?? ''}</h2>
                             <form onSubmit={handleSubmit}>
                                     <div className="form-grid">
                                         <div className="contract_form_field_column">
