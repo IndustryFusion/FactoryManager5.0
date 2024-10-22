@@ -74,17 +74,17 @@ export class AssetController {
     }
   }
 
-  @Get('/get-owner-asset/:company_ifric_id')
-  async getOwnerAssets(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+  @Post('/get-owner-asset/:company_ifric_id')
+  async setFactoryOwnerAssets(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {
       const token = await this.tokenService.getToken();
-      return await this.assetService.getOwnerAssets(company_ifric_id, token, req);
+      return await this.assetService.setFactoryOwnerAssets(company_ifric_id, token, req);
     } catch(err) {
       throw new NotFoundException();
     }
   }
 
-  @Get(':id')
+  @Get('get-asset-by-id/:id')
   async getAssetDataById(@Param('id') id: string) {
     try {
       const token = await this.tokenService.getToken();
