@@ -28,7 +28,6 @@ const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-a
 const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
 import { useRouter } from "next/router";
-import Cookies from "js-cookie";
 import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
@@ -60,18 +59,6 @@ const Dashboard = () => {
   const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), {
     ssr: false,
    });
-  
-
-
-  useEffect(() => {
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else {
-      if (router.isReady) {        
-      }   
-    }   
-  }, [router.isReady ])
-
 
   return (
     <>

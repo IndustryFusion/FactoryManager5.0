@@ -20,7 +20,6 @@ import {
   fetchAllocatedAssets,
 } from "@/utility/factory-site-utility";
 import "../../styles/asset-list.css";
-import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { InputText } from "primereact/inputtext";
 import { AllocatedAssets } from "../../types/asset-types";
@@ -113,9 +112,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
 
   useEffect(() => {
 
-    if (Cookies.get("login_flag") === "false") {
-      router.push("/login");
-    } else if (router.isReady) {
+    if (router.isReady) {
       const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] : router.query.factoryId;
       if (typeof id === 'string') {
         getAllocatedAndUnallocatedAssets(id);

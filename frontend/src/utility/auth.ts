@@ -282,3 +282,16 @@ export const getAccessGroupData = async(token: string) => {
         throw error;
     }
 }
+
+export const verifyCompanyCertificate = async(company_ifric_id: string) => {
+    try{
+        return await api.get(`${BACKEND_URL}/certificate/verify-company-certificate/${company_ifric_id}`);
+    } catch(error: any){
+        console.log("error getting company verification", error);
+        if (error?.response && error?.response?.status === 401) {
+        updatePopupVisible(true);
+        } else {
+        throw error;
+        }
+    }
+}

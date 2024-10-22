@@ -18,7 +18,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import axios from "axios";
 import { getAccessGroupData } from "@/utility/auth";
 import { Toast } from "primereact/toast";
@@ -38,7 +37,7 @@ export default function WelcomePage() {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         if (error?.response && error?.response?.status === 401) {
-          window.location.href = `${ifxSuiteUrl}/login`;   
+          window.location.href = `${ifxSuiteUrl}/home`;   
         } else {
           console.error("Error response:", error.response?.data.message);
           showToast(toast, "error", "Error", "Error during login");
