@@ -13,6 +13,7 @@ body {
   height: 100vh;
   font-family: "League Spartan";
   flex-shrink: 0;
+  background-color: #fff;
 }
 .sidebar_wrapper.collapse {
   width: 70px;
