@@ -26,12 +26,24 @@ body {
 .asset-tabs.p-tabview .p-tabview-nav {
   background: transparent !important;
   border: none !important;
+
 }
 
 .asset-tabs.p-tabview .p-tabview-nav li {
   margin-right: 0.5rem !important;
 }
+.dashboard-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  max-height: 50vh;
+}
 
+.factory-container,
+.factory-container-collapse {
+  margin: 0;
+  padding: 0;
+}
 .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
   background: transparent !important;
   border: none !important;

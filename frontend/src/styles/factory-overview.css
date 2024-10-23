@@ -13,7 +13,7 @@ body{
 .sidebar-container {
   flex: 0 15%;
   padding: 0px 12px 27px;
-  border-right: 1px solid #e6e6e6;
+  /* border-right: 1px solid #e6e6e6; */
   background-color: var(--white);
   transition: flex 0.3s ease;
   position: fixed;
@@ -26,7 +26,7 @@ body{
 .collapse-sidebar {
   flex: 0 3%;
   padding: 23px 16px 27px 12px;
-  border-right: 1px solid #e6e6e6;
+  /* border-right: 1px solid #e6e6e6; */
   background-color: var(--white);
   transition: flex 0.3s ease;
   position: fixed;
@@ -36,16 +36,12 @@ body{
   overflow: hidden;
 }
 
-.factory-container{
-  width: 97%;
-  margin-left: 265px;
-  
-  padding-top: 10px;
-}
+.factory-container,
 .factory-container-collpase{
- padding-top: 10px;
   width: 97%;
-  margin-left: 65px;
+  margin: 0;
+  padding: 0;
+ 
 }
 .asset-header {
   border-bottom: 1px solid #e6e6e6;

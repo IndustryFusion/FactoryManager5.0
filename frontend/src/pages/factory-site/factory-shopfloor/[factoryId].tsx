@@ -17,6 +17,7 @@
 import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-shopfloor";
 import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 import "../../../styles/factory-shopfloor.css"
+import "@/styles/sidebar.css"// this css is imported only for the css class navbar_wrapper  
 import { useState } from "react";
 import Navbar from "@/components/navBar/navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
@@ -34,7 +35,10 @@ const FactoryShopFloor = () => {
     return (
         <>
             <div style={{ overflow: "hidden", height: "95vh" }}>
-                <Navbar navHeader="Factory Picklist"/>
+                <div className="navbar_wrapper">
+                    <Navbar navHeader="Factory Picklist"/>
+                </div>
+               
                 <FactoryShopFloorProvider>
                     <div className="factory-shopfloor-container">
                         <ShopFloorProvider>

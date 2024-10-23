@@ -30,22 +30,15 @@ const AssetManagementPage = () => {
 
     initializeAssets();
   }, []); 
+  
   return (
     <div className="flex">
-      <div
-        className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
-      >
-        <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-      </div>
-      <div
-        className={
-          isSidebarExpand
-            ? "factory-container"
-            : "factory-container-collpase"
-        }
-      >
-        <Navbar navHeader="Asset Management" />
-        <div className="dashboard-container -mt-3">
+      <Sidebar/>
+      <div className={isSidebarExpand ? "factory-container"  : "factory-container-collpase"} >
+        <div className='navbar-wrapper mt-4'>
+          <Navbar navHeader="Asset Management" />
+        </div>
+        <div className="dashboard-container">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
               <TabView activeIndex={activeIndex} onTabChange={(e) => dispatch(setActiveTabIndex(e.index))} className="asset-tabs">

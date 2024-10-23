@@ -351,6 +351,7 @@ const AddContractPage: React.FC = () => {
 
     return (
         <div className="flex">
+            <Sidebar/>
             <div className="main_content_wrapper">
                 <div className="navbar_wrapper">
                     <Navbar navHeader={"Add Contract"} />

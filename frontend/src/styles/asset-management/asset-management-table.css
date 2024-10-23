@@ -204,7 +204,9 @@ body {
   color: var(--grey-secondary);
 }
 
-
+.p-tabview-nav-content{
+  margin-top: -50px;
+}
 .spinner-container {
   display: flex;
   justify-content: center;

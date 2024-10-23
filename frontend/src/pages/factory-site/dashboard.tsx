@@ -39,6 +39,7 @@ import OnboardForm from '@/components/dashboard/onboard-form';
 import Sidebar from '@/components/navBar/sidebar';
 import Navbar from '@/components/navBar/navbar';
 import "../../styles/factory-overview.css"
+import "@/styles/sidebar.css"
 
 interface PrefixedAssetProperty {
   key: string;
@@ -71,7 +72,9 @@ const Dashboard = () => {
         <div className="flex">
           <Sidebar />
         <div className='main_content_wrapper'>
-          <Navbar navHeader="Dashboard" />
+          <div className="navbar_wrapper">
+            <Navbar navHeader="Dashboard" />
+          </div>
           <div className="overflow_y_auto">
           <div className="dashboard-container">      
        <AutoRefresh />

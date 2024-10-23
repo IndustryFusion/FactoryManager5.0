@@ -44,46 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
   const [profileDetail, setProfileDetail] = useState(false);
   const router = useRouter();
   const [userData, setUserData] = useState<UserData>(userInfo);
-  const [previousPageRoute, setPreviousPageRoute] = useState<string | null>(
-    null
-  );
   const toastRef = useRef(null);
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toastRef.current?.show({
-        severity: "success",
-        summary: "Copied",
-        detail: "IFRIC ID copied to clipboard",
-        life: 3000,
-      });
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-    }
-  };
-
-  const fetchCompanyDetails = async (
-    companyIfricId: string
-  ) => {
-    try {
-      const response = await getCompanyDetailsById(companyIfricId);
-      console.log("Full API response:", response);
-      
-      if (response && response.data && Array.isArray(response.data) && response.data.length > 0) {
-        console.log("API response data:", response.data);
-        console.log("First item in data array:", response.data[0]);
-
-        return response.data[0];
-      } else {
-        console.log("API response does not contain expected data structure");
-        return {};
-      }
-    } catch (error) {
-      console.error("Failed to fetch company details:", error);
-      return {};
-    }
-  };
 
   const fetchUserData = async () => {
     try {
@@ -98,28 +59,21 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
 
         setUserData(initialUserData);
 
-        // Fetch company details
         const companyDetails = await fetchCompanyDetails(data.company_ifric_id);
-        console.log("Fetched company name:", companyDetails);
-
+        
         const dataToSend = {
           user_email: companyDetails.email,
           company_ifric_id: companyDetails.company_ifric_id,
         };
 
-        // Fetch user data
         const response = await getUserDetails(dataToSend);
 
         if(Object.keys(companyDetails).length) {
-          setUserData((prevState) => {
-            const newState = {
-              ...prevState!,
-              company_name: companyDetails.company_name,
-              user_image: response?.data[0].user_image ? response?.data[0].user_image : ""
-            };
-            console.log("Updated user data state:", newState);
-            return newState;
-          });
+          setUserData((prevState) => ({
+            ...prevState!,
+            company_name: companyDetails.company_name,
+            user_image: response?.data[0].user_image ? response?.data[0].user_image : ""
+          }));
         }
       }
     } catch (error) {
@@ -127,29 +81,32 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     }
   };
 
+  const fetchCompanyDetails = async (companyIfricId: string) => {
+    try {
+      const response = await getCompanyDetailsById(companyIfricId);
+      if (response?.data?.[0]) {
+        return response.data[0];
+      }
+      return {};
+    } catch (error) {
+      console.error("Failed to fetch company details:", error);
+      return {};
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, [userInfo]);
 
-  useEffect(() => {
-    const storedPreviousRoute = localStorage.getItem("previousRoute");
-    setPreviousPageRoute(storedPreviousRoute);
-
-    const handleRouteChange = (url: string) => {
-      localStorage.setItem("previousRoute", router.asPath);
-    };
-    router.events.on("routeChangeStart", handleRouteChange);
-    return () => {
-      router.events.off("routeChangeStart", handleRouteChange);
-    };
-  }, [router]);
-
-  const createAssetRoute = previousPageRoute?.includes(
-    "/asset/create/create-asset"
-  );
-
   const fullPath = router.asPath;
-const home = {
+  const breadcrumbItems = generateBreadcrumbItems();
+  const showBackButton = breadcrumbItems.length >= 2;
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const home = {
     label: "",
     url: "/factory-site/factory-overview",
     template: () => (
@@ -158,28 +115,28 @@ const home = {
           <Button
             icon="pi pi-angle-double-left"
             onClick={handleBackClick}
-            className="p-button-text p-button-rounded p-button-secondary -ml-1"
+            className="p-button-text p-button-rounded p-button-secondary -ml-3"
             style={{ color: "#6c757d", padding: "0px 2px 0px 12px", height: "auto", width: "fit-content" }}
             aria-label="Go back"
           />
         )}
-        <Link href="/factory-site/factory-overview" legacyBehavior>
+        <Button
+          className="p-button-text p-button-rounded"
+          onClick={() => router.push("/factory-site/factory-overview")}
+          style={{ padding: 0 }}
+        >
           <Image
             src="/bread-crum/home_icon.svg"
             alt="Home"
             width={18}
             height={17}
-            style={{ cursor: "pointer" }}
-            className=""
           />
-        </Link>
+        </Button>
       </div>
     ),
   };
 
-  const generateBreadcrumbItems = (): BreadcrumbItem[] => {
-    let items: BreadcrumbItem[] = [];
-
+  function generateBreadcrumbItems(): BreadcrumbItem[] {
     const createLastItem = (label: string): BreadcrumbItem => ({
       label,
       className: "current-page",
@@ -188,53 +145,70 @@ const home = {
         event.originalEvent.stopPropagation();
       },
     });
+     
+    const getUrnId = (path: string) => {
+      const match = path.match(/urn:ngsi-ld:factories:[^/]+/);
+      return match ? match[0] : '';
+    };
 
-    // New specific route handling
-    if (fullPath === "/factory-site/factory-overview") {
-      return [];  // Only home icon will be shown
+    const currentUrnId = getUrnId(fullPath);
+
+    // Route-specific breadcrumbs with dynamic URN handling
+    if (fullPath.startsWith('/factory-site/factory-shopfloor/urn:ngsi-ld:factories')) {
+      return [
+        { 
+          label: "Factory Flow", 
+          url: `/factory-site/factory-management/${currentUrnId}`
+        },
+        createLastItem("Pick List")
+      ];
     }
+    // Route-specific breadcrumbs
+    const routeBreadcrumbs: Record<string, BreadcrumbItem[]> = {
+      "/factory-site/factory-overview": [], // No breadcrumb for this route
+      "/factory-site/factory-management/urn:ngsi-ld:factories": [
+        { label: "Factory Flow", url: "#" }
+      ],
+      "/factory-site/dashboard": [
+        { label: "Dashboard", url: "#" }
+      ],
+      "/asset-management": [
+        { label: "Asset Management", url: "#" }
+      ],
+      "/certificates": [
+        { label: "Certificate", url: "#" }
+      ],
+      "/contract-manager": [
+        { label: "Contract Manager", url: "#" }
+      ],
+      "/add-contract": [
+        { label: "Contract Manager", url: "/contract-manager" },
+        createLastItem("Add Contract")
+      ]
+    };
 
-    if (fullPath.startsWith("/factory-site/factory-management/urn:ngsi-ld:factories")) {
-      return [createLastItem("Factory Flow")];
-    }
+    // Get the matching route configuration
+    let items = [...(routeBreadcrumbs[fullPath] || [])];
 
-    if (fullPath === "/factory-site/dashboard") {
-      return [createLastItem("Dashboard")];
-    }
-
-    if (fullPath === "/asset-management") {
-      return [createLastItem("Asset Management")];
-    }
-    // Default path handling for unspecified routes
-    let pathParts = fullPath.split("/").filter((part) => part);
-    if (pathParts.length === 0) return [];
-
-    pathParts.forEach((part, index) => {
-      const isLast = index === pathParts.length - 1;
-      const label = part
-        .split("-")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      
-      if (isLast) {
-        items.push(createLastItem(label));
-      } else {
-        items.push({
-          label,
-          url: `/${pathParts.slice(0, index + 1).join("/")}`
-        });
+    // If no exact match, check for partial matches
+    if (!routeBreadcrumbs[fullPath]) {
+      for (const route in routeBreadcrumbs) {
+        if (fullPath.startsWith(route)) {
+          items = [...routeBreadcrumbs[route]];
+          break;
+        }
       }
-    });
+    }
+
+    // Make the last item non-clickable
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      items[items.length - 1] = createLastItem(lastItem.label);
+    }
 
     return items;
-  };
+  }
 
-  const breadcrumbItems = generateBreadcrumbItems();
-  const showBackButton = breadcrumbItems.length >= 2;
-
-  const handleBackClick = () => {
-    router.back();
-  };
 
 
   return (
@@ -244,14 +218,8 @@ const home = {
         <div className="flex justify-content-between">
           <div className="flex align-items-center">
             <div>
-              <h2 className="nav-header">
-                {fullPath.includes(
-                  "/digital-pass-creator/qr-code-generator/urn:ifric:"
-                ) && createAssetRoute
-                  ? "Create Digital Product Pass"
-                  : navHeader}
-              </h2>
-              {router.pathname !== "/dashboard" ? (
+              <h2 className="nav-header">{navHeader}</h2>
+              {fullPath !== "/factory-site/factory-overview" && (
                 <BreadCrumb
                   model={breadcrumbItems}
                   home={home}
@@ -259,33 +227,6 @@ const home = {
                     breadcrumbItems.length < 2 ? "mt-2 ml-2" : ""
                   }`}
                 />
-              ) : (
-                <div className="flex align-items-center">
-                  <div className="flex flex-column">
-                    <h2 className="dashboard-user-name">
-                      {userData?.company_name}
-                    </h2>
-                    <div className="flex align-items-center">
-                      <h3 className="user-company-name">
-                        {userData?.company_id}
-                      </h3>
-                      <Button
-                        icon="pi pi-copy"
-                        onClick={() =>
-                          copyToClipboard(userData?.company_id || "")
-                        }
-                        className="p-button-text p-button-rounded p-button-secondary ml-2"
-                        tooltip="Copy IFRIC ID"
-                        tooltipOptions={{ position: "top" }} style={{flexShrink: "0"}}
-                      />
-                    </div>
-                  </div>
-                  <Message
-                    severity="info"
-                    text="In the background, verification of company details is in progress; we will notify you."
-                    className="certificate-msg-nav ml-8 mt-2"
-                  />
-                </div>
               )}
             </div>
           </div>
@@ -299,7 +240,7 @@ const home = {
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
-         <Alerts/>
+          <Alerts/>
           <Button
             icon="pi pi-th-large"
             onClick={() => router.push("/factory-site/dashboard")}

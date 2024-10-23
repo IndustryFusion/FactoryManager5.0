@@ -137,7 +137,6 @@
     justify-content: center;
     min-width: 220px;
     border: none;
-    margin-top: 1.3rem;
     margin-left: 7rem;
   }
   
@@ -167,10 +166,6 @@
   .arrow-button .p-button-icon {
     margin-bottom: 1%;
   }
-  
-  /* .generate-cert-btn:hover {
-    background-color: #333;
-  } */
   
   .certificate-card-container {
     display: flex;

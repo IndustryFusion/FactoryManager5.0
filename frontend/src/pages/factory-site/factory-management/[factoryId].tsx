@@ -35,6 +35,7 @@ import {
 } from "@/utility/factory-site-utility";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Sidebar from "@/components/navBar/sidebar";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -74,8 +75,12 @@ const ShopFloorManager: React.FC = () => {
 
   return (
     <>
+    {/* <Sidebar/> */}
     <FactoryShopFloorProvider>
-      <Navbar navHeader="Factory Flow" />
+     
+      <div className="navbar_wrapper">
+        <Navbar navHeader="Factory Flow" />
+      </div>
         <div
           style={{
             display: "flex",
