@@ -244,11 +244,19 @@ export class AssetService {
           }
           
         } catch(err) {
+          if(err.status===404){
+            const scorpioResponse = await axios.post(this.scorpioUrl, response.data[i], {headers});
+          }
+            
           console.log("Fcatory Asset Post error", assetId, err)
           continue;
         }
       }
-      return result;
+      return {
+        success: true,
+          status: 201,
+          message: 'Scorpio Updated',
+      };
     } catch(err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
