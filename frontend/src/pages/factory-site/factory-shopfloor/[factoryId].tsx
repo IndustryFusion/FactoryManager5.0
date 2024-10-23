@@ -26,44 +26,46 @@ import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import Footer from "@/components/navBar/footer";
 import PicklistAssets from "@/components/factoryShopFloorForm/picklist-assets";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Sidebar from "@/components/navBar/sidebar";
 
 
 const FactoryShopFloor = () => {
 
     const [formViewPage, setFormViewPage] = useState(true);
+    const [isSidebarExpand, setSidebarExpand] = useState(true);
 
     return (
-        <>
+        <div className="flex">
+        <Sidebar />
+        <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
             <div style={{ overflow: "hidden", height: "95vh" }}>
-                <div className="navbar_wrapper">
-                    <Navbar navHeader="Factory Picklist"/>
-                </div>
-               
-                <FactoryShopFloorProvider>
-                    <div className="factory-shopfloor-container">
-                        <ShopFloorProvider>
-                            <div className="shopfloor-list-container">
-                                <ShopFloorList
-                                    formViewPage={formViewPage}
-                                />
-                                <div>
-                                    <AllocatedAsset />
-                                </div>
-                            </div>
-                            <div className="form-container" style={{ zoom: "90%" }}>
-                                < FactoryShopFloorForm />
-                            </div>
-                            <div className="allocated-list-container" >
-                                <PicklistAssets />
-                            </div>
-
-                        </ShopFloorProvider>
-                    </div>
-                    <Footer />
-                </FactoryShopFloorProvider>
+            <div className="navbar_wrapper">
+                <Navbar navHeader="Factory Picklist" />
             </div>
-        </>
-    )
+            
+            <FactoryShopFloorProvider>
+                <div className="factory-shopfloor-container">
+                <ShopFloorProvider>
+                    <div className="shopfloor-list-container">
+                    <ShopFloorList formViewPage={formViewPage} />
+                    <div>
+                        <AllocatedAsset />
+                    </div>
+                    </div>
+                    <div className="form-container" style={{ zoom: "90%" }}>
+                    <FactoryShopFloorForm />
+                    </div>
+                    <div className="allocated-list-container">
+                    <PicklistAssets />
+                    </div>
+                </ShopFloorProvider>
+                </div>
+                <Footer />
+            </FactoryShopFloorProvider>
+            </div>
+        </div>
+        </div>
+    );
 }
 
 export async function getServerSideProps({ locale }: { locale: string }) {
