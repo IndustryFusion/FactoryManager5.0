@@ -40,7 +40,7 @@ interface TemplateData {
     };
 }
 
-const AddContractPage: React.FC = () => {
+const CreateBinding: React.FC = () => {
     const router = useRouter();
     const [templateData, setTemplateData] = useState<TemplateData | null>(null);
     const [formData, setFormData] = useState<{ [key: string]: any }>({
@@ -111,44 +111,47 @@ const AddContractPage: React.FC = () => {
                         }));
                     }
                 }
-
+                   console.log("template here",template);
+                   
                 if(template) {
                     // fetch contract details
                     const contractResponse = await getContractByType(btoa(template.type));
-                    setConsumerName(contractResponse?.data[13].meta_data.created_user || '');
+                    console.log("contractResponse here", contractResponse);
+                    
+                    setConsumerName(contractResponse?.data[0].meta_data.created_user || '');
                     if(contractResponse?.data) {
                         // Fetch producer company details
                         if (userData.company_ifric_id) {
-                            const response = await fetchCompanyDetails(contractResponse.data[13].data_consumer_company_ifric_id);
+                            const response = await fetchCompanyDetails(contractResponse.data[0].data_consumer_company_ifric_id);
                             if (response?.data) {
                                 setFormData(prevState => ({
                                     ...prevState,
-                                    contract_title : contractResponse.data[13].contract_name,
+                                    contract_title : contractResponse.data[0].contract_name,
                                     consumer_company_name: response.data[0].company_name,
                                     consumer_company_address: response.data[0].address_1,
                                     consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
                                     consumer_company_country: response.data[0].country,
                                     consumer_company_zip: response.data[0].zip,
-                                    contract_start_date: new Date(contractResponse.data[13].meta_data.created_at).toLocaleDateString('en-US', {
+                                    contract_start_date: new Date(contractResponse.data[0].meta_data.created_at).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',
                                     }),
-                                    contract_end_date: new Date(contractResponse.data[13].contract_valid_till).toLocaleDateString('en-US', {
+                                    contract_end_date: new Date(contractResponse.data[0].contract_valid_till).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: '2-digit',
                                         day: '2-digit',
                                     }),
-                                    interval: contractResponse.data[13].interval ? contractResponse.data[13].interval : "",
-                                    data_consumer_company_ifric_id: contractResponse.data[13].data_consumer_company_ifric_id,
-                                    contract_ifric_id: contractResponse.data[13].contract_ifric_id
+                                    interval: contractResponse.data[0].interval ? contractResponse.data[0].interval : "",
+                                    data_consumer_company_ifric_id: contractResponse.data[0].data_consumer_company_ifric_id,
+                                    contract_ifric_id: contractResponse.data[0].contract_ifric_id
                                 }));
                             }
                         }
                     }
-                    console.log("asset_properties ",contractResponse?.data[13])
+                    console.log("asset_properties ",contractResponse?.data[0])
                     // set selected asset properties
-                    const selectedProperties = contractResponse?.data[13].asset_properties ? contractResponse.data[13].asset_properties.map((value: string) => value.split("/").pop()) : [];
+                    const selectedProperties = contractResponse?.data[0].asset_properties ? contractResponse.data[0].asset_properties.map((value: string) => value.split("/").pop()) : [];
                     console.log("selectedProperties ",selectedProperties);
                     setSelectedAssetProperties(selectedProperties);
 
@@ -432,13 +435,13 @@ const AddContractPage: React.FC = () => {
         <div className="flex">
             <div className="main_content_wrapper">
             <div className="navbar_wrapper">
-                    <Navbar navHeader={"Sign Contract"} />
+                    <Navbar navHeader={"Create Binding"} />
                 </div>
                 <div className="create-contract-form-container">
                     <Toast ref={toast} />
                     <div className="create-contract-form-grid">
                         <div className="create-contract-form-wrapper">
-                            <h1 className="template-form-heading">{formData.contract_title ?? ''}</h1>
+                            <h2 className="template-form-heading ml-3">{formData.contract_title ?? ''}</h2>
                             <form onSubmit={handleSubmit}>
                                     <div className="form-grid">
                                         <div className="contract_form_field_column">
@@ -491,7 +494,7 @@ const AddContractPage: React.FC = () => {
                                                     maxDate={certificateExpiry ? new Date(certificateExpiry.getTime()) : undefined} className='contract_form_field' dateFormat="MM dd, yy"
                                                 />
                                                 {certificateExpiry && (
-                                                    <small>
+                                                    <small className="ml-3 mt-2">
                                                         Contract end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
                                                         year: 'numeric',
                                                         month: 'short',
@@ -606,7 +609,7 @@ const AddContractPage: React.FC = () => {
                                         icon="pi pi-refresh"
                                     />
                                     <Button
-                                        label="Sign Contract"
+                                        label="Submit"
                                         className="p-button-primary custom-add-btn"
                                         icon="pi pi-check"
                                         onClick={(e) => {e.preventDefault(); setVisible(true)}}
@@ -664,4 +667,4 @@ const AddContractPage: React.FC = () => {
     );
 };
 
-export default AddContractPage;
+export default CreateBinding;
