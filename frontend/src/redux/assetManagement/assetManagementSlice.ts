@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchAssetManagement } from '@/utility/asset-utility';
+import { fetchAllAllocatedAssets } from '@/utility/factory-site-utility';
 
 export interface Asset {
   id: string;
@@ -8,13 +9,19 @@ export interface Asset {
   product_name: string;
   asset_manufacturer_name: string;
 }
-
+export interface AllocatedAssetData {
+  factoryName: string;
+  assets: string[];
+}
 interface AssetManagementState {
   assets: Asset[];
   loading: boolean;
   error: string | null;
   selectedAssets: Asset[];
   activeTabIndex: number;
+  allocatedAssets: AllocatedAssetData[];
+  allocatedAssetsLoading: boolean;
+  allocatedAssetsError: string | null;
 }
 
 const initialState: AssetManagementState = {
@@ -23,6 +30,9 @@ const initialState: AssetManagementState = {
   error: null,
   selectedAssets: [],
   activeTabIndex: 0,
+  allocatedAssets: [],
+  allocatedAssetsLoading: false,
+  allocatedAssetsError: null,
 };
 
 export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string }>(
@@ -36,6 +46,32 @@ export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string
       return response as Asset[];
     } catch (error) {
       return rejectWithValue('Failed to fetch assets');
+    }
+  }
+);
+
+export const fetchAllocatedAssetsAsync = createAsyncThunk(
+  'assetManagement/fetchAllocatedAssets',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetchAllAllocatedAssets();
+      
+      if (response?.status === 404) {
+        return rejectWithValue('Error fetching allocated assets');
+      }
+
+      let transformedArray: AllocatedAssetData[] = [];
+      if (Object.keys(response).length > 0) {
+        for (let factoryName in response) {
+          transformedArray.push({
+            factoryName: factoryName,
+            assets: response[factoryName]
+          });
+        }
+      }
+      return transformedArray;
+    } catch (error) {
+      return rejectWithValue('Failed to fetch allocated assets');
     }
   }
 );
@@ -66,6 +102,24 @@ const assetManagementSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? 'An error occurred';
         state.assets = []; // Clear assets on error
+      })
+
+       // Allocated Assets Cases
+
+      .addCase(fetchAllocatedAssetsAsync.pending, (state) => {
+        state.allocatedAssetsLoading = true;
+        state.allocatedAssetsError = null;
+      })
+      .addCase(fetchAllocatedAssetsAsync.fulfilled, (state, action) => {
+        state.allocatedAssetsLoading = false;
+        state.allocatedAssets = action.payload;
+        state.allocatedAssetsError = null;
+        state.isInitialized = true;
+      })
+      .addCase(fetchAllocatedAssetsAsync.rejected, (state, action) => {
+        state.allocatedAssetsLoading = false;
+        state.allocatedAssetsError = action.payload as string;
+        state.allocatedAssets = [];
       });
   },
 });

@@ -78,7 +78,7 @@ const ShopFloorManager: React.FC = () => {
     {/* <Sidebar/> */}
     <FactoryShopFloorProvider>
      
-      <div className="navbar_wrapper">
+      <div className="navbar_wrapper mt-4">
         <Navbar navHeader="Factory Flow" />
       </div>
         <div

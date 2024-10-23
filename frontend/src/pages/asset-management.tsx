@@ -9,7 +9,7 @@ import Footer from '@/components/navBar/footer';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Card } from 'primereact/card';
 import '@/styles/asset-management/asset-management-page.css'
-import { fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
+import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 
@@ -18,19 +18,30 @@ const AssetManagementPage = () => {
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
   const { t } = useTranslation(['common', 'button']);
+  const [dataInitialized, setDataInitialized] = useState(false);
 
-    useEffect(() => {
-    const initializeAssets = async () => {
-      try {
-        await dispatch(fetchAssets());
-      } catch (error) {
-        console.error('Failed to fetch assets:', error);
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!dataInitialized) {
+        try {
+          await Promise.all([
+            dispatch(fetchAssets()),
+            dispatch(fetchAllocatedAssetsAsync())
+          ]);
+          setDataInitialized(true);
+        } catch (error) {
+          console.error('Failed to fetch data:', error);
+        }
       }
     };
 
-    initializeAssets();
-  }, []); 
-  
+    initializeData();
+  }, [dispatch, dataInitialized]);
+
+  const handleTabChange = (e) => {
+    dispatch(setActiveTabIndex(e.index));
+  };
+
   return (
     <div className="flex">
       <Sidebar/>
@@ -41,7 +52,7 @@ const AssetManagementPage = () => {
         <div className="dashboard-container">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
-              <TabView activeIndex={activeIndex} onTabChange={(e) => dispatch(setActiveTabIndex(e.index))} className="asset-tabs">
+              <TabView activeIndex={activeIndex} onTabChange={handleTabChange}  className="asset-tabs">
                 <TabPanel header="Asset Table">
                   <div className="p-2 md:p-3">
                     <AssetManagement />
