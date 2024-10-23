@@ -69,20 +69,11 @@ const Dashboard = () => {
      />
       }
         <div className="flex">
-        <div
-          className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
-        >
-          <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-        </div>
-        <div
-          className={
-            isSidebarExpand
-              ? "factory-container"
-              : "  factory-container-collpase"
-          }
-        >
+          <Sidebar />
+        <div className='main_content_wrapper'>
           <Navbar navHeader="Dashboard" />
-      <div className="dashboard-container">      
+          <div className="overflow_y_auto">
+          <div className="dashboard-container">      
        <AutoRefresh />
         <DashboardCards  />
         <div className="flex flex-column md:flex-row my-3 gap-2 mx-4" style={{height:"80%", width:"97%" }}>
@@ -103,6 +94,7 @@ const Dashboard = () => {
           <MachineStateChart/>
           </div>     
       </div>
+          </div>
       </div>
       </div>
       <Footer />
