@@ -26,8 +26,6 @@ body {
 .asset-tabs.p-tabview .p-tabview-nav {
   background: transparent !important;
   border: none !important;
-  border-bottom: 1px solid #dee2e6 !important;
-  padding: 0 1.5rem !important;
 }
 
 .asset-tabs.p-tabview .p-tabview-nav li {
@@ -41,7 +39,6 @@ body {
   font-weight: 600 !important;
   font-size: 1rem !important;
   padding: 1rem 1.5rem !important;
-  transition: all 0.3s ease !important;
 }
 
 .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link:hover {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import AssetManagement from "../components/assetManagement/asset-management-new";
@@ -9,7 +9,7 @@ import Footer from '@/components/navBar/footer';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Card } from 'primereact/card';
 import '@/styles/asset-management/asset-management-page.css'
-import { setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
+import { fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 
@@ -19,6 +19,17 @@ const AssetManagementPage = () => {
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
   const { t } = useTranslation(['common', 'button']);
 
+    useEffect(() => {
+    const initializeAssets = async () => {
+      try {
+        await dispatch(fetchAssets());
+      } catch (error) {
+        console.error('Failed to fetch assets:', error);
+      }
+    };
+
+    initializeAssets();
+  }, []); 
   return (
     <div className="flex">
       <div

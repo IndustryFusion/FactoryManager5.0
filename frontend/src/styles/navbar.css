@@ -1,80 +1,59 @@
-.custom-icon-button {
-  background-image: url("/qrCodeCreatorIcon.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  width: 1.5em;
-  height: 1.5em;
-  display: inline-block;
-  vertical-align: middle;
-  background-color: white;
-  border: none;
-  opacity: 0.5;
-}
-.nav-breadcrumb {
-  margin-top: 5px !important;
-  padding: 0px !important;
-}
-.nav-header {
-  margin-left: 28px !important;
-  margin: 0;
-}
-/* .nav-items img {
-  cursor: pointer;
-} */
-.qr_nav_icon {
-  width: 24px;
-  height: 24px;
-  /* margin-top: 8px; */
-}
-.current-page .p-menuitem-text {
-  color: #2196f3 !important;
-}
-.dashboard-user-name {
-  margin: 0;
-  color: var(--Black, #2b2b2b);
-  font-family: "League Spartan";
-  font-size: 24px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
+.asset-overview-header {
+  width: 100%;
+  padding: 1rem 1;
+  margin-left: -30px;
 }
 
-.user-company-name {
-  margin: 0;
-  color: var(--grey-primary);
-  font-family: "League Spartan";
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav_avatar {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2b2b2b;
+  color: white;
+  border-radius: 50%;
   font-size: 18px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-}
-.add-user-item .p-menuitem-text,
-.user-details-item .p-menuitem-text {
-  color: #2196f3 !important;
-}
-.sidebar-right-icon {
-  position: absolute;
-  left: 2.8rem;
-  top: 5.4rem;
-  width: 18px;
-  height: 18px;
+  font-weight: 500;
   cursor: pointer;
-  z-index: 1000;
+  overflow: hidden;
 }
 
 .nav_icon_button {
   border: none;
   outline: none;
   border-radius: 8px;
-  background-color: white;
+  background-color: transparent;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
-.nav_icon_button:hover,
-.nav_icon_button:focus {
+
+.nav_icon_button:hover {
   background-color: #f3f3f5;
+}
+
+.nav-breadcrumb {
+  margin-top: 5px !important;
+  padding: 0 !important;
+  margin-left: 58px !important;
+}
+
+.nav-header {
+  margin-left: 65px !important;
+  margin: 0;
+}
+
+.current-page .p-menuitem-text {
+  color: #2196f3 !important;
 }

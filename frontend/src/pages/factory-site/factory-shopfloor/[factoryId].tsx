@@ -18,7 +18,7 @@ import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-sho
 import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 import "../../../styles/factory-shopfloor.css"
 import { useState } from "react";
-import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
+import Navbar from "@/components/navBar/navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
@@ -34,9 +34,8 @@ const FactoryShopFloor = () => {
     return (
         <>
             <div style={{ overflow: "hidden", height: "95vh" }}>
-                <HorizontalNavbar />
+                <Navbar navHeader="Factory Picklist"/>
                 <FactoryShopFloorProvider>
-
                     <div className="factory-shopfloor-container">
                         <ShopFloorProvider>
                             <div className="shopfloor-list-container">

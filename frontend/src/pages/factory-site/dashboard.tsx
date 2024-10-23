@@ -17,7 +17,6 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState,useRef } from "react";
 import axios from "axios";
-import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
 import "../../styles/dashboard.css"
 const CombineSensorChart = dynamic(
   () => import('@/components/dashboard/senosor-linear-charts'),

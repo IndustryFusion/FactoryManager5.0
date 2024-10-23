@@ -23,6 +23,7 @@ import relationsReducer from "./relations/relationsSlice";
 import powerConsumptionReducer from "./powerConsumption/powerConsumptionSlice";
 import assetManagementReducer from './assetManagement/assetManagementSlice';
 import contractsSliceReducer from "./contract/contractSlice";
+import factoryUserReducer from "./auth/factoryUserSlice";
 
 export const store = configureStore({
     reducer: {
@@ -33,7 +34,8 @@ export const store = configureStore({
         relations: relationsReducer,
         powerConsumption: powerConsumptionReducer,
         assetManagement: assetManagementReducer,
-        contracts: contractsSliceReducer
+        contracts: contractsSliceReducer,
+        factoryUserSlice:factoryUserReducer
     },
 });
 

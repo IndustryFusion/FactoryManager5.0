@@ -47,24 +47,28 @@ const AssetManagement: React.FC = () => {
 
   const renderHeader = () => {
     return (
-      <div className="flex justify-content-between align-items-center">
-        <span className="p-input-icon-left">
-          <i className="pi pi-search" />
-          <InputText 
-            value={globalFilterValue} 
-            onChange={onGlobalFilterChange} 
-            placeholder="Search" 
-            className="p-inputtext-sm search-input"
+      <div className="table-header">
+        <div className="flex justify-content-between align-items-center gap-4">
+          <div className="search-wrapper">
+            <span className="p-input-icon-left">
+              <i className="pi pi-search" />
+              <InputText 
+                value={globalFilterValue} 
+                onChange={onGlobalFilterChange} 
+                placeholder="Search" 
+                className="p-inputtext-sm"
+              />
+            </span>
+          </div>
+          <Button 
+            icon="pi pi-refresh" 
+            onClick={handleRefresh} 
+            className="p-button-outlined refresh-button" 
+            tooltip="Refresh Assets"
+            tooltipOptions={{ position: 'left' }}
+            label='Refresh Assets'
           />
-        </span>
-        <Button 
-          icon="pi pi-refresh" 
-          onClick={handleRefresh} 
-          className="p-button-outlined p-button-sm" 
-          tooltip="Refresh Assets"
-          tooltipOptions={{ position: 'left' }}
-          label='Refresh Assets Table'
-        />
+        </div>
       </div>
     );
   };
@@ -157,11 +161,12 @@ const AssetManagement: React.FC = () => {
   };
 
   return (
-    <div className="card">
+    <div className="asset-management-container">
       <Toast ref={toast} />
       <ContextMenu model={menuModel} ref={cm} onHide={() => setSelectedProduct(null)} />
+      
       {loading ? (
-        <div className="flex justify-content-center align-items-center" style={{ height: '300px' }}>
+        <div className="spinner-container">
           <ProgressSpinner />
         </div>
       ) : (
@@ -176,14 +181,14 @@ const AssetManagement: React.FC = () => {
           loading={loading}
           responsiveLayout="scroll"
           globalFilterFields={['id', 'asset_serial_number', 'type', 'product_name', 'asset_manufacturer_name']}
-          header={header}
+          header={renderHeader()}
           emptyMessage="No assets found."
-          className="p-datatable-sm custom-row-padding asset-dynamic-table"
+          className="asset-table"
           selectionMode="multiple"
           selection={selectedAssets}
           onSelectionChange={(e) => dispatch(setSelectedAssets(e.value as Asset[]))}
           scrollable
-          scrollHeight="calc(100vh - 10px)"
+          scrollHeight="calc(100vh - 230px)"
           onContextMenu={(e) => cm.current?.show(e.originalEvent)}
           contextMenuSelection={selectedProduct as any}
           onContextMenuSelectionChange={(e) => setSelectedProduct(e.value as any)}
@@ -194,7 +199,7 @@ const AssetManagement: React.FC = () => {
           <Column field="type" header="Asset Type" body={(rowData: Asset) => rowData.type.split('/').pop()}  />
           <Column field="product_name" header="Product Name" />
           <Column field="asset_manufacturer_name" header="Manufacturer" />
-          <Column body={actionItemsTemplate} header="Action" />
+          <Column body={actionItemsTemplate} header="Action" headerStyle={{ width: '5rem' }} />
         </DataTable>
       )}
     </div>

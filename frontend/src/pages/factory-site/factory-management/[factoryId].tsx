@@ -18,7 +18,7 @@ import React, { useState, useEffect, useRef, useCallback ,Suspense } from "react
 import { useRouter } from "next/router";
 import dynamic from 'next/dynamic'
 import { ShopFloor } from "../../../types/shop-floor";
-import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
+import Navbar from "../../../components/navBar/navbar";
 import Footer from "../../../components/navBar/footer";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
@@ -75,7 +75,7 @@ const ShopFloorManager: React.FC = () => {
   return (
     <>
     <FactoryShopFloorProvider>
-      <HorizontalNavbar />
+      <Navbar navHeader="Factory Flow" />
         <div
           style={{
             display: "flex",
