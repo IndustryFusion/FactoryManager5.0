@@ -13,10 +13,71 @@
     align-items: stretch;
     background-color: white;
 }
+.delete-text{
+    margin-bottom: 5px;
+    color: #2b2b2b;
+    font-family: League Spartan;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+.review_lists{
+    padding-left: 40px;
+}
 .create-contract-form-container .p-card.p-component{
     font-family: inherit;
 }
 
+.review_lists li{
+    list-style: none;
+    padding: 10px ;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: 180px;
+    font-size: 1rem;
+}
+.review_lists li:hover{
+    background: #eeeff0a6;
+    border-radius: 8px;
+}
+.review-btn{
+      display: flex;
+      justify-content: center;
+      color: #fff;
+      background-color: #025802;
+      padding: 10px;
+      border-radius: 8px;
+      margin:  10px ;
+      font-size: 18px;
+      margin-top: 1.8rem;
+}
+.cancel-btn {
+    text-align: center;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background-color: #c5c4c4;
+    color: rgb(5, 3, 3);
+    box-shadow: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .action-btn-save {
+    text-align: center;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #2b2b2b;
+    box-shadow: none;
+    color: white;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+ 
 /* Asset Type List Styling */
 .asset-type-list-cover {
     height: 100%;
@@ -133,6 +194,7 @@
     gap: 20px;
     justify-content: flex-end;
     margin-top: 20px;
+    align-items: center;
 }
 .custom-cancel-btn, .custom-add-btn, .custom-reset-btn{
     box-shadow: none;
@@ -171,6 +233,7 @@
     box-shadow: none;
     color: #ffffff !important;
     transition: all 0.3s ease;
+    padding: 8px 16px;
 }
 .custom-add-btn:disabled{
     opacity: 50%;

@@ -21,8 +21,10 @@ import entityIdReducer from "./entityId/entityIdSlice";
 import authReducer from "./auth/authSlice"
 import relationsReducer from "./relations/relationsSlice";
 import powerConsumptionReducer from "./powerConsumption/powerConsumptionSlice";
+import bindingsSliceReducer from "./binding/bindingsSlice"
 import assetManagementReducer from './assetManagement/assetManagementSlice';
 import contractsSliceReducer from "./contract/contractSlice";
+
 
 export const store = configureStore({
     reducer: {
@@ -32,6 +34,7 @@ export const store = configureStore({
         auth: authReducer,
         relations: relationsReducer,
         powerConsumption: powerConsumptionReducer,
+        bindings: bindingsSliceReducer,
         assetManagement: assetManagementReducer,
         contracts: contractsSliceReducer
     },
