@@ -1,5 +1,8 @@
 
 @import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
+:root {
+   --page-zoom: 100%;
+}
 
 body{
   margin: 0;
@@ -772,5 +775,29 @@ line-height: normal;
   .factory-btn {
     width: 100%;
     margin: 0.25rem 0;
+  }
+}
+
+@media screen and (min-width: 2550px) and (max-width: 2570px) {
+ .dashboard-container {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3020px) and (max-width: 3030px) {
+  .dashboard-container {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3450px) and (max-width: 3460px) {
+  .dashboard-container {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3830px) and (max-width: 3850px) {
+  .dashboard-container {
+    zoom: var(--page-zoom);
   }
 }
