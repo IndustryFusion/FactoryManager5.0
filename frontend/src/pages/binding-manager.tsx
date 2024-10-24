@@ -108,6 +108,9 @@ const BindingManager = () => {
     router.push("/create-binding");
   };
 
+  console.log("bindingsData", bindingsData);
+  
+
   return (
     <>
       <div className="flex">
@@ -115,7 +118,7 @@ const BindingManager = () => {
         <Toast ref={toast} />
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
-            <Navbar navHeader="Bindings Request" />
+            <Navbar navHeader="Binding Manager" />
             <div className="flex gap-4 contract-container">
               <div className="contract-left-container">
                 <div className="contract-search-container">
@@ -132,7 +135,7 @@ const BindingManager = () => {
                   />
                 </div>
                 <div className="mt-6">
-                  <h3 className="m-0 ml-1 folder-heading">Folders</h3>
+                  <h3 className="m-0 ml-1 heading-folder-text">Folders</h3>
                   <div className=" flex mt-1 contracts-tree">
                     <Tree
                       value={nodes}
@@ -172,6 +175,7 @@ const BindingManager = () => {
                 handleCreateClick={handleCreateClick}
                 />
                 <div className="contract-cards-container">
+                <h2 className="ml-5 mb-0">Folders</h2>
                   <ContractFolders
                     setFilterContracts={setFilterContracts}
                     setInsuranceFilterContracts={setInsuranceFilterContracts}
@@ -213,12 +217,16 @@ const BindingManager = () => {
                           </h3>
                         </div>
                       )}
+                      <div>
+                      <h2 className="ml-5 mt-7 heading-file-text">Files</h2>
                       {contractsOriginal &&
                         bindingsData.map((binding) => (
                           <div key={binding._id}>
                             <BindingCard binding={binding} />
                           </div>
                         ))}
+                      </div>
+                     
                     </>
                   )}
                 </div>

@@ -12,7 +12,7 @@ const ContractCard:React.FC<any> = ({ contract }) => {
   return (
     <div 
    onClick={()=>router.push(`contract/${contract?.contract_ifric_id}`)}
-    className="flex contract-card mt-4" style={{ gap: "3rem" }}>
+    className="flex contract-card mt-4 mr-5" style={{ gap: "3rem" }}>
       <div className="flex gap-2 folder-heading align-items-center">
         <i className="pi pi-file-import" style={{ fontSize: "22px" }}></i>
         <h3 className="m-0 contract-card-heading">{contract?.contract_name}</h3>

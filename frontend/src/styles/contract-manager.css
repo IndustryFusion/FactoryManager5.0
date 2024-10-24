@@ -245,3 +245,7 @@ border-bottom: 2px solid #e1e8ed;
 .not-found-text{
   color: #95989a;
 }
+.heading-folder-text,
+.heading-file-text{
+  font-size: 22px;
+}

@@ -16,7 +16,7 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
       {contractsOriginal && (
         <>
           <div
-            className="flex contract-card"
+            className="flex contract-card mr-5"
             style={{ gap: "3rem", marginTop: "2rem" }}
             onClick={() => {
                 setContractsOriginal(false)
@@ -47,7 +47,7 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
           </div>
 
           <div
-            className="flex contract-card mt-4"
+            className="flex contract-card mt-4 mr-5"
             style={{ gap: "3rem" }}
             onClick={() =>{
                 setContractsOriginal(false)
