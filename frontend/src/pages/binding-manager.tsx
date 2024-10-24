@@ -111,8 +111,8 @@ const BindingManager = () => {
   return (
     <>
       <div className="flex">
+      <Sidebar />
         <Toast ref={toast} />
-       
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
             <Navbar navHeader="Bindings Request" />
