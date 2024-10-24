@@ -8,7 +8,6 @@ import Navbar from "@/components/navBar/navbar";
 import Footer from "@/components/navBar/footer";
 import { useRouter } from "next/router";
 import { BiBuildings } from "react-icons/bi";
-import "@/styles/certificates/certificate-page.css";
 
 const CertificatesPage: React.FC = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
@@ -27,8 +26,6 @@ const CertificatesPage: React.FC = () => {
     setIsClientReady(true);
   }, [router.query]);
 
-  const navHeader = "Certificates";
-
   const companyInfoText =
     "An active company certificate authorizes the company to actively participate in data contracts and sharing features.";
   const assetInfoText =
@@ -40,12 +37,11 @@ const CertificatesPage: React.FC = () => {
 
   return (
     <div className="flex">
-      <div className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}>
-        <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-      </div>
-      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
-        <Navbar navHeader={navHeader} />
-        <div className="dashboard-container -mt-7">
+        <Sidebar />
+      <div className='main_content_wrapper'>
+        <Navbar navHeader="Certificates" />
+        <div className="overflow_y_auto">
+        <div className="dashboard-container ">
           <div className={`certificates-container ${assetIfricId ? "" : ""}`}>
             <div className="certificates-content-wrapper">
               <TabView
@@ -88,6 +84,7 @@ const CertificatesPage: React.FC = () => {
               </TabView>
             </div>
           </div>
+        </div>
         </div>
       </div>
       <Footer />
