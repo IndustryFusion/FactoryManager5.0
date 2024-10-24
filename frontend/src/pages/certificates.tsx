@@ -5,12 +5,11 @@ import Certificates from "@/components/certificates/company";
 import AssetsTab from "@/components/certificates/asset";
 import Sidebar from "@/components/navBar/sidebar";
 import Navbar from "@/components/navBar/navbar";
-import Footer from "@/components/navBar/footer";
 import { useRouter } from "next/router";
 import { BiBuildings } from "react-icons/bi";
+import Footer from "@/components/navBar/footer"
 
 const CertificatesPage: React.FC = () => {
-  const [isSidebarExpand, setSidebarExpand] = useState(true);
   const [assetIfricId, setAssetIfricId] = useState<string | null>(null);
   const [isClientReady, setIsClientReady] = useState(false);
   const [certificateActiveTab, setCertificateActiveTab] = useState(0);
@@ -39,7 +38,10 @@ const CertificatesPage: React.FC = () => {
     <div className="flex">
         <Sidebar />
       <div className='main_content_wrapper'>
-        <Navbar navHeader="Certificates" />
+        <div className='navbar-wrapper mt-4'>
+          <Navbar navHeader="Certificates" />
+        </div>
+       
         <div className="overflow_y_auto">
         <div className="dashboard-container ">
           <div className={`certificates-container ${assetIfricId ? "" : ""}`}>

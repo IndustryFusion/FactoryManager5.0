@@ -115,7 +115,7 @@ const Alerts = () => {
           }}
           tooltip="Alerts"
           tooltipOptions={{ position: 'bottom' }}
-          style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
+          // style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
         />
         <div style={badgeStyle}>
           <Badge className={`p-badge ${alertsCount > 5 ? "active" : ""}`} value={alertsCount} />

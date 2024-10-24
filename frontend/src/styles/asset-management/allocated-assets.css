@@ -1,0 +1,131 @@
+/* Table Container Styles */
+.factory-table {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.factory-table:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Header Styles */
+.factory-table .p-datatable-header {
+  background: #f8f9fa;
+  border: none;
+  padding: 1rem;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* Search Input Styles */
+.p-input-icon-left {
+  width: 100%;
+  max-width: 300px;
+}
+
+.p-input-icon-left input {
+  width: 100%;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  transition: all 0.2s ease;
+}
+
+.p-input-icon-left input:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.p-input-icon-left i {
+  color: #6c757d;
+  left: 0.75rem;
+}
+
+/* Column Header Styles */
+.factory-table .p-datatable-thead > tr > th {
+  background: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+}
+
+/* Row Styles */
+.factory-table .p-datatable-tbody > tr {
+  transition: background-color 0.2s ease;
+}
+
+.factory-table .p-datatable-tbody > tr:hover {
+  background-color: #f8f9fa;
+}
+
+.factory-table .p-datatable-tbody > tr > td {
+  padding: 0.875rem 1rem;
+  border: 1px solid #e9ecef;
+  color: #495057;
+}
+
+/* Factory ID Text Styles */
+.factory-id-text {
+  font-weight: 500;
+  color: #2196F3;
+}
+
+/* Assets Column Styles */
+.factory-table .p-datatable-tbody > tr > td:last-child {
+  color: #666;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Toast Styles */
+.p-toast {
+  opacity: 0.95;
+}
+
+.p-toast .p-toast-message {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+  .factory-table {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+  
+  .factory-table .p-datatable-thead > tr > th,
+  .factory-table .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+  }
+}
+
+/* Empty State Styles */
+.p-datatable-emptymessage td {
+  text-align: center;
+  padding: 2rem !important;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Row Zebra Striping */
+.factory-table .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.factory-table .p-datatable-tbody > tr > td.factory-column {
+  color: #2196F3 !important;
+  font-weight: 500;
+  background-color: inherit !important;
+}
+.factory-table .p-datatable-thead > tr > th.factory-header {
+  background: #f8f9fa !important;
+  color: #495057 !important;
+}

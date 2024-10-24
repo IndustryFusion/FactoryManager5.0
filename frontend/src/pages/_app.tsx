@@ -27,7 +27,10 @@ import Head from "next/head";
 import "@/app/globals.css";
 import { UnauthorizedPopup } from '../utility/jwt';
 
+
 function MyApp({ Component, pageProps, router }: AppProps) {
+
+
   const AuthComponent =
     ["/auth/login", "/auth/register", "/recover-password", "/auth/reset/update-password", "/privacy", "/terms-and-conditions"].includes(router.pathname)
         ? Component

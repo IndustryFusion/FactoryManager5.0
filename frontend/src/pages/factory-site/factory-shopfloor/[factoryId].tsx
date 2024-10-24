@@ -17,50 +17,55 @@
 import FactoryShopFloorForm from "@/components/factoryShopFloorForm/formview-shopfloor";
 import ShopFloorList from "@/components/reactFlow/shopfloor-list";
 import "../../../styles/factory-shopfloor.css"
+import "@/styles/sidebar.css"// this css is imported only for the css class navbar_wrapper  
 import { useState } from "react";
-import HorizontalNavbar from "@/components/navBar/horizontal-navbar";
+import Navbar from "@/components/navBar/navbar";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 import AllocatedAsset from "@/components/factoryShopFloorForm/allocated-asset";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import Footer from "@/components/navBar/footer";
 import PicklistAssets from "@/components/factoryShopFloorForm/picklist-assets";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Sidebar from "@/components/navBar/sidebar";
 
 
 const FactoryShopFloor = () => {
 
     const [formViewPage, setFormViewPage] = useState(true);
+    const [isSidebarExpand, setSidebarExpand] = useState(true);
 
     return (
-        <>
+        <div className="flex">
+        <Sidebar />
+        <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
             <div style={{ overflow: "hidden", height: "95vh" }}>
-                <HorizontalNavbar />
-                <FactoryShopFloorProvider>
-
-                    <div className="factory-shopfloor-container">
-                        <ShopFloorProvider>
-                            <div className="shopfloor-list-container">
-                                <ShopFloorList
-                                    formViewPage={formViewPage}
-                                />
-                                <div>
-                                    <AllocatedAsset />
-                                </div>
-                            </div>
-                            <div className="form-container" style={{ zoom: "90%" }}>
-                                < FactoryShopFloorForm />
-                            </div>
-                            <div className="allocated-list-container" >
-                                <PicklistAssets />
-                            </div>
-
-                        </ShopFloorProvider>
-                    </div>
-                    <Footer />
-                </FactoryShopFloorProvider>
+            <div className="navbar_wrapper">
+                <Navbar navHeader="Factory Picklist" />
             </div>
-        </>
-    )
+            
+            <FactoryShopFloorProvider>
+                <div className="factory-shopfloor-container">
+                <ShopFloorProvider>
+                    <div className="shopfloor-list-container">
+                    <ShopFloorList formViewPage={formViewPage} />
+                    <div>
+                        <AllocatedAsset />
+                    </div>
+                    </div>
+                    <div className="form-container" style={{ zoom: "90%" }}>
+                    <FactoryShopFloorForm />
+                    </div>
+                    <div className="allocated-list-container">
+                    <PicklistAssets />
+                    </div>
+                </ShopFloorProvider>
+                </div>
+                <Footer />
+            </FactoryShopFloorProvider>
+            </div>
+        </div>
+        </div>
+    );
 }
 
 export async function getServerSideProps({ locale }: { locale: string }) {
