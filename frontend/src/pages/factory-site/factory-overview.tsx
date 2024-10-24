@@ -358,7 +358,7 @@ const FactoryOverview = () => {
     <div className="flex">
       <Sidebar />   
       <div className='main_content_wrapper'>
-        <div className='navbar-wrapper mt-4'>
+        <div className='navbar-wrapper mt-5'>
           <Navbar navHeader="Factory Overview" />
         </div>
         <div className="dashboard-container">
