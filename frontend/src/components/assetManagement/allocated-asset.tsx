@@ -90,29 +90,31 @@ const AllocatedAsset = () => {
 
   return (
     <>
-      <Toast ref={toast} />
+    <Toast ref={toast} />
+    <div className="allocated-assets-container">
       <DataTable
-        style={{ zoom: "92%" }}
-        className="factory-table"
-        value={allocatedAssets}
-        rowGroupMode="rowspan"
-        showGridlines
-        header={renderHeader()}
-        headerColumnGroup={headerGroup}
-        filters={filters}
-        globalFilterFields={['factoryName', 'assets']}
+      style={{ zoom: "92%" }}
+      className="factory-table"
+      value={allocatedAssets}
+      rowGroupMode="rowspan"
+      showGridlines
+      header={renderHeader()}
+      headerColumnGroup={headerGroup}
+      filters={filters}
+      globalFilterFields={['factoryName', 'assets']}
       >
-        <Column
-          field="factoryName"
-          className="factory-id-text"
-          filter
-        />
-        <Column
-          field="assets"
-          filter
-          body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
-        />
+      <Column
+        field="factoryName"
+        className="factory-column"
+        filter
+      />
+      <Column
+        field="assets"
+        filter
+        body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
+      />
       </DataTable>
+    </div>
     </>
   );
 };

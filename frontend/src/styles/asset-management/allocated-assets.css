@@ -120,16 +120,12 @@
   background-color: #fafbfc;
 }
 
-/* Animation for Row Updates */
-@keyframes highlight {
-  0% {
-    background-color: rgba(33, 150, 243, 0.1);
-  }
-  100% {
-    background-color: transparent;
-  }
+.factory-table .p-datatable-tbody > tr > td.factory-column {
+  color: #2196F3 !important;
+  font-weight: 500;
+  background-color: inherit !important;
 }
-
-.row-updated {
-  animation: highlight 1s ease-out;
+.factory-table .p-datatable-thead > tr > th.factory-header {
+  background: #f8f9fa !important;
+  color: #495057 !important;
 }
