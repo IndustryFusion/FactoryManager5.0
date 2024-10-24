@@ -17,6 +17,7 @@
 import axios from "axios";
 import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
+import { getAccessGroup } from "./indexed-db";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -147,16 +148,25 @@ export const getAssetById = async (assetId: string): Promise<Asset | null> => {
 
 export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
   try {
+    const access_group = await getAccessGroup();
+    const token = access_group.jwt_token
+    
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+    
     const response = await axios.post(
       `${BACKEND_API_URL}/asset/get-owner-asset/${company_ifric_id}`,
       {}, 
       {
        headers: {
-        "Content-Type": "application/ld+json",
-        Accept: "application/ld+json",
+          "Content-Type": "application/ld+json",
+          "Accept": "application/ld+json",
+          "Authorization": `Bearer ${token}`
       },
       }
     );
+    console.log("post setOwner asset endpoint console",response.data)
     return response.data;
   } catch (error: any) {
       console.error("error")

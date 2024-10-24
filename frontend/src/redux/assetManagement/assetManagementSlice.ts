@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchAssetManagement } from '@/utility/asset-utility';
+import {setFactoryOwnerAssets} from "@/utility/asset"
 import { fetchAllAllocatedAssets } from '@/utility/factory-site-utility';
+import { getAccessGroup } from '@/utility/indexed-db';
 
 export interface Asset {
   id: string;
@@ -39,6 +41,11 @@ export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string
   'assetManagement/fetchAssets',
   async (_, { rejectWithValue }) => {
     try {
+      const accessGroup = await getAccessGroup();
+      if (!accessGroup?.company_ifric_id) {
+        throw new Error('Company IFRIC ID not found');
+      }
+      await setFactoryOwnerAssets(accessGroup.company_ifric_id);
       const response = await fetchAssetManagement();
       if (!response || !Array.isArray(response)) {
         throw new Error('Invalid response from server');
