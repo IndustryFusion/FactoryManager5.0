@@ -185,6 +185,13 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       "/add-contract": [
         { label: "Contract Manager", url: "/contract-manager" },
         createLastItem("Add Contract")
+      ],
+       "/binding-manager": [
+        { label: "Binding Manager", url: "#" }
+      ],
+      "/create-binding": [
+        { label: "Binding Manager", url: "/binding-manager" },
+        createLastItem("Create Binding")
       ]
     };
 

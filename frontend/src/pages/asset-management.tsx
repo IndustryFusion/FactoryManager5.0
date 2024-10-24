@@ -43,16 +43,17 @@ const AssetManagementPage = () => {
   };
 
   return (
+    <>
     <div className="flex">
-      <Sidebar/>
-      <div className={isSidebarExpand ? "factory-container"  : "factory-container-collpase"} >
+      <Sidebar />
+      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
         <div className='navbar-wrapper mt-4'>
           <Navbar navHeader="Asset Management" />
         </div>
         <div className="dashboard-container">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
-              <TabView activeIndex={activeIndex} onTabChange={handleTabChange}  className="asset-tabs">
+              <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
                 <TabPanel header="Asset Table">
                   <div className="p-2 md:p-3">
                     <AssetManagement />
@@ -68,8 +69,9 @@ const AssetManagementPage = () => {
           </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </div><Footer />
+    </>
+  
   );
 };
 

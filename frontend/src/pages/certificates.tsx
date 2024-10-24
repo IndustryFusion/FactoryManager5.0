@@ -6,8 +6,8 @@ import AssetsTab from "@/components/certificates/asset";
 import Sidebar from "@/components/navBar/sidebar";
 import Navbar from "@/components/navBar/navbar";
 import { useRouter } from "next/router";
-import "@/styles/certificates/certificate-page.css";
 import { BiBuildings } from "react-icons/bi";
+import Footer from "@/components/navBar/footer"
 
 const CertificatesPage: React.FC = () => {
   const [assetIfricId, setAssetIfricId] = useState<string | null>(null);
@@ -25,8 +25,6 @@ const CertificatesPage: React.FC = () => {
     setIsClientReady(true);
   }, [router.query]);
 
-  const navHeader = "Certificates";
-
   const companyInfoText =
     "An active company certificate authorizes the company to actively participate in data contracts and sharing features.";
   const assetInfoText =
@@ -37,53 +35,61 @@ const CertificatesPage: React.FC = () => {
   }
 
   return (
-    <div className={`certificates-container ${assetIfricId ? "" : ""}`}>
-      <Sidebar />
-      <div className="main_content_wrapper">
-        <div className="navbar_wrapper">
-          <Navbar navHeader={navHeader} />
+    <div className="flex">
+        <Sidebar />
+      <div className='main_content_wrapper'>
+        <div className='navbar-wrapper mt-4'>
+          <Navbar navHeader="Certificates" />
         </div>
-        <div className="certificates-content-wrapper">
-          <TabView
-            className="certificates-tabview spaced-tabs"
-            activeIndex={certificateActiveTab}
-            onTabChange={(e) => setCertificateActiveTab(e.index)}
-          >
-            <TabPanel
-              header={
-                <span className="tab-header">
-                  <BiBuildings className="mr-2" style={{fontSize:"30px"}}/>
-                  <span>Company</span>
-                </span>
-              }
-              className="spaced-tab-panel"
-            >
-              <Message
-                severity="info"
-                text={companyInfoText}
-                className="mb-3 ml-5"
-              />
-              <Certificates />
-            </TabPanel>
-            <TabPanel
-              header={
-                <span className="tab-header">
-                  <i className="pi pi-box"></i>
-                  <span>Assets</span>
-                </span>
-              }
-              className="spaced-tab-panel"
-            >
-              <Message
-                severity="info"
-                text={assetInfoText}
-                className="mb-3 ml-5"
-              />
-              <AssetsTab assetIfricId={assetIfricId} />
-            </TabPanel>
-          </TabView>
+       
+        <div className="overflow_y_auto">
+        <div className="dashboard-container ">
+          <div className={`certificates-container ${assetIfricId ? "" : ""}`}>
+            <div className="certificates-content-wrapper">
+              <TabView
+                className="certificates-tabview spaced-tabs"
+                activeIndex={certificateActiveTab}
+                onTabChange={(e) => setCertificateActiveTab(e.index)}
+              >
+                <TabPanel
+                  header={
+                    <span className="tab-header">
+                      <BiBuildings className="mr-2" style={{fontSize:"30px"}}/>
+                      <span>Company</span>
+                    </span>
+                  }
+                  className="spaced-tab-panel"
+                >
+                  <Message
+                    severity="info"
+                    text={companyInfoText}
+                    className="mb-3 ml-5"
+                  />
+                  <Certificates />
+                </TabPanel>
+                <TabPanel
+                  header={
+                    <span className="tab-header">
+                      <i className="pi pi-box"></i>
+                      <span>Assets</span>
+                    </span>
+                  }
+                  className="spaced-tab-panel"
+                >
+                  <Message
+                    severity="info"
+                    text={assetInfoText}
+                    className="mb-3 ml-5"
+                  />
+                  <AssetsTab assetIfricId={assetIfricId} />
+                </TabPanel>
+              </TabView>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

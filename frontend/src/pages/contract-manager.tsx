@@ -96,8 +96,9 @@ const ContractManager = () => {
   return (
     <>
       <div className="flex">
+      <Sidebar />
         <Toast ref={toast} />
-        <Sidebar/>
+ 
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
             <Navbar navHeader="Contracts Manager" />
@@ -120,7 +121,7 @@ const ContractManager = () => {
                 </div>
                 <div className="mt-6">
                   <h3 className="m-0 ml-1 folder-heading">Folders</h3>
-                  <div className="card flex mt-1 contracts-tree">
+                  <div className=" flex mt-1 contracts-tree">
                     <Tree
                       value={nodes}
                       selectionMode="single"

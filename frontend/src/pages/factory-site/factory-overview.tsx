@@ -354,15 +354,12 @@ const FactoryOverview = () => {
     );
   };
 
- 
-
-
   return (
     <div className="flex">
-      <Sidebar/>
-      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
-        <div className="navbar_wrapper mt-3">
-         <Navbar navHeader="Factory Overview" />
+      <Sidebar />   
+      <div className='main_content_wrapper'>
+        <div className='navbar-wrapper mt-4'>
+          <Navbar navHeader="Factory Overview" />
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
@@ -399,7 +396,8 @@ const FactoryOverview = () => {
             />
           )}
         </div>
-      </div>
+        </div>
+   
       <Footer />
     </div>
   );

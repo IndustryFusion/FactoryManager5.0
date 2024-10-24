@@ -25,7 +25,8 @@ import { FiEdit3 } from 'react-icons/fi';
 import DeleteDialog from '@/components/delete-dialog';
 import { InputNumber } from 'primereact/inputnumber';
 import { Message } from 'primereact/message';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchContractsRedux } from '@/redux/contract/contractSlice';
 
 
 interface PropertyDefinition {
@@ -76,18 +77,20 @@ const ContractDetails: React.FC = () => {
     const [contractNameExists, setContractNameExists] = useState(false);
     const contractsData = useSelector((state: any) => state.contracts.contracts);
     const [allContracts, setAllContracts] = useState([]);
+    const [inputWidth, setInputWidth] = useState(0);
     const { contractId } = router.query;
+    const dispatch = useDispatch();
 
     useEffect(() => {
         setAllContracts(contractsData);
     }, [contractsData])
 
-    console.log("contractsData here outside", contractsData);
-    
+ 
     const fetchContractDetails =async(contractIfricId:string)=>{
         try{
          const response = await getContractDetails(contractIfricId);
          const [contract]=response;
+         console.log("contract details here", contract)
          setContractData({
             ...contract,
             contract_valid_till: contract.contract_valid_till ? new Date(contract.contract_valid_till) : null
@@ -113,17 +116,38 @@ const ContractDetails: React.FC = () => {
             inputRef.current.focus();
         }
     }, [editTitle]);
+
     useEffect(() => {
         if (contractId ) {
-          console.log("Contract ID:", contractId );
           fetchContractDetails(contractId)
         }
-      }, [contractId ]);
+      }, [contractId]);
+
+      useEffect(() => {
+        if (inputRef.current) {
+          const span = document.createElement("span");
+          const computedStyle = window.getComputedStyle(inputRef.current);
+          span.style.font = computedStyle.font;
+          span.style.padding = computedStyle.padding;
+          span.style.border = computedStyle.border;
+          span.style.visibility = "hidden";
+          span.style.position = "absolute";
+          span.style.whiteSpace = "pre";
+          span.textContent = contractData?.contract_name || "";
+          document.body.appendChild(span);
+    
+          const width = span.offsetWidth;
+          setInputWidth(width + 25);
+    
+          document.body.removeChild(span);
+        }
+      }, [contractData?.contract_name]);
 
 
     const fetchData = async () => {
         try {
             const userData = await getAccessGroup();
+            dispatch(fetchContractsRedux(userData?.company_ifric_id));
             if (userData && userData.jwt_token) {
                 // Fetch template data (from backend)
                 const templateResponse =  await getTemplateByName("predictiveMaintenance_laserCutter");
@@ -155,6 +179,8 @@ const ContractDetails: React.FC = () => {
                 // Fetch asset properties (from MongoDB, sandbox backend)
                 const assetTypeBase64 = btoa(`https://industry-fusion.org/base/v0.1/${formData.asset_type}`);
                 const assetPropertiesResponse = await getTemplateByType(assetTypeBase64);
+                console.log("assetPropertiesResponse",assetPropertiesResponse);
+                
                 const mongoProperties = assetPropertiesResponse?.data.properties;
 
                 // Filter only the properties with segment "realtime"
@@ -360,9 +386,14 @@ const ContractDetails: React.FC = () => {
            console.log("response from edit here", response);
            
         } catch (error) {
-            console.error('Error submitting form:', error);
-            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to edit contract' });
-        }
+          if (axios.isAxiosError(error)) {
+              console.error("Error response:", error.response?.data.message);
+              toast.current?.show({ severity: 'error', summary: 'Error', detail:  error?.message });
+            } else {
+              console.error("Error:", error);
+              toast.current?.show({ severity: 'error', summary: 'Error', detail:  error?.message });
+            };
+      }
     };  
   
     const renderDataTypeList = ()=> {
@@ -404,6 +435,7 @@ const ContractDetails: React.FC = () => {
 
     return (
       <div className="flex">
+        <Sidebar />
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
             <Navbar navHeader={"Contract"} />
@@ -414,30 +446,27 @@ const ContractDetails: React.FC = () => {
               <div className="create-contract-form-wrapper">
                 <form onSubmit={handleSubmit}>
                   <div className="form-grid">
-                    <div className="contract_title_group">
-                      <div
-                         className={`${editTitle ? "edit-expand" : "edit-collapse"} ${
-                            contractData?.contract_name?.length > 50 ? "long-contract-name" : "short-contract-name"
-                          }`}
-                      >
-                        <InputText
-                          id="contract_title"
-                          value={contractData?.contract_name ?? ""}
-                          onChange={(e) =>
-                            handleInputChange(e, "contract_name")
-                          }
-                          required
-                          className="contract_form_field field_title"
-                          onBlur={() => {
-                            setTimeout(() => {
-                              setEditTitle(false);
-                            }, 200);
-                          }}
-                          disabled={!editTitle || !isEdit}
-                         
-                        />
+                    <div className="contract_title_group ml-3">
+                      <div>
+                      <InputText
+                        id="contract_title"
+                        ref={inputRef}
+                        value={contractData?.contract_name ?? ""}
+                        onChange={(e) => handleInputChange(e, "contract_name")}
+                        required
+                        className={`contract_form_field field_title ${
+                          editTitle ? "editable" : ""
+                        }`}
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setEditTitle(false);
+                          }, 200);
+                        }}
+                        disabled={!editTitle || !isEdit}
+                        style={{ width: inputWidth + "px" }}
+                      />
                       </div>
-                      <div style={{ flex: "0 10%" }}>
+                      <div >
                         <button
                           onClick={(e) => {
                             e.preventDefault();
@@ -564,7 +593,7 @@ const ContractDetails: React.FC = () => {
                           }
                         />
                         {certificateExpiry && isEdit && (
-                          <small>
+                          <small className="ml-3 mt-2">
                             Contract end date must be before{" "}
                             {new Date(certificateExpiry).toLocaleDateString(
                               "en-US",
@@ -699,10 +728,10 @@ const ContractDetails: React.FC = () => {
                           className={`${
                             isEdit ? "edit-contract-input" : ""
                           } contract_form_field`}
-                          min={10}
-                          max={60}
+                          min={templateData?.properties["interval"]?.minimum}
+                          max={templateData?.properties["interval"]?.maximum}
                         />
-                        <small>Realtime update interval for properties.</small>
+                        <small className="ml-3 mt-2">Realtime update interval for properties.</small>
                         {templateData?.properties.data_type && (
                           <div className="data_types_field_wrapper">
                             <label htmlFor="" className="required-field">
