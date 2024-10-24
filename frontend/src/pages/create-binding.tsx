@@ -17,6 +17,7 @@ import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
 import Navbar from '@/components/navBar/navbar';
 import { Dialog } from 'primereact/dialog';
+import Sidebar from '@/components/navBar/sidebar';
 
 interface PropertyDefinition {
     type: string;
@@ -433,6 +434,7 @@ const CreateBinding: React.FC = () => {
 
     return (
         <div className="flex">
+            <Sidebar />
             <div className="main_content_wrapper">
             <div className="navbar_wrapper">
                     <Navbar navHeader={"Create Binding"} />

@@ -31,6 +31,7 @@ import DeleteDialogBox from "@/components/contractManager/delete-dialog-box";
 import { deleteBinding, getBindingDetails, getContractData, updateBindingDetails } from "@/utility/bindings";
 import { useSelector } from "react-redux";
 import { getAssetById } from "@/utility/asset";
+import Sidebar from "@/components/navBar/sidebar";
 
 interface PropertyDefinition {
   type: string;
@@ -623,6 +624,7 @@ const CreateBindingPage: React.FC = () => {
 
   return (
     <div className="flex">
+        <Sidebar />
       <div className="main_content_wrapper">
         <div className="navbar_wrapper">
           <Navbar navHeader={"Binding"} />

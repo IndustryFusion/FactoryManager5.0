@@ -359,11 +359,10 @@ const FactoryOverview = () => {
 
   return (
     <div className="flex">
-      <div className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}>
-        <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-      </div>
-      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
+        <Sidebar />   
+      <div className='main_content_wrapper'>
         <Navbar navHeader="Factory Overview" />
+        <div className="overflow_y_auto">
         <div className="dashboard-container">
           <Toast ref={toast} />
           <div className="grid py-1 px-2 factory-overview">
@@ -398,6 +397,7 @@ const FactoryOverview = () => {
               deleteItemName={factoryName}
             />
           )}
+        </div>
         </div>
       </div>
       <Footer />

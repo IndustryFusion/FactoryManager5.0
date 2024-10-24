@@ -21,20 +21,11 @@ const AssetManagementPage = () => {
 
   return (
     <div className="flex">
-      <div
-        className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
-      >
-        <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
-      </div>
-      <div
-        className={
-          isSidebarExpand
-            ? "factory-container"
-            : "factory-container-collpase"
-        }
-      >
+        <Sidebar />
+      <div className='main_content_wrapper'>
         <Navbar navHeader="Asset Management" />
-        <div className="dashboard-container -mt-3">
+        <div className="overflow_y_auto">
+        <div className="dashboard-container ">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
               <TabView activeIndex={activeIndex} onTabChange={(e) => dispatch(setActiveTabIndex(e.index))} className="asset-tabs">
@@ -51,6 +42,7 @@ const AssetManagementPage = () => {
               </TabView>
             </Card>
           </div>
+        </div>
         </div>
       </div>
       <Footer />

@@ -1,7 +1,4 @@
-.certificates-container {
-  display: flex;
-  height: 100vh;
-}
+
 
 .sidebar-expanded {
   flex: 0 15%;
@@ -47,7 +44,7 @@
 
 .certificates-content-wrapper {
   padding: 24px;
-  display: flex;
+  /* display: flex; */
   /*styles for scrollbar*/
   height: calc(100% - 72px);
   /* overflow: auto; */
