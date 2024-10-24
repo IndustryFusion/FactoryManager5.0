@@ -26,34 +26,10 @@ import withAuth from "@/app/withAuth";
 import Head from "next/head";
 import "@/app/globals.css";
 import { UnauthorizedPopup } from '../utility/jwt';
-import { setFactoryOwnerAssets } from '@/utility/asset';
-import { useEffect } from "react";
-import { getAccessGroup } from '@/utility/indexed-db';
 
 
 function MyApp({ Component, pageProps, router }: AppProps) {
 
-  useEffect(() => {
-    const initializeFactoryOwner = async () => {
-      if (["/auth/login", "/auth/register", "/recover-password", 
-           "/auth/reset/update-password", "/privacy", "/terms-and-conditions"]
-           .includes(router.pathname)) {
-        return;
-      }
-
-      try {
-        const accessData = await getAccessGroup();
-        if (accessData?.company_ifric_id) {
-         const res =  await setFactoryOwnerAssets(accessData.company_ifric_id);
-         console.log("res",res)
-        }
-      } catch (error) {
-        console.error('Failed to initialize factory owner assets:', error);
-      }
-    };
-
-    initializeFactoryOwner();
-  }, [router.pathname]);
 
   const AuthComponent =
     ["/auth/login", "/auth/register", "/recover-password", "/auth/reset/update-password", "/privacy", "/terms-and-conditions"].includes(router.pathname)

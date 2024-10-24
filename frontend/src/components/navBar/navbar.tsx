@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { getUserDetails } from "@/utility/auth";
 import Alerts from "@/components/alert/alerts"
+import Language from "./language";
 
 type NavbarProps = {
   navHeader?: string;
@@ -232,6 +233,10 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
           </div>
         </div>
         <div className="flex gap-3 nav-items">
+          {/* //just commneted out the language fetaures just for now since we will add more translation in future */}
+          {/* <div className="language-dropdown">
+            <Language />
+          </div> */}
           <Button
             icon="pi pi-box"
             onClick={() => router.push("/asset-management")}

@@ -50,7 +50,7 @@ const Language: React.FC = () => {
         if (option) {
             return (
                 <div className="flex align-items-center">
-                    <img alt={option.name} src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png" className={`mr-2 flag flag-${option.code.toLowerCase()}`} style={{ width: '18px' }} />
+                    <img alt={option.name} src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png" className={`mr-3 -ml-3 flag flag-${option.code.toLowerCase()}`} style={{ width: '20px' }} />
                     <div>{option.name}</div>
                 </div>
             );
@@ -61,16 +61,18 @@ const Language: React.FC = () => {
 
     const languageOptionTemplate = (option: localeObject) => {
         return (
-            <div className="flex align-items-center">
-                <img alt={option.name} src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png" className={`mr-2 flag flag-${option.code.toLowerCase()}`} style={{ width: '18px' }} />
+            <div className="flex align-items-center ">
+                <img alt={option.name} src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png" className={`mr-3 flag flag-${option.code.toLowerCase()}`} style={{ width: '18px' }} />
                 <div>{option.name}</div>
             </div>
         );
     };
 
     return (
-        <Dropdown value={selectedLanguage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" 
-            filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-7rem" />
+           <div className="flex align-items-center justify-content-start">
+              <Dropdown value={selectedLanguage} onChange={(e) => changeLocale(e.value)} options={countries} optionLabel="name" 
+              filter valueTemplate={selectedLanguageTemplate} itemTemplate={languageOptionTemplate} className="w-full md:w-7rem" />
+           </div>
     )
 };
 
