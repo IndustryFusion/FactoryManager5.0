@@ -256,7 +256,11 @@ const AddContractPage: React.FC = () => {
             if (response?.data) {
                 setFormData(prevState => ({
                     ...prevState,
-                    consumer_company_name: response.data[0].company_name
+                    consumer_company_name: response.data[0].company_name,
+                    consumer_company_address: response.data[0].address_1,
+                    consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
+                    consumer_company_country: response.data[0].country,
+                    consumer_company_zip: response.data[0].zip,
                 }));
                 setConsumerAddress(`${response.data[0].address_1} ${response.data[0].address_2}`)
             }
@@ -540,8 +544,11 @@ const AddContractPage: React.FC = () => {
                                                                 <Image src="/warning.svg" width={16} height={16} alt='company not verified icon' />
                                                             )}
                                                         </div>
-                                                            <div style={{ marginTop: "4px" }}>{consumerAddress}</div>
-                                                            <div style={{ marginTop: "4px" }}>{formData.data_consumer_company_ifric_id}</div>
+                                                            <div style={{ marginTop: "4px" }}>{formData.data_consumer_company_ifric_id ?? ''}</div>
+                                                            <div style={{ marginTop: "4px" }}>{formData.consumer_company_address ?? ''}</div>
+                                                            <div style={{ marginTop: "4px" }}>{formData.consumer_company_city ?? ''}</div>
+                                                            <div style={{ marginTop: "4px" }}>{formData.consumer_company_country ?? ''}</div>
+                                                            <div style={{ marginTop: "4px" }}>{formData.consumer_company_zip ?? ''}</div>
                                                         </div>
                                                     </div>
                                             </div>

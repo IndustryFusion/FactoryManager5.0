@@ -193,6 +193,28 @@ function Sidebar() {
               Binding Manager
             </div>
           </Button>
+          <Button
+            className={`sidebar_navlink ${
+              router.pathname === "/contract-manager" ? "is_active" : ""
+            }`}
+            onClick={() => handleRoute("binding-request")}
+            tooltip={!sidebarOpen ? "Contract Manager" : undefined}
+            tooltipOptions={{ position: "right", event: "both" }}
+          >
+            <Image
+              src="/sidebar/contract_icon.svg"
+              width={18}
+              height={18}
+              alt="dashboard_icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${
+                !sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+            >
+              Binding Request
+            </div>
+          </Button>
           </div>
           {sidebarOpen && (
             <div className="pass_quota_container">
