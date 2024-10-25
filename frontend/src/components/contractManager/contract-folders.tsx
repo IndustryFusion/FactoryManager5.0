@@ -7,20 +7,24 @@ interface ContractCardsProps {
   setInsuranceFilterContracts:Dispatch<SetStateAction<boolean>>;
   setContractsOriginal:Dispatch<SetStateAction<boolean>>;
   contractsOriginal:boolean;
+  setShowAll:Dispatch<SetStateAction<boolean>>;
 }
 
-const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, setInsuranceFilterContracts,setContractsOriginal, contractsOriginal}) => {
+const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, setInsuranceFilterContracts,setContractsOriginal, contractsOriginal,setShowAll}) => {
     
   return (
     <>
       {contractsOriginal && (
         <>
           <div
-            className="flex contract-card"
+            className="flex contract-card mr-5"
             style={{ gap: "3rem", marginTop: "2rem" }}
             onClick={() => {
                 setContractsOriginal(false)
-                setFilterContracts(true)}}
+                setFilterContracts(true)
+                setShowAll(false)
+              }}
+                
           >
             <div className="flex gap-2 folder-heading align-items-center">
               <i className="pi pi-folder"></i>
@@ -39,19 +43,20 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
             <div>
               <p className="card-label-grey">Shared with:</p>
               <div className="flex mt-3">
-                <div className="share-content user-one">OW</div>
-                <div className="share-content user-two">NA</div>
-                <div className="share-content user-three">MP</div>
+                <div className="share-content user-1">OW</div>
+                <div className="share-content user-2">NA</div>
+                <div className="share-content user-3">MP</div>
               </div>
             </div>
           </div>
 
           <div
-            className="flex contract-card mt-4"
+            className="flex contract-card mt-4 mr-5"
             style={{ gap: "3rem" }}
             onClick={() =>{
                 setContractsOriginal(false)
                 setInsuranceFilterContracts(true)
+                setShowAll(false)
             } }
           >
             <div className="flex gap-2 folder-heading align-items-center">
@@ -73,9 +78,9 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
               <p className="card-label-grey">Shared with:</p>
             </div>
             <div className="flex mt-3">
-                <div className="share-content user-one">OW</div>
-                <div className="share-content user-two">NA</div>
-                <div className="share-content user-three">MP</div>
+                <div className="share-content user-1">OW</div>
+                <div className="share-content user-2">NA</div>
+                <div className="share-content user-3">MP</div>
               </div>
             </div>
           </div>
