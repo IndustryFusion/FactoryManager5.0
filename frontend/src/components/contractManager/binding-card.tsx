@@ -5,10 +5,37 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { GiAlarmClock } from "react-icons/gi";
 import { MdLockOpen, MdLockOutline } from "react-icons/md";
+import SharedWithCompanies from "./shared-with-companies";
 
-const BindingCard: React.FC<any> = ({ binding }) => {
-  const [contractData, setContractData] = useState({});
-  const [loginCompanyName, setLoginCompanyName] = useState("");
+interface MetaData {
+  created_at: string;
+  created_user: string;
+}
+
+interface Binding {
+  contract_id: string;
+  contract_binding_ifric_id: string;
+  meta_data: MetaData;
+  provider_company_name?: string;
+}
+
+interface ContractData {
+  contract_name?: string;
+  consumer_company_name?: string;
+}
+
+interface Company {
+  _id: string;
+  provider_company_name: string;
+}
+
+interface BindingCardProps {
+  binding: Binding;
+}
+
+const BindingCard: React.FC<BindingCardProps> = ({ binding }) => {
+  const [contractData, setContractData] = useState<ContractData>({});
+  const [sharedCompanies, setSharedCompanies] = useState<Company>([]);
   const formattedDate = moment(binding?.meta_data?.created_at).format(
     "DD MMM YYYY"
   );
@@ -30,7 +57,7 @@ const BindingCard: React.FC<any> = ({ binding }) => {
 
   const fetchSharedCompanies =async(bindingIfricId:string)=>{
     const response = await getSharedWithBindingCompanies(bindingIfricId);
-    console.log("response from endpoint here", response );
+    setSharedCompanies(response);
     
   }
   
@@ -39,9 +66,7 @@ const BindingCard: React.FC<any> = ({ binding }) => {
     fetchSharedCompanies(binding?.contract_binding_ifric_id)
   }, [binding?.contract_id]);
 
-
-
-
+ 
   return (
     <div
       onClick={() =>
@@ -70,10 +95,7 @@ const BindingCard: React.FC<any> = ({ binding }) => {
       </div>
       <div>
         <p className="card-label-grey">Shared with:</p>
-        <div className="flex mt-3">
-          <div className=" share-content user-one">OW</div>
-          <div className=" share-content user-two">NA</div>
-        </div>
+          <SharedWithCompanies sharedCompanies={sharedCompanies} />         
       </div>
       <div>
         <div className="flex gap-3">
@@ -81,7 +103,6 @@ const BindingCard: React.FC<any> = ({ binding }) => {
           <MdLockOutline style={{ fontSize: "20px", color: "#1be21b" }} />
           <div>
             <p className="card-label-black">{contractData?.consumer_company_name}</p>
-            {/* <p className="mt-1 card-label-grey">Jacob Hamesworth</p> */}
           </div>
         </div>
         <div className="mt-3 flex gap-3">
@@ -89,7 +110,6 @@ const BindingCard: React.FC<any> = ({ binding }) => {
           <MdLockOpen style={{ fontSize: "20px", color: "#95989a" }} />
           <div>
             <p className="card-label-black">{binding?.provider_company_name}</p>
-            {/* <p className="mt-1 card-label-grey">Jarek Owczarek</p> */}
           </div>
         </div>
         <div></div>
@@ -101,6 +121,7 @@ const BindingCard: React.FC<any> = ({ binding }) => {
         </button>
       </div>
     </div>
+
   );
 };
 export default BindingCard;

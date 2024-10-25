@@ -42,7 +42,7 @@ export const getBindingDetails = async (bindingIfricId: string) => {
 };
 
 export const getContractData = async (contractId: string) => {
-  console.log("contractId in utility", contractId);
+
 
   try {
     const response = await axios.get(
@@ -139,6 +139,7 @@ export const getSharedWithBindingCompanies =async(bindingIfricId: string)=>{
     }
   }
 }
+
 
 
 

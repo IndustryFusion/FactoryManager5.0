@@ -8,7 +8,7 @@ import { Tree } from "primereact/tree";
 import { NodeService } from "@/service/NodeService";
 import { Checkbox } from "primereact/checkbox";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getBindings } from "@/utility/bindings";
+import { getBindings, getContractData } from "@/utility/bindings";
 import ContractCard from "@/components/contractManager/contract-file";
 import { IoArrowBack } from "react-icons/io5";
 import ContractFolders from "@/components/contractManager/contract-folders";
@@ -20,15 +20,34 @@ import { useRouter } from "next/router";
 import BindingCard from "@/components/contractManager/binding-card";
 import BindingHeader from "@/components/contractManager/binding-header";
 
+interface Binding {
+  _id: string;
+  contract_id: string;
+  contract_binding_ifric_id: string;
+  asset_ifric_id: string;
+  provider_company_name: string;
+  data_provider_company_ifric_id: string;
+  contract_binding_valid_till: string;
+  asset_certificate_data: string;
+  provider_company_certificate_data: string;
+  meta_data: {
+      created_at: string;
+      created_user: string;
+      last_updated_at: string;
+  };
+  __v: number;
+}
+
 const BindingManager = () => {
   const [nodes, setNodes] = useState([]);
   const [companyIfricId, setCompanyIfricId] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
   // const [contractsData, setContractsData] = useState([]);
-  const [predictiveFilteredContractsData, setpredictiveFilteredContractsData] = useState([]);
+  const [predictiveFilteredContractsData, setPredictiveFilteredContractsData] = useState([]);
   const [filterContracts, setFilterContracts] = useState(false);
   const [insuranceFilterContracts, setInsuranceFilterContracts] =useState(false);
   const [contractsOriginal, setContractsOriginal] = useState(true);
+  const [showAll,setShowAll] = useState(true);
   const [loading, setLoading] = useState(false);
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
@@ -36,12 +55,6 @@ const BindingManager = () => {
 
   // Access the bindings data from Redux
   const bindingsData = useSelector((state: any) => state.bindings.bindings);
-
-  console.log("bindingsData here", bindingsData);
-  console.log("contracts original",contractsOriginal);
-  
-  
-
 
   const showToast = (
     severity: ToastMessage["severity"],
@@ -84,16 +97,32 @@ const BindingManager = () => {
   },[companyIfricId]);
 
 
+  const fetchAndFilterContracts = async (bindings:Binding[]) => {
+    const predictiveContracts:Binding[] = [];
+
+    for (const binding of bindings) {
+        const contractId = binding.contract_id;
+        try {
+            const response = await getContractData(contractId);
+            const [contract] = response;
+            console.log("predictiveContracts each", contract);
+
+            if (contract?.contract_type?.trim() === "https://industry-fusion.org/contracts/v0.1/predictiveMaintenanceLaserCutter") {
+                predictiveContracts.push(binding);
+            }
+        } catch (error) {
+            console.error(`Error fetching contract for ID ${contractId}:`, error);
+        }
+    }
+    setPredictiveFilteredContractsData(predictiveContracts);
+};
+
+
   const handleFilterContracts = () => {
     setLoading(true);
 
     setTimeout(() => {
-      const filteredData = bindingsData.filter(
-        (contract) =>
-          contract?.contract_type?.trim() ===
-          "https://industry-fusion.org/contracts/v0.1/predictiveMaintenanceLaserCutter"
-      );
-      setpredictiveFilteredContractsData(filteredData);
+      fetchAndFilterContracts(bindingsData)
       setLoading(false);
     }, 2000); // Adjust the delay time in milliseconds (e.g., 1000 = 1 second)
   };
@@ -108,8 +137,6 @@ const BindingManager = () => {
     router.push("/create-binding");
   };
 
-  console.log("bindingsData", bindingsData);
-  
 
   return (
     <>
@@ -135,7 +162,7 @@ const BindingManager = () => {
                   />
                 </div>
                 <div className="mt-6">
-                  <h3 className="m-0 ml-1 heading-folder-text">Folders</h3>
+                  <h3 className="m-0 ml-1 folder-heading">Folders</h3>
                   <div className=" flex mt-1 contracts-tree">
                     <Tree
                       value={nodes}
@@ -175,24 +202,26 @@ const BindingManager = () => {
                 handleCreateClick={handleCreateClick}
                 />
                 <div className="contract-cards-container">
-                <h2 className="ml-5 mb-0">Folders</h2>
+                <h2 className="ml-5 mb-0">{showAll ?"Folders ": ""}</h2>
                   <ContractFolders
                     setFilterContracts={setFilterContracts}
                     setInsuranceFilterContracts={setInsuranceFilterContracts}
                     setContractsOriginal={setContractsOriginal}
                     contractsOriginal={contractsOriginal}
+                    setShowAll ={setShowAll}
                   />
                   {loading ? (
                     <div></div>
                   ) : (
                     <>
                       {!contractsOriginal && (
-                        <div className="ml-1">
+                        <div className="ml-4">
                           <button
                             className="back-btn flex justify-content-center align-items-center border-none black_button_hover "
                             onClick={() => {
                               setInsuranceFilterContracts(false);
                               setFilterContracts(false);
+                              setShowAll(true)
                               setContractsOriginal(true);
                             }}
                           >
@@ -204,21 +233,22 @@ const BindingManager = () => {
                       {filterContracts &&
                         predictiveFilteredContractsData.length > 0 &&
                         predictiveFilteredContractsData.map((contract) => (
+                          
+                          
                           <div  key={contract._id}>
-                             <ContractCard
-                            contract={contract}
+                             <BindingCard binding={contract}
                           />
                           </div> 
                         ))}
                       {insuranceFilterContracts && (
                         <div>
-                          <h3 className="not-found-text">
+                          <h3 className="not-found-text ml-4">
                             Insurance contract files not found
                           </h3>
                         </div>
                       )}
                       <div>
-                      <h2 className="ml-5 mt-7 heading-file-text">Files</h2>
+                      <h2 className="ml-5 mt-7 heading-file-text">{showAll ?"Files": ""}</h2>
                       {contractsOriginal &&
                         bindingsData.map((binding) => (
                           <div key={binding._id}>
