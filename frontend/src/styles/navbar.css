@@ -48,11 +48,14 @@
   margin-top: 5px !important;
   padding: 0 !important;
   margin-left: 58px !important;
+  font-family: "League Spartan";
 }
 
 .nav-header {
   margin-left: 65px !important;
   margin: 0;
+  font-family: "League Spartan";
+  margin-top: 0.7rem;
 }
 
 .current-page .p-menuitem-text {
