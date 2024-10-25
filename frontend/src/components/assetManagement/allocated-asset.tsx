@@ -15,31 +15,34 @@
 // limitations under the License. 
 // 
 
-import { fetchAllAllocatedAssets } from "@/utility/factory-site-utility";
+import { useRef, useState } from "react";
+import { useTranslation } from "next-i18next";
 import { FilterMatchMode } from "primereact/api";
 import { Column } from "primereact/column";
 import { ColumnGroup } from "primereact/columngroup";
 import { DataTable } from "primereact/datatable";
 import { InputText } from "primereact/inputtext";
 import { Row } from "primereact/row";
-import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "next-i18next";
-import { AllocatedAssetData } from "../../types/allocated-asset-data";
-import { Toast, ToastMessage } from "primereact/toast";
+import { Toast } from "primereact/toast";
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import "@/styles/asset-management/allocated-assets.css";
 
 const AllocatedAsset = () => {
+  const { allocatedAssets, allocatedAssetsLoading, allocatedAssetsError } = useSelector(
+    (state: RootState) => state.assetManagement
+  );
+
   const [filters, setFilters] = useState<{
     global: { value: string | null; matchMode: FilterMatchMode };
   }>({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [allAllocatedAssets, setAllAllocatedAssets] =  useState<AllocatedAssetData[]>([]);
   const { t } = useTranslation(['placeholder', 'reactflow']);
   const toast = useRef<Toast>(null);
 
-  // Handle global filter change
-  const onGlobalFilterChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     let _filters = { ...filters };
     _filters['global'].value = value;
@@ -47,59 +50,20 @@ const AllocatedAsset = () => {
     setGlobalFilterValue(value);
   };
 
-  // Render the search input for the DataTable header
   const renderHeader = () => {
     return (
       <div className="flex justify-content-center">
         <span className="p-input-icon-left">
           <i className="pi pi-search" />
           <InputText
-            value={globalFilterValue} onChange={onGlobalFilterChange}
-            placeholder={t('placeholder:search')} />
+            value={globalFilterValue}
+            onChange={onGlobalFilterChange}
+            placeholder={t('placeholder:search')}
+          />
         </span>
       </div>
     );
   };
-  const header = renderHeader();
-
-// Fetch and transform data from the backend
-  const handleAllAllocatedAsset = async () => {
-    try {
-      const response = await fetchAllAllocatedAssets();   
-      console.log("response from allocated Asset", response);
-
-      if(response?.status === 404){
-      showToast("error", "Error", "fetching allocated assets")
-      }else{
-    
-        let transformedArray:AllocatedAssetData[] = [];
-        if(Object.keys(response).length > 0){
-       
-          for (let factoryName in response) {
-            let obj: AllocatedAssetData = {
-              factoryName: factoryName,
-              assets: response[factoryName]
-            }
-            transformedArray.push(obj);
-          }
-             setAllAllocatedAssets(transformedArray)  
-        }  
-      }
-     
-     
-    } catch (error) {
-      console.error("Error from @components/assetManagement/allocated-asset.tsx",error)
-    }
-  }
-
-  useEffect(() => {
-    handleAllAllocatedAsset();
-  }, []);
-
-  const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
-  };
-
 
   const headerGroup = (
     <ColumnGroup>
@@ -108,36 +72,51 @@ const AllocatedAsset = () => {
         <Column header="Assets" />
       </Row>
     </ColumnGroup>
-  )
+  );
+
+  if (allocatedAssetsLoading) {
+    return <div className="loading-spinner">Loading...</div>;
+  }
+
+  // Show error toast if there's an error
+  if (allocatedAssetsError) {
+    toast.current?.show({
+      severity: 'error',
+      summary: 'Error',
+      detail: allocatedAssetsError,
+      life: 5000
+    });
+  }
 
   return (
     <>
     <Toast ref={toast} />
+    <div className="allocated-assets-container">
       <DataTable
-        style={{ zoom: "92%" }}
-        className="factory-table"
-        value={allAllocatedAssets}
-        rowGroupMode="rowspan" showGridlines
-        header={header}
-        headerColumnGroup={headerGroup}
-        filters={filters}
-        globalFilterFields={['factoryName', 'assets']}
+      style={{ zoom: "92%" }}
+      className="factory-table"
+      value={allocatedAssets}
+      rowGroupMode="rowspan"
+      showGridlines
+      header={renderHeader()}
+      headerColumnGroup={headerGroup}
+      filters={filters}
+      globalFilterFields={['factoryName', 'assets']}
       >
-        <Column
-          field="factoryName"
-          className="factory-id-text"
-          filter
-        ></Column>
-        <Column
-          field="assets"
-          filter
-          body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
-        >
-        </Column>
+      <Column
+        field="factoryName"
+        className="factory-column"
+        filter
+      />
+      <Column
+        field="assets"
+        filter
+        body={(rowData) => rowData?.assets.length > 0 && rowData?.assets?.join(', ')}
+      />
       </DataTable>
+    </div>
     </>
-  )
-}
-
+  );
+};
 
 export default AllocatedAsset;

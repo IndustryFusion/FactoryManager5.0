@@ -193,7 +193,7 @@ body {
 .navbar_wrapper {
   position: sticky;
   border-bottom: 1px solid #e6e6e6;
-  top: 0;
+  top: 5px;
   left: 0;
   right: 0;
   height: 72px;

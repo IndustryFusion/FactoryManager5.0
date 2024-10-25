@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import AssetManagement from "../components/assetManagement/asset-management-new";
@@ -9,7 +9,7 @@ import Footer from '@/components/navBar/footer';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Card } from 'primereact/card';
 import '@/styles/asset-management/asset-management-page.css'
-import { setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
+import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 
@@ -18,17 +18,42 @@ const AssetManagementPage = () => {
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
   const { t } = useTranslation(['common', 'button']);
+  const [dataInitialized, setDataInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!dataInitialized) {
+        try {
+          await Promise.all([
+            dispatch(fetchAssets()),
+            dispatch(fetchAllocatedAssetsAsync())
+          ]);
+          setDataInitialized(true);
+        } catch (error) {
+          console.error('Failed to fetch data:', error);
+        }
+      }
+    };
+
+    initializeData();
+  }, [dispatch, dataInitialized]);
+
+  const handleTabChange = (e) => {
+    dispatch(setActiveTabIndex(e.index));
+  };
 
   return (
+    <>
     <div className="flex">
-        <Sidebar />
-      <div className='main_content_wrapper'>
-        <Navbar navHeader="Asset Management" />
-        <div className="overflow_y_auto">
-        <div className="dashboard-container ">
+      <Sidebar />
+      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
+        <div className='navbar-wrapper mt-4'>
+          <Navbar navHeader="Asset Management" />
+        </div>
+        <div className="dashboard-container">
           <div className="p-2 md:p-4">
             <Card className="mb-4">
-              <TabView activeIndex={activeIndex} onTabChange={(e) => dispatch(setActiveTabIndex(e.index))} className="asset-tabs">
+              <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
                 <TabPanel header="Asset Table">
                   <div className="p-2 md:p-3">
                     <AssetManagement />
@@ -43,10 +68,10 @@ const AssetManagementPage = () => {
             </Card>
           </div>
         </div>
-        </div>
       </div>
-      <Footer />
-    </div>
+    </div><Footer />
+    </>
+  
   );
 };
 

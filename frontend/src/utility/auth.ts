@@ -91,24 +91,6 @@ export const updateUserAccessGroup = async(userId: string | string[] | undefined
     }
 }
 
-export const getUserDetails = async(userId: string | string[] | undefined) => {
-    try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-user-details/${userId}`,{
-            headers: {
-            "Content-Type": "application/json",
-            },
-        });
-    
-    } catch(error: any) {
-        console.log('err from fetch user details by id ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
 export const getUserProductAccess = async(userId: string | string[] | undefined) => {
     try {
         return await api.get(`${REGISTRY_API_URL}/auth/get-user-product-access/${userId}`,{
@@ -295,3 +277,22 @@ export const verifyCompanyCertificate = async(company_ifric_id: string) => {
         }
     }
 }
+
+export const getUserDetails = async (dataToSend: Record<string, string>) => {
+    try {
+        return await api.get(`${REGISTRY_API_URL}/auth/get-user-details`, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            params: dataToSend,
+        });
+
+    } catch (error: any) {
+        console.log('err from updating company user ',error);
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+        } else {
+          throw error;
+        }
+    }
+};

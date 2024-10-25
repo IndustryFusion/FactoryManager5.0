@@ -18,7 +18,7 @@ import React, { useState, useEffect, useRef, useCallback ,Suspense } from "react
 import { useRouter } from "next/router";
 import dynamic from 'next/dynamic'
 import { ShopFloor } from "../../../types/shop-floor";
-import HorizontalNavbar from "../../../components/navBar/horizontal-navbar";
+import Navbar from "../../../components/navBar/navbar";
 import Footer from "../../../components/navBar/footer";
 import { ShopFloorProvider } from "@/context/shopfloor-context";
 const ShopFloorList = dynamic(() => import("../../../components/reactFlow/shopfloor-list"), {
@@ -35,6 +35,7 @@ import {
 } from "@/utility/factory-site-utility";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Sidebar from "@/components/navBar/sidebar";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -42,6 +43,7 @@ const ShopFloorManager: React.FC = () => {
   const elementRef = useRef(null);
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
   const [shopfloor, setShopfloor] = useState({});
+  const [isSidebarExpand, setSidebarExpand] = useState(true);
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -73,75 +75,76 @@ const ShopFloorManager: React.FC = () => {
   }, []);
 
   return (
-    <>
-    <FactoryShopFloorProvider>
-      <HorizontalNavbar />
-        <div
-          style={{
-            display: "flex",
-            height: "99vh",
-            marginTop: "80px",
-            zoom: "85%",
-          
-          }}
-          className="bg-gray-100"
-        >
-        <ShopFloorProvider>
-          <div
-            style={{
-              borderRight: "1px solid #ccc",
-              padding: "10px",
-              width: "400px",
-              maxHeight: "100%",
-              flexShrink: 0, // Prevents the component from shrinking
-            }}
-          >
-            <ShopFloorList
-              factoryId={factoryId}
-              onShopFloorDeleted={handleShopFloorDeleted}
-              setShopfloorProp={setShopfloor}
-            />
+    <div className="flex">
+      <Sidebar />
+      <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
+        <FactoryShopFloorProvider>
+          <div className="navbar_wrapper mt-4">
+            <Navbar navHeader="Factory Flow" />
           </div>
           <div
-            ref={elementRef}
             style={{
-              flex: 1,
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              padding: "10px",
-          
-              maxHeight: "100%",
-              flexShrink: 0,
+              display: "flex",
+              height: "calc(100vh - 120px)", 
+              zoom: "85%",
             }}
+            className="bg-gray-100"
           >
-            {factoryDetails && (
-              <FlowEditor
-                factoryId={factoryId}
-                factory={factoryDetails}
-                deletedShopFloors={deletedShopFloors}
-              />
-            )}
-
-            {!factoryDetails && <div>Loading factory details...</div>}
+            <ShopFloorProvider>
+              <div
+                style={{
+                  borderRight: "1px solid #ccc",
+                  padding: "10px",
+                  width: "400px",
+                  maxHeight: "100%",
+                  flexShrink: 0,
+                }}
+              >
+                <ShopFloorList
+                  factoryId={factoryId}
+                  onShopFloorDeleted={handleShopFloorDeleted}
+                  setShopfloorProp={setShopfloor}
+                />
+              </div>
+              <div
+                ref={elementRef}
+                style={{
+                  flex: 1,
+                  border: "1px solid #ccc",
+                  borderRadius: "10px",
+                  padding: "10px",
+                  maxHeight: "100%",
+                  flexShrink: 0,
+                }}
+              >
+                {factoryDetails ? (
+                  <FlowEditor
+                    factoryId={factoryId}
+                    factory={factoryDetails}
+                    deletedShopFloors={deletedShopFloors}
+                  />
+                ) : (
+                  <div>Loading factory details...</div>
+                )}
+              </div>
+              <div
+                style={{
+                  borderRight: "1px solid #ccc",
+                  padding: "10px",
+                  width: "450px",
+                  maxHeight: "100%",
+                  flexShrink: 0,
+                }}
+              >
+                <UnallocatedAssets factoryId={factoryId} product_name="" />
+              </div>
+            </ShopFloorProvider>
           </div>
-           <div
-            style={{
-              borderRight: "1px solid #ccc",
-              padding: "10px",
-              width: "450px", // Ensure width is explicitly set to 350px for UnallocatedAssets as well
-              maxHeight: "100%",
-              flexShrink: 0, // Prevents the component from shrinking
-            }}
-          >
-            
-            <UnallocatedAssets factoryId={factoryId} product_name="" />
-          </div>
-        </ShopFloorProvider>
-        </div>
-      <Footer />
-      </FactoryShopFloorProvider>
-    </>
-  );
+          <Footer />
+        </FactoryShopFloorProvider>
+      </div>
+    </div>
+    );
 };
 
 export async function getServerSideProps({ locale }: { locale: string }) {

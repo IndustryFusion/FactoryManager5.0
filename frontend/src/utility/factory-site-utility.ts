@@ -578,6 +578,7 @@ export const fetchAllAllocatedAssets = async () => {
       },
       withCredentials: true,
     });
+    console.log("response allocated assets",response)
     return response.data;
   } catch (error) {
     console.error("Error fetching all allocated assets:", error);

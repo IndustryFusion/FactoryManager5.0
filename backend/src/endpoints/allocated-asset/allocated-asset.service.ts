@@ -192,13 +192,17 @@ export class AllocatedAssetService {
         if(Array.isArray(factorySpecificAssets)){
           for(let i = 0; i < factorySpecificAssets.length; i++){
             let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i], token);
-            let productName = assetData[Object.keys(factoryData).find(key => key.includes("product_name"))].value;
-            finalData[factoryName].push(productName);
+            const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
+            if (productNameKey && assetData[productNameKey].value) {
+              finalData[factoryName].push(assetData[productNameKey].value);
+            }
           }
         } else if(factorySpecificAssets !== "json-ld-1.1") {
           let assetData = await this.assetService.getAssetDataById(factorySpecificAssets, token);
-          let productName = assetData[Object.keys(factoryData).find(key => key.includes("product_name"))].value;
-          finalData[factoryName].push(productName);
+          const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
+          if (productNameKey && assetData[productNameKey].value) {
+            finalData[factoryName].push(assetData[productNameKey].value);
+          }
         }
       }
       return finalData;

@@ -354,15 +354,13 @@ const FactoryOverview = () => {
     );
   };
 
- 
-
-
   return (
     <div className="flex">
-        <Sidebar />   
+      <Sidebar />   
       <div className='main_content_wrapper'>
-        <Navbar navHeader="Factory Overview" />
-        <div className="overflow_y_auto">
+        <div className='navbar-wrapper mt-5'>
+          <Navbar navHeader="Factory Overview" />
+        </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
           <div className="grid py-1 px-2 factory-overview">
@@ -399,7 +397,7 @@ const FactoryOverview = () => {
           )}
         </div>
         </div>
-      </div>
+   
       <Footer />
     </div>
   );

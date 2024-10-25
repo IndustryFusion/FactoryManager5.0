@@ -6,6 +6,7 @@
   --text-color: #333333;
   --background-color: #f5f5f5;
   --card-background: #ffffff;
+   --page-zoom: 100%;
 }
 
 body {
@@ -26,14 +27,24 @@ body {
 .asset-tabs.p-tabview .p-tabview-nav {
   background: transparent !important;
   border: none !important;
-  border-bottom: 1px solid #dee2e6 !important;
-  padding: 0 1.5rem !important;
+
 }
 
 .asset-tabs.p-tabview .p-tabview-nav li {
   margin-right: 0.5rem !important;
 }
+.dashboard-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  max-height: 50vh;
+}
 
+.factory-container,
+.factory-container-collapse {
+  margin: 0;
+  padding: 0;
+}
 .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
   background: transparent !important;
   border: none !important;
@@ -41,7 +52,6 @@ body {
   font-weight: 600 !important;
   font-size: 1rem !important;
   padding: 1rem 1.5rem !important;
-  transition: all 0.3s ease !important;
 }
 
 .asset-tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link:hover {
@@ -218,4 +228,48 @@ body {
 
 .align-items-center {
   align-items: center;
+}
+
+/* Responsive zoom adjustments */
+@media screen and (min-width: 2550px) and (max-width: 2570px) {
+  .asset-management-wrapper {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3020px) and (max-width: 3030px) {
+  .asset-management-wrapper {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3450px) and (max-width: 3460px) {
+  .asset-management-wrapper {
+    zoom: var(--page-zoom);
+  }
+}
+
+@media screen and (min-width: 3830px) and (max-width: 3850px) {
+  .asset-management-wrapper {
+    zoom: var(--page-zoom);
+  }
+}
+
+/* Additional responsive adjustments */
+@media screen and (max-width: 1366px) {
+  .dashboard-container {
+    max-height: 45vh;
+  }
+}
+
+@media screen and (min-width: 1367px) and (max-width: 1920px) {
+  .dashboard-container {
+    max-height: 50vh;
+  }
+}
+
+@media screen and (min-width: 1921px) {
+  .dashboard-container {
+    max-height: 55vh;
+  }
 }

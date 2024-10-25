@@ -183,7 +183,7 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
             </div>
             <div>
             <Button
-                  className="generate-cert-btn black_button_hover"
+                  className="generate-cert-btn mt-4"
                   onClick={handleGenerateCertificate}
                 >
                   Generate Certificate

@@ -24,6 +24,7 @@ import powerConsumptionReducer from "./powerConsumption/powerConsumptionSlice";
 import bindingsSliceReducer from "./binding/bindingsSlice"
 import assetManagementReducer from './assetManagement/assetManagementSlice';
 import contractsSliceReducer from "./contract/contractSlice";
+import factoryUserReducer from "./auth/factoryUserSlice";
 
 
 export const store = configureStore({
@@ -36,7 +37,8 @@ export const store = configureStore({
         powerConsumption: powerConsumptionReducer,
         bindings: bindingsSliceReducer,
         assetManagement: assetManagementReducer,
-        contracts: contractsSliceReducer
+        contracts: contractsSliceReducer,
+        factoryUserSlice:factoryUserReducer
     },
 });
 

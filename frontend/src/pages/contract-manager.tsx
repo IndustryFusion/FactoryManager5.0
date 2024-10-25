@@ -15,8 +15,8 @@ import { Toast, ToastMessage } from "primereact/toast";
 import axios from "axios";
 import { fetchContractsRedux } from "@/redux/contract/contractSlice";
 import { useDispatch, useSelector } from "react-redux";
+import "@/styles/sidebar.css";
 import Sidebar from "@/components/navBar/sidebar";
-
 const ContractManager = () => {
   const [nodes, setNodes] = useState([]);
   const [companyIfricId, setCompanyIfricId] = useState("");
@@ -98,9 +98,12 @@ const ContractManager = () => {
       <div className="flex">
       <Sidebar />
         <Toast ref={toast} />
+ 
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
-            <Navbar navHeader="Contracts Manager" />        
+            <Navbar navHeader="Contracts Manager" />
+          </div>
+        
             <div className="flex gap-4 contract-container">
               <div className="contract-left-container">
                 <div className="contract-search-container">
@@ -206,8 +209,8 @@ const ContractManager = () => {
                   )}
                 </div>
               </div>
-            </div>
-            </div>
+          
+          </div>
         </div>
       </div>
     </>
