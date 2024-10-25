@@ -64,7 +64,6 @@ const ContractDetails: React.FC = () => {
     const [certificateExpiry, setCertificateExpiry] = useState<Date | null>(null);
     const [editTitle, setEditTitle] = useState<Boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const [consumerAddress, setConsumerAddress] = useState('');
     const [companyUser, setCompanyUser] = useState('');
     const [companyIfricId, setCompanyIfricId] = useState('');
     const [consumerCompanyCertified, setConsumerCompanyCertified] = useState<Boolean | null>(null);
@@ -303,9 +302,12 @@ const ContractDetails: React.FC = () => {
             if (response?.data) {
                 setFormData(prevState => ({
                     ...prevState,
-                    consumer_company_name: response.data[0].company_name
+                    consumer_company_name: response.data[0].company_name,
+                    consumer_company_address: response.data[0].address_1,
+                    consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
+                    consumer_company_country: response.data[0].country,
+                    consumer_company_zip: response.data[0].zip,
                 }));
-                setConsumerAddress(`${response.data[0].address_1} ${response.data[0].address_2}`)
             }
         } catch (error) {
             console.error('Error fetching company details:', error);
@@ -467,30 +469,33 @@ const ContractDetails: React.FC = () => {
                       />
                       </div>
                       <div >
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setEditTitle(!editTitle);
-                          }}
-                          className="contract_field_button"
-                          disabled={isEdit ? false : true}
-                        >
-                          {editTitle === false || isEdit === false ? (
-                            <Image
-                              src="/add-contract/edit_icon.svg"
-                              width={22}
-                              height={22}
-                              alt="edit icon"
-                            ></Image>
-                          ) : (
-                            <Image
-                              src="/add-contract/save_icon.svg"
-                              width={22}
-                              height={22}
-                              alt="save icon"
-                            ></Image>
-                          )}
-                        </button>
+                        {
+                          isEdit && 
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setEditTitle(!editTitle);
+                            }}
+                            className="contract_field_button"
+                          >
+                            {editTitle === false || isEdit === false ? (
+                              <Image
+                                src="/add-contract/edit_icon.svg"
+                                width={22}
+                                height={22}
+                                alt="edit icon"
+                              ></Image>
+                            ) : (
+                              <Image
+                                src="/add-contract/save_icon.svg"
+                                width={22}
+                                height={22}
+                                alt="save icon"
+                              ></Image>
+                            )}
+                          </button>
+                        }
+                        
                       </div>
                     </div>
                     {contractNameExists && (
@@ -655,12 +660,11 @@ const ContractDetails: React.FC = () => {
                                       />
                                     )}
                                 </div>
-                                <div style={{ marginTop: "4px" }}>
-                                  {consumerAddress}
-                                </div>
-                                <div style={{ marginTop: "4px" }}>
-                                  {contractData?.data_consumer_company_ifric_id}
-                                </div>
+                                <div style={{ marginTop: "4px" }}>{contractData?.data_consumer_company_ifric_id ?? ''}</div>
+                                <div style={{ marginTop: "4px" }}>{formData.consumer_company_address ?? ''}</div>
+                                <div style={{ marginTop: "4px" }}>{formData.consumer_company_city ?? ''}</div>
+                                <div style={{ marginTop: "4px" }}>{formData.consumer_company_country ?? ''}</div>
+                                <div style={{ marginTop: "4px" }}>{formData.consumer_company_zip ?? ''}</div>
                               </div>
                             </div>
                           </div>
