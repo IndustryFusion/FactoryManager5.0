@@ -356,6 +356,7 @@ const CreateBinding: React.FC = () => {
             console.log("response ",response?.data);
             if(response?.data.status === 201) {
                 toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding added successfully' });
+                setVisible(false)
             } else {
                 toast.current?.show({ severity: 'error', summary: 'Error', detail: response?.data.message });
             }
@@ -629,7 +630,7 @@ const CreateBinding: React.FC = () => {
                         <div className="asset-type-list-cover">
                             {renderAssetTypeList()}
                         </div>
-                            <Dialog header={renderDialogHeader} visible={visible} style={{width:"100%", maxWidth: '550px' }}  draggable={false} footer={renderDialogFooter} onHide={() => {if (!visible) return; setVisible(false); }} className='contract_dialog_cover'>
+                            <Dialog header={renderDialogHeader} visible={visible} style={{width:"100%", maxWidth: '30vw' }}  draggable={false} footer={renderDialogFooter} onHide={() => {if (!visible) return; setVisible(false); }} className='contract_dialog_cover'>
                                 <div className='contract_dialog_content'>
                                     <div className="contract_dialog_company_details">
                                         <div className="consumer_details_wrapper">
@@ -654,13 +655,13 @@ const CreateBinding: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className='contract_form_field_column' style={{marginTop: "15px", padding: "0px"}}>
-                                        <div className="field representative_highlight">
+                                        <div className="field representative_highlight representative-container">
                                             <label htmlFor="contract_start_date">Representative name</label>
                                             <div className='text_large_bold'>
                                                 {consumerName}
                                             </div>
                                         </div>
-                                        <div className="field representative_highlight">
+                                        <div className="field representative_highlight representative-container">
                                             <label htmlFor="contract_start_date">Representative name</label>
                                             <div className='text_large_bold'>
                                                 {userName}

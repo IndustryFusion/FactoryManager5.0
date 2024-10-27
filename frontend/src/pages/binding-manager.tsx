@@ -199,7 +199,7 @@ const BindingManager = () => {
               </div>
               <div className="contract-right-container">
                 <BindingHeader 
-                handleCreateClick={handleCreateClick}
+              
                 />
                 <div className="contract-cards-container">
                 <h2 className="ml-5 mb-0">{showAll ?"Folders ": ""}</h2>

@@ -172,6 +172,7 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 margin-top: 1rem;
+margin-right: 3rem;
 }
 .folder-heading .pi-folder {
 font-size: 22px;
@@ -224,6 +225,9 @@ width: 80%;
 }
 .contract-tabs.p-tabview .p-tabview-nav-content {
 border-bottom: 2px solid #e1e8ed;
+}
+.sort-dropdown .p-inputtext {
+  padding: 0.5rem;
 }
 .main_content_wrapper {
   height: 100vh;

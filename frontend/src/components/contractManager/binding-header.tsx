@@ -8,7 +8,7 @@ interface Optiontype {
   value: string;
 }
 
-const BindingHeader:React.FC<any> = ({handleCreateClick}) => {
+const BindingHeader = () => {
   const router = useRouter();
   const sortOptions = [
     { label: "Asc", value: "contract_name" },
@@ -78,19 +78,7 @@ const BindingHeader:React.FC<any> = ({handleCreateClick}) => {
               />
             </div>
           </div>
-          <button
-            className="contract-btn flex justify-content-center align-items-center border-none black_button_hover"
-            onClick={handleCreateClick}
-          >
-            Create Binding
-            <img
-              src="/plus_icon.svg"
-              width="24"
-              height="24"
-              alt="plus icon"
-              style={{ marginRight: "6px" }}
-            ></img>
-          </button>
+        
         </div>
       </div>
     </>

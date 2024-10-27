@@ -34,8 +34,8 @@ const ContractCard:React.FC<any> = ({ contract }) => {
       <div>
                 <p className="card-label-grey">Shared with:</p>
                 <div className="flex mt-3">
-                  <div className=" share-content user-one">OW</div>
-                  <div className=" share-content user-two">NA</div>
+                  <div className=" share-content user-1">OW</div>
+                  <div className=" share-content user-2">NA</div>
                 </div>
             </div>
             <div>
