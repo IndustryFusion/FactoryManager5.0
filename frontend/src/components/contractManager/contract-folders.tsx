@@ -7,7 +7,7 @@ interface ContractCardsProps {
   setInsuranceFilterContracts:Dispatch<SetStateAction<boolean>>;
   setContractsOriginal:Dispatch<SetStateAction<boolean>>;
   contractsOriginal:boolean;
-  setShowAll:Dispatch<SetStateAction<boolean>>;
+  setShowAll ?: Dispatch<SetStateAction<boolean>>;
 }
 
 const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, setInsuranceFilterContracts,setContractsOriginal, contractsOriginal,setShowAll}) => {

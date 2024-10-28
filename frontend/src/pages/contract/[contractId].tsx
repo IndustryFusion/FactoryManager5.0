@@ -27,6 +27,7 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Message } from 'primereact/message';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchContractsRedux } from '@/redux/contract/contractSlice';
+import ContractDeleteDialog from '@/components/contractManager/contract-delete-dialog';
 
 
 interface PropertyDefinition {
@@ -423,7 +424,7 @@ const ContractDetails: React.FC = () => {
          const response = await deleteContract(contractIfricId);
          console.log("delete response here", response);
          if(response?.acknowledged){
-            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Contract deleted successfully' });
+            toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Contract deleted successfully' });
             router.back();
          }
          
@@ -870,7 +871,7 @@ const ContractDetails: React.FC = () => {
           </div>
         </div>
         {contractDelete && (
-          <DeleteDialog
+          <ContractDeleteDialog
             deleteDialog={contractDelete}
             setDeleteDialog={setContractDelete}
             handleDelete={handleDelete}

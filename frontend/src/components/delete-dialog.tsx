@@ -21,9 +21,11 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ deleteDialog, setDeleteDial
                 visible={deleteDialog}
                 onHide={() => setDeleteDialog(false)}
                 header={header}
+                draggable={false}
+                resizable={false}
             >
                 <div className="mb-6">
-                    <span>{t('overview:deleteWarning')}</span>
+                    <span>Confirm Delete</span>
                     <span style={{ textTransform: "capitalize", fontWeight: "bold" }}> {deleteItemName}</span>
                 </div>
 

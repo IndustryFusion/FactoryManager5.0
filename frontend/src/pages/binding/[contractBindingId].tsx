@@ -568,7 +568,7 @@ const CreateBindingPage: React.FC = () => {
     }));
   };
   const renderDataTypeList = () => {
-    const dataTypes = contractData.data_type;
+    const dataTypes = contractData?.data_type ?? [];
     return (
       <div className="datatype_chips_wrapper">
         {dataTypes.map((dataType: string) => (
@@ -580,7 +580,7 @@ const CreateBindingPage: React.FC = () => {
   const renderDialogHeader = () => {
     return (
       <div className="flex align-items-center justify-content-between">
-        <h3 className="contract_dialog_heading">Signing Contract</h3>
+        <h3 className="contract_dialog_heading m-0">Signing Contract</h3>
       </div>
     );
   };
