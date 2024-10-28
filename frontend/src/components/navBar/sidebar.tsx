@@ -198,7 +198,7 @@ function Sidebar() {
               router.pathname === "/contract-manager" ? "is_active" : ""
             }`}
             onClick={() => handleRoute("binding-request")}
-            tooltip={!sidebarOpen ? "Contract Manager" : undefined}
+            tooltip={!sidebarOpen ? "Binding Request" : undefined}
             tooltipOptions={{ position: "right", event: "both" }}
           >
             <Image
