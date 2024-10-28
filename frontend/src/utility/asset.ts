@@ -123,7 +123,7 @@ export const postFile = async (formData: FormData) => {
 
 export const getAssetById = async (assetId: string): Promise<Asset | null> => {
   try {
-    const response = await api.get(`${BACKEND_API_URL}/asset/${assetId}`, {
+    const response = await api.get(`${BACKEND_API_URL}/asset/get-asset-by-id/${assetId}`, {
       headers: {
         "Content-Type": "application/ld+json",
         Accept: "application/ld+json",

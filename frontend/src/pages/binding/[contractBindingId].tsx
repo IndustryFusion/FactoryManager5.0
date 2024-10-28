@@ -330,10 +330,14 @@ const CreateBindingPage: React.FC = () => {
                 new Date(assetCertificateResponse.data[0].expiry_on)
               );
             }
-          }
+          }else {
+            setAssetVerified(null);
+            toast.current?.show({ severity: 'warn', summary: 'Warn', detail: assetCertificateResponse?.data.message });
+        }
         }
       }
     } catch (error) {
+      setAssetVerified(null);
       console.error("Error fetching data:", error);
       toast.current?.show({
         severity: "error",

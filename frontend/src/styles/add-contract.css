@@ -638,7 +638,7 @@
    }
    .contract_dialog_company_details {
     display: flex;
-    gap: 12rem;
+    gap: 4rem;
     font-family: League Spartan;
 }
 .contract_dialog_heading{

@@ -200,10 +200,11 @@
 /* Calendar Icon Styling */
 .calendar-icon {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 10px;
   color: #6c757d;
 }
+
 
 .error-message {
   color: #dc3545;

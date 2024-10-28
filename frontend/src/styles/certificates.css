@@ -178,10 +178,18 @@
   /* Calendar Icon Styling */
   .calendar-icon {
     position: absolute;
-    top: 10px;
+    top: 12px;
     left: 10px;
     color: #6c757d;
   }
+  .calendar-asset-icon{
+    position: absolute;
+    top: 20px;
+    left: 16px;
+    color: #6c757d;
+    z-index: 1000;
+  }
+
   
   .error-message {
     color: #dc3545;
