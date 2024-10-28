@@ -195,7 +195,7 @@ function Sidebar() {
           </Button>
           <Button
             className={`sidebar_navlink ${
-              router.pathname === "/contract-manager" ? "is_active" : ""
+              router.pathname === "/binding-request" ? "is_active" : ""
             }`}
             onClick={() => handleRoute("binding-request")}
             tooltip={!sidebarOpen ? "Binding Request" : undefined}
