@@ -166,7 +166,7 @@ const ContractManager = () => {
                   ) : (
                     <>
                       {!contractsOriginal && (
-                        <div className="ml-1">
+                        <div className="ml-4">
                           <button
                             className="back-btn flex justify-content-center align-items-center border-none black_button_hover "
                             onClick={() => {
@@ -191,7 +191,7 @@ const ContractManager = () => {
                         ))}
                       {insuranceFilterContracts && (
                         <div>
-                          <h3 className="not-found-text">
+                          <h3 className="not-found-text ml-4">
                             Insurance contract files not found
                           </h3>
                         </div>

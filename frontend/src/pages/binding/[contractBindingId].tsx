@@ -330,10 +330,14 @@ const CreateBindingPage: React.FC = () => {
                 new Date(assetCertificateResponse.data[0].expiry_on)
               );
             }
-          }
+          }else {
+            setAssetVerified(null);
+            toast.current?.show({ severity: 'warn', summary: 'Warn', detail: assetCertificateResponse?.data.message });
+        }
         }
       }
     } catch (error) {
+      setAssetVerified(null);
       console.error("Error fetching data:", error);
       toast.current?.show({
         severity: "error",
@@ -564,7 +568,7 @@ const CreateBindingPage: React.FC = () => {
     }));
   };
   const renderDataTypeList = () => {
-    const dataTypes = contractData.data_type;
+    const dataTypes = contractData?.data_type ?? [];
     return (
       <div className="datatype_chips_wrapper">
         {dataTypes.map((dataType: string) => (
@@ -576,7 +580,7 @@ const CreateBindingPage: React.FC = () => {
   const renderDialogHeader = () => {
     return (
       <div className="flex align-items-center justify-content-between">
-        <h3 className="contract_dialog_heading">Signing Contract</h3>
+        <h3 className="contract_dialog_heading m-0">Signing Contract</h3>
       </div>
     );
   };

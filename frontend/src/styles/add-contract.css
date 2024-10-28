@@ -94,7 +94,6 @@
     overflow-y: auto;
     height: 100%;
     max-height: calc(100vh - 72px);
-    
 }
 
 .asset-type-list h2 {
@@ -450,7 +449,7 @@
     /* grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr; */
     align-items: stretch;
-    gap: 20px;
+    gap: 2rem;
     padding: 0px 15px;
 }
 .contract_form_field_column .field{
@@ -623,3 +622,25 @@
     background-color: #ffffff; 
     font-size: 21px;
   }
+  .representative-container{
+    border: 3px solid #ced4da;
+    border-radius: 8px;
+    padding: 0.7rem 1rem; 
+    margin-top: 1.5rem;
+  }
+  .p-dialog .p-dialog-header {
+	border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+   }
+   .p-dialog .p-dialog-footer {
+   border-bottom-right-radius: 10px;
+   border-bottom-left-radius: 10px;
+   }
+   .contract_dialog_company_details {
+    display: flex;
+    gap: 4rem;
+    font-family: League Spartan;
+}
+.contract_dialog_heading{
+    font-family: League Spartan;
+}

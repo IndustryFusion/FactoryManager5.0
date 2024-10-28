@@ -39,9 +39,9 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
             <div>
               <p className="card-label-grey">Shared with:</p>
               <div className="flex mt-3">
-                <div className="share-content user-one">OW</div>
-                <div className="share-content user-two">NA</div>
-                <div className="share-content user-three">MP</div>
+                <div className="share-content user-1">OW</div>
+                <div className="share-content user-2">NA</div>
+                <div className="share-content user-3">MP</div>
               </div>
             </div>
           </div>
@@ -73,9 +73,9 @@ const ContractFolders: React.FC<ContractCardsProps> = ({ setFilterContracts, set
               <p className="card-label-grey">Shared with:</p>
             </div>
             <div className="flex mt-3">
-                <div className="share-content user-one">OW</div>
-                <div className="share-content user-two">NA</div>
-                <div className="share-content user-three">MP</div>
+                <div className="share-content user-1">OW</div>
+                <div className="share-content user-2">NA</div>
+                <div className="share-content user-3">MP</div>
               </div>
             </div>
           </div>

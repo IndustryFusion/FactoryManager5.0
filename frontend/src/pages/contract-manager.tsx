@@ -28,6 +28,7 @@ const ContractManager = () => {
   const [insuranceFilterContracts, setInsuranceFilterContracts] =
     useState(false);
   const [contractsOriginal, setContractsOriginal] = useState(true);
+  const [showAll,setShowAll] = useState(true);
   const [loading, setLoading] = useState(false);
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
@@ -163,13 +164,14 @@ const ContractManager = () => {
                     setInsuranceFilterContracts={setInsuranceFilterContracts}
                     setContractsOriginal={setContractsOriginal}
                     contractsOriginal={contractsOriginal}
+                    setShowAll ={setShowAll}
                   />
                   {loading ? (
                     <div></div>
                   ) : (
                     <>
                       {!contractsOriginal && (
-                        <div className="ml-1">
+                        <div className="ml-4">
                           <button
                             className="back-btn flex justify-content-center align-items-center border-none black_button_hover "
                             onClick={() => {
@@ -194,7 +196,7 @@ const ContractManager = () => {
                         ))}
                       {insuranceFilterContracts && (
                         <div>
-                          <h3 className="not-found-text">
+                          <h3 className="not-found-text ml-4">
                             Insurance contract files not found
                           </h3>
                         </div>

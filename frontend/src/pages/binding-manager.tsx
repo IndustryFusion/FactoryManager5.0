@@ -2,14 +2,12 @@ import Navbar from "@/components/navBar/navbar";
 import Sidebar from "@/components/navBar/sidebar";
 import React, { useEffect, useState, useRef } from "react";
 import "../styles/contract-manager.css";
-import ContractHeader from "@/components/contractManager/contract-header";
 import { InputText } from "primereact/inputtext";
 import { Tree } from "primereact/tree";
 import { NodeService } from "@/service/NodeService";
 import { Checkbox } from "primereact/checkbox";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { getBindings, getContractData } from "@/utility/bindings";
-import ContractCard from "@/components/contractManager/contract-file";
 import { IoArrowBack } from "react-icons/io5";
 import ContractFolders from "@/components/contractManager/contract-folders";
 import { Toast, ToastMessage } from "primereact/toast";
@@ -199,7 +197,7 @@ const BindingManager = () => {
               </div>
               <div className="contract-right-container">
                 <BindingHeader 
-                handleCreateClick={handleCreateClick}
+              
                 />
                 <div className="contract-cards-container">
                 <h2 className="ml-5 mb-0">{showAll ?"Folders ": ""}</h2>
