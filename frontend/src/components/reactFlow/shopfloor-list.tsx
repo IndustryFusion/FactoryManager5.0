@@ -38,11 +38,25 @@ interface ShopfloorListProps {
   setShopfloorProp?: {};
   formViewPage?:boolean
 }
-// First, let's create a function to get the appropriate icon and color for each floor type
-const getFloorTypeIcon = (floorType?: string) => {
-  if (!floorType) return 'pi pi-building';
+// Type guard to check if value is a string
+const isString = (value: any): value is string => {
+  return typeof value === 'string';
+};
+
+// Function to safely convert floor type to string
+const normalizeFloorType = (floorType: any): string => {
+  if (!floorType) return '';
+  if (isString(floorType)) return floorType;
+  if (typeof floorType === 'object' && floorType.value) return String(floorType.value);
+  return String(floorType);
+};
+
+const getFloorTypeIcon = (floorType?: any): string => {
+  const normalizedType = normalizeFloorType(floorType);
   
-  switch(floorType.toLowerCase()) {
+  if (!normalizedType) return 'pi pi-building';
+  
+  switch(normalizedType.toLowerCase()) {
     case 'production':
       return 'pi pi-cog';
     case 'pre-production':
@@ -59,10 +73,12 @@ const getFloorTypeIcon = (floorType?: string) => {
   }
 };
 
-const getFloorTypeColor = (floorType?: string) => {
-  if (!floorType) return '#64748b';
+const getFloorTypeColor = (floorType?: any): string => {
+  const normalizedType = normalizeFloorType(floorType);
+  
+  if (!normalizedType) return '#64748b';
 
-  switch(floorType.toLowerCase()) {
+  switch(normalizedType.toLowerCase()) {
     case 'production':
       return '#6366f1'; // indigo
     case 'pre-production':
@@ -118,6 +134,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
 const fetchShopFloors = async (factoryId: string) => {
   try {
     const factoryDetails = await getshopFloorById(factoryId);
+    console.log("factoryDetails",factoryDetails)
     setShopFloors(
       factoryDetails.map((floor: any) => ({
         id: floor.id,

@@ -174,11 +174,10 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     setSearchTerm(value.toLowerCase());
   };
 
-  console.log("asset",assets)
-return (
-    <>
-   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '60%' }}>
-    <div className="flex align-items-center justify-content-center gap-2 mb-4 search-container" style={{ width: '200%' }}>
+  
+  return (
+  <div className="asset-container">
+    <div className="search-container">
       <div className="input-group">
         <span className="p-input-icon-left">
           <i className="pi pi-search search-icon" />
@@ -220,77 +219,76 @@ return (
       </div>
     </div>
 
-      <TabView className="ml-1"  style={{height:"145%"}}>
-        <TabPanel header={t('reactflow:availableAsset')}  >
-          <div className="tab-list-items">
-              <ul className="-ml-2 ">
-              {assets.filter(asset => 
-                asset.product_name?.toLowerCase().includes(searchTerm) && 
-                (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
-              ).map((asset, index) => (
-                <li 
-                    key={index} 
-                    className={`asset-item ${selectedUnallocatedAsset === asset?.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedUnallocatedAsset(asset?.id)}
-                    draggable={true} 
-                    onDragStart={(e) => handleDragStart(e, asset, "asset")}
-                  >
-                    <i 
-                      className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
-                      style={{ color: getCategoryColor(asset.asset_category) }}
-                    />
-                    <span className="asset-name">{asset.product_name}</span>
-                    <span 
-                      className="category-badge"
-                      style={{ 
-                        backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
-                        color: getCategoryColor(asset.asset_category)
-                      }}
-                    >
-                      {asset.asset_category}
-                    </span>
-                 </li>
-                ))}
-            </ul>
-          </div>
-        
+    <TabView className="assets-tabview">
+      <TabPanel header={t('reactflow:availableAsset')}>
+        <div className="tab-list-items">
+          <ul className="asset-list">
+            {assets.filter(asset => 
+              asset.product_name?.toLowerCase().includes(searchTerm) && 
+              (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
+            ).map((asset, index) => (
+              <li 
+                key={index} 
+                className={`asset-item ${selectedUnallocatedAsset === asset?.id ? 'selected' : ''}`}
+                onClick={() => setSelectedUnallocatedAsset(asset?.id)}
+                draggable={true} 
+                onDragStart={(e) => handleDragStart(e, asset, "asset")}
+              >
+                <i 
+                  className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
+                  style={{ color: getCategoryColor(asset.asset_category) }}
+                />
+                <span className="asset-name">{asset.product_name}</span>
+                <span 
+                  className="category-badge"
+                  style={{ 
+                    backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
+                    color: getCategoryColor(asset.asset_category)
+                  }}
+                >
+                  {asset.asset_category}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </TabPanel>
 
-           
-        </TabPanel>
-        <TabPanel header={t('reactflow:allocatedAsset')} className="-ml-2" >
-            <ul className="-ml-1">
-              {allocatedAssets.filter(asset => 
-                asset.product_name?.toLowerCase().includes(searchTerm) && 
-                (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
-              ).map((asset, index) => (
-               <li 
-                    key={index} 
-                    className={`asset-item ${selectedAllocatedAsset === asset?.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedAllocatedAsset(asset?.id)}
-                    draggable={true} 
-                    onDragStart={(e) => handleDragStart(e, asset, "asset")}
-                  >
-                    <i 
-                      className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
-                      style={{ color: getCategoryColor(asset.asset_category) }}
-                    />
-                    <span className="asset-name">{asset.product_name}</span>
-                    <span 
-                      className="category-badge"
-                      style={{ 
-                        backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
-                        color: getCategoryColor(asset.asset_category)
-                      }}
-                    >
-                      {asset.asset_category}
-                    </span>
-                  </li>
-              ))}
-            </ul>
-        </TabPanel>
-      </TabView>
-    </div>
-    </>
+      <TabPanel header={t('reactflow:allocatedAsset')}>
+        <div className="tab-list-items">
+          <ul className="asset-list">
+            {allocatedAssets.filter(asset => 
+              asset.product_name?.toLowerCase().includes(searchTerm) && 
+              (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
+            ).map((asset, index) => (
+              <li 
+                key={index} 
+                className={`asset-item ${selectedAllocatedAsset === asset?.id ? 'selected' : ''}`}
+                onClick={() => setSelectedAllocatedAsset(asset?.id)}
+                draggable={true} 
+                onDragStart={(e) => handleDragStart(e, asset, "asset")}
+              >
+                <i 
+                  className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
+                  style={{ color: getCategoryColor(asset.asset_category) }}
+                />
+                <span className="asset-name">{asset.product_name}</span>
+                <span 
+                  className="category-badge"
+                  style={{ 
+                    backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
+                    color: getCategoryColor(asset.asset_category)
+                  }}
+                >
+                  {asset.asset_category}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </TabPanel>
+    </TabView>
+  </div>
   );
 };
 

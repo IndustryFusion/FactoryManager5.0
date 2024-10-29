@@ -1,7 +1,7 @@
 /* Custom Node Container */
 .customNode {
   position: relative;
-  background-color: white;
+  background-color: rgba(161, 217, 115, 0.69);
   border-radius: 5px;
   min-width: 150px;
   min-height: 100px;
@@ -9,36 +9,42 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-radius: 13%;
 }
 
 /* Handle Base Styles */
 .customHandle {
-  width: 8px;
-  height: 8px;
-  background-color: #784be8;
-  border: 2px solid #fff;
+  width: 40%;
+  height: 20%;
+  /* background-color: #784be8; */
+  /* border: 2px solid #fff;
   border-radius: 50%;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3); */
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
 
 /* Handle Positioning */
 .customHandle[data-handlepos="top"] {
-  top: -4px !important;
+  top: -10px !important;
   left: 50% !important;
   transform: translate(-50%, 0);
 }
 
 .customHandle[data-handlepos="bottom"] {
-  bottom: -4px !important;
+  bottom: -5px !important;
   left: 50% !important;
   transform: translate(-50%, 0);
 }
 
-/* Edge Styles */
+/* Edge and Connection Styles */
 .react-flow__edge-path {
   stroke: #784be8;
   stroke-width: 2;
   fill: none;
+  z-index: 1000;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
@@ -46,16 +52,39 @@
   stroke-width: 3;
 }
 
-/* Connection Line */
 .react-flow__connection-path {
   stroke: #784be8;
   stroke-width: 2;
   stroke-dasharray: 5 5;
+  margin: 0;
+  padding: 0;
+  z-index: 1000;
 }
 
-/* Handle Interaction States */
+/* Connection Handles */
+.react-flow__handle, 
+.react-flow__handle-bottom, 
+.nodrag, 
+.nopan, 
+.customHandle, 
+.source, 
+.connectable, 
+.connectablestart, 
+.connectableend, 
+.connectionindicator {
+  margin: 0;
+  z-index: 1;
+}
+
+/* Edge Interaction */
+.react-flow__edge-interaction {
+  margin-left: -100px;
+  z-index: 1000;
+}
+
+/* Handle Hover States */
 .customHandle:hover {
-  background-color: #5436a9;
+  background-color: #121212;
   cursor: crosshair;
 }
 
@@ -73,11 +102,62 @@
   font-size: 12px;
   margin-bottom: 8px;
   color: #333;
+  text-align: center;
 }
 
-/* Ensure handles are always visible */
+/* Handle Visibility */
 .react-flow__handle {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: all !important;
+  z-index: 1;
+}
+
+/* Edge Connection */
+.react-flow__edge {
+  pointer-events: all;
+  z-index: 1000;
+}
+
+/* MultiSelect Spacing */
+.customNode .p-multiselect {
+  margin: 10px 0;
+}
+
+/* Edge Layer Management */
+.react-flow__edges {
+  z-index: 1000;
+}
+
+.react-flow__nodes {
+  z-index: 1;
+}
+
+/* Connection Indicator */
+.connectionindicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0e0e0e;
+  border: 2px solid white;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Easy Connect Styles */
+.react-flow__handle-connecting {
+  background: #ff6b6b;
+}
+
+.react-flow__handle-valid {
+  background: #55dd99;
+}
+
+/* Connection Guide Line */
+.react-flow__connection-line {
+  stroke: #784be8;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+  z-index: 1000;
 }

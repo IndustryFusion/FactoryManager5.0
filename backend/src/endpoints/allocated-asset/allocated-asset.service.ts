@@ -301,39 +301,50 @@ async createGlobal(token: string) {
     }
   }
 
-  async updateFormAllocatedAsset(data: any, token: string){
-    try{
+  async updateFormAllocatedAsset(data: any, token: string) {
+    try {
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      for(let key in data){
+      for (let key in data) {
         let id = `${key}:allocated-assets`;
-        let finalAssetData = data[key];
+        // Convert incoming asset IDs to the required format
+        let finalAssetData = data[key].map(assetId => ({ id: assetId }));
+        
         let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
         let response = await axios.get(checkUrl, {
           headers
         });
-        if(response.data.length > 0){
-          let assetData =  response.data[0];
-          //  const formattedAssetArr = assetArr.map(id => ({ id }));
-          let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"].object;
-          if(Array.isArray(getAllocatedAssets)){
+
+        if (response.data.length > 0) {
+          let assetData = response.data[0];
+          
+          // Extract existing assets from the new data structure
+          let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
+          
+          if (Array.isArray(getAllocatedAssets)) {
             finalAssetData = [...finalAssetData, ...getAllocatedAssets];
-          }else{
+          } else if (getAllocatedAssets.id) {
             finalAssetData = [...finalAssetData, getAllocatedAssets];
           }
+          
           await this.remove(id, token);
         }
-        finalAssetData = [...new Set(finalAssetData)];
+
+        // Remove duplicates based on asset ID
+        finalAssetData = [...new Map(finalAssetData.map(item => [item.id, item])).values()];
+
         const finalData = {
           "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
           "id": id,
           "type": "urn-holder",
           "http://www.industry-fusion.org/schema#last-data": {
             type: 'Property',
-            object: finalAssetData
+            value: {
+              "https://industry-fusion.org/base/v0.1/items": finalAssetData
+            }
           }
         };
         await axios.post(this.scorpioUrl, finalData, {headers});
@@ -343,7 +354,7 @@ async createGlobal(token: string) {
         status: 201,
         message: 'Factory Allocated Assets Created successful',
       };
-    }catch(err){
+    } catch (err) {
       return err;
     }
   }

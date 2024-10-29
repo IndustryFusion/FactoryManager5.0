@@ -74,6 +74,12 @@ import {
   getAllConnectedNodesBelow,
 } from "../../utility/react-flow-utility";
 import { HistoryState } from "next/dist/shared/lib/router/router";
+import { handleUpdateRelations } from '@/utility/react-flow';
+interface RelationPayload {
+  [key: string]: {
+    [relationKey: string]: string[];
+  };
+}
 
 const nodeTypes = {
   asset: CustomAssetNode,
@@ -124,6 +130,7 @@ const FlowEditor: React.FC<
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   const isUndoRedoAction = useRef(false);
 
+
    // Initialize history when nodes or edges are first loaded
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
@@ -157,6 +164,53 @@ const addToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
     setHasChanges(true);
   }, [currentHistoryIndex]);
 
+  // Add this utility function to your component
+const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): RelationPayload => {
+  const payload: RelationPayload = {};
+  
+  edges.forEach(edge => {
+    const sourceNode = nodes.find(node => node.id === edge.source);
+    const targetNode = nodes.find(node => node.id === edge.target);
+    
+    // Handle asset -> relation edge
+    if (sourceNode?.data?.type === "asset" && targetNode?.type === "relation") {
+      const assetId = sourceNode.data.id;
+      const relationType = targetNode.id.split('_')[1]; // e.g., "hasFilter" from "relation_hasFilter_001"
+      
+      if (!payload[assetId]) {
+        payload[assetId] = {};
+      }
+      if (!payload[assetId][relationType]) {
+        payload[assetId][relationType] = [];
+      }
+    }
+    
+    // Handle relation -> asset edge
+    if (sourceNode?.type === "relation" && targetNode?.data?.type === "asset") {
+      const relationType = sourceNode.id.split('_')[1];
+      const targetAssetId = targetNode.data.id;
+      
+      // Find the asset that owns this relation
+      const parentEdge = edges.find(e => e.target === sourceNode.id && 
+        nodes.find(n => n.id === e.source)?.data?.type === "asset");
+      
+      if (parentEdge) {
+        const parentNode = nodes.find(n => n.id === parentEdge.source);
+        if (parentNode?.data?.id) {
+          if (!payload[parentNode.data.id]) {
+            payload[parentNode.data.id] = {};
+          }
+          if (!payload[parentNode.data.id][relationType]) {
+            payload[parentNode.data.id][relationType] = [];
+          }
+          payload[parentNode.data.id][relationType].push(targetAssetId);
+        }
+      }
+    }
+  });
+  
+  return payload;
+};
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const createRelationNodeAndEdge = (
     assetId: string,
@@ -443,106 +497,118 @@ const addToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
   // @desc:
   //@GET : the React Flow data for the specified factory ID both mongo
   const getMongoDataFlowEditor = useCallback(async () => {
-    if (factoryId) {
-      try {
-        setIsOperationInProgress(true);
+  if (factoryId) {
+    try {
+      setIsOperationInProgress(true);
 
-        const getReactFlowMongo = await axios.get(
-          `${API_URL}/react-flow/${factoryId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            withCredentials: true,
-          }
+      const getReactFlowMongo = await axios.get(
+        `${API_URL}/react-flow/${factoryId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (
+        getReactFlowMongo.data &&
+        getReactFlowMongo.data.factoryData?.nodes &&
+        getReactFlowMongo.data.factoryData?.edges
+      ) {
+        // Remove duplicate nodes (especially factory nodes)
+        const uniqueNodes = Array.from(
+          new Map(
+            getReactFlowMongo.data.factoryData.nodes.map(node => [node.id, node])
+          ).values()
         );
 
-        if (
-          getReactFlowMongo.data &&
-          getReactFlowMongo.data.factoryData.nodes &&
-          getReactFlowMongo.data.factoryData.edges
-        ) {
-          const dagreGraph = new dagre.graphlib.Graph();
-          dagreGraph.setGraph({
-            ranksep: 30, // @desc: Set vertical spacing between nodes
-            nodesep: 90, // @desc: Set horizontal spacing between nodes
-          });
-          dagreGraph.setDefaultEdgeLabel(() => ({}));
+        const dagreGraph = new dagre.graphlib.Graph();
+        dagreGraph.setGraph({
+          ranksep: 30,
+          nodesep: 90,
+        });
+        dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-          // @desc: Add nodes to the dagre graph
-          getReactFlowMongo.data.factoryData.nodes.forEach((node: Node) => {
-            dagreGraph.setNode(node.id, { width: 100, height: 100 });
-          });
+        // Add nodes to dagre graph
+        uniqueNodes.forEach((node: Node) => {
+          dagreGraph.setNode(node.id, { width: 150, height: 100 });
+        });
 
-          // @desc: Add edges to the dagre graph
-          getReactFlowMongo.data.factoryData.edges.forEach((edge: Edge) => {
-            dagreGraph.setEdge(edge.source, edge.target);
-          });
+        // Add edges to dagre graph
+        getReactFlowMongo.data.factoryData.edges.forEach((edge: Edge) => {
+          dagreGraph.setEdge(edge.source, edge.target);
+        });
 
-          // @desc: Auto layout the nodes using dagre
-          dagre.layout(dagreGraph);
+        // Run the layout
+        dagre.layout(dagreGraph);
 
-          // @desc: Map nodes to the new positions provided by dagre
-          const layoutedNodes = getReactFlowMongo.data.factoryData.nodes.map(
-            (node: Node) => {
-              const nodeWithPosition = dagreGraph.node(node.id);
-              return {
-                ...node,
-                position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
-              };
+        // Get the positioned nodes
+        const layoutedNodes = uniqueNodes.map((node: Node) => {
+          const nodeWithPosition = dagreGraph.node(node.id);
+          return {
+            ...node,
+            position: {
+              x: nodeWithPosition.x,
+              y: nodeWithPosition.y,
+            },
+            type: node.type || node.data?.type, // Ensure type is set correctly
+            data: {
+              ...node.data,
+              type: node.type || node.data?.type, // Ensure type is in data as well
             }
-          );
-            // Initialize history with backend data
-          const initialState: HistoryState = {
-            nodes: layoutedNodes,
-            edges: response.data.factoryData.edges,
-            timestamp: Date.now(),
-            source: 'backend'
           };
-            setHistory([initialState]);
-          setNodes(layoutedNodes);
-          setEdges(getReactFlowMongo.data.factoryData.edges);
+        });
 
-          // @desc: Set the original nodes and edges for comparison
-          setOriginalNodes(layoutedNodes);
-          setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+        // Initialize history with backend data
+        const initialState: HistoryState = {
+          nodes: layoutedNodes,
+          edges: getReactFlowMongo.data.factoryData.edges,
+          timestamp: Date.now(),
+          source: 'backend'
+        };
 
-          setIsRestored(true);
-          const updatedRelationCounts: RelationCounts = {};
+        setHistory([initialState]);
+        setCurrentHistoryIndex(0);
 
-          // @desc: Update relation counts based on the highest count for each relation
-          layoutedNodes.forEach((node: Node) => {
-            if (node.data.type === "relation") {
-              // node IDs follow the format "relation-relationName_count"
-              const match = node.id.match(/relation-(.+)_([0-9]+)/);
-              if (match) {
-                const [, relationName, count] = match;
-                const numericCount = parseInt(count, 10);
-                // Update the relationCounts state with the highest count for each relation
-                if (
-                  !updatedRelationCounts[relationName] ||
-                  updatedRelationCounts[relationName] < numericCount
-                ) {
-                  updatedRelationCounts[relationName] = numericCount;
-                }
+        // Set the states
+        setNodes(layoutedNodes);
+        setEdges(getReactFlowMongo.data.factoryData.edges);
+        setOriginalNodes(layoutedNodes);
+        setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
+        setIsRestored(true);
+
+        // Handle relation counts
+        const updatedRelationCounts: RelationCounts = {};
+        layoutedNodes.forEach((node: Node) => {
+          if (node.data?.type === "relation") {
+            const match = node.id.match(/relation_(.+)_([0-9]+)/);
+            if (match) {
+              const [, relationName, count] = match;
+              const numericCount = parseInt(count, 10);
+              if (!updatedRelationCounts[relationName] || 
+                  updatedRelationCounts[relationName] < numericCount) {
+                updatedRelationCounts[relationName] = numericCount;
               }
             }
-          });
-
-          setRelationCounts(updatedRelationCounts);
-        } else {
-          console.log(
-            "Error from restoreMongoDataFlowEditor function @pages/factory-site/react-flow/flow-editor"
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching flowchart data:", error);
-      } finally {
-        setIsOperationInProgress(false);
+          }
+        });
+        setRelationCounts(updatedRelationCounts);
       }
+    } catch (error) {
+      console.error("Error fetching flowchart data:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error loading flowchart",
+        detail: "Failed to load flowchart data",
+        life: 3000,
+      });
+    } finally {
+      setIsOperationInProgress(false);
     }
-  }, [setNodes, setEdges, factoryId, setRelationCounts]);
+  }
+}, [factoryId, setNodes, setEdges, setRelationCounts, toast]);
 
   // @desc:
   //@PATCH : the React Flow data for the specified factory ID ( both mongo and scorpio)
@@ -905,6 +971,14 @@ const addToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
       const data = getReactFlowMongo.data;
       const isEmpty =
         !data || Object.keys(data).length === 0 || !data.factoryData;
+
+           // Prepare the relation payload
+      const relationPayload = transformEdgesToRelationPayload(edges, nodes);
+      console.log("relationPayload",relationPayload)
+    
+      if (Object.keys(relationPayload).length > 0) {
+        await handleUpdateRelations(relationPayload);
+     }
 
       if (isEmpty) {
         await saveMongoAndScorpio();

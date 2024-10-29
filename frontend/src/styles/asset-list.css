@@ -6,7 +6,7 @@
 }
 
 .tab-list-items {
-  height: calc(100vh - 180px); /* Increased from previous value */
+  height: calc(80vh - 180px); /* Increased from previous value */
   overflow-y: auto;
 }
 
@@ -45,7 +45,7 @@
 /* Tab Panels Container */
 .p-tabview .p-tabview-panels {
   padding: 1.5rem 1.5rem 1.5rem 0.5rem;
-  height: calc(100vh - 180px); /* Increased from 280px */
+  height: calc(85vh - 180px); /* Increased from 280px */
   overflow-y: auto;
   background-color: #f8fafc;
 }

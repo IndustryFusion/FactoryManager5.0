@@ -1,6 +1,163 @@
-.p-dialog-title{
-     padding-left: 2%;      
+/* Dialog and Text Styles */
+.p-dialog-title {
+  padding-left: 2%;
 }
+
 .bold-text {
-    font-weight: bold;
+  font-weight: bold;
+}
+
+/* Edge Styles */
+.react-flow__edge-interaction {
+  stroke: #784be8;
+  stroke-width: 2;
+  pointer-events: all;
+  z-index: 500;
+}
+
+.react-flow__edge {
+  pointer-events: stroke;
+  z-index: 500;
+}
+
+.react-flow__edge-path {
+  stroke: #784be8;
+  stroke-width: 2;
+  fill: none;
+  z-index: 500;
+}
+
+.react-flow__connection-path {
+  stroke: #784be8;
+  stroke-width: 2;
+  z-index: 500;
+}
+
+/* Handle Styles */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #784be8;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: absolute;
+  pointer-events: all;
+  transform-origin: center;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Connection Indicator */
+.connectionindicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0b0b0b;
+  border: 2px solid white;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  margin-left: -10px;
+  /* margin-top: 4px; */
+  z-index: 1;
+}
+
+/* Handle Positioning */
+.react-flow__handle-top {
+  top: 1px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.react-flow__handle-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+/* Edge Interaction Area */
+.react-flow__edge-interaction-wrap {
+  position: absolute;
+  pointer-events: all;
+  min-width: 30px;
+  min-height: 20px;
+  margin-left: -90px;
+}
+
+/* Connection Line */
+.react-flow__connection-line {
+  stroke: #784be8;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Layer Organization */
+.react-flow__edges {
+  z-index: 500;
+}
+
+.react-flow__nodes {
+  z-index: 1;
+  pointer-events: all !important;
+}
+
+/* Node specific styles to ensure draggability */
+.react-flow__node {
+  z-index: 1;
+  pointer-events: all !important;
+  cursor: grab;
+}
+
+.react-flow__node:active {
+  cursor: grabbing;
+}
+
+/* Viewport and Pane */
+.react-flow__viewport {
+  z-index: 0;
+}
+
+.react-flow__pane {
+  z-index: 1;
+  pointer-events: all;
+}
+
+/* Selection and Interaction States */
+.react-flow__selection {
+  z-index: 600;
+}
+
+.react-flow__nodesselection-rect {
+  pointer-events: none;
+  z-index: 2;
+}
+
+.react-flow__edge.selected {
+  z-index: 501;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #00ff00;
+  stroke-width: 3;
+}
+
+/* Edge Text Labels */
+.react-flow__edge-textwrapper {
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* Additional pointer-event fixes */
+.react-flow__nodes-selection {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.react-flow__edges-selection {
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Ensure node dragging works */
+.react-flow__node-dragging {
+  z-index: 1000;
 }

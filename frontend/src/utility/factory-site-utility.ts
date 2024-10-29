@@ -243,7 +243,7 @@ export const getShopFloors = async (factoryId: string) => {
 
 export const getshopFloorById = async (factoryId: string) => {
 
-  const response = await axios.get(`${API_URL}/shop-floor/`, {
+  const response = await axios.get(`${API_URL}/shop-floor/${factoryId}`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -252,6 +252,7 @@ export const getshopFloorById = async (factoryId: string) => {
 
     params: { id: factoryId },
   });
+  console.log("response 5545454",response)
   return response.data;
 };
 
