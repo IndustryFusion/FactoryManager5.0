@@ -131,7 +131,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     }
   };
 
-const fetchShopFloors = async (factoryId: string) => {
+  const fetchShopFloors = async (factoryId: string) => {
   try {
     const factoryDetails = await getshopFloorById(factoryId);
     console.log("factoryDetails",factoryDetails)
@@ -153,6 +153,7 @@ const fetchShopFloors = async (factoryId: string) => {
   }
 };
 
+console.log("shopFloor 111", shopFloors)
 
   useEffect(() => {
     filterShopFloors();

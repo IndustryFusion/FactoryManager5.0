@@ -38,16 +38,21 @@ export class ShopFloorService {
       };
 
       let checkUrl = `${this.scorpioUrl}?type=${data.type}&q=http://www.industry-fusion.org/schema%23floor_name==%22${data.properties['floor_name']}%22`;
+      console.log("checkUrl",checkUrl)
       let shopFloorData = await axios.get(checkUrl, { headers });
+      console.log("shopFloorData",shopFloorData)
 
       if(!shopFloorData.data.length){
+        console.log("shopFloorData",shopFloorData)
         //fetch the last urn from scorpio and create a new urn
         const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store`;
+        console.log("fetchLastUrnUrl",fetchLastUrnUrl)
         
         let getLastUrn = await axios.get(fetchLastUrnUrl, {
           headers,
         });
         getLastUrn = getLastUrn.data;
+        console.log("getLastUrn.data",getLastUrn)
         let newUrn = '',
           lastUrn = {},
           lastUrnKey = '';

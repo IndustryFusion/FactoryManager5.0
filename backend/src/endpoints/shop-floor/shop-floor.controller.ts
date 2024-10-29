@@ -51,15 +51,18 @@ export class ShopFloorController {
             type: 'Relationship',
             object: createResponse.id
           }
+          console.log("object ",obj)
           if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
             shopFloorData = [...shopFloorData, obj];
           } else if(shopFloorData.object.includes('urn')) {
             shopFloorData = [shopFloorData, obj]
           } else {
             shopFloorData = [obj];
-          }
           
+          }
+          console.log("shopFloorData",shopFloorData)
           data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
+          console.log("data delete",data)
           const deleteResponse = await this.factorySiteService.removeScript(factoryId, token);
           if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
             const response = await axios.post(this.scorpioUrl, data, { headers });

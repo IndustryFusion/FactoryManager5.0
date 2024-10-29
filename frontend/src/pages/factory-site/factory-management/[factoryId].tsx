@@ -57,6 +57,7 @@ const ShopFloorManager: React.FC = () => {
     const fetchShopFloorById = async (factoryId: string) => {
       try {
         const details = await getShopFloors(factoryId);
+        console.log("details",details)
         setFactoryDetails(details);
       } catch (error) {
         console.error("Failed to fetch factory details", error);
@@ -66,7 +67,8 @@ const ShopFloorManager: React.FC = () => {
     if (router.isReady) {
       const { factoryId } = router.query;
       if (typeof factoryId === 'string') {
-        fetchShopFloorById(factoryId);
+        const data = fetchShopFloorById(factoryId);
+        console.log("data",data)
       }
     }
   }, [factoryId, router.isReady]);

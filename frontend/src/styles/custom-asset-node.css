@@ -1,17 +1,18 @@
 /* Custom Node Container */
 .customNode {
   position: relative;
-  background-color: rgba(161, 217, 115, 0.69);
-  border-radius: 5px;
-  min-width: 150px;
+  background-color: #caf1d8;
+  width: 120%;
   min-height: 100px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-radius: 13%;
+  border-radius: 16px;
 }
-
+ .p-inputwrapper-filled{
+  border-radius: 15px;
+ }
 /* Handle Base Styles */
 .customHandle {
   width: 40%;
@@ -36,33 +37,18 @@
   height: 30%;
   border: none;
 }
-
+.p-multiselect-trigger{
+  border-radius: 15px;
+}
+.p-multiselect-chip{
+  border-radius: 15px;
+}
 .customHandle[data-handlepos="bottom"] {
-  bottom: -5px !important;
-  left: 50% !important;
+  bottom: -6px !important;
+  left: 95px;
   transform: translate(-50%, 0);
-}
-
-/* Edge and Connection Styles */
-.react-flow__edge-path {
-  stroke: #784be8;
-  stroke-width: 2;
-  fill: none;
-  z-index: 1000;
-}
-
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: #00ff00;
-  stroke-width: 3;
-}
-
-.react-flow__connection-path {
-  stroke: #784be8;
-  stroke-width: 2;
-  stroke-dasharray: 5 5;
-  margin: 0;
-  padding: 0;
-  z-index: 1000;
+  width: 13px;
+  height: 13px;
 }
 
 /* Connection Handles */

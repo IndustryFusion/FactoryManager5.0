@@ -7,40 +7,15 @@
   font-weight: bold;
 }
 
-/* Edge Styles */
-.react-flow__edge-interaction {
-  stroke: #784be8;
-  stroke-width: 2;
-  pointer-events: all;
-  z-index: 300; 
-}
 
 .react-flow__edge {
   pointer-events: stroke;
   z-index: 300;
 }
 
-.react-flow__edge-path {
-  stroke: #784be8;
-  stroke-width: 2;
-  fill: none;
-  z-index: 300; 
-}
-
-.react-flow__connection-path {
-  stroke: #784be8;
-  stroke-width: 2;
-  z-index: 300;
-}
 
 .react-flow__handle {
   z-index: 500; 
-}
-.react-flow__edge-path,
-.react-flow__connection-path {
-  stroke: #784be8;
-  stroke-width: 3;
-  fill: none;
 }
 
 /* Connection Indicator */
@@ -65,30 +40,17 @@
 
 .react-flow__handle-bottom {
   bottom: 0;
-  left: 45%;
+  left: 55%;
   transform: translate(-50%, 50%);
 }
 
-/* Edge Interaction Area */
-.react-flow__edge-interaction-wrap {
-  position: absolute;
-  pointer-events: all;
-  min-width: 30px;
-  min-height: 20px;
-  margin-left: -90px;
-}
 
-/* Connection Line */
-.react-flow__connection-line {
-  stroke: #784be8;
-  stroke-width: 2;
-  fill: none;
-}
+
 
 /* Layer Organization */
 .react-flow__edges {
   z-index: 300; 
-
+}
 .react-flow__nodes {
   z-index: 500; 
   pointer-events: all !important;
@@ -129,10 +91,6 @@
   z-index: 501;
 }
 
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: #00ff00;
-  stroke-width: 3;
-}
 
 /* Edge Text Labels */
 .react-flow__edge-textwrapper {
@@ -154,5 +112,4 @@
 /* Ensure node dragging works */
 .react-flow__node-dragging {
   z-index: 1000;
-}
 }

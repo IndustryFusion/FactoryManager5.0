@@ -85,14 +85,6 @@ const nodeTypes = {
   asset: CustomAssetNode,
 };
 
-const defaultEdgeOptions = {
-  animated: false,
-  style: {
-    stroke: '#784be8',
-    strokeWidth: 2,
-  },
-};
-
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
   FlowEditorProps & { deletedShopFloors: string[] }
@@ -1693,7 +1685,6 @@ const handleBackspacePress = useCallback(() => {
               onNodeClick={onElementClick}
               nodeTypes={nodeTypes}
               deleteKeyCode={null}
-              defaultEdgeOptions={defaultEdgeOptions}
             >
               <MiniMap />
               <Controls />
