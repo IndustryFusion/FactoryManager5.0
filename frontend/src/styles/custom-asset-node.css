@@ -1,42 +1,143 @@
-.customNodeBody {
-  width: 150px;
-  height: 80px;
-  border: 3px solid black;
+/* Custom Node Container */
+.customNode {
   position: relative;
-  overflow: hidden;
-  border-radius: 10px;
+  background-color: #caf1d8;
+  width: 120%;
+  min-height: 100px;
+  padding: 10px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+}
+ .p-inputwrapper-filled{
+  border-radius: 15px;
+ }
+/* Handle Base Styles */
+.customHandle {
+  width: 40%;
+  height: 20%;
+  /* background-color: #784be8; */
+  /* border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3); */
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
 
-.customNode:before {
-  content: '';
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  height: 20px;
-  width: 85%;
+/* Handle Positioning */
+.customHandle[data-handlepos="top"] {
+  top: -10px !important;
+  left: 50% !important;
+  background-color: transparent;
   transform: translate(-50%, 0);
-  background: #caf1d8;
-  z-index: 1000;
-  line-height: 1;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 9px;
-
+  width: 30%;
+  height: 30%;
+  border: none;
+}
+.p-multiselect-trigger{
+  border-radius: 15px;
+}
+.p-multiselect-chip{
+  border-radius: 15px;
+}
+.customHandle[data-handlepos="bottom"] {
+  bottom: -6px !important;
+  left: 95px;
+  transform: translate(-50%, 0);
+  width: 13px;
+  height: 13px;
 }
 
-div.customHandle {
-  width: 100%;
-  height: 60%;
-  background: blue;
+/* Connection Handles */
+.react-flow__handle, 
+.react-flow__handle-bottom, 
+.nodrag, 
+.nopan, 
+.customHandle, 
+.source, 
+.connectable, 
+.connectablestart, 
+.connectableend, 
+.connectionindicator {
+  margin: 0;
+  z-index: 1;
+}
+
+/* Edge Interaction */
+.react-flow__edge-interaction {
+  margin-left: -100px;
+  z-index: 1000;
+}
+
+/* MultiSelect Panel */
+.custom-multiselect-panel {
+  z-index: 1000;
+}
+
+/* Node Label */
+.node-label {
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: #333;
+  text-align: center;
+}
+
+/* Handle Visibility */
+.react-flow__handle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
+  z-index: 1;
+}
+
+/* Edge Connection */
+.react-flow__edge {
+  pointer-events: all;
+  z-index: 1000;
+}
+
+/* MultiSelect Spacing */
+.customNode .p-multiselect {
+  margin: 10px 0;
+}
+
+/* Edge Layer Management */
+.react-flow__edges {
+  z-index: 1000;
+}
+
+.react-flow__nodes {
+  z-index: 1;
+}
+
+/* Connection Indicator */
+.connectionindicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0e0e0e;
+  border: 2px solid white;
   position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 0;
-  transform: none;
-  border: none;
-  opacity: 0;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Easy Connect Styles */
+.react-flow__handle-connecting {
+  background: #ff6b6b;
+}
+
+.react-flow__handle-valid {
+  background: #55dd99;
+}
+
+/* Connection Guide Line */
+.react-flow__connection-line {
+  stroke: #784be8;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+  z-index: 1000;
 }

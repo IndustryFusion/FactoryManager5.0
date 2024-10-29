@@ -1,14 +1,3 @@
-@keyframes colorDip {
-  0%, 100% {
-    transform: translateY(-50%) scale(1);
-    background-color: #164B60; /* Dark blue */
-  }
-  50% {
-    transform: translateY(-50%) scale(0.8);
-    background-color: #dce2e7; /* Light blue */
-  }
-}
-
 
 .large-button {
   padding: 12px 24px; 
@@ -23,3 +12,241 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
+/* Search Container Styling */
+.p-input-icon-left {
+  position: relative;
+  width: 100%;
+  margin: 15px 0;
+}
+
+/* Search Input Styling */
+.p-input-icon-left .p-inputtext {
+  padding: 12px 12px 12px 40px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.p-input-icon-left .p-inputtext:hover {
+  background-color: #fff;
+  border-color: #6366f1;
+}
+
+/* Search Icon Styling */
+.p-input-icon-left i.pi-search {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.p-input-icon-left:hover i.pi-search {
+  color: #6366f1;
+}
+
+/* When input is focused, change icon color */
+.p-input-icon-left .p-inputtext:focus + i.pi-search {
+  color: #6366f1;
+}
+
+.search-icon{
+  margin-top: 0.5%;
+}
+/* Placeholder Styling */
+.p-input-icon-left .p-inputtext::placeholder {
+  color: #adb5bd;
+  font-weight: 400;
+}
+
+/* Animation for focus */
+@keyframes searchFocus {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+.p-input-icon-left .p-inputtext:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  background-color: #fff;
+}
+
+/* Button animations */
+.bold-button {
+  font-size: 16px;
+  padding: 10px 15px;
+  min-width: 100px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.bold-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Search container wrapper */
+.search-container {
+  position: relative;
+  margin: 20px 0;
+  padding: 0 15px;
+}
+
+/* Input group styling */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin-left: -20px;
+}
+/* Existing styles remain the same until the list styles */
+
+/* List Container Styling */
+.list-disc {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* List Item Styling */
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 8px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.list-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.list-item.selected {
+  background-color: #f8fafc;
+  border-color: #6366f1;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15);
+}
+
+/* Floor Icon Styling */
+.floor-icon {
+  font-size: 1.25rem;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin-right: 12px;
+  background-color: rgba(99, 102, 241, 0.1);
+  transition: all 0.2s ease;
+}
+
+.list-item:hover .floor-icon {
+  transform: scale(1.1);
+}
+
+/* Floor Name Styling */
+.floor-name {
+  flex: 1;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.95rem;
+  margin: 0 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Floor Type Badge Styling */
+.floor-type-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.025em;
+  text-transform: capitalize;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Styling Enhancement */
+.card-full-height {
+  height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* List Container Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+ul {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Empty State Styling */
+.empty-list {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .list-item {
+    padding: 10px 12px;
+    margin: 6px 8px;
+  }
+
+  .floor-icon {
+    min-width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .floor-name {
+    font-size: 0.875rem;
+  }
+
+  .floor-type-badge {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+}

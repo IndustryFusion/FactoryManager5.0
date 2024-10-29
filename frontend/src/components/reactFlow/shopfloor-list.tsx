@@ -38,6 +38,63 @@ interface ShopfloorListProps {
   setShopfloorProp?: {};
   formViewPage?:boolean
 }
+// Type guard to check if value is a string
+const isString = (value: any): value is string => {
+  return typeof value === 'string';
+};
+
+// Function to safely convert floor type to string
+const normalizeFloorType = (floorType: any): string => {
+  if (!floorType) return '';
+  if (isString(floorType)) return floorType;
+  if (typeof floorType === 'object' && floorType.value) return String(floorType.value);
+  return String(floorType);
+};
+
+const getFloorTypeIcon = (floorType?: any): string => {
+  const normalizedType = normalizeFloorType(floorType);
+  
+  if (!normalizedType) return 'pi pi-building';
+  
+  switch(normalizedType.toLowerCase()) {
+    case 'production':
+      return 'pi pi-cog';
+    case 'pre-production':
+    case 'pre-prodcution': // handling typo in your data
+      return 'pi pi-sync';
+    case 'storage and warehousing':
+      return 'pi pi-box';
+    case 'quality control':
+      return 'pi pi-check-circle';
+    case 'maintenance area':
+      return 'pi pi-wrench';
+    default:
+      return 'pi pi-building';
+  }
+};
+
+const getFloorTypeColor = (floorType?: any): string => {
+  const normalizedType = normalizeFloorType(floorType);
+  
+  if (!normalizedType) return '#64748b';
+
+  switch(normalizedType.toLowerCase()) {
+    case 'production':
+      return '#6366f1'; // indigo
+    case 'pre-production':
+    case 'pre-prodcution':
+      return '#22c55e'; // green
+    case 'storage and warehousing':
+      return '#f59e0b'; // amber
+    case 'quality control':
+      return '#3b82f6'; // blue
+    case 'maintenance area':
+      return '#8b5cf6'; // purple
+    default:
+      return '#64748b'; // slate
+  }
+};
+
 const ShopFloorList: React.FC<ShopfloorListProps> = ({
   factoryId,
   onShopFloorDeleted,
@@ -75,26 +132,28 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   };
 
   const fetchShopFloors = async (factoryId: string) => {
-    try {
-      const factoryDetails = await getshopFloorById(factoryId);
-      setShopFloors(
-        factoryDetails.map((floor: ShopFloor) => ({
-          id: floor.id,
-          floorName:
-            floor["http://www.industry-fusion.org/schema#floor_name"].value,
-        }))
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Failed to fetch shop floors:", error);
-        setError(error.message);
-      } else {
-        console.error("Failed to fetch shop floors:", error);
-        setError("An error occurred");
-      }
+  try {
+    const factoryDetails = await getshopFloorById(factoryId);
+    console.log("factoryDetails",factoryDetails)
+    setShopFloors(
+      factoryDetails.map((floor: any) => ({
+        id: floor.id,
+        floorName: floor["http://www.industry-fusion.org/schema#floor_name"]?.value || "Unnamed Floor",
+        type_of_floor: floor["http://www.industry-fusion.org/schema#type_of_floor"]?.value || "Unknown"
+      }))
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Failed to fetch shop floors:", error);
+      setError(error.message);
+    } else {
+      console.error("Failed to fetch shop floors:", error);
+      setError("An error occurred");
     }
-  };
+  }
+};
 
+console.log("shopFloor 111", shopFloors)
 
   useEffect(() => {
     filterShopFloors();
@@ -208,19 +267,20 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         <Toast ref={toast} style={{ top: '60px' }} />
         <div>
           <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
-          <div className="p-input-icon-left flex align-items-center ml-4">
-            <i className="pi pi-search" />
-            <InputText
-              value={searchValue}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setSearchValue(e.target.value)
-              }
-              placeholder={t('placeholder:searchByName')}
-              style={{ width: "95%", marginRight: "1rem" }}
-              className=""
-            >
-              <i className="pi pi-search" slot="prefix"></i>
-            </InputText>
+          <div className="search-container">
+            <div className="input-group">
+              <div className="p-input-icon-left flex align-items-center ml-4">
+                <i className="pi pi-search search-icon" />
+                <InputText
+                  value={searchValue}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setSearchValue(e.target.value)
+                  }
+                  placeholder={t('placeholder:searchByName')}
+                  className="search-input"
+                />
+              </div>
+            </div>
           </div>
           <div className="form-btn-container mb-2 flex  ml-2 mt-4">
 
@@ -251,8 +311,12 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               onClick={confirmDelete}
             />
           </div>
-          <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: "10%" }}>
-            {filteredShopFloors.map((floor, index) => (
+          <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: "10%" , marginLeft:"-10%"}}>
+          {filteredShopFloors.map((floor, index) => {
+            // Get the actual floor type from the mapped data
+            const floorType = floor.type_of_floor || "No Type Set";
+            
+            return (
               <li
                 key={floor.id}
                 draggable
@@ -261,27 +325,44 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                   if (index !== 0) {
                     setSelectedShopFloorId(null);
                   }
-                 setSelectedShopFloorId(floor.id);
-                 setShopFloorValue({ id: floor.id, floorName: floor.floorName });
+                  setSelectedShopFloorId(floor.id);
+                  setShopFloorValue({ id: floor.id, floorName: floor.floorName });
                 }}
+                className="ml-3 mb-3 list-item flex items-center gap-3 p-3 rounded-lg transition-all duration-300"
                 style={{
                   cursor: "pointer",
-                  backgroundColor:
-                    selectedShopFloorId === floor.id
+                  backgroundColor: selectedShopFloorId === floor.id
+                    ? "#e3e3e3a6"
+                    : index === 0 && !selectedShopFloorId
                       ? "#e3e3e3a6"
-                      : index === 0 && !selectedShopFloorId
-                        ? "#e3e3e3a6"
-                        : "#fff",
-                  position: "relative",
-                  paddingLeft: "20px",
-                  maxWidth: "93%"
+                      : "#fff",
+                  maxWidth: "93%",
+                  border: "1px solid #e2e8f0",
                 }}
-                className="ml-3 mb-3 list-item"
               >
-                {floor.floorName}
+                <i 
+                  className={`${getFloorTypeIcon(floorType)} floor-icon`}
+                  style={{ 
+                    color: getFloorTypeColor(floorType),
+                    fontSize: '1.2rem'
+                  }}
+                />
+                <span className="floor-name flex-1">
+                  {floor.floorName}
+                </span>
+                <span 
+                  className="floor-type-badge text-xs px-2 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: `${getFloorTypeColor(floorType)}20`,
+                    color: getFloorTypeColor(floorType)
+                  }}
+                >
+                  {floorType}
+                </span>
               </li>
-            ))}
-          </ul>
+            );
+          })}
+        </ul>
         </div>
       </Card>
       {isEdit && (

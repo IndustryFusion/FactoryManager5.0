@@ -1,5 +1,5 @@
 {
     "switchView": "Switch View",
-    "unAllocatedAsset": "Unallocated Assets",
+    "availableAsset": "Available Assets",
     "allocatedAsset": "Allocated Assets"
 }

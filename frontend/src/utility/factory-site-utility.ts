@@ -252,6 +252,7 @@ export const getshopFloorById = async (factoryId: string) => {
 
     params: { id: factoryId },
   });
+  console.log("response 5545454",response)
   return response.data;
 };
 
@@ -521,7 +522,7 @@ export const saveFlowchartData = async (
 
 export const getAssetRelationById = async (assetId: string) => {
   try {
-    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+    const response = await axios.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -539,7 +540,7 @@ export const getAssetRelationById = async (assetId: string) => {
 
 export const getAssetById = async(assetId: string) =>{
   try {
-    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+    const response = await axios.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
