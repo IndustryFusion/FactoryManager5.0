@@ -8,7 +8,7 @@ interface Optiontype {
   value: string;
 }
 
-const BindingHeader = () => {
+const ContractHeader = () => {
   const router = useRouter();
   const sortOptions = [
     { label: "Asc", value: "contract_name" },
@@ -17,8 +17,6 @@ const BindingHeader = () => {
   const [selectedSortOption, setSelectedSortOption] = useState(
     sortOptions[0].value
   );
-
- 
 
   const handleSortChange = (e: { value: string }) => {
     setSelectedSortOption(e.value);
@@ -78,11 +76,10 @@ const BindingHeader = () => {
               />
             </div>
           </div>
-        
         </div>
       </div>
     </>
   );
 };
 
-export default BindingHeader;
+export default ContractHeader;

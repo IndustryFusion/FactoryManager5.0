@@ -231,33 +231,21 @@ export class AssetService {
       
       
       const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
-      const result = [];
       for(let i = 0; i < response.data.length; i++) {
-        const assetId = response.data[i].asset_ifric_id;
+        const assetId = response.data[i].id;
         try {
-          const checkAssetResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
-          if(checkAssetResponse.data.status != 201){
-            const scorpioResponse = await axios.post(this.scorpioUrl, response.data[i], {headers});
-            if(scorpioResponse.data.status!=201) {
-                console.log("Fcatory Asset Post error", assetId, scorpioResponse.data)
-            }
-          } else {
-              console.log("Asset arealdy present", checkAssetResponse.data);
-          }
-          
+          await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
         } catch(err) {
-          if(err.status===404){
-            const scorpioResponse = await axios.post(this.scorpioUrl, response.data[i], {headers});
+          if(err.response.status === 404) {
+            await axios.post(this.scorpioUrl, response.data[i], {headers});
           }
-            
-          console.log("Fcatory Asset Post error", assetId, err)
           continue;
         }
       }
       return {
         success: true,
-          status: 201,
-          message: 'Scorpio Updated',
+        status: 201,
+        message: 'Scorpio Updated',
       };
     } catch(err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);

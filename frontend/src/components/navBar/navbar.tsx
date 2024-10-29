@@ -164,6 +164,35 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         createLastItem("Pick List")
       ];
     }
+
+    if(fullPath.startsWith('/binding/create')){
+    return[
+      { 
+        label: "Binding Request", 
+        url: "/binding-request"
+      },
+      createLastItem("Create Binding")
+    ]
+    }
+
+    if(fullPath.startsWith('/binding/')){
+      return[
+        { 
+          label: "Binding Manager", 
+          url: "/binding-manager"
+        },
+        createLastItem("Binding")
+      ]
+      }
+      if(fullPath.startsWith('/contract/')){
+        return[
+          { 
+            label: "Contract Manager", 
+            url: "/contract-manager"
+          },
+          createLastItem("Contract")
+        ]
+        }
     // Route-specific breadcrumbs
     const routeBreadcrumbs: Record<string, BreadcrumbItem[]> = {
       "/factory-site/factory-overview": [], // No breadcrumb for this route
@@ -192,7 +221,11 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       "/create-binding": [
         { label: "Binding Manager", url: "/binding-manager" },
         createLastItem("Create Binding")
+      ],
+      "/binding-request": [
+        { label: "Binding Request", url: "#" }
       ]
+
     };
 
     // Get the matching route configuration

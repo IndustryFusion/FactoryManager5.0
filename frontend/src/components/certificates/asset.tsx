@@ -157,8 +157,8 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
       <div className="flex justify-content-between align-items-center">
         <div className="flex" style={{ gap: "4rem" }}>
           <div className="certificate-input-container">
-            <div className="certificate-label-row">
-              <label className="certificate-label-text" htmlFor="assetID">
+            <div className="certificate-label-row" style={{marginBottom:"0.5rem"}}>
+              <label className="certificate-label-text " htmlFor="assetID">
                 Asset IFRIC ID
               </label>
               <Button
@@ -192,7 +192,7 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
               className="flex align-items-center gap-2"
               style={{ position: "relative" }}
             >
-              <FaRegCalendar className="mr-2 calendar-icon" />
+              <FaRegCalendar className="mr-2 calendar-asset-icon" />
               <Calendar
                 className="mb-2"
                 id="calendar-24h"

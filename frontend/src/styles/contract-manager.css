@@ -158,13 +158,13 @@ margin-left: -0.5rem;
 overflow: hidden;
 color: #fff;
 }
-.user-one {
+.user-1 {
 background-color: #2b2b2b;
 }
-.user-two {
+.user-2 {
 background-color: #015001;
 }
-.user-three {
+.user-3 {
 background-color: #040448;
 }
 .contract-header-container {
@@ -172,6 +172,7 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 margin-top: 1rem;
+margin-right: 3rem;
 }
 .folder-heading .pi-folder {
 font-size: 22px;
@@ -225,6 +226,9 @@ width: 80%;
 .contract-tabs.p-tabview .p-tabview-nav-content {
 border-bottom: 2px solid #e1e8ed;
 }
+.sort-dropdown .p-inputtext {
+  padding: 0.5rem;
+}
 .main_content_wrapper {
   height: 100vh;
   position: relative;
@@ -244,4 +248,8 @@ border-bottom: 2px solid #e1e8ed;
 }
 .not-found-text{
   color: #95989a;
+}
+.heading-folder-text,
+.heading-file-text{
+  font-size: 22px;
 }

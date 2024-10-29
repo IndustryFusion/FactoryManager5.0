@@ -1,58 +1,39 @@
 import Navbar from "@/components/navBar/navbar";
-import Sidebar from "@/components/navBar/sidebar";
 import React, { useEffect, useState, useRef } from "react";
-import "../styles/contract-manager.css";
+import "../styles/binding-request.css";
+import ContractHeader from "@/components/bindingRequest/binding-header";
 import { InputText } from "primereact/inputtext";
 import { Tree } from "primereact/tree";
 import { NodeService } from "@/service/NodeService";
 import { Checkbox } from "primereact/checkbox";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getBindings, getContractData } from "@/utility/bindings";
+import { getContracts } from "@/utility/contract";
+import ContractCard from "@/components/bindingRequest/binding-file";
 import { IoArrowBack } from "react-icons/io5";
-import ContractFolders from "@/components/contractManager/contract-folders";
+import ContractFolders from "@/components/bindingRequest/binding-folders";
 import { Toast, ToastMessage } from "primereact/toast";
 import axios from "axios";
-import { fetchBindingsRedux } from "@/redux/binding/bindingsSlice";
+import { fetchContractsRedux } from "@/redux/contract/contractSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/router";
-import BindingCard from "@/components/contractManager/binding-card";
-import BindingHeader from "@/components/contractManager/binding-header";
+import Sidebar from '@/components/navBar/sidebar';
 
-interface Binding {
-  _id: string;
-  contract_id: string;
-  contract_binding_ifric_id: string;
-  asset_ifric_id: string;
-  provider_company_name: string;
-  data_provider_company_ifric_id: string;
-  contract_binding_valid_till: string;
-  asset_certificate_data: string;
-  provider_company_certificate_data: string;
-  meta_data: {
-      created_at: string;
-      created_user: string;
-      last_updated_at: string;
-  };
-  __v: number;
-}
-
-const BindingManager = () => {
+const ContractManager = () => {
   const [nodes, setNodes] = useState([]);
   const [companyIfricId, setCompanyIfricId] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
   // const [contractsData, setContractsData] = useState([]);
-  const [predictiveFilteredContractsData, setPredictiveFilteredContractsData] = useState([]);
+  const [predictiveFilteredContractsData, setpredictiveFilteredContractsData] =
+    useState([]);
   const [filterContracts, setFilterContracts] = useState(false);
-  const [insuranceFilterContracts, setInsuranceFilterContracts] =useState(false);
+  const [insuranceFilterContracts, setInsuranceFilterContracts] =
+    useState(false);
   const [contractsOriginal, setContractsOriginal] = useState(true);
-  const [showAll,setShowAll] = useState(true);
   const [loading, setLoading] = useState(false);
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
-  const router = useRouter();
 
-  // Access the bindings data from Redux
-  const bindingsData = useSelector((state: any) => state.bindings.bindings);
+  // Access the contracts data from Redux
+  const contractsData = useSelector((state: any) => state.contracts.contracts);
 
   const showToast = (
     severity: ToastMessage["severity"],
@@ -75,10 +56,7 @@ const BindingManager = () => {
     try {
     const details = await getAccessGroup();
     setCompanyIfricId(details.company_ifric_id);
-    const ifricId = details.company_ifric_id;
-    if (ifricId) {
-      dispatch(fetchBindingsRedux(ifricId));
-    }
+    dispatch(fetchContractsRedux(companyIfricId));
     } catch(error: any) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
@@ -89,38 +67,22 @@ const BindingManager = () => {
       }
     }
   };
-
   useEffect(() => {
     getCompanyId();
-  },[companyIfricId]);
+  });
 
-
-  const fetchAndFilterContracts = async (bindings:Binding[]) => {
-    const predictiveContracts:Binding[] = [];
-
-    for (const binding of bindings) {
-        const contractId = binding.contract_id;
-        try {
-            const response = await getContractData(contractId);
-            const [contract] = response;
-            console.log("predictiveContracts each", contract);
-
-            if (contract?.contract_type?.trim() === "https://industry-fusion.org/contracts/v0.1/predictiveMaintenanceLaserCutter") {
-                predictiveContracts.push(binding);
-            }
-        } catch (error) {
-            console.error(`Error fetching contract for ID ${contractId}:`, error);
-        }
-    }
-    setPredictiveFilteredContractsData(predictiveContracts);
-};
 
 
   const handleFilterContracts = () => {
     setLoading(true);
 
     setTimeout(() => {
-      fetchAndFilterContracts(bindingsData)
+      const filteredData = contractsData.filter(
+        (contract) =>
+          contract?.contract_type?.trim() ===
+          "https://industry-fusion.org/contracts/v0.1/predictiveMaintenanceLaserCutter"
+      );
+      setpredictiveFilteredContractsData(filteredData);
       setLoading(false);
     }, 2000); // Adjust the delay time in milliseconds (e.g., 1000 = 1 second)
   };
@@ -131,19 +93,14 @@ const BindingManager = () => {
     }
   }, [filterContracts]);
 
-  const handleCreateClick = () => {
-    router.push("/create-binding");
-  };
-
-
   return (
     <>
       <div className="flex">
-      <Sidebar />
         <Toast ref={toast} />
+          <Sidebar />
         <div className="main_content_wrapper">
           <div className="navbar_wrapper">
-            <Navbar navHeader="Binding Manager" />
+            <Navbar navHeader="Binding Request" />
             <div className="flex gap-4 contract-container">
               <div className="contract-left-container">
                 <div className="contract-search-container">
@@ -161,7 +118,7 @@ const BindingManager = () => {
                 </div>
                 <div className="mt-6">
                   <h3 className="m-0 ml-1 folder-heading">Folders</h3>
-                  <div className=" flex mt-1 contracts-tree">
+                  <div className="card flex mt-1 contracts-tree">
                     <Tree
                       value={nodes}
                       selectionMode="single"
@@ -196,17 +153,13 @@ const BindingManager = () => {
                 </div>
               </div>
               <div className="contract-right-container">
-                <BindingHeader 
-              
-                />
+                <ContractHeader />
                 <div className="contract-cards-container">
-                <h2 className="ml-5 mb-0">{showAll ?"Folders ": ""}</h2>
                   <ContractFolders
                     setFilterContracts={setFilterContracts}
                     setInsuranceFilterContracts={setInsuranceFilterContracts}
                     setContractsOriginal={setContractsOriginal}
                     contractsOriginal={contractsOriginal}
-                    setShowAll ={setShowAll}
                   />
                   {loading ? (
                     <div></div>
@@ -219,7 +172,6 @@ const BindingManager = () => {
                             onClick={() => {
                               setInsuranceFilterContracts(false);
                               setFilterContracts(false);
-                              setShowAll(true)
                               setContractsOriginal(true);
                             }}
                           >
@@ -231,10 +183,9 @@ const BindingManager = () => {
                       {filterContracts &&
                         predictiveFilteredContractsData.length > 0 &&
                         predictiveFilteredContractsData.map((contract) => (
-                          
-                          
                           <div  key={contract._id}>
-                             <BindingCard binding={contract}
+                             <ContractCard
+                            contract={contract}
                           />
                           </div> 
                         ))}
@@ -245,16 +196,12 @@ const BindingManager = () => {
                           </h3>
                         </div>
                       )}
-                      <div>
-                      <h2 className="ml-5 mt-7 heading-file-text">{showAll ?"Files": ""}</h2>
                       {contractsOriginal &&
-                        bindingsData.map((binding) => (
-                          <div key={binding._id}>
-                            <BindingCard binding={binding} />
+                        contractsData.map((contract) => (
+                          <div key={contract._id}>
+                            <ContractCard contract={contract} />
                           </div>
                         ))}
-                      </div>
-                     
                     </>
                   )}
                 </div>
@@ -267,4 +214,4 @@ const BindingManager = () => {
   );
 };
 
-export default BindingManager;
+export default ContractManager;

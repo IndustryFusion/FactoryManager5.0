@@ -6,17 +6,18 @@ import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import Image from 'next/image.js';
 import { Toast } from 'primereact/toast';
-import { getAccessGroup } from "../utility/indexed-db";
+import { getAccessGroup } from "../../../utility/indexed-db";
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import "../styles/add-contract.css";
-import { getCompanyDetailsById } from '../utility/auth';
+import "../../../styles/add-binding.css";
+import { getCompanyDetailsById, verifyCompanyCertificate } from '../../../utility/auth';
 import { getTemplateByName, getCompanyCertificate, getContractByType, getAssetByType, getAssetCertificateById, createBinding } from '@/utility/contract';
 import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
 import Navbar from '@/components/navBar/navbar';
 import { Dialog } from 'primereact/dialog';
+import { getContractDetails, getContractTemplatesById } from '@/utility/contract';
 import Sidebar from '@/components/navBar/sidebar';
 
 interface PropertyDefinition {
@@ -44,10 +45,7 @@ interface TemplateData {
 const CreateBinding: React.FC = () => {
     const router = useRouter();
     const [templateData, setTemplateData] = useState<TemplateData | null>(null);
-    const [formData, setFormData] = useState<{ [key: string]: any }>({
-        asset_type: 'laserCutter',
-        contract_title: 'Contract Title'
-    });
+    const [formData, setFormData] = useState<{ [key: string]: any }>({});
     const [selectedAssetProperties, setSelectedAssetProperties] = useState<string[]>([]);
     const toast = useRef<Toast>(null);
     const [certificateExpiry, setCertificateExpiry] = useState<Date | null>(null);
@@ -58,6 +56,11 @@ const CreateBinding: React.FC = () => {
     const [userName, setUserName] = useState<string>("");
     const [visible, setVisible] = useState<Boolean>(false);
     const [consumerName, setConsumerName] = useState<string>("");
+    const { contractIfricId } = router.query;
+    const [consumerCompanyCertified, setConsumerCompanyCertified] = useState<Boolean | null>(null);
+    const [providerCompanyCertified, setProviderCompanyCertified] = useState<Boolean | null>(null);
+
+    const ifricUrl = process.env.NEXT_PUBLIC_IFRIC_PLATFORM_FRONTEND_URL;
 
     useEffect(() => {
         fetchData();
@@ -70,20 +73,9 @@ const CreateBinding: React.FC = () => {
     const fetchData = async () => {
         try {
             const userData = await getAccessGroup();
-            if (userData && userData.jwt_token) {
+            if (userData && userData.jwt_token && contractIfricId) {
                 setCompanyIfricId(userData.company_ifric_id);
                 setUserName(userData.user_name)
-                // Fetch template data (from backend)
-                const templateResponse = await getTemplateByName("predictiveMaintenance_laserCutter");
-                const template = templateResponse?.data[0];
-                console.log(template);
-                setTemplateData(template);
-                initializeFormData(template.properties);
-
-                setFormData(prevState => ({
-                    ...prevState,
-                    data_provider_company_ifric_id: userData.company_ifric_id,
-                }));
 
                 // Fetch company certificate
                 const companyCertResponse = await getCompanyCertificate(userData.company_ifric_id);
@@ -92,13 +84,18 @@ const CreateBinding: React.FC = () => {
                     setFormData(prevState => ({
                         ...prevState,
                         provider_company_certificate_data: companyCert.certificate_data,
-                        binding_end_date: new Date(companyCert.expiry_on)
+                        binding_start_date: new Date().toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                        }),
+                        binding_end_date: new Date(companyCert.expiry_on) 
                     }));
 
                     setCertificateExpiry(new Date(companyCert.expiry_on));
                 }
 
-                // Fetch producer company details
+                // Fetch provider company details
                 if (userData.company_ifric_id) {
                     const response = await fetchCompanyDetails(userData.company_ifric_id);
                     if (response?.data) {
@@ -109,56 +106,74 @@ const CreateBinding: React.FC = () => {
                             provider_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
                             provider_company_country: response.data[0].country,
                             provider_company_zip: response.data[0].zip,
+                            provider_company_ifric_id: userData.company_ifric_id,
                         }));
-                    }
-                }
-                   console.log("template here",template);
-                   
-                if(template) {
-                    // fetch contract details
-                    const contractResponse = await getContractByType(btoa(template.type));
-                    console.log("contractResponse here", contractResponse);
-                    
-                    setConsumerName(contractResponse?.data[0].meta_data.created_user || '');
-                    if(contractResponse?.data) {
-                        // Fetch producer company details
-                        if (userData.company_ifric_id) {
-                            const response = await fetchCompanyDetails(contractResponse.data[0].data_consumer_company_ifric_id);
-                            if (response?.data) {
-                                setFormData(prevState => ({
-                                    ...prevState,
-                                    contract_title : contractResponse.data[0].contract_name,
-                                    consumer_company_name: response.data[0].company_name,
-                                    consumer_company_address: response.data[0].address_1,
-                                    consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
-                                    consumer_company_country: response.data[0].country,
-                                    consumer_company_zip: response.data[0].zip,
-                                    contract_start_date: new Date(contractResponse.data[0].meta_data.created_at).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                    }),
-                                    contract_end_date: new Date(contractResponse.data[0].contract_valid_till).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                    }),
-                                    interval: contractResponse.data[0].interval ? contractResponse.data[0].interval : "",
-                                    data_consumer_company_ifric_id: contractResponse.data[0].data_consumer_company_ifric_id,
-                                    contract_ifric_id: contractResponse.data[0].contract_ifric_id
-                                }));
-                            }
+
+                        const verfifyCertResponse = await verifyCompanyCertificate(userData.company_ifric_id);
+                        if(verfifyCertResponse?.data.success === true && verfifyCertResponse.data.status === 201) {
+                            setProviderCompanyCertified(true);
+                        } else {
+                            setProviderCompanyCertified(false);
                         }
                     }
-                    console.log("asset_properties ",contractResponse?.data[0])
+                }
+                
+                // fetch contract details
+                const contractResponse = await getContractDetails(contractIfricId);
+                if(contractResponse.length > 0) {
+                    // Fetch template data (from backend)
+                    const templateResponse = await getContractTemplatesById(btoa(contractResponse[0].contract_type));
+                    const template = templateResponse?.data[0];
+                    setTemplateData(template);
+
+                    setFormData(prevState => ({
+                        ...prevState,
+                        data_provider_company_ifric_id: userData.company_ifric_id,
+                    }));
+
+                    // Fetch consumer company details
+                    setConsumerName(contractResponse[0].meta_data.created_user || '');
+                    const response = await fetchCompanyDetails(contractResponse[0].data_consumer_company_ifric_id);
+                    console.log("consumer response ",response?.data);
+                    if (response?.data) {
+                        setFormData(prevState => ({
+                            ...prevState,
+                            contract_title : contractResponse[0].contract_name,
+                            consumer_company_name: response.data[0].company_name,
+                            consumer_company_address: response.data[0].address_1,
+                            consumer_company_city: response.data[0].city ? response.data[0].city : response.data[0].address_2,
+                            consumer_company_country: response.data[0].country,
+                            consumer_company_zip: response.data[0].zip,
+                            contract_start_date: new Date(contractResponse[0].meta_data.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                            }),
+                            contract_end_date: new Date(contractResponse[0].contract_valid_till).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                            }),
+                            interval: contractResponse[0].interval ? contractResponse[0].interval : "",
+                            data_consumer_company_ifric_id: contractResponse[0].data_consumer_company_ifric_id,
+                            contract_ifric_id: contractResponse[0].contract_ifric_id,
+                            asset_type: contractResponse[0].asset_type,  
+                            contract_type: contractResponse[0].contract_type
+                        }));
+                        const verfifyCertResponse = await verifyCompanyCertificate(contractResponse[0].data_consumer_company_ifric_id);
+                        if(verfifyCertResponse?.data.success === true && verfifyCertResponse.data.status === 201) {
+                            setConsumerCompanyCertified(true);
+                        } else {
+                            setConsumerCompanyCertified(false);
+                        }
+                    }
+                
                     // set selected asset properties
-                    const selectedProperties = contractResponse?.data[0].asset_properties ? contractResponse.data[0].asset_properties.map((value: string) => value.split("/").pop()) : [];
-                    console.log("selectedProperties ",selectedProperties);
+                    const selectedProperties = contractResponse[0].asset_properties ? contractResponse[0].asset_properties.map((value: string) => value.split("/").pop()) : [];
                     setSelectedAssetProperties(selectedProperties);
 
                     // fetch assets of template type
                     const assetResponse = await getAssetByType(btoa(template.properties.asset_type.default));
-                    console.log("assetResponse ",assetResponse?.data);
                     if(assetResponse?.data) {
                         const options = assetResponse.data.map((value: { id: string }) => ({
                             label: value.id,
@@ -167,6 +182,7 @@ const CreateBinding: React.FC = () => {
                         setAssetOptions(options);
                     }
                 }
+                console.log("formdata ",formData)
             } else {
                 toast.current?.show({ severity: 'error', summary: 'Error', detail: 'User data or JWT not found' });
             }
@@ -198,46 +214,25 @@ const CreateBinding: React.FC = () => {
                     // check whether asset certificate expiry is before company certificate expiry
                     if(certificateExpiry) {
                         const companyExpiry = moment(certificateExpiry);
-                        console.log("companyExpiry ",companyExpiry)
-                        console.log("assetExpiry ",assetExpiry)
                         if(companyExpiry.isAfter(assetExpiry)) {
                             setCertificateExpiry(new Date(assetCertificateResponse.data[0].expiry_on));
+                            setFormData(prevState => ({
+                                ...prevState,
+                                binding_end_date: new Date(assetCertificateResponse.data[0].expiry_on) 
+                            }));
                         }
                     }
+                } else {
+                    setAssetVerified(null);
+                    toast.current?.show({ severity: 'warn', summary: 'Warn', detail: assetCertificateResponse?.data.message });
                 }
             }
         } catch (error) {
+            setAssetVerified(null);
             console.error('Error fetching data:', error);
             toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to load necessary data' });
         }
     }
-
-    const initializeFormData = (properties: { [key: string]: PropertyDefinition }) => {
-        const initialData: { [key: string]: any } = {
-            asset_type: 'laserCutter',
-            binding_start_date: new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-            }),
-        };
-        Object.entries(properties).forEach(([key, property]) => {
-            if (property.app === 'creator') {
-                if (property.default !== undefined) {
-                    initialData[key] = property.default;
-                } else if (property.type === 'array') {
-                    initialData[key] = [];
-                } else if (property.type === 'string') {
-                    initialData[key] = '';
-                } else if (property.type === 'number') {
-                    initialData[key] = 0;
-                } else if (property.type === 'date') {
-                    initialData[key] = null;
-                }
-            }
-        });
-        setFormData(initialData);
-    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | { value: any }, field: string) => {
         const value = 'target' in e ? e.target.value : e.value;
@@ -308,19 +303,8 @@ const CreateBinding: React.FC = () => {
         );
     };
 
-    const renderSelectedAssetProperties = () => (
-        <Card title="Selected Asset Properties">
-            <ul>
-                {selectedAssetProperties.map((property, index) => (
-                    <li key={`property-${index}`}>{property}</li>
-                ))}
-            </ul>
-        </Card>
-    );
-
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        console.log("submitting..")
         try {
 
             if(!selectedAsset) {
@@ -330,6 +314,11 @@ const CreateBinding: React.FC = () => {
 
             if(!formData.binding_end_date) {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please choose binding end date' });
+                return;
+            }
+
+            if(!providerCompanyCertified) {
+                toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Company certificate expired, Please create new company certificate' });
                 return;
             }
 
@@ -368,7 +357,8 @@ const CreateBinding: React.FC = () => {
             const response = await createBinding(result);
             console.log("response ",response?.data);
             if(response?.data.status === 201) {
-                toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Contract added successfully' });
+                toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding added successfully' });
+                setVisible(false)
             } else {
                 toast.current?.show({ severity: 'error', summary: 'Error', detail: response?.data.message });
             }
@@ -404,8 +394,9 @@ const CreateBinding: React.FC = () => {
             asset_type: assetType,
         }));
     };
+
     const renderDataTypeList = ()=> {
-        const dataTypes = formData.data_type
+        const dataTypes = templateData?.properties.data_type.default;
         return(
             <div className='datatype_chips_wrapper'>
                 {dataTypes.map((dataType:string) => (
@@ -414,13 +405,15 @@ const CreateBinding: React.FC = () => {
             </div>
         )
     }
+
     const renderDialogHeader = () => {
         return (
             <div className="flex align-items-center justify-content-between">
-                <h3 className='contract_dialog_heading'>Signing Contract</h3>
+                <h3 className='contract_dialog_heading m-0'>Signing Contract</h3>
             </div>
         );
     };
+    
     const renderDialogFooter = () => {
         return (
             <div>
@@ -436,7 +429,7 @@ const CreateBinding: React.FC = () => {
         <div className="flex">
             <Sidebar />
             <div className="main_content_wrapper">
-            <div className="navbar_wrapper">
+                <div className="navbar_wrapper">
                     <Navbar navHeader={"Create Binding"} />
                 </div>
                 <div className="create-contract-form-container">
@@ -458,7 +451,7 @@ const CreateBinding: React.FC = () => {
                                         </div>
                                         <div className='contract_form_subheader'>Contract Time</div>
                                         <div className="contract_form_field_column">
-                                            <div className="field">
+                                            <div className="field align-items-start">
                                                 <label htmlFor="contract_start_date">Contract Start Date</label>
                                                 <div className='text_large_bold'>{new Date(formData.contract_start_date).toLocaleDateString('en-US', {
                                                     year: 'numeric',
@@ -491,13 +484,14 @@ const CreateBinding: React.FC = () => {
                                                     id="binding_end_date"
                                                     value={formData.binding_end_date ?? null}
                                                     onChange={(e) => handleInputChange(e, 'binding_end_date')}
+                                                    placeholder={formData.binding_end_date ?? null}
                                                     showIcon
                                                     required
                                                     maxDate={certificateExpiry ? new Date(certificateExpiry.getTime()) : undefined} className='contract_form_field' dateFormat="MM dd, yy"
                                                 />
                                                 {certificateExpiry && (
                                                     <small className="ml-3 mt-2">
-                                                        Contract end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
+                                                        Binding end date must be before {new Date(certificateExpiry).toLocaleDateString('en-US', {
                                                         year: 'numeric',
                                                         month: 'short',
                                                         day: 'numeric',
@@ -510,14 +504,20 @@ const CreateBinding: React.FC = () => {
                                             <div className="contract_form_field_column">
                                             <div className="field">
                                             <div className="consumer_details_wrapper">
-                                                <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                                <Image src="/company_icon.svg" width={24} height={24} alt='company icon'></Image>
                                                 <div>
                                                     <label htmlFor="provider_company_name">Data Consumer</label>
                                                     <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
                                                         <div className='text_large_bold'>{formData.consumer_company_name ?? ''}</div>
+                                                        {(consumerCompanyCertified !== null && consumerCompanyCertified === true) && (
+                                                            <Image src="/verified_icon.svg" width={16} height={16} alt='company verified icon' />
+                                                        )}
+                                                        {(consumerCompanyCertified !== null && consumerCompanyCertified === false) && (
+                                                            <Image src="/warning.svg" width={16} height={16} alt='company not verified icon' />
+                                                        )}
                                                     </div>
+                                                        <div style={{ marginTop: "4px" }}>{formData.data_consumer_company_ifric_id}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.consumer_company_address ?? ''}</div>
-                                                        {/* <div style={{ marginTop: "4px" }}>{formData.data_consumer_company_ifric_id}</div> */}
                                                         <div style={{ marginTop: "4px" }}>{formData.consumer_company_city ?? ''}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.consumer_company_country ?? ''}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.consumer_company_zip ?? ''}</div>
@@ -527,12 +527,19 @@ const CreateBinding: React.FC = () => {
                                             </div>
                                             <div className="field">
                                             <div className="consumer_details_wrapper">
-                                                <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                                <Image src="/company_icon.svg" width={24} height={24} alt='company icon'></Image>
                                                 <div>
                                                     <label htmlFor="provider_company_name">Data Provider</label>
                                                     <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
                                                         <div className='text_large_bold'>{formData.provider_company_name ?? ''}</div>
+                                                        {(providerCompanyCertified !== null && providerCompanyCertified === true) && (
+                                                            <Image src="/verified_icon.svg" width={16} height={16} alt='company verified icon' />
+                                                        )}
+                                                        {(providerCompanyCertified !== null && providerCompanyCertified === false) && (
+                                                            <Image src="/warning.svg" width={16} height={16} alt='company not verified icon' />
+                                                        )}
                                                     </div>
+                                                    <div style={{ marginTop: "4px" }}>{formData.provider_company_ifric_id}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.provider_company_address ?? ''}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.provider_company_city ?? ''}</div>
                                                         <div style={{ marginTop: "4px" }}>{formData.provider_company_country ?? ''}</div>
@@ -556,22 +563,31 @@ const CreateBinding: React.FC = () => {
                                                     placeholder="Select a asset"
                                                     required className='contract_form_field'
                                                 />
+                                                {
+                                                    assetVerified == true &&
+                                                    <div className='asset_verified_group'>
+                                                        <Image src="/verified_icon.svg" alt='company verified' width={16} height={16}></Image>
+                                                        <div>IFRIC Verified</div>
+                                                    </div> 
+                                                }
+                                                {
+                                                    assetVerified == false &&
+                                                    <div className='asset_verified_group'>
+                                                        <Image src="/warning.svg" alt='company verified' width={16} height={16}></Image>
+                                                        <div>Not IFRIC Verified</div>
+                                                    </div>
+                                                }
                                             </div>
                                             {
-                                                assetVerified == true &&
-                                                <div className='asset_verified_group'>
-                                                    <Image src="/verified_icon.svg" alt='company verified' width={16} height={16}></Image>
-                                                    <div>IFRIC Verified</div>
-                                                </div> 
-                                            }
-                                            {
                                                 assetVerified == false &&
-                                                <div className='asset_verified_group'>
-                                                    <Image src="/warning.svg" alt='company verified' width={16} height={16}></Image>
-                                                    <div>Not IFRIC Verified</div>
+                                                <div className='asset_certify'>
+                                                    <Button
+                                                        label="Certify Asset"
+                                                        className="p-button-primary custom-add-btn"
+                                                        onClick={() => router.push(`/certificates?asset_ifric_id=${selectedAsset}`)}
+                                                    />
                                                 </div>
                                             }
-                                            
                                         </div>
                                         <div className='contract_form_subheader'>Shared Data</div>
                                         <div className="contract_form_field_column">
@@ -605,13 +621,7 @@ const CreateBinding: React.FC = () => {
                                         icon="pi pi-times"
                                     />
                                     <Button
-                                        type="reset"
-                                        label="Reset"
-                                        className="p-button-secondary p-button-outlined custom-reset-btn"
-                                        icon="pi pi-refresh"
-                                    />
-                                    <Button
-                                        label="Submit"
+                                        label="Sign"
                                         className="p-button-primary custom-add-btn"
                                         icon="pi pi-check"
                                         onClick={(e) => {e.preventDefault(); setVisible(true)}}
@@ -622,46 +632,46 @@ const CreateBinding: React.FC = () => {
                         <div className="asset-type-list-cover">
                             {renderAssetTypeList()}
                         </div>
-                            <Dialog header={renderDialogHeader} visible={visible} style={{width:"100%", maxWidth: '550px' }}  draggable={false} footer={renderDialogFooter} onHide={() => {if (!visible) return; setVisible(false); }} className='contract_dialog_cover'>
-                            <div className='contract_dialog_content'>
-                                <div className="contract_dialog_company_details">
-                                    <div className="consumer_details_wrapper">
-                                        <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
-                                        <div>
-                                            <label htmlFor="provider_company_name">Data Consumer</label>
-                                            <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
-                                                <div className='text_large_bold'>{formData.consumer_company_name ?? ''}</div>
+                            <Dialog header={renderDialogHeader} visible={visible} style={{width:"100%", maxWidth: '30vw' }}  draggable={false} footer={renderDialogFooter} onHide={() => {if (!visible) return; setVisible(false); }} className='contract_dialog_cover'>
+                                <div className='contract_dialog_content'>
+                                    <div className="contract_dialog_company_details">
+                                        <div className="consumer_details_wrapper">
+                                            <Image src="/company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                            <div>
+                                                <label htmlFor="provider_company_name">Data Consumer</label>
+                                                <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                    <div className='text_large_bold'>{formData.consumer_company_name ?? ''}</div>
+                                                </div>
+                                                </div>
                                             </div>
+                                        </div>
+                                        <div className="consumer_details_wrapper">
+                                            <Image src="/company_icon.svg" width={24} height={24} alt='company icon'></Image>
+                                            <div>
+                                                <label htmlFor="provider_company_name">Data Provider</label>
+                                                <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
+                                                    <div className='text_large_bold'>{formData.provider_company_name ?? ''}</div>
+                                                </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="consumer_details_wrapper">
-                                        <Image src="company_icon.svg" width={24} height={24} alt='company icon'></Image>
-                                        <div>
-                                            <label htmlFor="provider_company_name">Data Provider</label>
-                                            <div style={{ color: "#2b2b2bd6", lineHeight: "18px" }}><div className='company_verified_group'>
-                                                <div className='text_large_bold'>{formData.provider_company_name ?? ''}</div>
+                                    <div className='contract_form_field_column' style={{marginTop: "15px", padding: "0px"}}>
+                                        <div className="field representative_highlight representative-container">
+                                            <label htmlFor="contract_start_date">Representative name</label>
+                                            <div className='text_large_bold'>
+                                                {consumerName}
                                             </div>
+                                        </div>
+                                        <div className="field representative_highlight representative-container">
+                                            <label htmlFor="contract_start_date">Representative name</label>
+                                            <div className='text_large_bold'>
+                                                {userName}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className='contract_form_field_column' style={{marginTop: "15px", padding: "0px"}}>
-                                    <div className="field representative_highlight">
-                                        <label htmlFor="contract_start_date">Representative name</label>
-                                        <div className='text_large_bold'>
-                                            {consumerName}
-                                        </div>
-                                    </div>
-                                    <div className="field representative_highlight">
-                                        <label htmlFor="contract_start_date">Representative name</label>
-                                        <div className='text_large_bold'>
-                                            {userName}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Dialog>
+                            </Dialog>
                     </div>
                 </div>
             </div>
