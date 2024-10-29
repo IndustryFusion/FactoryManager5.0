@@ -1,42 +1,83 @@
-.customNodeBody {
-  width: 150px;
-  height: 80px;
-  border: 3px solid black;
+/* Custom Node Container */
+.customNode {
   position: relative;
-  overflow: hidden;
-  border-radius: 10px;
+  background-color: white;
+  border-radius: 5px;
+  min-width: 150px;
+  min-height: 100px;
+  padding: 10px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.customNode:before {
-  content: '';
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  height: 20px;
-  width: 85%;
+/* Handle Base Styles */
+.customHandle {
+  width: 8px;
+  height: 8px;
+  background-color: #784be8;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Handle Positioning */
+.customHandle[data-handlepos="top"] {
+  top: -4px !important;
+  left: 50% !important;
   transform: translate(-50%, 0);
-  background: #caf1d8;
-  z-index: 1000;
-  line-height: 1;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 9px;
-
 }
 
-div.customHandle {
-  width: 100%;
-  height: 60%;
-  background: blue;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 0;
-  transform: none;
-  border: none;
-  opacity: 0;
+.customHandle[data-handlepos="bottom"] {
+  bottom: -4px !important;
+  left: 50% !important;
+  transform: translate(-50%, 0);
+}
+
+/* Edge Styles */
+.react-flow__edge-path {
+  stroke: #784be8;
+  stroke-width: 2;
+  fill: none;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #00ff00;
+  stroke-width: 3;
+}
+
+/* Connection Line */
+.react-flow__connection-path {
+  stroke: #784be8;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+}
+
+/* Handle Interaction States */
+.customHandle:hover {
+  background-color: #5436a9;
+  cursor: crosshair;
+}
+
+.customHandle.connecting {
+  background-color: #ff0072;
+}
+
+/* MultiSelect Panel */
+.custom-multiselect-panel {
+  z-index: 1000;
+}
+
+/* Node Label */
+.node-label {
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* Ensure handles are always visible */
+.react-flow__handle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
 }

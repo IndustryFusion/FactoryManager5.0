@@ -165,6 +165,7 @@ export class AssetService {
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      // console.log("typeArr",typeArr)
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
@@ -176,6 +177,7 @@ export class AssetService {
           });
         }
       }
+      // console.log("assetData",assetData)
       return assetData;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
@@ -418,7 +420,7 @@ export class AssetService {
         factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
         let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
         if(Array.isArray(lastData)){
-          const newArray = lastData.filter(item => item !== assetId);
+          const newArray = lastData.filter(item => item.id !== assetId);
           factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = newArray;
         }else{
           factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = '';

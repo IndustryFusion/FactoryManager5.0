@@ -1,110 +1,174 @@
-ul {
-  list-style-type: none;
-  padding-left: 0;
-  border:"none"
-}
-
-li {
-  cursor: pointer;
-  padding: 5px;
-  transition: background-color 0.3s;
-  font-size: 1.2em;
-}
-
-.p-inputswitch.p-highlight .p-inputswitch-slider {
-  background: #6366f1;
-}
-
-.selected {
-  background-color: #e0e0e0;
-}
-
-.container {
+/* Tab View Container */
+.p-tabview {
+  height: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
 }
 
-.hr {
-  color: black;
-}
-.filter-button {
-  background-color: white ; 
-  border: none;
-}
-.alert-type-text{
-  color: #666666;
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 0.4px;
-}
-.alert-text{
-  color: #606060;
-}
-.alert-time{
-  color:  #212529;;
-  margin-top: 5px;
-}
-.alert-btn{
-  display: flex;
-  justify-content: flex-end;
-}
-.alert-btn-text{
-  font-size: 12px;
-}
-.data-container{
-  flex: 0 1 90%;
-    display: flex;
-    justify-content: space-between;
-}
-.label-text{
-  font-size: 11px !important;
-  color: #a39999;
-}
-@keyframes colorDip {
-  0%, 100% {
-    transform: translateY(-50%) scale(1);
-    background-color: #164B60; 
-  }
-  50% {
-    transform: translateY(-50%) scale(0.8);
-    background-color: #dce2e7; /* Light blue */
-  }
+.tab-list-items {
+  height: calc(100vh - 180px); /* Increased from previous value */
+  overflow-y: auto;
 }
 
-.p-button-light-grey {
-    background-color: #cdc9c9; 
-    color: #333; 
-    border-color: #ccc; 
-    border: none;
+/* Tab Headers */
+.p-tabview .p-tabview-nav {
+  margin: 0;
+  padding: 8px 16px 0 16px;
+  background-color: #fff;
+  border-bottom: 2px solid #f0f0f0;
 }
 
-.p-card.p-component.card-full-height {
-  height: 100vh; 
-} 
-.list-disc{
-  height:150px; 
+.p-tabview .p-tabview-nav li {
+  margin-right: 4px;
 }
 
-/* .p-tabview-panels{
-  height: 100vh;
-  overflow-y: scroll;
-} */
-
-/* .p-tabview .p-tabview-panels {
-  height: 78vh; 
-} */
 .p-tabview .p-tabview-nav-link {
-    text-decoration: none !important; /* Removes underline */
-    /* border: none !important;  */
+  padding: 16px 24px !important;
+  font-weight: 600 !important;
+  font-size: 1rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+  border-radius: 8px 8px 0 0;
 }
 
-/* Specific handling for active tabs to remove any underline or border used as underline */
+.p-tabview .p-tabview-nav-link:hover {
+  background-color: #f8fafc;
+  color: #6366f1;
+}
+
 .p-tabview .p-tabview-nav-link.p-highlight {
-    border-bottom: none !important;
+  background-color: transparent;
+  color: #6366f1;
+  border-bottom: 3px solid #6366f1;
 }
 
-.p-tabview-nav{
-  margin-bottom: 10px;
+/* Tab Panels Container */
+.p-tabview .p-tabview-panels {
+  padding: 1.5rem 1.5rem 1.5rem 0.5rem;
+  height: calc(100vh - 180px); /* Increased from 280px */
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
+/* List Container */
+.asset-list-container {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-left: 0;
+}
+
+/* Asset List */
+.asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  padding-left: 8px;
+  margin: 0;
+  list-style: none;
+}
+
+/* List Items */
+.asset-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  gap: 12px;
+  margin: 0 0 8px -8px; /* Added bottom margin for spacing */
+}
+
+.asset-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.asset-item.selected {
+  background-color: #ebf3fc;
+}
+
+/* Custom Scrollbar */
+.p-tabview .p-tabview-panels::-webkit-scrollbar,
+.asset-list-container::-webkit-scrollbar,
+.tab-list-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.p-tabview .p-tabview-panels::-webkit-scrollbar-track,
+.asset-list-container::-webkit-scrollbar-track,
+.tab-list-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.p-tabview .p-tabview-panels::-webkit-scrollbar-thumb,
+.asset-list-container::-webkit-scrollbar-thumb,
+.tab-list-items::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 2px solid #f1f1f1;
+}
+
+.p-tabview .p-tabview-panels::-webkit-scrollbar-thumb:hover,
+.asset-list-container::-webkit-scrollbar-thumb:hover,
+.tab-list-items::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Asset Item Content */
+.asset-icon {
+  font-size: 1.25rem;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-name {
+  flex: 1;
+  font-weight: 500;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.category-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Container Heights */
+.asset-manager-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 16px 16px 16px 8px;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+/* Search Container */
+.search-container {
+  margin-bottom: 16px; /* Reduced from 20px */
+  padding: 0 8px 0 0;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Make tabs fill available space */
+.asset-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }

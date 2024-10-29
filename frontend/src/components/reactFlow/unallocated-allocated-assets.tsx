@@ -43,6 +43,15 @@ interface Asset {
   asset_category: string;
  [key: string]:string,
 }
+const getCategoryIcon = (category?: string) => {
+  // Return a professional asset-like icon
+return 'pi pi-box';
+};
+
+const getCategoryColor = (category?: string) => {
+  // Using a professional dark blue shade
+ return '#64748b';
+};
 
 const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   factoryId,
@@ -146,7 +155,6 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     });
   };
 
-
   function handleDragStart(
     event: React.DragEvent,
     data: AllocatedAssets,
@@ -165,52 +173,89 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   const handleSearchChange = (value: string) => {
     setSearchTerm(value.toLowerCase());
   };
+
+  console.log("asset",assets)
 return (
     <>
-   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '80%' }}>
-      <div className="flex align-items-center justify-content-center gap-2 mb-4">
-        <InputText
-          value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder={t('placeholder:searchByName')}
-          style={{width: "350px"}}
-          className="mt-2"
+   <div className="flex flex-column align-items-center mt-3 mb-3" style={{ height: '60%' }}>
+    <div className="flex align-items-center justify-content-center gap-2 mb-4 search-container" style={{ width: '200%' }}>
+      <div className="input-group">
+        <span className="p-input-icon-left">
+          <i className="pi pi-search search-icon" />
+          <InputText
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder={t('placeholder:searchByName')}
+            className="search-input"
+          />
+        </span>
+        <Button
+          icon="pi pi-filter-fill"
+          onClick={(e) => menu.current?.toggle(e)}
+          className="p-button-text"
+          aria-label="Filter"
         />
-        <Button icon="pi pi-filter-fill" onClick={(e) => menu.current?.toggle(e)}    style={{ backgroundColor: "white", borderColor: "darkgrey", color: "grey", border:"none"}} className="mt-2" />
-        <Menu model={[
-          {
+        <Menu 
+          model={[{
             label: 'Asset Categories',
             items: assetCategories.map(category => ({
               template: () => (
-                <div className="p-flex p-ai-center">
-                  <Checkbox inputId={category} onChange={() => handleCategoryChange(category)} checked={selectedCategories.includes(category)} />
-                  <label htmlFor={category} className="p-checkbox-label ml-2">{category}</label>
+                <div className="flex align-items-center p-2">
+                  <Checkbox 
+                    inputId={category} 
+                    onChange={() => handleCategoryChange(category)} 
+                    checked={selectedCategories.includes(category)} 
+                  />
+                  <label htmlFor={category} className="p-checkbox-label ml-2">
+                    {category}
+                  </label>
                 </div>
               ),
             })),
-          },
-        ]} popup ref={menu} style={{marginLeft:"-20%"}} />
+          }]} 
+          popup 
+          ref={menu} 
+          className="p-menu-modern"
+        />
       </div>
+    </div>
 
-      <TabView className="ml-1" >
-        <TabPanel header={t('reactflow:unAllocatedAsset')} >
-            <ul className="-ml-2">
+      <TabView className="ml-1"  style={{height:"145%"}}>
+        <TabPanel header={t('reactflow:availableAsset')}  >
+          <div className="tab-list-items">
+              <ul className="-ml-2 ">
               {assets.filter(asset => 
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
                 <li 
-                key={index} 
-                className="mb-4 ml-4  list-item" 
-                onClick={()=>setSelectedUnallocatedAsset(asset?.id)}
-                draggable={true} 
-                onDragStart={(e) => handleDragStart(e, asset, "asset")}
-                style={{backgroundColor: selectedUnallocatedAsset === asset?.id? "#e3e3e3a6" : "#fff",}}
-                >
-                  {asset.product_name}
-                </li>
-              ))}
+                    key={index} 
+                    className={`asset-item ${selectedUnallocatedAsset === asset?.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedUnallocatedAsset(asset?.id)}
+                    draggable={true} 
+                    onDragStart={(e) => handleDragStart(e, asset, "asset")}
+                  >
+                    <i 
+                      className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
+                      style={{ color: getCategoryColor(asset.asset_category) }}
+                    />
+                    <span className="asset-name">{asset.product_name}</span>
+                    <span 
+                      className="category-badge"
+                      style={{ 
+                        backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
+                        color: getCategoryColor(asset.asset_category)
+                      }}
+                    >
+                      {asset.asset_category}
+                    </span>
+                 </li>
+                ))}
             </ul>
+          </div>
+        
+
+           
         </TabPanel>
         <TabPanel header={t('reactflow:allocatedAsset')} className="-ml-2" >
             <ul className="-ml-1">
@@ -218,16 +263,28 @@ return (
                 asset.product_name?.toLowerCase().includes(searchTerm) && 
                 (selectedCategories.length === 0 || selectedCategories.includes(asset.asset_category))
               ).map((asset, index) => (
-                <li 
-                key={index} 
-                className="mb-4 ml-4 list-item" 
-                draggable={true} 
-                onDragStart={(e) => handleDragStart(e, asset, "asset")}
-                onClick={()=> setSelectedAllocatedAsset(asset?.id)}
-                style={{backgroundColor: selectedAllocatedAsset === asset?.id? "#e3e3e3a6" : "#fff",}}
-                >
-                  {asset.product_name}
-                </li>
+               <li 
+                    key={index} 
+                    className={`asset-item ${selectedAllocatedAsset === asset?.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedAllocatedAsset(asset?.id)}
+                    draggable={true} 
+                    onDragStart={(e) => handleDragStart(e, asset, "asset")}
+                  >
+                    <i 
+                      className={`${getCategoryIcon(asset.asset_category)} asset-icon`}
+                      style={{ color: getCategoryColor(asset.asset_category) }}
+                    />
+                    <span className="asset-name">{asset.product_name}</span>
+                    <span 
+                      className="category-badge"
+                      style={{ 
+                        backgroundColor: `${getCategoryColor(asset.asset_category)}20`,
+                        color: getCategoryColor(asset.asset_category)
+                      }}
+                    >
+                      {asset.asset_category}
+                    </span>
+                  </li>
               ))}
             </ul>
         </TabPanel>

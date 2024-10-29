@@ -73,6 +73,7 @@ import {
   applyDagreLayout,
   getAllConnectedNodesBelow,
 } from "../../utility/react-flow-utility";
+import { HistoryState } from "next/dist/shared/lib/router/router";
 
 const nodeTypes = {
   asset: CustomAssetNode,
@@ -119,6 +120,43 @@ const FlowEditor: React.FC<
   const { t } = useTranslation(["button", "reactflow"]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  const isUndoRedoAction = useRef(false);
+
+   // Initialize history when nodes or edges are first loaded
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      if (history.length === 0) {
+        setHistory([{ nodes: [...nodes], edges: [...edges] }]);
+        setCurrentHistoryIndex(0);
+      }
+    }
+  }, [nodes, edges]);
+  // Function to add new state to history
+const addToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
+    if (isUndoRedoAction.current) {
+      isUndoRedoAction.current = false;
+      return;
+    }
+
+    const newState: HistoryState = {
+      nodes: newNodes,
+      edges: newEdges,
+      timestamp: Date.now(),
+      source: 'user'
+    };
+
+    setHistory(prevHistory => {
+      // Remove any future states if we're not at the end of history
+      const historySplice = prevHistory.slice(0, currentHistoryIndex + 1);
+      return [...historySplice, newState];
+    });
+
+    setCurrentHistoryIndex(prevIndex => prevIndex + 1);
+    setHasChanges(true);
+  }, [currentHistoryIndex]);
+
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const createRelationNodeAndEdge = (
     assetId: string,
@@ -314,23 +352,94 @@ const FlowEditor: React.FC<
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       onNodesChangeProvide(changes);
+       const significantChanges = changes.some(
+        change => change.type !== 'position' || change.dragging === false
+      );
+      
+      if (significantChanges) {
+        const newNodes = [...nodes];
+        changes.forEach(change => {
+          if (change.type === 'remove') {
+            const index = newNodes.findIndex(node => node.id === change.id);
+            if (index !== -1) {
+              newNodes.splice(index, 1);
+            }
+          }
+        });
+        addToHistory(newNodes, edges);
+      }
+      
       if (isRestored && checkForNewAdditionsNodesEdges()) {
         setHasChanges(true);
       }
     },
-    [onNodesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]
+    [onNodesChangeProvide,nodes, edges, isRestored,addToHistory, checkForNewAdditionsNodesEdges]
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
+      
       onEdgesChangeProvide(changes);
+      const newEdges = [...edges];
+      changes.forEach(change => {
+        if (change.type === 'remove') {
+          const index = newEdges.findIndex(edge => edge.id === change.id);
+          if (index !== -1) {
+            newEdges.splice(index, 1);
+          }
+        }
+      });
+      addToHistory(nodes, newEdges);
+    
       if (isRestored && checkForNewAdditionsNodesEdges()) {
         setHasChanges(true);
       }
     },
-    [onEdgesChangeProvide, isRestored, checkForNewAdditionsNodesEdges]
+    [onEdgesChangeProvide, isRestored, nodes, edges, addToHistory,checkForNewAdditionsNodesEdges]
   );
+ const handleUndo = useCallback(() => {
+    if (currentHistoryIndex > 0) {
+      isUndoRedoAction.current = true;
+      const previousState = history[currentHistoryIndex - 1];
+      
+      // If we're undoing to the backend state, show a notification
+      if (previousState.source === 'backend') {
+        toast.current?.show({
+          severity: 'info',
+          summary: 'Initial State',
+          detail: 'Returned to initial backend state',
+          life: 3000,
+        });
+      }
 
+      setNodes(previousState.nodes);
+      setEdges(previousState.edges);
+      setCurrentHistoryIndex(prevIndex => prevIndex - 1);
+      setHasChanges(currentHistoryIndex > 1);
+    }
+  }, [history, currentHistoryIndex, setNodes, setEdges]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (currentHistoryIndex < history.length - 1) {
+      isUndoRedoAction.current = true;
+      const nextState = history[currentHistoryIndex + 1];
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      setCurrentHistoryIndex(prevIndex => prevIndex + 1);
+    }
+  }, [history, currentHistoryIndex, setNodes, setEdges]);
+
+  // Add keyboard shortcuts for undo/redo
+  useHotkeys('ctrl+z', (event) => {
+    event.preventDefault();
+    handleUndo();
+  }, [handleUndo]);
+
+  useHotkeys('ctrl+shift+z', (event) => {
+    event.preventDefault();
+    handleRedo();
+  }, [handleRedo]);
   // @desc:
   //@GET : the React Flow data for the specified factory ID both mongo
   const getMongoDataFlowEditor = useCallback(async () => {
@@ -384,7 +493,14 @@ const FlowEditor: React.FC<
               };
             }
           );
-
+            // Initialize history with backend data
+          const initialState: HistoryState = {
+            nodes: layoutedNodes,
+            edges: response.data.factoryData.edges,
+            timestamp: Date.now(),
+            source: 'backend'
+          };
+            setHistory([initialState]);
           setNodes(layoutedNodes);
           setEdges(getReactFlowMongo.data.factoryData.edges);
 
@@ -470,7 +586,7 @@ const FlowEditor: React.FC<
       );
 
       if (reactFlowUpdateMongo.status == 200) {
-        setToastMessage("Flowchart Updated successfully");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -494,7 +610,7 @@ const FlowEditor: React.FC<
       );
 
       if (reactAllocatedAssetScorpio.status == 200) {
-        setToastMessage("Allocated Asset Scorpio Updated");
+
       } else {
         toast.current?.show({
           severity: "error",
@@ -514,7 +630,7 @@ const FlowEditor: React.FC<
         }
       );
       if (reactFlowScorpioUpdate.status == 200) {
-        setToastMessage("Scorpio updated successfully");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -560,7 +676,7 @@ const FlowEditor: React.FC<
         })),
       },
     };
-
+    console.log("factoryData",payLoad)
     try {
       setIsOperationInProgress(true);
       const reactFlowUpdateMongo = await axios.post(
@@ -574,8 +690,9 @@ const FlowEditor: React.FC<
           withCredentials: true,
         }
       );
+      console.log("reactFlowUpdateMongo",reactFlowUpdateMongo)
       if (reactFlowUpdateMongo.status == 201) {
-        setToastMessage("Flowchart created successfully");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -599,8 +716,9 @@ const FlowEditor: React.FC<
         }
       );
 
+
       if (reactAllocatedAssetScorpio.status == 201) {
-        setToastMessage("Allocated Asset Scorpio created");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -623,7 +741,7 @@ const FlowEditor: React.FC<
       );
       dispatch(reset());
       if (reactFlowScorpioUpdate.status == 200) {
-        setToastMessage("Scorpio updated successfully");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -712,7 +830,7 @@ const FlowEditor: React.FC<
         reactFlowUpdateMongo.status == 200 &&
         reactFlowScorpioUpdate.status == 200
       ) {
-        setToastMessage("Successfully updated");
+
       } else {
         toast.current?.show({
           severity: "warn",
@@ -749,7 +867,7 @@ const FlowEditor: React.FC<
         withCredentials: true,
       });
 
-      setToastMessage("Refresh Completed");
+
       await getMongoDataFlowEditor();
     } catch (error) {
       console.error("Failed to update flowchart:", error);
@@ -766,6 +884,8 @@ const FlowEditor: React.FC<
   //@desc: helps to decide when to save or update data according to different reactflow scenarios
   //@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio
   const saveOrUpdate = useCallback(async () => {
+    console.log("nodes", nodes)
+    console.log("edges",edges)
     try {
       setIsOperationInProgress(true);
 
@@ -822,7 +942,7 @@ const FlowEditor: React.FC<
               })),
             },
           };
-
+          console.log("  if (onlyFactoryToShopFloor || !existingEdgesFactToShopFloor) {")
           const reactFlowUpdateMongo = await axios.patch(
             `${API_URL}/react-flow/${factoryId}`,
             payLoad,
@@ -834,8 +954,9 @@ const FlowEditor: React.FC<
               withCredentials: true,
             }
           );
+          console.log("reactFlowUpdateMongo", payLoad)
           if (reactFlowUpdateMongo.status == 200) {
-            setToastMessage("Flowchart updated");
+
           } else {
             toast.current?.show({
               severity: "warn",
@@ -854,7 +975,7 @@ const FlowEditor: React.FC<
               withCredentials: true,
             }
           );
-
+          console.log("allocatedAssetAvailableOrNot",allocatedAssetAvailableOrNot)
           if (allocatedAssetAvailableOrNot.data.length == 0) {
             const reactAllocatedAssetScorpio = await axios.post(
               API_URL + "/allocated-asset",
@@ -871,7 +992,7 @@ const FlowEditor: React.FC<
               }
             );
             if (reactAllocatedAssetScorpio.status == 201) {
-              setToastMessage("Allocated Asset in Scorpio created ");
+
             } else {
               toast.current?.show({
                 severity: "warn",
@@ -894,8 +1015,9 @@ const FlowEditor: React.FC<
                 withCredentials: true,
               }
             );
+            console.log("reactAllocatedAssetScorpio",reactAllocatedAssetScorpio)
             if (reactAllocatedAssetScorpio.status == 200) {
-              setToastMessage("Allocated Asset Scorpio Updated");
+    
             } else {
               toast.current?.show({
                 severity: "warn",
@@ -919,7 +1041,7 @@ const FlowEditor: React.FC<
           );
           dispatch(reset());
           if (reactFlowScorpioUpdate.status == 200) {
-            setToastMessage("Scorpio updated successfully");
+
           } else {
             toast.current?.show({
               severity: "warn",
@@ -1167,6 +1289,8 @@ const onElementClick: NodeMouseHandler = useCallback(
 
         setNodes(updatedNodes);
         setEdges([...updatedEdges, newEdge]);
+        const newEdges = [...edges, newEdge];
+        addToHistory(nodes, newEdges);
       } else if (
         sourceNode.data.type === "factory" &&
         targetNode.data.type === "shopFloor"
@@ -1182,91 +1306,98 @@ const onElementClick: NodeMouseHandler = useCallback(
         }
       }
     },
-    [nodes, setNodes, setEdges, toast]
+    [nodes, setNodes, setEdges, toast,addToHistory]
   );
 
   //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
-  const handleBackspacePress = useCallback(() => {
-    if (
-      !selectedElements ||
-      (!selectedElements.nodes && !selectedElements.edges)
-    ) {
-      toast.current?.show({
-        severity: "warn",
-        summary: "No selection",
-        detail: "Please select an edge or node to delete.",
-        life: 3000,
-      });
-      return;
-    }
+const handleBackspacePress = useCallback(() => {
+  if (
+    !selectedElements ||
+    (!selectedElements.nodes && !selectedElements.edges)
+  ) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "No selection",
+      detail: "Please select an edge or node to delete.",
+      life: 3000,
+    });
+    return;
+  }
 
-    // Initialize deletable edge IDs
-    let edgeIdsToDelete: string[] = [];
+  // Initialize deletable edge IDs
+  let edgeIdsToDelete: string[] = [];
 
-    // Filter edges that are not connecting a factory to a shopFloor
-    if (selectedElements.edges) {
-      edgeIdsToDelete = selectedElements.edges
-        .filter((edge) => {
-          const sourceNode = nodes.find((node) => node.id === edge.source);
-          const targetNode = nodes.find((node) => node.id === edge.target);
-          return !(
-            sourceNode?.data.type === "factory" &&
-            targetNode?.data.type === "shopFloor"
-          );
-        })
-        .map((edge) => edge.id);
-    }
-
-    // Exclude the factory and shopFloor nodes from deletion
-    const containsNonDeletableNodes = selectedElements.nodes?.some(
-      (node: Node<any>) =>
-        node.data.type === "factory" || node.data.type === "shopFloor"
-    );
-
-    if (containsNonDeletableNodes) {
-      toast.current?.show({
-        severity: "warn",
-        summary: "Deletion Not Allowed",
-        detail: "Cannot delete factory or shopFloor nodes.",
-        life: 3000,
-      });
-      return;
-    }
-
-    // Collect IDs of nodes to delete
-    const nodeIdsToDelete = new Set<string>(
-      selectedElements.nodes?.map((node) => node.id) ?? []
-    );
-
-    // Collect edges associated with the nodes to delete
-    const additionalEdgeIdsToDelete = edges
-      .filter(
-        (edge) =>
-          nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
-      )
+  // Filter edges that are not connecting a factory to a shopFloor
+  if (selectedElements.edges) {
+    edgeIdsToDelete = selectedElements.edges
+      .filter((edge) => {
+        const sourceNode = nodes.find((node) => node.id === edge.source);
+        const targetNode = nodes.find((node) => node.id === edge.target);
+        return !(
+          sourceNode?.data.type === "factory" &&
+          targetNode?.data.type === "shopFloor"
+        );
+      })
       .map((edge) => edge.id);
+  }
 
-    // Combine the edge IDs to delete
-    edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
+  // Exclude the factory and shopFloor nodes from deletion
+  const containsNonDeletableNodes = selectedElements.nodes?.some(
+    (node: Node<any>) =>
+      node.data.type === "factory" || node.data.type === "shopFloor"
+  );
 
-    // Update nodes and edges state
-    const updatedNodes = nodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    const updatedEdges = edges.filter(
+  if (containsNonDeletableNodes) {
+    toast.current?.show({
+      severity: "warn",
+      summary: "Deletion Not Allowed",
+      detail: "Cannot delete factory or shopFloor nodes.",
+      life: 3000,
+    });
+    return;
+  }
+
+  // Collect IDs of nodes to delete
+  const nodeIdsToDelete = new Set<string>(
+    selectedElements.nodes?.map((node) => node.id) ?? []
+  );
+
+  // Collect edges associated with the nodes to delete
+  const additionalEdgeIdsToDelete = edges
+    .filter(
+      (edge) =>
+        nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
+    )
+    .map((edge) => edge.id);
+
+  // Combine the edge IDs to delete
+  edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
+
+  // Update nodes and edges state
+  setNodes((prevNodes) => {
+    const updatedNodes = prevNodes.filter((node) => !nodeIdsToDelete.has(node.id));
+    console.log("Updated nodes:", updatedNodes);
+    return updatedNodes;
+  });
+
+  setEdges((prevEdges) => {
+    const updatedEdges = prevEdges.filter(
       (edge) => !edgeIdsToDelete.includes(edge.id)
     );
+    console.log("Updated edges:", updatedEdges);
+    return updatedEdges;
+  });
 
-    setNodes(updatedNodes);
-    setEdges(updatedEdges);
-    setSelectedElements(null);
-  }, [
-    selectedElements,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setSelectedElements,
-    toast,
-  ]);
+  // Clear the selected elements
+  setSelectedElements(null);
+}, [
+  selectedElements,
+  edges,
+  setNodes,
+  setEdges,
+  setSelectedElements,
+  toast,
+]);
 
   useHotkeys(
     "backspace",
@@ -1280,13 +1411,14 @@ const onElementClick: NodeMouseHandler = useCallback(
   //@desc : 1) on shopFloor node double click navigate to dashboard
   //        2) on factory node double click show dialog
   const onNodeDoubleClick: NodeMouseHandler = useCallback(
+   
     async (event, node) => {
       if (node.type == "factory") {
         const cleanedFactoryId = node.id.replace("factory_", "");
         setSelectedFactoryId(cleanedFactoryId);
         setDialogVisible(true);
       }
-
+      console.log("node data",node)
       // if (node.type === "shopFloor") {
       //     if (hasChanges) {
       //         // Save or update changes before navigating if there are any changes
@@ -1411,11 +1543,19 @@ const onElementClick: NodeMouseHandler = useCallback(
                 raised
               />
               <Button
-                label={t("button:undo")}
-                onClick={getMongoDataFlowEditor}
-                className="p-button-secondary m-2 bold-text"
-                raised
-              />
+              label={t("button:undo")}
+              onClick={handleUndo}
+              disabled={currentHistoryIndex <= 0}
+              className="p-button-secondary m-2 bold-text"
+              raised
+            />
+            <Button
+              label="Redo"
+              onClick={handleRedo}
+              disabled={currentHistoryIndex >= history.length - 1}
+              className="m-2 bold-text"
+              raised
+            />
               <Button
                 label={t("button:refresh")}
                 onClick={refreshFromScorpio}

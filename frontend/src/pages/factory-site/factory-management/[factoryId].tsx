@@ -43,7 +43,7 @@ const ShopFloorManager: React.FC = () => {
   const elementRef = useRef(null);
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
   const [shopfloor, setShopfloor] = useState({});
-  const [isSidebarExpand, setSidebarExpand] = useState(true);
+  const [isSidebarExpand, setSidebarExpand] = useState(false);
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -86,7 +86,7 @@ const ShopFloorManager: React.FC = () => {
             style={{
               display: "flex",
               height: "calc(100vh - 120px)", 
-              zoom: "85%",
+              zoom: "90%",
             }}
             className="bg-gray-100"
           >
@@ -114,6 +114,7 @@ const ShopFloorManager: React.FC = () => {
                   borderRadius: "10px",
                   padding: "10px",
                   maxHeight: "100%",
+                  width:"120%",
                   flexShrink: 0,
                 }}
               >

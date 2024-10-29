@@ -41,7 +41,10 @@ export class AllocatedAssetService {
           }
         })
       }
+    // Remove duplicates
       assetArr = [...new Set(assetArr)];
+      // Transform array into required format
+      const formattedAssetArr = assetArr.map(id => ({ id }));
       if (assetArr.length > 0) {
         const headers = {
           Authorization: 'Bearer ' + token,
@@ -54,11 +57,13 @@ export class AllocatedAssetService {
           "id": id,
           "type": "urn-holder",
           "http://www.industry-fusion.org/schema#last-data": {
-            type: 'Property',
-            object: assetArr
+             value: {
+              items: formattedAssetArr
+            }
           }
         };
         let response = await axios.post(this.scorpioUrl, data, {headers});
+        await this.updateGlobal(token)
         return {
           status: response.status,
           statusText: response.statusText
@@ -74,45 +79,61 @@ export class AllocatedAssetService {
     }
   }
   
-  async createGlobal(token: string) {
-    try{
-      let allocatedAssetData = await this.findAll(token);
-      let assetArr = [];
-      for(let i = 0; i < allocatedAssetData.length; i++){    
-        const factorySpecificData = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object; 
-        if(Array.isArray(factorySpecificData)){
-          assetArr = [...assetArr, ...factorySpecificData];
-        } else {
-          assetArr.push(factorySpecificData);
+async createGlobal(token: string) {
+  try {
+    let allocatedAssetData = await this.findAll(token);
+    console.log("allocatedAssetData createGlobal",allocatedAssetData)
+    let assetArr = [];
+    
+    for(let i = 0; i < allocatedAssetData.length; i++) {    
+      const lastData = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"];
+      
+      // Only process if it's a Property type with items
+      if (lastData.type === "Property" && 
+          lastData.value && 
+          lastData.value["https://industry-fusion.org/base/v0.1/items"]) {
+        
+        const items = lastData.value["https://industry-fusion.org/base/v0.1/items"];
+        if (Array.isArray(items)) {
+          assetArr = [...assetArr, ...items];
         }
       }
-      assetArr = [...new Set(assetArr)];
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      };
-
-      const data = {
-        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-        "id": "urn:ngsi-ld:global-allocated-assets-store",
-        "type": "urn-holder",
-        "http://www.industry-fusion.org/schema#last-data": {
-          type: 'Property',
-          object: assetArr.length > 0 ? assetArr : ""
-        }
-      };
-      let response = await axios.post(this.scorpioUrl, data, {headers});
-      return {
-        status: response.status,
-        statusText: response.statusText
-      }
-    }catch(err){
-      return err;
     }
-  }
 
- async findOne(factoryId: string, token: string) {
+    // Remove duplicates while preserving object structure
+    assetArr = Array.from(
+      new Set(assetArr.map(item => JSON.stringify(item)))
+    ).map(item => JSON.parse(item));
+
+    const headers = {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/ld+json',
+      'Accept': 'application/ld+json'
+    };
+    // console.log("assetArr",assetArr)
+    const data = {
+      "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+      "id": "urn:ngsi-ld:global-allocated-assets-store",
+      "type": "urn-holder",
+      "http://www.industry-fusion.org/schema#last-data": {
+        type: "Property",
+        value: {
+          items: assetArr
+        }
+      }
+    };
+
+    let response = await axios.post(this.scorpioUrl, data, {headers});
+    return {
+      status: response.status,
+      statusText: response.statusText
+    }
+  } catch(err) {
+    return err;
+  }
+}
+
+  async findOne(factoryId: string, token: string) {
     try{
       const headers = {
         Authorization: 'Bearer ' + token,
@@ -125,12 +146,13 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-     
-      let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"].object;
+
+      let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
+  
       let finalArray = [];
       if (Array.isArray(assetIds) && assetIds.length > 0) {
         for (let i = 0; i < assetIds.length; i++) {
-          let id = assetIds[i];
+          let id = assetIds[i].id;
           const assetData = await this.assetService.getAssetDataById(id, token);
           const finalData = {
             id,
@@ -171,7 +193,7 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-    
+      // console.log("findAll",response.data) 
       return response.data;
     } catch(err) {
       return err;
@@ -223,23 +245,42 @@ export class AllocatedAssetService {
       let response = await axios.get(fetchUrl, {
         headers
       });
-      if(response.data){
-        return response.data["http://www.industry-fusion.org/schema#last-data"].object;
+     if (response.data) {
+      console.log("global assets", response.data);
+      
+      // Extract the items array from the nested structure
+      const lastData = response.data["http://www.industry-fusion.org/schema#last-data"];
+      if (lastData?.value?.["https://industry-fusion.org/base/v0.1/items"]) {
+        const items = lastData.value["https://industry-fusion.org/base/v0.1/items"];
+        
+        // Return array of asset IDs
+        if (Array.isArray(items)) {
+          return items.map(item => item.id).filter(Boolean);
+        }
       }
-    } catch(err) {
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      };
-      if (err.response && err.response.status === 404) {
-        await this.createGlobal(token);
-        return await this.getGlobalAllocatedAssets(token);
-      } else {
-        return err;
-      }
+      
+      // Return empty array if no items found
+      return [];
+    }
+    
+    return [];
+    
+  } catch (err) {
+    const headers = {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/ld+json',
+      'Accept': 'application/ld+json'
+    };
+    
+    if (err.response && err.response.status === 404) {
+      await this.createGlobal(token);
+      return await this.getGlobalAllocatedAssets(token);
+    } else {
+      console.error('Error fetching global allocated assets:', err);
+      return [];
     }
   }
+}
 
   async update(factoryId: string, token: string) {
     try{
@@ -276,6 +317,7 @@ export class AllocatedAssetService {
         });
         if(response.data.length > 0){
           let assetData =  response.data[0];
+          //  const formattedAssetArr = assetArr.map(id => ({ id }));
           let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"].object;
           if(Array.isArray(getAllocatedAssets)){
             finalAssetData = [...finalAssetData, ...getAllocatedAssets];
