@@ -154,15 +154,12 @@
   overflow: hidden;
 }
 
-/* Search Container */
-.search-container {
-  margin-bottom: 16px; /* Reduced from 20px */
-  padding: 0 8px 0 0;
-}
 
-.input-group {
+.search-container .input-group {
   display: flex;
   gap: 8px;
+  width: 100%;
+  margin-left: 1%;
 }
 
 /* Make tabs fill available space */

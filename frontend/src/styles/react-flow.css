@@ -12,39 +12,35 @@
   stroke: #784be8;
   stroke-width: 2;
   pointer-events: all;
-  z-index: 500;
+  z-index: 300; 
 }
 
 .react-flow__edge {
   pointer-events: stroke;
-  z-index: 500;
+  z-index: 300;
 }
 
 .react-flow__edge-path {
   stroke: #784be8;
   stroke-width: 2;
   fill: none;
-  z-index: 500;
+  z-index: 300; 
 }
 
 .react-flow__connection-path {
   stroke: #784be8;
   stroke-width: 2;
-  z-index: 500;
+  z-index: 300;
 }
 
-/* Handle Styles */
 .react-flow__handle {
-  width: 8px;
-  height: 8px;
-  background: #784be8;
-  border: 2px solid white;
-  border-radius: 50%;
-  position: absolute;
-  pointer-events: all;
-  transform-origin: center;
-  transform: translate(-50%, -50%);
-  z-index: 1;
+  z-index: 500; 
+}
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: #784be8;
+  stroke-width: 3;
+  fill: none;
 }
 
 /* Connection Indicator */
@@ -57,8 +53,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   margin-left: -10px;
-  /* margin-top: 4px; */
-  z-index: 1;
+  z-index: 400; 
 }
 
 /* Handle Positioning */
@@ -70,7 +65,7 @@
 
 .react-flow__handle-bottom {
   bottom: 0;
-  left: 50%;
+  left: 45%;
   transform: translate(-50%, 50%);
 }
 
@@ -92,17 +87,16 @@
 
 /* Layer Organization */
 .react-flow__edges {
-  z-index: 500;
-}
+  z-index: 300; 
 
 .react-flow__nodes {
-  z-index: 1;
+  z-index: 500; 
   pointer-events: all !important;
 }
 
 /* Node specific styles to ensure draggability */
 .react-flow__node {
-  z-index: 1;
+  z-index: 500; 
   pointer-events: all !important;
   cursor: grab;
 }
@@ -142,7 +136,7 @@
 
 /* Edge Text Labels */
 .react-flow__edge-textwrapper {
-  z-index: 500;
+  z-index: 400;
   pointer-events: none;
 }
 
@@ -160,4 +154,5 @@
 /* Ensure node dragging works */
 .react-flow__node-dragging {
   z-index: 1000;
+}
 }

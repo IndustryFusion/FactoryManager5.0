@@ -30,7 +30,11 @@
 .customHandle[data-handlepos="top"] {
   top: -10px !important;
   left: 50% !important;
+  background-color: transparent;
   transform: translate(-50%, 0);
+  width: 30%;
+  height: 30%;
+  border: none;
 }
 
 .customHandle[data-handlepos="bottom"] {
@@ -80,16 +84,6 @@
 .react-flow__edge-interaction {
   margin-left: -100px;
   z-index: 1000;
-}
-
-/* Handle Hover States */
-.customHandle:hover {
-  background-color: #121212;
-  cursor: crosshair;
-}
-
-.customHandle.connecting {
-  background-color: #ff0072;
 }
 
 /* MultiSelect Panel */
