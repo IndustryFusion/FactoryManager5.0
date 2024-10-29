@@ -59,7 +59,7 @@
 }
 
 /* Asset List */
-.asset-list {
+.tab-list-items .asset-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
