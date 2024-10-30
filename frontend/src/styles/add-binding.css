@@ -511,6 +511,7 @@
     color: #2b2b2b;
     background-color: #e7e7e7;
     font-size: 14px;
+    padding: 8px 15px 8px 15px;
 }
 .consumer_details_wrapper{
     display: flex;
@@ -664,9 +665,7 @@ overflow: hidden;
 
 .contract_dialog_company_details {
     display: flex;
-    gap: 4rem;
     font-family: League Spartan;
-    margin-left: 1rem;
 }
 .contract_dialog_heading{
     font-family: League Spartan;
