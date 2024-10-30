@@ -281,8 +281,7 @@ const AddContractPage: React.FC = () => {
 
     const handleInputChange = (e: any , field: string) => {
         if (field === 'interval') {
-            const value =  e.value;
-            
+            const value =  e.target.value;
             // Ensure value is a valid number
             if (isNaN(value)) {
                 toast.current?.show({
@@ -296,17 +295,16 @@ const AddContractPage: React.FC = () => {
     
             const min = templateData?.properties[field]?.minimum ?? 0;
             const max = templateData?.properties[field]?.maximum ?? Infinity;
-
-            if (value >= min && value <= max) {
-                setFormData({ ...formData, [field]: value });
-            } else {
+            
+            setFormData({ ...formData, [field]: value });
+            if (value <= min || value >= max) {
                 toast.current?.show({
                     severity: 'warn',
                     summary: 'Warning',
                     detail: `Value must be between ${min} and ${max}.`
                 });
             }
-            
+
             return;
         }
         if(field === 'contract_name'){
@@ -321,7 +319,7 @@ const AddContractPage: React.FC = () => {
                      
         }
         setFormData({ ...formData, [field]: e.target.value });
-    };;
+    };
 
     const fetchConsumerCompanyName = async (companyId: string) => {
         try {
@@ -383,7 +381,16 @@ const AddContractPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("form data ",formData);
+        const min = templateData?.properties.interval?.minimum ?? 0;
+        const max = templateData?.properties.interval?.maximum ?? Infinity;
+        if (formData.interval <= min || formData.interval >= max) {
+            toast.current?.show({
+                severity: 'warn',
+                summary: 'Warning',
+                detail: `Value must be between ${min} and ${max}.`
+            });
+            return;
+        }
         const clauses = templateData?.properties.contract_clauses.enums || [];
         const formattedClauses = clauses.map((clause: string) =>
         clause.replace(/\[consumer\]/g, formData.consumer_company_name || 'Company Name Not Available')
@@ -427,7 +434,7 @@ const AddContractPage: React.FC = () => {
                 // Check if the company has certificates
                 if (response?.data && response?.data.length > 0) {
                     const response = await createContract(dataToSend);
-                    
+
                     if (response?.statusText === "Created" && response?.data.status === 201) {
                         toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Contract created.' });
                     }
