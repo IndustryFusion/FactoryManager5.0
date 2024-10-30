@@ -16,9 +16,7 @@
 
 import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import {
-  getshopFloorById,
-  deleteShopFloorById,
-} from "@/utility/factory-site-utility";
+  getshopFloorById,deleteShopFloorById,  fetchAllShopFloors, TransformedShopFloor } from "@/utility/factory-site-utility";
 import { ShopFloor } from "../../types/shop-floor";
 import { Button } from "primereact/button";
 import { useRouter } from "next/router";
@@ -131,29 +129,21 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     }
   };
 
-  const fetchShopFloors = async (factoryId: string) => {
-  try {
-    const factoryDetails = await getshopFloorById(factoryId);
-    console.log("factoryDetails",factoryDetails)
-    setShopFloors(
-      factoryDetails.map((floor: any) => ({
-        id: floor.id,
-        floorName: floor["http://www.industry-fusion.org/schema#floor_name"]?.value || "Unnamed Floor",
-        type_of_floor: floor["http://www.industry-fusion.org/schema#type_of_floor"]?.value || "Unknown"
-      }))
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("Failed to fetch shop floors:", error);
-      setError(error.message);
-    } else {
-      console.error("Failed to fetch shop floors:", error);
-      setError("An error occurred");
+  const fetchShopFloorsData = async (factoryId: string) => {
+    try {
+      const floors = await fetchAllShopFloors(factoryId);
+      setShopFloors(floors);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      setError(errorMessage);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: errorMessage,
+      });
     }
-  }
-};
+  };
 
-console.log("shopFloor 111", shopFloors)
 
   useEffect(() => {
     filterShopFloors();
@@ -171,7 +161,7 @@ console.log("shopFloor 111", shopFloors)
       const id = Array.isArray(router.query.factoryId) ? router.query.factoryId[0] :
       router.query.factoryId;
       if (typeof id === 'string') {
-        fetchShopFloors(id);
+         fetchShopFloorsData(id);
         setFactoryIdvalue(id);
       } else {
         console.error("factoryId is not a string or is undefined.");
