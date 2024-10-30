@@ -29,7 +29,37 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
  * @throws {Error} Throws an error if the upload fails.
  */
 
+export interface ShopFloorProperty {
+  type: string;
+  value: string;
+  observedAt: string;
+}
 
+export interface ShopFloorRelationship {
+  type: string;
+  object: string;
+}
+
+export interface ShopFloorResponse {
+  id: string;
+  type: string;
+  "http://www.industry-fusion.org/schema#floor_name": ShopFloorProperty;
+  "http://www.industry-fusion.org/schema#type_of_floor": ShopFloorProperty;
+  "@context": string[];
+}
+
+export interface FactoryResponse {
+  id: string;
+  type: string;
+  "http://www.industry-fusion.org/schema#hasShopFloor": ShopFloorRelationship[];
+  "@context": string[];
+}
+
+export interface TransformedShopFloor {
+  id: string;
+  floorName: string;
+  type_of_floor: string;
+}
 interface RelationshipDetail {
   type: string;
   object: string[];
@@ -243,7 +273,7 @@ export const getShopFloors = async (factoryId: string) => {
 
 export const getshopFloorById = async (factoryId: string) => {
 
-  const response = await axios.get(`${API_URL}/shop-floor/`, {
+  const response = await axios.get(`${API_URL}/shop-floor/${factoryId}`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -698,4 +728,85 @@ export const customLogger: {
   log: console.log,
 };
 
+const fetchSingleShopFloor = async (shopFloorId: string): Promise<ShopFloorResponse> => {
+  try {
+    const response = await axios.get(`${API_URL}/shop-floor/${shopFloorId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching shop floor data for ID ${shopFloorId}:`, error);
+    throw error;
+  }
+};
 
+/**
+ * Transforms raw shop floor data into a simplified format
+ * @param shopFloorData - Raw shop floor data from the API
+ * @returns Transformed shop floor data
+ */
+const transformShopFloorData = (shopFloorData: ShopFloorResponse): TransformedShopFloor => {
+  return {
+    id: shopFloorData.id,
+    floorName: shopFloorData["http://www.industry-fusion.org/schema#floor_name"]?.value || "Unnamed Floor",
+    type_of_floor: shopFloorData["http://www.industry-fusion.org/schema#type_of_floor"]?.value || "Unknown"
+  };
+};
+
+/**
+ * Fetches all shop floors for a factory
+ * @param factoryId - The ID of the factory
+ * @returns Promise with an array of transformed shop floor data
+ * @throws Error if the fetch fails
+ */
+export const fetchAllShopFloors = async (factoryId: string): Promise<TransformedShopFloor[]> => {
+  try {
+    // Fetch factory data to get shop floor IDs
+    const factoryResponse = await axios.get<FactoryResponse>(`${API_URL}/shop-floor/${factoryId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      withCredentials: true,
+      params: { id: factoryId },
+    });
+
+    const hasShopFloor = factoryResponse.data["http://www.industry-fusion.org/schema#hasShopFloor"];
+
+    // Check for json-ld-1.1 or empty relationships
+    if (!hasShopFloor || 
+        (Array.isArray(hasShopFloor) && hasShopFloor.length === 0) ||
+        (!Array.isArray(hasShopFloor) && hasShopFloor.object === "json-ld-1.1")) {
+      return [];
+    }
+
+    // Normalize to array
+    const shopFloorRelationships = Array.isArray(hasShopFloor) ? hasShopFloor : [hasShopFloor];
+
+    // Filter out json-ld-1.1 entries
+    const validShopFloorRelationships = shopFloorRelationships.filter(
+      relationship => relationship.object && relationship.object !== "json-ld-1.1"
+    );
+
+    if (validShopFloorRelationships.length === 0) {
+      return [];
+    }
+
+    // Fetch all shop floor details in parallel
+    const shopFloorPromises = validShopFloorRelationships
+      .map(relationship => fetchSingleShopFloor(relationship.object));
+
+    const shopFloorResults = await Promise.all(shopFloorPromises);
+
+    // Transform the results
+    return shopFloorResults.map(transformShopFloorData);
+
+  } catch (error) {
+    console.error('Error fetching shop floors:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch shop floors');
+  }
+};
