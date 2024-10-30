@@ -209,7 +209,7 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
           <Button
                 label={isGenerating ? "Generating..." : "Generate Certificate"}
                 onClick={handleGenerateCertificate}
-                className="p-button-rounded p-button-black generate-cert-btn mt-4"
+                className="p-button-rounded p-button-black generate-cert-btn "
                 disabled={isGenerating}
               />
           </div>

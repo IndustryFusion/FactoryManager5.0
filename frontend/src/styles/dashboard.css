@@ -56,7 +56,7 @@
 .p-dialog-header {
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
-    border-bottom: 1px solid #e6e6e6;
+    /* border-bottom: 1px solid #e6e6e6; */
 }
 .p-dialog .p-dialog-content:last-of-type, .p-dialog .p-dialog-footer {
     border-bottom-right-radius: 10px;
@@ -113,7 +113,6 @@
 
   .dashboard-container .p-inputtext,
   .dashboard-container .p-inputnumber .p-inputtext {
-  width: 100%;
   border-radius: 10px;
   /* border: 1px solid #ced4da !important; */
   background: var(--white);
