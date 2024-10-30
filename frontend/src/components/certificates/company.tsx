@@ -183,7 +183,7 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
             </div>
             <div>
             <Button
-                  className="generate-cert-btn mt-4"
+                  className="generate-cert-btn "
                   onClick={handleGenerateCertificate}
                 >
                   Generate Certificate
@@ -200,7 +200,7 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
           />
         )}
 
-        <div className="certificate-card-container">
+        <div className="certificate-card-container mt-4">
           {certificateData.length > 0 ? (
             certificateData.map((certificate, index) => (
               <CertificateCard
