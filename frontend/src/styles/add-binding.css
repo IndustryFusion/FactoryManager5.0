@@ -666,9 +666,11 @@ overflow: hidden;
 .contract_dialog_company_details {
     display: flex;
     font-family: League Spartan;
+    margin-top: 2rem;
 }
 .contract_dialog_heading{
     font-family: League Spartan;
+    font-size: 23px;
 }
 .representative-container{
     border: 3px solid #ced4da;

@@ -343,6 +343,7 @@
     border: none;
     box-shadow: none;
     font-family: inherit;
+    border-radius: 8px;
 }
 .contract_form_field .p-datepicker-trigger{
     margin: -2px -2px -2px 0px;
@@ -501,6 +502,7 @@
     font-size: 15px;
     padding: 0.3rem 0.7rem;
     border-radius: 16px;
+    margin-bottom: 0.8rem;
 	}
 .asset_chips .p-inputtext.p-chips-multiple-container{
     border: none;
