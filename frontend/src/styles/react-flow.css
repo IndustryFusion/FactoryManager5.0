@@ -1,6 +1,6 @@
 /* Dialog and Text Styles */
-.p-dialog-title {
-  padding-left: 2%;
+.dialog-class .p-dialog-title {
+  padding-left: -2%;
 }
 
 .bold-text {
@@ -56,7 +56,7 @@
   pointer-events: all !important;
 }
 
-/* Node specific styles to ensure draggability */
+
 .react-flow__node {
   z-index: 500; 
   pointer-events: all !important;
@@ -92,13 +92,13 @@
 }
 
 
-/* Edge Text Labels */
+
 .react-flow__edge-textwrapper {
   z-index: 400;
   pointer-events: none;
 }
 
-/* Additional pointer-event fixes */
+
 .react-flow__nodes-selection {
   z-index: 2;
   pointer-events: none;
@@ -109,7 +109,6 @@
   pointer-events: none;
 }
 
-/* Ensure node dragging works */
 .react-flow__node-dragging {
   z-index: 1000;
 }

@@ -12,15 +12,15 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Search Container Styling */
-.p-input-icon-left {
+
+.search-container .p-input-icon-left {
   position: relative;
   width: 100%;
   margin: 15px 0;
 }
 
-/* Search Input Styling */
-.p-input-icon-left .p-inputtext {
+
+.search-container .p-input-icon-left .p-inputtext {
   padding: 12px 12px 12px 40px;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
@@ -31,38 +31,25 @@
   color: #495057;
 }
 
-.p-input-icon-left .p-inputtext:hover {
+.search-container .p-input-icon-left .p-inputtext:hover {
   background-color: #fff;
   border-color: #6366f1;
 }
 
-/* Search Icon Styling */
-.p-input-icon-left i.pi-search {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-  font-size: 1rem;
-  transition: color 0.3s ease;
-}
-
-.p-input-icon-left:hover i.pi-search {
+.search-container .p-input-icon-left i.pi-search {
   color: #6366f1;
 }
 
-/* When input is focused, change icon color */
-.p-input-icon-left .p-inputtext:focus + i.pi-search {
+
+.search-container .p-input-icon-left:hover i.pi-search {
   color: #6366f1;
 }
 
+.search-container .p-input-icon-left .p-inputtext:focus + i.pi-search {
+  color: #6366f1;
+}
 .search-icon{
-  margin-top: 0.5%;
-}
-/* Placeholder Styling */
-.p-input-icon-left .p-inputtext::placeholder {
-  color: #adb5bd;
-  font-weight: 400;
+  margin-top: -7px;
 }
 
 /* Animation for focus */
@@ -70,11 +57,6 @@
   0% { transform: scale(1); }
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
-}
-.p-input-icon-left .p-inputtext:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
-  background-color: #fff;
 }
 
 /* Button animations */
@@ -108,9 +90,7 @@
   transition: all 0.3s ease;
   margin-left: -20px;
 }
-/* Existing styles remain the same until the list styles */
 
-/* List Container Styling */
 .list-disc {
   list-style: none;
   padding: 0;

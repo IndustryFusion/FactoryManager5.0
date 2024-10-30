@@ -1597,6 +1597,7 @@ const handleBackspacePress = useCallback(() => {
           visible={dialogVisible}
           onHide={() => setDialogVisible(false)}
           style={{ width: "50vw" }}
+          className="dialog-class"
         >
           <hr style={{ margin: "0" }} />
           <p>
