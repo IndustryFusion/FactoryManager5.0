@@ -182,7 +182,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         },
         withCredentials: true,
       });
-
+      console.log("payload1111",payload)
       const shopFloorResponse = response.data;
       
 
@@ -194,6 +194,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
           name: response.data.floorName,
           type: "shopFloor",
         };
+        console.log("newShopFloor",newShopFloor)
         addShopFloor(newShopFloor);
         // setIsVisibleProp(false);
       } else if (shopFloorResponse.status === 400) {

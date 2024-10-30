@@ -140,40 +140,40 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   };
 
   return (
-    <div
-      style={{
-        padding: "10px",
-        border: "1px none #ddd",
-        backgroundColor: "#caf1d8",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        height: "100px",
-      }}
-      className="customNode"
-    >
-      
-      {!isConnecting && isConnectable && (
-        <Handle className="customHandle" position={Position.Bottom} type="source"  style={{ zIndex: 10 }} />
-      )}
-      <Handle className="customHandle" position={Position.Top} type="target" isConnectable={isConnectable}  style={{ zIndex: 10 }} />
-      <small>{data.label}</small>
-      <div style={{ marginTop: "10px",zIndex: 20  }}>
-        <MultiSelect
-          value={selectedRelations}
-          options={relationOptions}
-          onChange={handleRelationsChange}
-          optionLabel="label"
-          placeholder="Select Relations"
-          display="chip"
-          style={{ width: "100%" }}
-          className="w-full sm:w-10rem"
-          appendTo="self" 
-          panelClassName="custom-multiselect-panel"
-        />
-      </div>
+  <div className="customNode">
+    {!isConnecting && isConnectable && (
+      <Handle 
+        className="customHandle"
+        position={Position.Bottom}
+        type="source"
+        data-handlepos="bottom"
+        isConnectable={isConnectable}
+      />
+    )}
+    <Handle 
+      className="customHandle"
+      position={Position.Top}
+      type="target"
+      data-handlepos="top"
+      isConnectable={isConnectable}
+    />
+    <small className="node-label">{data.label}</small>
+    <div style={{ marginTop: "10px", marginLeft:"20px" }}>
+      <MultiSelect
+        value={selectedRelations}
+        options={relationOptions}
+        onChange={handleRelationsChange}
+        optionLabel="label"
+        placeholder="Select Relations"
+        display="chip"
+        style={{ width: "100%" }}
+        className="w-full sm:w-10rem"
+        appendTo="self"
+        panelClassName="custom-multiselect-panel"
+      />
     </div>
-  );
+  </div>
+);
 };
 
 export default CustomAssetNode;

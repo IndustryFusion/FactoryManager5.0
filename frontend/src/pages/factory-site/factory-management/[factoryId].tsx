@@ -36,6 +36,7 @@ import {
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Sidebar from "@/components/navBar/sidebar";
+import "@/styles/react-flow-page.css"
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -43,7 +44,7 @@ const ShopFloorManager: React.FC = () => {
   const elementRef = useRef(null);
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
   const [shopfloor, setShopfloor] = useState({});
-  const [isSidebarExpand, setSidebarExpand] = useState(true);
+  const [isSidebarExpand, setSidebarExpand] = useState(false);
 
   const factoryId =
     typeof router.query.factoryId === "string"
@@ -56,6 +57,7 @@ const ShopFloorManager: React.FC = () => {
     const fetchShopFloorById = async (factoryId: string) => {
       try {
         const details = await getShopFloors(factoryId);
+        console.log("details",details)
         setFactoryDetails(details);
       } catch (error) {
         console.error("Failed to fetch factory details", error);
@@ -65,7 +67,8 @@ const ShopFloorManager: React.FC = () => {
     if (router.isReady) {
       const { factoryId } = router.query;
       if (typeof factoryId === 'string') {
-        fetchShopFloorById(factoryId);
+        const data = fetchShopFloorById(factoryId);
+        console.log("data",data)
       }
     }
   }, [factoryId, router.isReady]);
@@ -75,48 +78,23 @@ const ShopFloorManager: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex">
+   <div className="flex">
       <Sidebar />
       <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
         <FactoryShopFloorProvider>
           <div className="navbar_wrapper mt-4">
             <Navbar navHeader="Factory Flow" />
           </div>
-          <div
-            style={{
-              display: "flex",
-              height: "calc(100vh - 120px)", 
-              zoom: "85%",
-            }}
-            className="bg-gray-100"
-          >
+          <div className="main-content bg-gray-100">
             <ShopFloorProvider>
-              <div
-                style={{
-                  borderRight: "1px solid #ccc",
-                  padding: "10px",
-                  width: "400px",
-                  maxHeight: "100%",
-                  flexShrink: 0,
-                }}
-              >
+              <div className="shopfloor-list-container">
                 <ShopFloorList
                   factoryId={factoryId}
                   onShopFloorDeleted={handleShopFloorDeleted}
                   setShopfloorProp={setShopfloor}
                 />
               </div>
-              <div
-                ref={elementRef}
-                style={{
-                  flex: 1,
-                  border: "1px solid #ccc",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  maxHeight: "100%",
-                  flexShrink: 0,
-                }}
-              >
+              <div ref={elementRef} className="flow-editor-container">
                 {factoryDetails ? (
                   <FlowEditor
                     factoryId={factoryId}
@@ -124,18 +102,10 @@ const ShopFloorManager: React.FC = () => {
                     deletedShopFloors={deletedShopFloors}
                   />
                 ) : (
-                  <div>Loading factory details...</div>
+                  <div className="loading-state">Loading factory details...</div>
                 )}
               </div>
-              <div
-                style={{
-                  borderRight: "1px solid #ccc",
-                  padding: "10px",
-                  width: "450px",
-                  maxHeight: "100%",
-                  flexShrink: 0,
-                }}
-              >
+              <div className="unallocated-assets-container">
                 <UnallocatedAssets factoryId={factoryId} product_name="" />
               </div>
             </ShopFloorProvider>
