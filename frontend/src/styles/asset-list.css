@@ -1,5 +1,5 @@
 /* Tab View Container */
-.p-tabview {
+.assets-tabview .p-tabview {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -11,39 +11,36 @@
 }
 
 /* Tab Headers */
-.p-tabview .p-tabview-nav {
+.assets-tabview .p-tabview .p-tabview-nav {
   margin: 0;
   padding: 8px 16px 0 16px;
   background-color: #fff;
   border-bottom: 2px solid #f0f0f0;
 }
 
-.p-tabview .p-tabview-nav li {
-  margin-right: 4px;
-}
-
-.p-tabview .p-tabview-nav-link {
+.assets-tabview .p-tabview .p-tabview-nav-link {
   padding: 16px 24px !important;
   font-weight: 600 !important;
   font-size: 1rem;
   color: #64748b;
   transition: all 0.2s ease;
   border-radius: 8px 8px 0 0;
+  margin-right: 4px;
 }
 
-.p-tabview .p-tabview-nav-link:hover {
+.assets-tabview .p-tabview .p-tabview-nav-link:hover {
   background-color: #f8fafc;
   color: #6366f1;
 }
 
-.p-tabview .p-tabview-nav-link.p-highlight {
+.assets-tabview .p-tabview .p-tabview-nav-link.p-highlight {
   background-color: transparent;
   color: #6366f1;
   border-bottom: 3px solid #6366f1;
 }
 
 /* Tab Panels Container */
-.p-tabview .p-tabview-panels {
+.assets-tabview .p-tabview .p-tabview-panels {
   padding: 1.5rem 1.5rem 1.5rem 0.5rem;
   height: calc(85vh - 180px); /* Increased from 280px */
   overflow-y: auto;
@@ -93,20 +90,20 @@
 }
 
 /* Custom Scrollbar */
-.p-tabview .p-tabview-panels::-webkit-scrollbar,
+.assets-tabview .p-tabview .p-tabview-panels::-webkit-scrollbar,
 .asset-list-container::-webkit-scrollbar,
 .tab-list-items::-webkit-scrollbar {
   width: 8px;
 }
 
-.p-tabview .p-tabview-panels::-webkit-scrollbar-track,
+.assets-tabview .p-tabview .p-tabview-panels::-webkit-scrollbar-track,
 .asset-list-container::-webkit-scrollbar-track,
 .tab-list-items::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.p-tabview .p-tabview-panels::-webkit-scrollbar-thumb,
+.assets-tabview .p-tabview .p-tabview-panels::-webkit-scrollbar-thumb,
 .asset-list-container::-webkit-scrollbar-thumb,
 .tab-list-items::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -114,7 +111,7 @@
   border: 2px solid #f1f1f1;
 }
 
-.p-tabview .p-tabview-panels::-webkit-scrollbar-thumb:hover,
+.assets-tabview .p-tabview .p-tabview-panels::-webkit-scrollbar-thumb:hover,
 .asset-list-container::-webkit-scrollbar-thumb:hover,
 .tab-list-items::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
