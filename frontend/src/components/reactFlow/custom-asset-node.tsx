@@ -158,7 +158,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       isConnectable={isConnectable}
     />
     <small className="node-label">{data.label}</small>
-    <div style={{ marginTop: "10px", marginLeft:"20px" }}>
+    <div style={{ marginTop: "10px", marginLeft:"20px" }} className="multi-select">
       <MultiSelect
         value={selectedRelations}
         options={relationOptions}

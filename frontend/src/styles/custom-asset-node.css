@@ -10,7 +10,7 @@
   justify-content: space-between;
   border-radius: 16px;
 }
- .p-inputwrapper-filled{
+ .custom-multiselect-panel .p-inputwrapper-filled{
   border-radius: 15px;
  }
 /* Handle Base Styles */
@@ -37,10 +37,10 @@
   height: 30%;
   border: none;
 }
-.p-multiselect-trigger{
+.multi-select .p-multiselect-trigger{
   border-radius: 15px;
 }
-.p-multiselect-chip{
+.multi-select .p-multiselect-chip{
   border-radius: 15px;
 }
 .customHandle[data-handlepos="bottom"] {
