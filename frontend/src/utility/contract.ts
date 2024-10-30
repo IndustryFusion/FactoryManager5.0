@@ -305,3 +305,22 @@ export const getContractTemplatesById = async (id: string) => {
     }
   }
 };
+
+export const getContractByTemplates = async () => {
+  try {
+      return await api.get(
+          `${IFX_BACKEND_URL}/contract/get-contract-by-template`, {
+          headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          },
+      });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
