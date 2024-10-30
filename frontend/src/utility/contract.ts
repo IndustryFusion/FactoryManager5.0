@@ -309,7 +309,7 @@ export const getContractTemplatesById = async (id: string) => {
 export const getContractByTemplates = async () => {
   try {
       return await api.get(
-          `${IFX_BACKEND_URL}/contract/get-contract-by-template`, {
+          `${BACKEND_API_URL}/templates/get-contract-by-template`, {
           headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
