@@ -224,7 +224,7 @@ const CreateBinding: React.FC = () => {
                     }
                 } else {
                     setAssetVerified(null);
-                    toast.current?.show({ severity: 'warn', summary: 'Warn', detail: assetCertificateResponse?.data.message });
+                    toast.current?.show({ severity: 'warn', summary: 'Warn', detail: "Asset Certificate not found" });
                 }
             }
         } catch (error) {
