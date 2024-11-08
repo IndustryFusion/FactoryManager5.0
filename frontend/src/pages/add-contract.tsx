@@ -245,15 +245,18 @@ const AddContractPage: React.FC = () => {
     const getCompanyVerification = async(company_ifric_id: string) => {
         try{
             const response = await verifyCompanyCertificate(company_ifric_id);
+            console.log("certifiexpr", response);
             if(response?.data.success === true && response.data.status === 201){
-                setConsumerCompanyCertified(true)
+                setConsumerCompanyCertified(true);
             }
             else{
-                setConsumerCompanyCertified(false)
+                setConsumerCompanyCertified(false);
+                toast.current?.show({ severity: 'error', summary: 'Error', detail: response?.data.message });
             }
         }
         catch(error){
             console.error(error);
+            
         }
     }
 
