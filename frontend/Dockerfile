@@ -38,5 +38,14 @@ COPY . .
 # Open the desired port
 EXPOSE 3002
 
-# Run the web service on container startup.
-CMD ["npm", "run", "dev"]
+ARG ENV=dev
+# Conditionally copy the correct environment file based on ENV
+RUN if [ "$ENV" = "dev" ]; then \
+    cp .env.development .env.local; \
+  else \
+    cp .env.production .env.local; \
+  fi
+# Run the build (always)
+RUN npm run build
+# Start the application (production start command)
+CMD ["npm", "run", "start"]
