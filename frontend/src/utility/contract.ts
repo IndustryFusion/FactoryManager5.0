@@ -324,3 +324,22 @@ export const getContractByTemplates = async () => {
     }
   }
 };
+
+export const getAllContractByAssetType = async () => {
+  try {
+      return await api.get(
+          `${BACKEND_API_URL}/contract/get-all-contract-by-asset-type`, {
+          headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          },
+      });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};

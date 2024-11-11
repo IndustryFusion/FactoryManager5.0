@@ -7,13 +7,13 @@ import { Tree } from "primereact/tree";
 import { NodeService } from "@/service/NodeService";
 import { Checkbox } from "primereact/checkbox";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getContracts } from "@/utility/contract";
+import { getAllContractByAssetType } from "@/utility/contract";
 import ContractCard from "@/components/bindingRequest/binding-file";
 import { IoArrowBack } from "react-icons/io5";
 import ContractFolders from "@/components/bindingRequest/binding-folders";
 import { Toast, ToastMessage } from "primereact/toast";
 import axios from "axios";
-import { fetchContractsRedux } from "@/redux/contract/contractSlice";
+import { updateBindingRequestContracts } from "@/redux/binding/bindingRequestSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Sidebar from '@/components/navBar/sidebar';
 
@@ -21,7 +21,7 @@ const ContractManager = () => {
   const [nodes, setNodes] = useState([]);
   const [companyIfricId, setCompanyIfricId] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
-  // const [contractsData, setContractsData] = useState([]);
+  const [contractsData, setContractsData] = useState([]);
   const [predictiveFilteredContractsData, setpredictiveFilteredContractsData] =
     useState([]);
     const [iotAnalyticsContractsData, setIotAnalyticsContractsData] = useState([]);
@@ -36,7 +36,7 @@ const ContractManager = () => {
   const dispatch = useDispatch();
 
   // Access the contracts data from Redux
-  const contractsData = useSelector((state: any) => state.contracts.contracts);
+  const bindingRequestData = useSelector((state: any) => state.bindingRequest.contracts);
 
   const showToast = (
     severity: ToastMessage["severity"],
@@ -59,7 +59,11 @@ const ContractManager = () => {
     try {
     const details = await getAccessGroup();
     setCompanyIfricId(details.company_ifric_id);
-    dispatch(fetchContractsRedux(companyIfricId));
+
+    const response = await getAllContractByAssetType();
+    if(response?.data.length) {
+      dispatch(updateBindingRequestContracts(response.data));
+    }
     } catch(error: any) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
@@ -70,11 +74,14 @@ const ContractManager = () => {
       }
     }
   };
+
   useEffect(() => {
     getCompanyId();
-  });
+  },[]);
 
-
+  useEffect(() => {
+    setContractsData(bindingRequestData);
+  },[bindingRequestData]);
 
   const handleFilterContracts = () => {
     setLoading(true);
