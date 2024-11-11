@@ -352,6 +352,13 @@ textarea {
 
 }
 
+.dashboard-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
 @media screen and (min-width: 1550px) {
     .chart-content,
     .assets-content {

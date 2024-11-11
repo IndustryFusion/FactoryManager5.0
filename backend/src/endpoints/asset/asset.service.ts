@@ -38,7 +38,7 @@ export class AssetService {
       const assetData = [];
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
@@ -87,7 +87,7 @@ export class AssetService {
           const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
           result.push(scorpioResponse.data);
         } catch(err) {
-            console.log("Error fetching asset", i, err)
+            // console.log("Error fetching asset", i, err)
             continue;
         } 
         }
@@ -164,7 +164,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
       // console.log("typeArr",typeArr)
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
@@ -229,6 +229,12 @@ export class AssetService {
         'Authorization': req.headers['authorization']
       };
       
+      // fetch asset types to find and store unique types.
+      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
+      let typeData = await axios.get(typeUrl,{headers});
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
+      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
+      let uniqueType = [];
       
       const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
       for(let i = 0; i < response.data.length; i++) {
@@ -238,9 +244,21 @@ export class AssetService {
         } catch(err) {
           if(err.response.status === 404) {
             await axios.post(this.scorpioUrl, response.data[i], {headers});
+            if(typeArr.length > 0 && !typeArr.includes(response.data[i].type) && !uniqueType.some(data => data.value === response.data[i].type)){
+              uniqueType.push({
+                type: "Property",
+                value: response.data[i].type
+              });
+            }
           }
           continue;
         }
+      }
+      
+      if(uniqueType.length > 0){
+        typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items = [...typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items, ...uniqueType];
+        await this.deleteAssetById('urn:ngsi-ld:asset-type-store',token);
+        await axios.post(this.scorpioUrl, typeData.data, {headers});
       }
       return {
         success: true,
@@ -261,7 +279,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       let uniqueType = [];
       // sending multiple requests to scorpio to save the asset array

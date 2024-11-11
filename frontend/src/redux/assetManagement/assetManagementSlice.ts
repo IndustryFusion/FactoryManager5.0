@@ -3,14 +3,7 @@ import { fetchAssetManagement } from '@/utility/asset-utility';
 import {setFactoryOwnerAssets} from "@/utility/asset"
 import { fetchAllAllocatedAssets } from '@/utility/factory-site-utility';
 import { getAccessGroup } from '@/utility/indexed-db';
-
-export interface Asset {
-  id: string;
-  asset_serial_number: string;
-  type: string;
-  product_name: string;
-  asset_manufacturer_name: string;
-}
+import { Asset } from "@/types/asset-types";
 export interface AllocatedAssetData {
   factoryName: string;
   assets: string[];
