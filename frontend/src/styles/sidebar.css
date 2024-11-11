@@ -38,7 +38,7 @@ body {
   left: 30px;
 }
 .sidebar_header {
-  padding: 22px 15px;
+  padding: 22px 15px 35px 15px;
   position: sticky;
   top: 0;
   right: 0;
@@ -50,14 +50,13 @@ body {
   justify-content: space-between;
   gap: 8px;
   transition: all 300ms ease;
+  margin-left: 1px;
 }
 .sidebar_logo_wrapper.collapse{
-  width: 38px;
   overflow: hidden;
-  margin-left: 5px;
 }
 .sidebar_content {
-  padding: 40px 15px;
+  padding: 20px 15px;
   height: calc(100vh - 86px);
   overflow-y: auto;
 }

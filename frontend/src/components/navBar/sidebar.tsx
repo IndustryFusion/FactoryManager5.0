@@ -32,9 +32,9 @@ function Sidebar() {
         <div className={`sidebar_logo_wrapper ${!sidebarOpen ? "collapse" : ""}`}>
           <Image
             src="/sidebar/logo_expanded.svg"
-            alt="IFRIC logo"
-            width={200}
-            height={45}
+            alt="Factory logo"
+            width={205}
+            height={38}
             onClick={() => handleRoute("dashboard")}
             style={{ cursor: "pointer" }}
           ></Image>
