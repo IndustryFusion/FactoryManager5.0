@@ -34,5 +34,6 @@ EXPOSE 4002
 # Install application dependencies
 RUN npm install
 
-# Start the Nest.js application
-CMD ["npm", "run", "start"]
+RUN npm run build
+
+CMD ["npm", "run", "start:prod"]
