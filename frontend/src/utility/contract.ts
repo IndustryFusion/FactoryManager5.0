@@ -343,3 +343,31 @@ export const getAllContractByAssetType = async () => {
     }
   }
 };
+
+export const getAssetManagementData = async (company_ifric_id: string, type: string) => {
+  try {
+    const result: Record<string,any> = [];
+    const response = await api.get(
+        `${BACKEND_API_URL}/asset/asset-management/${company_ifric_id}`, {
+        headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        },
+    });
+    if(response.data) {
+      response.data.forEach((value: Record<string,any>) => {
+        if(value.type === type) {
+          result.push(value);
+        }
+      })
+    }
+    return result;
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+}

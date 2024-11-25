@@ -135,6 +135,14 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   }
 
+  const handleRefresh = () => {
+    try {
+      dispatch(fetchAssets());
+    } catch (error) {
+      console.error("Fetched assets:", error)
+    }
+  };
+
 
   const handleClick = async (selectedAsset: Asset) => {
     const response = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
@@ -215,14 +223,14 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   return (
     <>
       <Toast ref={toast} />
-      <div style={{ zoom: "74%" }}>
+      <div style={{ zoom: "74%", width:"33%" }}>
         <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
               <h5 className="heading-text">Assets</h5>
               {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
             </div>
-            <div className="mb-5" style={{paddingLeft: "15px"}}>
+            <div className="mb-5 flex justify-content-center align-items-center">
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText
@@ -232,6 +240,14 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   placeholder={t('placeholder:searchByProduct')}
                   className="mb-10" style={{ borderRadius: "10px", width: "460px"}} />
               </span>
+              <Button 
+                icon="pi pi-refresh" 
+                onClick={handleRefresh} 
+                className="p-button-outlined refresh-button" 
+                tooltip="Refresh Assets"
+                tooltipOptions={{ position: 'left' }}
+                label='Refresh'
+              />
             </div>
             {loading ? (
               <div className="dashboard-spinner">
