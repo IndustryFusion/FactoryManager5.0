@@ -1,7 +1,6 @@
 import { useTranslation } from "next-i18next";
 import { BreadCrumb } from "primereact/breadcrumb";
 import "../../styles/navbar.css";
-import ProfileDialog from "./profile-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { getAccessGroup } from "@/utility/indexed-db";
@@ -16,6 +15,7 @@ import { RootState } from "@/redux/store";
 import { getUserDetails } from "@/utility/auth";
 import Alerts from "@/components/alert/alerts"
 import Language from "./language";
+import ProfileMenu from "./profile-menu";
 
 type NavbarProps = {
   navHeader?: string;
@@ -294,21 +294,9 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
-          <div className="nav_avatar" onClick={() => setProfileDetail(true)}>
-            {(userData?.user_image && userData?.user_image.length > 0) ?
-              <img src={userData.user_image} alt="Image" style={{borderRadius: "100px"}} width="45" height="45" />
-              :
-              userData?.user_name.charAt(0).toUpperCase()
-            }
-          </div>
+          <ProfileMenu />
         </div>
       </div>
-      {profileDetail && (
-        <ProfileDialog
-          profileDetailProp={profileDetail}
-          setProfileDetailProp={setProfileDetail}
-        />
-      )}
     </>
   );
 };
