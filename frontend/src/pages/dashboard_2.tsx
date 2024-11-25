@@ -150,8 +150,8 @@ export default function DashboardTwo() {
                                         <div>
                                             <div>BA</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>
@@ -161,24 +161,24 @@ export default function DashboardTwo() {
                                         <div>
                                             <div>BA</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>
                                         <div>
                                             <div>AD</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>
                                         <div>
                                             <div>BB</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>
@@ -191,16 +191,16 @@ export default function DashboardTwo() {
                                         <div>
                                             <div>CB</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>
                                         <div>
                                             <div>DA</div>
                                             <div className='main_content_chip_wrapper'>
-                                            <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
-                                            <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
+                                                <div className="content_chip"><span><PiSteeringWheelFill className='card_icons' /></span>{selectedCard.engaged}</div>
+                                                <div className="content_chip"><span><FaHelmetSafety className='card_icons' /></span>{selectedCard.workers}</div>
                                             </div>
                                             <div className="content_chip"><span><IoCubeSharp /></span>{selectedCard.mined}<sub>mt</sub></div>
                                         </div>

@@ -35,7 +35,7 @@ export default function DashboardOne() {
         { name: 'Lara C.', picture: '', revenue: '$88,574', percentage: '18.12', leads: '190' },
         { name: 'Ethan M.', picture: '', revenue: '$134,907', percentage: '18.88', leads: '250' }
     ];
-    
+
 
     const [nodes] = useState([
         {
@@ -134,32 +134,32 @@ export default function DashboardOne() {
                 <div className="expansion_percentage_wrapper">
                     <div>Performance summary</div>
                     <div>
-                    <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.leads}</div>
-                    <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.revenue}</div>
+                        <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.leads}</div>
+                        <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.revenue}</div>
                     </div>
                 </div>
                 <div className="expansion_bento_grid">
                     <div>
                         <div>
-                    <div className="user_chip">
-                                                {data.picture ? (
-                                                    <img
-                                                        src={data.picture}
-                                                        alt={data.name}
-                                                        className="user_chip_avatar"
-                                                    />
-                                                ) : (
-                                                    <span className="user_chip_avatar">
-                                                        {data.name.charAt(0).toUpperCase()}
-                                                    </span>
-                                                )}
-                                                <span className="user_chip_name">{data.name}</span>
-                                            </div>
-                                            <div>
-                    <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.leads}</div>
-                    <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.revenue}</div>
-                    </div>
-                    </div>
+                            <div className="user_chip">
+                                {data.picture ? (
+                                    <img
+                                        src={data.picture}
+                                        alt={data.name}
+                                        className="user_chip_avatar"
+                                    />
+                                ) : (
+                                    <span className="user_chip_avatar">
+                                        {data.name.charAt(0).toUpperCase()}
+                                    </span>
+                                )}
+                                <span className="user_chip_name">{data.name}</span>
+                            </div>
+                            <div>
+                                <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.leads}</div>
+                                <div className="revenue_chip"><RiArrowUpDoubleLine width={14} height={14} />{data.revenue}</div>
+                            </div>
+                        </div>
                         <div>{data.revenue}</div>
                     </div>
                     <div>
@@ -374,7 +374,7 @@ export default function DashboardOne() {
                                     >
                                         <Column field="name" header="Name" />
                                         <Column field="revenue" header="Revenue" />
-                                        <Column field="leads" header="Leads"/>
+                                        <Column field="leads" header="Leads" />
                                         <Column field="percentage" header="KPI" />
                                         <Column expander />
                                     </DataTable>
