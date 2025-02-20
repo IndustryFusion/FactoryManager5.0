@@ -74,10 +74,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     return <>{assetType}</>;
   };
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
-    if (rowData && rowData.product_icon && rowData.product_icon !== 'NULL') {
+    if (rowData && rowData.product_image && rowData.product_image !== 'NULL') {
       return (
         <img
-          src={rowData.product_icon}
+          src={rowData.product_image}
           style={{ width: "70px", height: "auto" }}
         />
       );
@@ -270,7 +270,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                 >
                   <Column
                     header={t('dashboard:productImage')}
-                    field="product_icon"
+                    field="product_image"
                     body={productIconTemplate}
                   />
                   <Column
