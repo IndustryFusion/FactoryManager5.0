@@ -28,6 +28,12 @@ export class AssetService {
   //private readonly pdtScorpioUrl = process.env.PDT_SCORPIO_URL;
   private readonly ifxurl = process.env.IFX_PLATFORM_BACKEND_URL;
 
+  mask(input: string, key: string): string {
+    return input.split('').map((char, i) =>
+      (char.charCodeAt(0) ^ key.charCodeAt(i % key.length)).toString(16).padStart(2, '0')
+    ).join('');
+  }
+
   async getAssetData(token: string) {
     try {
       const headers = {
@@ -38,7 +44,7 @@ export class AssetService {
       const assetData = [];
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
@@ -226,17 +232,19 @@ export class AssetService {
       const registryHeaders = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': req.headers['authorization']
+        'Authorization': `Bearer ${this.mask(req.headers['authorization'].split(" ")[1], process.env.MASK_SECRET)}`
       };
       
       // fetch asset types to find and store unique types.
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       let uniqueType = [];
-      
+
       const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
+      
       for(let i = 0; i < response.data.length; i++) {
         const assetId = response.data[i].id;
         try {
