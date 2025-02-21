@@ -20,6 +20,9 @@ import { ImportAssetDto } from './dto/importAsset.dto';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import { Request } from 'express';
+import { CompactEncrypt } from 'jose';
+import { createHash } from 'crypto';
+
 @Injectable()
 export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -32,6 +35,22 @@ export class AssetService {
     return input.split('').map((char, i) =>
       (char.charCodeAt(0) ^ key.charCodeAt(i % key.length)).toString(16).padStart(2, '0')
     ).join('');
+  }
+
+  deriveKey(secret: string): Uint8Array {
+    const hash = createHash('sha256');
+    hash.update(secret);
+    return new Uint8Array(hash.digest());
+  }
+  
+  async encryptData(data: string) {
+    const encoder = new TextEncoder();
+    const encryptionKey = await this.deriveKey(process.env.JWT_SECRET);
+
+    const encrypted = await new CompactEncrypt(encoder.encode(data))
+    .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+    .encrypt(encryptionKey);
+    return encrypted;
   }
 
   async getAssetData(token: string) {
@@ -229,10 +248,11 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const registryHeaders = {
+      const encryptedToken = await this.encryptData(req.headers['authorization'].split(" ")[1]);
+      const ifxHeaders = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${this.mask(req.headers['authorization'].split(" ")[1], process.env.MASK_SECRET)}`
+        'Authorization': `Bearer ${this.mask(encryptedToken, process.env.MASK_SECRET)}`
       };
       
       // fetch asset types to find and store unique types.
@@ -243,7 +263,7 @@ export class AssetService {
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       let uniqueType = [];
 
-      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
+      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: ifxHeaders});
       
       for(let i = 0; i < response.data.length; i++) {
         const assetId = response.data[i].id;
