@@ -306,7 +306,7 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
 
 export const getNonShopFloorAssetDetails = async (assetId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/asset/${assetId}`, {
+    const response = await axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -475,7 +475,7 @@ export async function getShopFloorAndAssetData(factoryId: string) {
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
       const assetDataPromises = assetIds.map((assetId: any) =>
-        axios.get(`${API_URL}/asset/${assetId}`, {
+        axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -671,7 +671,7 @@ export async function getShopFloorAssets(shopFloorId: string) {
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
       const assetDataPromises = assetIds.map((assetId: any) =>{     
-       return   axios.get(`${API_URL}/asset/${assetId}`, {
+       return   axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",

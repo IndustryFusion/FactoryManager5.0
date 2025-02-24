@@ -199,22 +199,24 @@ const MachineStateChart = () => {
 
     const fetchAssets = async (assetId: string) => {
         try {
-            let attributeId: string = '';
-            const response = await axios.get(API_URL + `/asset/${assetId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            });
-            const assetData: Asset = response.data;
+            if (assetId) {
+                let attributeId: string = '';
+                const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                });
+                const assetData: Asset = response.data;
 
-            Object.keys(assetData).map((key) => {
-                if (key.includes("machine_state")) {
-                    attributeId = 'eq.' + key;
-                }
-            });
-            return attributeId;
+                Object.keys(assetData).map((key) => {
+                    if (key.includes("machine_state")) {
+                        attributeId = 'eq.' + key;
+                    }
+                });
+                return attributeId;
+            }
         } catch (error) {
             console.error("Error fetching asset data:", error);
         }
@@ -597,7 +599,7 @@ const MachineStateChart = () => {
     // useEffect to handle changes related to selectedIntervals
     useEffect(() => {
         if (router.isReady) {              
-            fetchDataAndAssign();                
+            fetchDataAndAssign();
         }
        
     }, [router.isReady, entityIdValue, selectedInterval])

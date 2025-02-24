@@ -70,6 +70,7 @@ import { ContractController } from './endpoints/contract/contract.controller';
 import { ContractService } from './endpoints/contract/contract.service';
 import { BindingController } from './endpoints/binding/binding.controller';
 import { BindingService } from './endpoints/binding/binding.service';
+import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -79,12 +80,11 @@ const mongoURI = process.env.MONGO_URL;
     MongooseModule.forRoot(mongoURI),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
+      { name: Onboarding.name, schema: OnboardingSchema }
     ]),
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule
-  
-    
   ],
   controllers: [
     AppController,

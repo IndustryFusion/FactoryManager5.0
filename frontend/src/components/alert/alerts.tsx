@@ -54,7 +54,7 @@ const Alerts = () => {
   // Function to fetch asset data by asset ID
   const fetchAssetData = async (assetId: string) => {
     try {
-      const response = await axios.get(API_URL + `/asset/${assetId}`, {
+      const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

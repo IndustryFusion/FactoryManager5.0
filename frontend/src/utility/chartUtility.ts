@@ -67,7 +67,7 @@ export const fetchAssets = async (assetId: string) => {
  
   try {
       const attributeIds: string[] = [];
-      const response = await axios.get(API_URL + `/asset/${assetId}`, {
+      const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
           headers: {
               "Content-Type": "application/json",
               Accept: "application/json",

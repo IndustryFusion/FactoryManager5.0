@@ -51,6 +51,15 @@ export class OnboardingAssetController {
     }
   }
 
+  @Get('/ip/:id')
+  findOneByIp(@Param('id') id: string) {
+    try {
+      return this.onboardingAssetService.findOneByIp(id);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() data) {
     try{
