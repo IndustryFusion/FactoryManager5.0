@@ -118,7 +118,7 @@ const CombineSensorChart: React.FC = () => {
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [chartInstance, setChartInstance] = useState(null);
-  const {selectedAssetData } = useDashboard();
+  const { selectedAssetData } = useDashboard();
   const intervalButtons = [
     { label: "Live", interval: "live" },
     { label: "10 Min", interval: "10min" },
@@ -161,10 +161,10 @@ const CombineSensorChart: React.FC = () => {
       decimation:
         selectedInterval === "custom"
           ? {
-              enabled: true,
-              algorithm: "lttb",
-              samples: 300, // Set decimation to 300
-            }
+            enabled: true,
+            algorithm: "lttb",
+            samples: 300, // Set decimation to 300
+          }
           : undefined,
       tooltip: {
         enabled: true,
@@ -264,16 +264,16 @@ const CombineSensorChart: React.FC = () => {
 
   const fetchAsset = async () => {
     try {
-      const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name")); 
-      const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date")); 
+      const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name"));
+      const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date"));
       const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;
-       if (creationDate) {
+      if (creationDate) {
         const [month, day, year] = creationDate.split('.');
         setMinDate(new Date(year, month - 1, day));
       }
       const productName = productKey ? (selectedAssetData[productKey]?.value || "Unknown Product") : undefined;
       setProductName(productName); // Set the product name in the state
-      
+
       // fetch templates from template sandbox
       const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAssetData.type)}`, {
         headers: {
@@ -282,25 +282,25 @@ const CombineSensorChart: React.FC = () => {
         },
         withCredentials: true,
       });
-      
+
       // Collect keys where the segment is 'realtime'and remove eclass in the key if present
       const prefixedKeys = Object.keys(temp.data.properties)
-      .filter((key: string) => temp.data.properties[key].segment === 'realtime')
-      .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
+        .filter((key: string) => temp.data.properties[key].segment === 'realtime')
+        .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
 
       const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
-          let index = 0;
-          const label = key.split("/").pop() || key;
-          return { label, value: label, selectedDatasetIndex:index+1 };
-        })
+        let index = 0;
+        const label = key.split("/").pop() || key;
+        return { label, value: label, selectedDatasetIndex: index + 1 };
+      })
         .filter(attribute => attribute.value !== "machine_state");
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 
-      if (selectedAttribute== '' || selectedAttribute== undefined || selectedAttribute ==null ) {
+      if (selectedAttribute == '' || selectedAttribute == undefined || selectedAttribute == null) {
         setSelectedAttribute(attributeLabels[0].value);
-      } 
+      }
     }
     catch (error) {
       setAttributes([]);
@@ -322,80 +322,80 @@ const CombineSensorChart: React.FC = () => {
       datasets: [],
     });
 
-};
-const fetchDataForAttribute =  async (attributeId:string, entityIdValue:string, selectedInterval:string, selectedDate?:Date, startTime?:Date,endTime?:Date) => {
-  setChartData({
-        labels:[],
-        datasets: []
-      });
-  setLoading(true); // Start loading
-  if (!entityIdValue) {
-    return;
-  }
-  
-  let attributeKey = selectedAssetData ? Object.keys(selectedAssetData).find(key => key.includes(attributeId)) : undefined;
-  
-  const params:FetchDataParams = {
-    intervalType: selectedInterval,
-    order: "observedAt.desc",
-    entityId: `eq.${entityIdValue}`,
-    attributeId: `eq.${attributeKey}`,
   };
-
-  // Customize parameters for custom intervals
-  if (selectedInterval == 'custom' && selectedDate && startTime  && endTime ) {
-  
-    const startDate = new Date(selectedDate);
-    startDate.setHours(startTime.getHours(), startTime.getMinutes());
-    const endDate = new Date(selectedDate);
-    endDate.setHours(endTime.getHours(), endTime.getMinutes());
-    params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
-  }
-  
-  try {
-    const response = await axios.get(`${API_URL}/pgrest`, {
-      params,
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      withCredentials: true,
+  const fetchDataForAttribute = async (attributeId: string, entityIdValue: string, selectedInterval: string, selectedDate?: Date, startTime?: Date, endTime?: Date) => {
+    setChartData({
+      labels: [],
+      datasets: []
     });
-    
-    const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
-    const labels = factoryData.map((data:DataItem) => formatLabel(new Date(data.observedAt)));
-    const dataPoints = factoryData.map((data:DataItem) => data.value ? Number(data.value) : null);
+    setLoading(true); // Start loading
+    if (!entityIdValue) {
+      return;
+    }
 
-    const newDataset = {
-      label: attributeId.replace('eq.', ''),
-      data: dataPoints,
-      fill: true,
-      borderColor: colors[0 % colors.length].borderColor,
-      backgroundColor: 'rgba(122, 162, 227, 0.2)',
-      tension: 0.4,
+    let attributeKey = selectedAssetData ? Object.keys(selectedAssetData).find(key => key.includes(attributeId)) : undefined;
+
+    const params: FetchDataParams = {
+      intervalType: selectedInterval,
+      order: "observedAt.desc",
+      entityId: `eq.${entityIdValue}`,
+      attributeId: `eq.${attributeKey}`,
     };
-    
-      if( selectedInterval !="custom" ){
+
+    // Customize parameters for custom intervals
+    if (selectedInterval == 'custom' && selectedDate && startTime && endTime) {
+
+      const startDate = new Date(selectedDate);
+      startDate.setHours(startTime.getHours(), startTime.getMinutes());
+      const endDate = new Date(selectedDate);
+      endDate.setHours(endTime.getHours(), endTime.getMinutes());
+      params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/pgrest`, {
+        params,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+
+      const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
+      const labels = factoryData.map((data: DataItem) => formatLabel(new Date(data.observedAt)));
+      const dataPoints = factoryData.map((data: DataItem) => data.value ? Number(data.value) : null);
+
+      const newDataset = {
+        label: attributeId.replace('eq.', ''),
+        data: dataPoints,
+        fill: true,
+        borderColor: colors[0 % colors.length].borderColor,
+        backgroundColor: 'rgba(122, 162, 227, 0.2)',
+        tension: 0.4,
+      };
+
+      if (selectedInterval != "custom") {
         setChartData(prevData => ({
-        ...prevData,
-        labels,
-        datasets: [...prevData.datasets, newDataset]
-      }));
+          ...prevData,
+          labels,
+          datasets: [...prevData.datasets, newDataset]
+        }));
 
       } else {
-          setChartData({
-            labels,
-            datasets: [newDataset],
-          });
-        }
-        setSelectedAttributeId(`eq.${attributeId}`);
-        setLoading(false);
-        setNoChartData(false);
-      } catch (error) {
-        console.error("Error fetching data for attribute:", error);
-        setNoChartData(true);
+        setChartData({
+          labels,
+          datasets: [newDataset],
+        });
       }
+      setSelectedAttributeId(`eq.${attributeId}`);
+      setLoading(false);
+      setNoChartData(false);
+    } catch (error) {
+      console.error("Error fetching data for attribute:", error);
+      setNoChartData(true);
     }
+  }
 
   const handleDateChange = async (e: CustomChangeEvent) => {
     setSelectedDate(e.value as Date);
@@ -409,10 +409,10 @@ const fetchDataForAttribute =  async (attributeId:string, entityIdValue:string, 
     const [hours, minutes] = timeValue.split(":").map(Number);
     const datePart = selectedDate
       ? new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate()
-        )
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      )
       : new Date();
     const newTime = new Date(datePart.setHours(hours, minutes, 0, 0));
     const currentDate = new Date();
@@ -458,13 +458,13 @@ const fetchDataForAttribute =  async (attributeId:string, entityIdValue:string, 
     newData.forEach((dataItem) => {
       const { observedAt, attributeId, value } = dataItem;
 
-    // Clean the attributeId by removing the URL prefix
-    const cleanAttributeId = attributeId.split('/').pop();
+      // Clean the attributeId by removing the URL prefix
+      const cleanAttributeId = attributeId.split('/').pop();
 
-    // Skip updates for the machine_state attribute
-    if (cleanAttributeId === 'machine_state') {
-      return;
-    }
+      // Skip updates for the machine_state attribute
+      if (cleanAttributeId === 'machine_state') {
+        return;
+      }
 
       // Attempt to find the dataset with the cleaned attributeId
       const datasetIndex = newChartData.datasets.findIndex(
@@ -521,28 +521,31 @@ const fetchDataForAttribute =  async (attributeId:string, entityIdValue:string, 
     // Reset attributes when entityIdValue changes
     setAttributes([]);
     setSelectedAttribute("");
-}, [entityIdValue]);  
+  }, [entityIdValue]);
 
-const fetchData = async() => {
-  await fetchAsset();
-  await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval ,selectedDate, startTime,endTime);
-}
+  const fetchData = async () => {
+    await fetchAsset();
+    await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval, selectedDate, startTime, endTime);
+  }
 
   useEffect(() => {
     if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
-        return; 
+      return;
     }
-    fetchData();
-}, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady,zoomLevel]);
+    if (selectedAssetData.id) {
+      fetchData();
+    }
+
+  }, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady, zoomLevel]);
 
 
-useEffect(() => {
- 
-  const socket = socketIOClient(`${API_URL}/`);
-  socketRef.current = socket;
+  useEffect(() => {
 
-    socketRef.current.on("dataUpdate", (updatedData:[]) => {
-            setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
+    const socket = socketIOClient(`${API_URL}/`);
+    socketRef.current = socket;
+
+    socketRef.current.on("dataUpdate", (updatedData: []) => {
+      setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
 
     });
     return () => {
@@ -616,16 +619,16 @@ useEffect(() => {
               <p className="font-bold">{t("dashboard:interval")}</p>
               <div className="flex justify-content-between align-items-center dashboard-dropdown">
                 <Dropdown
-                value={selectedInterval}
-                options={intervalButtons.map(({ label, interval }) => ({
-                  label,
-                  value: interval,
-                }))}
-                onChange={(e) => handleIntervalChange(e as CustomChangeEvent)}
-                placeholder="Select an Interval"
-                appendTo="self"
-               
-              />
+                  value={selectedInterval}
+                  options={intervalButtons.map(({ label, interval }) => ({
+                    label,
+                    value: interval,
+                  }))}
+                  onChange={(e) => handleIntervalChange(e as CustomChangeEvent)}
+                  placeholder="Select an Interval"
+                  appendTo="self"
+
+                />
                 <img
                   className="dropdown-icon-img"
                   src="/dropdown-icon.svg"
@@ -647,7 +650,7 @@ useEffect(() => {
                   maxDate={new Date()}
                   disabled={selectedInterval !== "custom"}
                   appendTo="self"
-                  
+
                 />
                 <div className="input-with-label mt-3">
                   <label

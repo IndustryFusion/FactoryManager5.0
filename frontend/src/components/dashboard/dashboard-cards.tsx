@@ -98,7 +98,7 @@ const DashboardCards: React.FC = () => {
     const fetchAssets = async (assetId: string) => {
         try {
             let attributeId: string = '';
-            const response = await axios.get(API_URL + `/asset/${assetId}`, {
+            const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
