@@ -88,4 +88,19 @@ export class OnboardingAssetService {
       throw err;
     }
   }
+
+  async findOneByIp(id: string) {
+    try {
+      const onbaordDevice = await this.onboardingModel.findOne({ ip_address: id }).exec();
+      if (!onbaordDevice) {
+        throw new NotFoundException(`Device with IP ${id} not found`);
+      }
+      return onbaordDevice;
+    } catch (err) {
+      throw new NotFoundException(
+        `Failed to fetch onboarding data: ${err.message}`,
+      );
+    }
+  }
+
 }
