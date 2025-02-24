@@ -29,7 +29,6 @@ import { useTranslation } from "next-i18next";
 import { OnboardData } from "@/types/onboard-form";
 import { Asset } from "@/types/asset-types";
 import YAML from 'yaml';
-import { protocol } from "socket.io-client";
 
 type OnboardDataKey = keyof OnboardData;
 
@@ -278,7 +277,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     type="text"
                                     placeholder="ex:airtracker-74145/relay1"
                                     onChange={(e) => handleInputChange(e.target.value, "main_topic")}
-                                    style={{ border: validateInput?.main_topic ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
