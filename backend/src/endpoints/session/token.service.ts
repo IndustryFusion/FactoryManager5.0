@@ -43,7 +43,10 @@ export class TokenService {
           if (decodedToken.exp > currentTime) {
             return tokenData.accessToken;
           } else {
-            throw new UnauthorizedException('Token has expired');
+            const token = await this.authService.login(this.username, this.password);
+            let tokenKey = 'token-storage';
+            await this.redisService.saveData(tokenKey, token);
+            return token.accessToken;
           }
         } else {
           throw new UnauthorizedException('Invalid token');
