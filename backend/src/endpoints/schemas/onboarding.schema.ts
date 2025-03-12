@@ -25,7 +25,7 @@ export class Onboarding {
   @Prop({ required: true })
   ip_address: string;
 
-  @Prop({ required: true })
+  @Prop()
   main_topic: string;
 
   @Prop({ required: true })
@@ -58,10 +58,10 @@ export class Onboarding {
   @Prop({ required: true })
   realm_password: string;
 
-  @Prop({ required: true })
+  @Prop()
   username_config: string;
 
-  @Prop({ required: true })
+  @Prop()
   password_config: string;
 
   @Prop({ required: true })

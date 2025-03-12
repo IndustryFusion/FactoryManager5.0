@@ -74,7 +74,7 @@ export class OnboardingAssetController {
         return response;
       }
     }catch(err){
-      throw new Error('failed to update speecific file ' + err);
+      throw new Error('failed to update specific file ' + err);
     }
   }
 }
