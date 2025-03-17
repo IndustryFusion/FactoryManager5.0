@@ -54,6 +54,7 @@ interface DataItem {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+const SOCKET_API_URL = process.env.NEXT_PUBLIC_BACKEND_SOCKET_URL;
 
 type AttributeOption = {
   selectedDatasetIndex: number;
@@ -541,7 +542,7 @@ const CombineSensorChart: React.FC = () => {
 
   useEffect(() => {
 
-    const socket = socketIOClient(`${API_URL}/`);
+    const socket = socketIOClient(`${SOCKET_API_URL}/`);
     socketRef.current = socket;
 
     socketRef.current.on("dataUpdate", (updatedData: []) => {
