@@ -542,7 +542,13 @@ const CombineSensorChart: React.FC = () => {
 
   useEffect(() => {
 
-    const socket = socketIOClient(`${SOCKET_API_URL}/`);
+    const socket = socketIOClient(`${SOCKET_API_URL}/`, {
+        transports: ["websocket"],
+        rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
+        reconnectionAttempts: 5, // Retry if connection fails
+        timeout: 5000 // Set connection timeout
+      }
+    );
     socketRef.current = socket;
 
     socketRef.current.on("dataUpdate", (updatedData: []) => {
