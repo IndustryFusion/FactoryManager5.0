@@ -75,8 +75,11 @@ export class CronService  {
     };
 
     try {
+      console.log("Getting token")
       let token = await this.tokenService.getToken();
+      console.log("debug chart socket 1", token, modifiedQueryParams)
       const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
+      console.log("debug chart socket 2", newData)
       if (newData) {
         this.emitDataChangeToClient(newData);
       }
