@@ -20,8 +20,10 @@ import { Injectable } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: "*", // Allow all origins (modify for security)
+    credentials: true,
   },
+  transports: ["websocket"],
 })
 @Injectable()
 export class ValueChangeStateGateway {

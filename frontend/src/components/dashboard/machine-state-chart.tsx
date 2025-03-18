@@ -586,7 +586,8 @@ const MachineStateChart = () => {
             transports: ["websocket"],
             rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
             reconnectionAttempts: 5, // Retry if connection fails
-            timeout: 5000 // Set connection timeout
+            timeout: 5000, // Set connection timeout
+            secure: true
         });
 
         socket.on("connect", () => {
