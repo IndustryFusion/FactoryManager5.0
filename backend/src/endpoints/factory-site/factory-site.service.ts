@@ -51,34 +51,35 @@ export class FactorySiteService {
       if(!factoryData.data.length){
         //fetch the last urn from scorpio and create a new urn
         const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:factory-id-store`;
-        
+        try {
+          const getLastUrn = await axios.get(fetchLastUrnUrl, {
+            headers
+          });
+        }
+        catch(error) {
+          if (error.response && error.response.status === 404){
+            const factoryStore = {
+              "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
+              "id": "urn:ngsi-ld:factory-id-store",
+              "type": "https://industry-fusion.org/base/v0.1/urn-holder",
+              "http://www.industry-fusion.org/schema#last-urn": {
+                  "type": "Property",
+                  "value": "urn:ngsi-ld:factories:2:000"
+              }
+            }
+            const response = await axios.post(this.scorpioUrl, factoryStore, {headers});
+            if (response.status !== 201){
+              return {
+                "success": false,
+                "status": 500,
+                "message": "Initial factory URN holder creation failed"
+              }
+            }
+          }
+        }
         let getLastUrn = await axios.get(fetchLastUrnUrl, {
           headers
         });
-        if (getLastUrn.status == 404){
-          const factoryStore = {
-            "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-            "id": "urn:ngsi-ld:factory-id-store",
-            "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-            "http://www.industry-fusion.org/schema#last-urn": {
-                "type": "Property",
-                "value": "urn:ngsi-ld:factories:2:000"
-            }
-          }
-          const response = await axios.post(this.scorpioUrl, factoryStore, {headers});
-          if (response.status !== 201){
-            return {
-              "success": false,
-              "status": 500,
-              "message": "Initial factory URN holder creation failed"
-            }
-          }
-          else{
-            getLastUrn = await axios.get(fetchLastUrnUrl, {
-              headers
-            });
-          }
-        }
         getLastUrn = getLastUrn.data;
         let newUrn = '', lastUrn = {}, lastUrnKey = '';
         lastUrn["@context"] = getLastUrn["@context"];

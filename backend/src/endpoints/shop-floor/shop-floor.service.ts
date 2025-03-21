@@ -48,34 +48,36 @@ export class ShopFloorService {
         const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store`;
         console.log("fetchLastUrnUrl",fetchLastUrnUrl)
         
-        let getLastUrn = await axios.get(fetchLastUrnUrl, {
-          headers,
-        });
-
-        if (getLastUrn.status == 404){
-          const shopStore = {
-            "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-            "id": "urn:ngsi-ld:shopFloor-id-store",
-            "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-            "last-urn": {
-                "type": "Property",
-                "value": "urn:ngsi-ld:shopFloors:2:000"
+        try{
+          const getLastUrn = await axios.get(fetchLastUrnUrl, {
+            headers,
+          });
+        }
+        catch(error){
+          if (error.response && error.response.status === 404){
+            const shopStore = {
+              "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
+              "id": "urn:ngsi-ld:shopFloor-id-store",
+              "type": "https://industry-fusion.org/base/v0.1/urn-holder",
+              "last-urn": {
+                  "type": "Property",
+                  "value": "urn:ngsi-ld:shopFloors:2:000"
+              }
             }
-          }
-          const response = await axios.post(this.scorpioUrl, shopStore, {headers});
-          if (response.status !== 201){
-            return {
-              "success": false,
-              "status": 500,
-              "message": "Initial Shopfloor URN holder creation failed"
+            const response = await axios.post(this.scorpioUrl, shopStore, {headers});
+            if (response.status !== 201){
+              return {
+                "success": false,
+                "status": 500,
+                "message": "Initial Shopfloor URN holder creation failed"
+              }
             }
-          }
-          else{
-            getLastUrn = await axios.get(fetchLastUrnUrl, {
-              headers
-            });
           }
         }
+        
+        let getLastUrn = await axios.get(fetchLastUrnUrl, {
+            headers
+        });
 
         getLastUrn = getLastUrn.data;
         console.log("getLastUrn.data",getLastUrn)
