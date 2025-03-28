@@ -335,10 +335,8 @@ const CombineSensorChart: React.FC = () => {
     }
 
     let attributeKey = selectedAssetData
-    ? Object.keys(selectedAssetData).find(key => key.endsWith('/' + attributeId))
+    ? Object.keys(selectedAssetData).find(key => String(key) === String(attributeId))
     : undefined;
-
-    console.log(selectedAssetData, "Abhijith");
 
     const params: FetchDataParams = {
       intervalType: selectedInterval,
