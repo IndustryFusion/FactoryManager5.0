@@ -107,7 +107,7 @@ export class PgRestService {
     
     // fetch actual key from asset data 
     if(assetData) {
-      actualKey = Object.keys(assetData).find(key => String(key) === String(attributeKey));
+      actualKey = Object.keys(assetData).find(key => key.endsWith('/' + attributeId));
       
       const attributeId = `attributeId=eq.${actualKey}`;
       const entityId = `entityId=${queryParams.entityId}`;
