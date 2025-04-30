@@ -22,6 +22,7 @@ import moment from 'moment';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_PLATFORM_BACKEND_URL;
+const IFX_CONNECTOR_URL = process.env.NEXT_PUBLIC_IFX_CONNECTOR_BACKEND_URL;
 
 export const getTemplateByName = async (templateName: string) => {
   try {
@@ -159,6 +160,38 @@ export const createBinding = async (data: Record<string, any>) => {
     return await api.post(
       `${IFX_BACKEND_URL}/binding`,
       data
+    );
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+export const updateBinding = async (data: Record<string, any>) => {
+  try {
+    return await api.patch(
+      `${IFX_BACKEND_URL}/binding`,
+      data
+    );
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+export const mongoUserCollectionCreation = async (data: Record<string, any>) => {
+  try {
+    return await api.post(
+      `${IFX_CONNECTOR_URL}/producer/provision`,
+      JSON.stringify(data)
     );
   } catch (error: any) {
     if (error?.response && error?.response?.status === 401) {
