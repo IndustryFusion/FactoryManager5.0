@@ -7,18 +7,18 @@ import axios from 'axios';
 export class ContractService {
   private readonly ifxUrl = process.env.IFX_PLATFORM_BACKEND_URL;
   private readonly scorpioUrl = process.env.SCORPIO_URL;
-
+  private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
 
   async findByType(contract_type: string) {
     try {
       const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-type/${contract_type}`);
       return response.data;
-    } catch(err) {
+    } catch (err) {
       throw new NotFoundException(`Failed to fetch contract by type ${contract_type}: ${err.message}`);
     }
   }
 
-  async findAllContractByAssetTypes(token: string) {
+  async findAllContractByAssetTypes(company_ifric_id: string, token: string, req: Request) {
     try {
       const contractData = [];
       const headers = {
@@ -26,20 +26,45 @@ export class ContractService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
-      let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
-      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
-      
-      for(let i = 0; i < typeArr.length; i++) {
+
+      const registryHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': req.headers['authorization']
+      };
+
+      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`, { headers: registryHeaders });
+      if (!(companyData.data.length)) {
+        return {
+          status: 404,
+          message: 'No company found with the provided ID'
+        };
+      }
+
+      const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`, { headers: registryHeaders });
+
+      const typeArr = [];
+      for (let i = 0; i < response.data.length; i++) {
+        const assetId = response.data[i].asset_ifric_id;
+        try {
+          const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, { headers });
+          console.log('scorpioResponseType', scorpioResponse.data.type);
+          typeArr.push(scorpioResponse.data.type);
+        } catch (err) {
+          // console.log("Error fetching asset", i, err)
+          continue;
+        }
+      }
+
+      for (let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
         const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-asset-type/${btoa(type)}`);
-        if(response.data.length > 0) {
+        if (response.data.length > 0) {
           contractData.push(...response.data);
         }
       }
       return contractData;
-    } catch(err) {
+    } catch (err) {
       throw new NotFoundException(`Failed to fetch all contract by asset type: ${err.message}`);
     }
   }
