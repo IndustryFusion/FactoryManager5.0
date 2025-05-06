@@ -369,6 +369,8 @@ const CreateBinding: React.FC = () => {
                 consumerId: formData.data_consumer_company_ifric_id,
             };
 
+            console.log("payload ",payload);
+
             const monoRes = await mongoUserCollectionCreation(payload);
             console.log("mongoRes ",monoRes?.data);
 
