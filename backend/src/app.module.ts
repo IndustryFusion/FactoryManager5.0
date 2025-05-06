@@ -71,6 +71,7 @@ import { ContractService } from './endpoints/contract/contract.service';
 import { BindingController } from './endpoints/binding/binding.controller';
 import { BindingService } from './endpoints/binding/binding.service';
 import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
+import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -80,7 +81,8 @@ const mongoURI = process.env.MONGO_URL;
     MongooseModule.forRoot(mongoURI),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
-      { name: Onboarding.name, schema: OnboardingSchema }
+      { name: Onboarding.name, schema: OnboardingSchema },
+      { name: 'PersistantTask', schema: PersistantTaskSchema }
     ]),
     ScheduleModule.forRoot(),
     HttpModule,

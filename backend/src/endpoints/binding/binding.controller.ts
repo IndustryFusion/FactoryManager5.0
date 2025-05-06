@@ -11,4 +11,11 @@ export class BindingController {
   create(@Body() createBindingDto: CreateBindingDto) {
     return this.bindingService.create(createBindingDto);
   }
+
+  @Post('start-publish')
+  async startBindingTask(
+    @Body() body: { producerId: string; bindingId: string; assetId: string, contract_ifric_id: string },
+  ) {
+    return this.bindingService.handleBinding(body.producerId, body.bindingId, body.assetId, body.contract_ifric_id);
+  }
 }

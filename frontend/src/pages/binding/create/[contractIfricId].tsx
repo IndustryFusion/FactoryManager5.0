@@ -19,6 +19,7 @@ import Navbar from '@/components/navBar/navbar';
 import { Dialog } from 'primereact/dialog';
 import { getContractDetails, getContractTemplatesById } from '@/utility/contract';
 import Sidebar from '@/components/navBar/sidebar';
+import { startTaskBinding } from '@/utility/bindings';
 
 interface PropertyDefinition {
     type: string;
@@ -387,7 +388,7 @@ const CreateBinding: React.FC = () => {
                 }
             }
             const responseUpdate = await updateBinding(resultUpdate);
-
+            const responseTask = await startTaskBinding(formData.data_provider_company_ifric_id, response?.data.binding_ifric_id, selectedAsset, formData.contract_ifric_id);
             if(responseUpdate?.data.status === 201) {
                 toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding added successfully' });
                 setVisible(false)
