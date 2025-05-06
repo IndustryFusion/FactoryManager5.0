@@ -189,9 +189,9 @@ export const updateBinding = async (data: Record<string, any>) => {
 
 export const mongoUserCollectionCreation = async (data: Record<string, any>) => {
   try {
+    console.log("data ", data);
     return await api.post(
-      `${IFX_CONNECTOR_URL}/producer/provision`,
-      JSON.stringify(data)
+      `${IFX_CONNECTOR_URL}/producer/provision`, data
     );
   } catch (error: any) {
     if (error?.response && error?.response?.status === 401) {
