@@ -67,5 +67,4 @@ export class AlertsService {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
   }
-
 }
