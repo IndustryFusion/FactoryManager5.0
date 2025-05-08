@@ -4,6 +4,7 @@ import { updatePopupVisible } from "./update-popup";
 import { Asset } from "@/types/asset-types";
 const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_PLATFORM_BACKEND_URL;
 const IFRIC_REGISTRY_BACKEND_URL = process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL
+const FACTORY_BACKEND =  process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const getBindings = async (companyIfricId: string) => {
   try {
@@ -154,7 +155,7 @@ export const startTaskBinding = async (
       contractId,
     };
     const response = await api.post(
-      `${IFX_BACKEND_URL}/binding/start-publish`,
+      `${FACTORY_BACKEND}/binding/start-publish`,
       dataToSend,
       {
         headers: {
