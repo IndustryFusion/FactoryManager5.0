@@ -52,6 +52,7 @@ export class BindingService implements OnModuleInit {
   async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
     try {
       const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
+      console.log("Contract data:", contract.data);
       const payload: CreatePersistantTaskDto = {
         producerId,
         bindingId,
