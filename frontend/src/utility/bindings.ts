@@ -154,6 +154,7 @@ export const startTaskBinding = async (
       assetId,
       contractId,
     };
+    console.log("Data to send:", dataToSend);
     const response = await api.post(
       `${FACTORY_BACKEND}/binding/start-publish`,
       dataToSend,

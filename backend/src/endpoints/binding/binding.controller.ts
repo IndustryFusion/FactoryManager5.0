@@ -14,8 +14,8 @@ export class BindingController {
 
   @Post('start-publish')
   async startBindingTask(
-    @Body() body: { producerId: string; bindingId: string; assetId: string, contract_ifric_id: string },
+    @Body() body: { producerId: string; bindingId: string; assetId: string, contractId: string },
   ) {
-    return this.bindingService.handleBinding(body.producerId, body.bindingId, body.assetId, body.contract_ifric_id);
+    return this.bindingService.handleBinding(body.producerId, body.bindingId, body.assetId, body.contractId);
   }
 }
