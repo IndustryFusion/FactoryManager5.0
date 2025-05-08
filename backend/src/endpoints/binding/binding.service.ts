@@ -18,8 +18,9 @@ interface PostAssetDataInput {
   dataType: string;
   attribute: string;
   value: any; // e.g. extracted key-value pairs from your previous step
-  message?: string;
+  metadata?: Record<string, any>; // optional metadata
   severity?: string;
+  message?: string;
   alertReceiveTime?: string;
 }
 
@@ -52,20 +53,20 @@ export class BindingService implements OnModuleInit {
   async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
     try {
       const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
-      console.log("Contract data:", contract.data);
+      console.log("Contract data for : " + contractId, contract.data);
       const payload: CreatePersistantTaskDto = {
         producerId,
         bindingId,
         assetId,
         contractId,
-        interval: contract.data.interval, // default interval
-        expiry: new Date(contract.data.contract_valid_till).toISOString(), // default expiry 1 hour from now
-        dataType: contract.data.data_type, // default data type
-        assetProperties: contract.data.asset_properties
+        interval: contract.data[0].interval, // default interval
+        expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
+        dataType: contract.data[0].data_type, // default data type
+        assetProperties: contract.data[0].asset_properties
       };
       console.log("Payload for binding task:", payload);
-      const task = new this.persistantModel({ payload });
-      task.save();
+      const task = new this.persistantModel(payload as CreatePersistantTaskDto);
+      await task.save();
       await this.loadAndStartTasks()
       return { status: 'success', message: 'Binding task started successfully' };
     } catch (err) {
@@ -102,26 +103,27 @@ export class BindingService implements OnModuleInit {
   extractMetadataFromParam(obj: Record<string, any>, param: string): Record<string, any> {
     const result: Record<string, any> = {};
     const paramObject = obj[param];
-
+    
     if (!paramObject || typeof paramObject !== 'object') return result;
-
+    console.log("Extracting metadata from param:",paramObject);
     for (const [key, value] of Object.entries(paramObject)) {
       // Skip top-level "value" and "type"
       if (key === 'value' || key === 'type') continue;
 
       // Check nested object validity
       if (
-        value &&
-        typeof value === 'object' &&
-        typeof value === 'object' && value !== null && 'type' in value && value.type === 'Property' &&
-        'value' in value
+        typeof value === 'string'
       ) {
-        result[key] = value.value;
+        result[key] = value;
+      }
+      else if (typeof value === 'object' && value !== null) {
+        // Check if the object has a "value" property
+        if ('value' in value) {
+          result[key] = value['value'];
+        }
       }
     }
-
     console.log("Extracted metadata:", result);
-
     return result;
   }
 
@@ -185,8 +187,9 @@ export class BindingService implements OnModuleInit {
       assetType,
       attribute,
       value,
-      message = '',
+      metadata = {},
       severity = '',
+      message = '',
       alertReceiveTime = '',
     } = input;
 
@@ -199,8 +202,9 @@ export class BindingService implements OnModuleInit {
       assetType: assetType,
       attribute: attribute,
       value: value, // ensure value is a string
-      message: message,
+      metadata: metadata,
       severity: severity,
+      message: message,
       alertReceiveTime: alertReceiveTime,
     };
     console.log("Payload for posting asset data:", payload);
@@ -216,15 +220,14 @@ export class BindingService implements OnModuleInit {
 
   private async processTask(task: any) {
     // Your actual data handling logic
-    console.log(`Running task ${task.id}:`, task);
+    console.log(`Running taask ${task.id}:`, task);
     const token = await this.tokenService.getToken();
-    const asset = this.assetService.getAssetDataById(task.assetId, token);
-    console.log("Asset data:", asset);
-
-    for (const key in task.dataType) {
-      if (task.dataType === 'metadata') {
-        for (const key1 in task.assetProperties) {
+    const asset = await this.assetService.getAssetDataById(task.assetId, token);
+    for (const key of task.dataType) {
+      if (key === 'metadata') {
+        for (const key1 of task.assetProperties) {
           const metadata = this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
+          if (Object.keys(metadata).length === 0) continue;
           this.postAssetData({
             producerId: task.producerId,
             bindingId: task.bindingId,
@@ -232,14 +235,16 @@ export class BindingService implements OnModuleInit {
             assetType: asset["type"],
             dataType: key,
             attribute: "https://industry-fusion.org/base/v0.1/" + key1,
-            value: metadata
+            value: JSON.stringify(metadata)
           });
         }
       }
 
-      if (task.dataType === 'static') {
+      if (key == 'static') {
         const staticData = this.extractSelectiveNonRealtimeValues(asset, task.assetProperties);
-        for (const key1 in task.assetProperties) {
+        if (Object.keys(staticData).length === 0) continue;
+        for (const key1 of task.assetProperties) {
+          if (staticData["https://industry-fusion.org/base/v0.1/" + key1] == undefined) continue;
           this.postAssetData({
             producerId: task.producerId,
             bindingId: task.bindingId,
@@ -252,9 +257,10 @@ export class BindingService implements OnModuleInit {
         }
       }
 
-      if (task.dataType === 'live') {
+      if (key == 'live') {
         const live = this.extractSelectiveRealtimeValues(asset, task.assetProperties);
-        for (const key1 in task.assetProperties) {
+        if (Object.keys(live).length === 0) continue;
+        for (const key1 of task.assetProperties) {
           this.postAssetData({
             producerId: task.producerId,
             bindingId: task.bindingId,
@@ -267,8 +273,9 @@ export class BindingService implements OnModuleInit {
         }
       }
 
-      if (task.dataType === 'alerts') {
+      if (key == 'alerts') {
         const alerts = await this.alertsService.findOne(task.assetId);
+        if (Object.keys(alerts).length === 0) continue;
         for (const alert of alerts) {
           if (alert["status"] !== "open") continue;
           this.postAssetData({
