@@ -62,6 +62,7 @@ export class BindingService implements OnModuleInit {
         dataType: contract.data.data_type, // default data type
         assetProperties: contract.data.asset_properties
       };
+      console.log("Payload for binding task:", payload);
       const task = new this.persistantModel({ payload });
       task.save();
       await this.loadAndStartTasks()
@@ -74,6 +75,7 @@ export class BindingService implements OnModuleInit {
   @Cron(CronExpression.EVERY_HOUR) // optional: refresh tasks hourly
   async loadAndStartTasks() {
     const taskList = await this.persistantModel.find();
+    console.log("Task list:", taskList);
     for (const task of taskList) {
       const taskId = task._id;
       if (this.activeTasks.has(taskId)) continue;
@@ -117,6 +119,8 @@ export class BindingService implements OnModuleInit {
       }
     }
 
+    console.log("Extracted metadata:", result);
+
     return result;
   }
 
@@ -141,6 +145,7 @@ export class BindingService implements OnModuleInit {
         }
       }
     }
+    console.log("Extracted non-realtime values:", result);
     return result;
   }
 
@@ -165,6 +170,7 @@ export class BindingService implements OnModuleInit {
         }
       }
     }
+    console.log("Extracted realtime values:", result);
     return result;
   }
 
@@ -196,6 +202,7 @@ export class BindingService implements OnModuleInit {
       severity: severity,
       alertReceiveTime: alertReceiveTime,
     };
+    console.log("Payload for posting asset data:", payload);
     try {
       await axios.post(this.ifxConnectorUrl + "/producer/publish-data-to-dataroom", payload);
     } catch (error) {
@@ -211,6 +218,7 @@ export class BindingService implements OnModuleInit {
     console.log(`Running task ${task.id}:`, task);
     const token = await this.tokenService.getToken();
     const asset = this.assetService.getAssetDataById(task.assetId, token);
+    console.log("Asset data:", asset);
 
     for (const key in task.dataType) {
       if (task.dataType === 'metadata') {

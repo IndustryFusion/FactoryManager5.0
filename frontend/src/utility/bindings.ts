@@ -163,7 +163,6 @@ export const startTaskBinding = async (
         },
       }
     );
-    return response.data;
   } catch (error: any) {
     console.error("Error updating binding:", error);
     if (error?.response && error?.response?.status === 401) {
