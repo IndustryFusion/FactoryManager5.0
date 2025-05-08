@@ -82,7 +82,7 @@ export class BindingService implements OnModuleInit {
       const taskId = task._id;
       if (this.activeTasks.has(taskId)) continue;
 
-      const intervalMs = task.interval;
+      const intervalS = task.interval;
       const expiry = new Date(task.expiry);
 
       const timer = setInterval(async () => {
@@ -93,7 +93,7 @@ export class BindingService implements OnModuleInit {
         }
 
         await this.processTask(task);
-      }, intervalMs);
+      }, intervalS * 1000);
 
       this.activeTasks.set(taskId, timer);
     }
