@@ -33,7 +33,7 @@ const nextConfig = {
         // !! WARN !!
         ignoreBuildErrors: true,
     },
-    i18n,
+    basePath: ''
 }
 
 module.exports = nextConfig
