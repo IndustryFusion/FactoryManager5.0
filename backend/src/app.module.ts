@@ -84,7 +84,6 @@ const mongoURI = process.env.MONGO_URL;
     }),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
-      { name: Onboarding.name, schema: OnboardingSchema },
       { name: 'PersistantTask', schema: PersistantTaskSchema }
     ]),
     MongooseModule.forFeature([
