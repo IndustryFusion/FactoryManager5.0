@@ -79,11 +79,17 @@ const mongoURI = process.env.MONGO_URL;
 @Module({
   imports: [
     MongooseModule.forRoot(mongoURI),
+    MongooseModule.forRoot(mongoURI.replace(/\/admin$/, '/factory'), {
+      connectionName: 'factory', // named connection (DB2)
+    }),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
       { name: Onboarding.name, schema: OnboardingSchema },
       { name: 'PersistantTask', schema: PersistantTaskSchema }
     ]),
+    MongooseModule.forFeature([
+      { name: Onboarding.name, schema: OnboardingSchema },
+    ], 'factory'), // use the named connection (DB2)
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule
