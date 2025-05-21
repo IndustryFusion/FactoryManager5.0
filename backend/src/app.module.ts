@@ -75,11 +75,12 @@ import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
+const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
 
 @Module({
   imports: [
     MongooseModule.forRoot(mongoURI),
-    MongooseModule.forRoot(mongoURI.replace(/\/admin$/, '/factory'), {
+    MongooseModule.forRoot(mongoURIFactory, {
       connectionName: 'factory', // named connection (DB2)
     }),
     MongooseModule.forFeature([
