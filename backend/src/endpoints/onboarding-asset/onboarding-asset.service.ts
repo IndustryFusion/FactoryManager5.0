@@ -26,7 +26,7 @@ import { OnboardingDto } from './dto/onboarding.dto';
 export class OnboardingAssetService {
 
   constructor(
-    @InjectModel(Onboarding.name)
+    @InjectModel(Onboarding.name, 'factory')
     private onboardingModel: Model<Onboarding>,
   ) { }
 
