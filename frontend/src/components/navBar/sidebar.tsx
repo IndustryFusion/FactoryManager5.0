@@ -35,7 +35,7 @@ function Sidebar() {
             alt="Factory logo"
             width={205}
             height={38}
-            onClick={() => handleRoute("dashboard")}
+            onClick={() => handleRoute("factory-site/factory-overview")}
             style={{ cursor: "pointer" }}
           ></Image>
           <Image
