@@ -75,7 +75,7 @@ export class OnboardingAssetService {
 
       const updatedDevice = await this.onboardingModel.findOneAndUpdate(
         { device_id: id },
-        data
+        { $set: data }
       ).exec();
 
       return {
