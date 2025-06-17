@@ -26,6 +26,9 @@ export class RedisService {
   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT)  ;
   constructor() {
     this.redisClient = new Redis({ host:this.REDIS_SERVER, port: Number(this.REDIS_PORT)});
+    this.redisClient.on('error', (err) => {
+      console.error('Redis error:', err);
+    });
   }
 
   // Returns Value for Specific Key
@@ -58,4 +61,9 @@ export class RedisService {
       throw error;
     }
   }
+
+  async deleteKey(key: string): Promise<number> {
+    return this.redisClient.del(key);
+  }
+
 }
