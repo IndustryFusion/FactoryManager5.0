@@ -80,7 +80,7 @@ function Sidebar() {
                 !sidebarOpen ? "sidebar_collapse_fade" : ""
               }`}
             >
-              Dashboard
+              Data Viewer
             </div>
           </Button>
           <Button

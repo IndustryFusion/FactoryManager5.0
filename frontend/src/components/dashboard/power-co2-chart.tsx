@@ -316,7 +316,7 @@ const PowerCo2Chart = () => {
   }, [chartData]);
 
   return (
-    <div className="card h-auto" style={{ width: "100%", zoom: "90%" }}>
+    <div className="data_viewer_card">
       <Toast ref={toast} />
       <h3 style={{ marginLeft: "30px", fontSize: "22px" }}>
         Power Consumption and Co2 Emission

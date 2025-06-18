@@ -36,6 +36,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { InputText } from "primereact/inputtext";
 import { useTranslation } from "next-i18next";
+import { OverlayPanel } from "primereact/overlaypanel";
+import Image from "next/image";
 
 
 // Register the zoom plugin
@@ -120,6 +122,7 @@ const CombineSensorChart: React.FC = () => {
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [chartInstance, setChartInstance] = useState(null);
   const { selectedAssetData } = useDashboard();
+  const op = useRef<OverlayPanel>(null);
   const intervalButtons = [
     { label: "Live", interval: "live" },
     { label: "10 Min", interval: "10min" },
@@ -335,8 +338,8 @@ const CombineSensorChart: React.FC = () => {
     }
 
     let attributeKey = selectedAssetData
-    ? Object.keys(selectedAssetData).find(key => String(key) === String(attributeId))
-    : undefined;
+      ? Object.keys(selectedAssetData).find(key => String(key) === String(attributeId))
+      : undefined;
 
     const params: FetchDataParams = {
       intervalType: selectedInterval,
@@ -545,12 +548,12 @@ const CombineSensorChart: React.FC = () => {
   useEffect(() => {
 
     const socket = socketIOClient(`${SOCKET_API_URL}/`, {
-        transports: ["websocket"],
-        rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
-        reconnectionAttempts: 5, // Retry if connection fails
-        timeout: 5000, // Set connection timeout
-        secure: true
-      }
+      transports: ["websocket"],
+      rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
+      reconnectionAttempts: 5, // Retry if connection fails
+      timeout: 5000, // Set connection timeout
+      secure: true
+    }
     );
     socketRef.current = socket;
 
@@ -581,6 +584,7 @@ const CombineSensorChart: React.FC = () => {
     },
   };
   const handleLoad = async () => {
+    op.current?.hide();
     await fetchDataForAttribute(
       selectedAttribute,
       entityIdValue,
@@ -592,24 +596,53 @@ const CombineSensorChart: React.FC = () => {
   };
   const startTimeValue = startTime ? format(startTime, "HH:mm") : "";
   const endTimeValue = endTime ? format(endTime, "HH:mm") : "";
+
+  const formatDateWithTimeRange = (
+    date: Date | null,
+    startTime: Date | undefined,
+    endTime: Date | undefined
+  ): string => {
+    if (!date || !startTime || !endTime) return '--';
+  
+    const formatTime = (time: Date): string => {
+      return time.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    };
+  
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+  
+    const formattedStart = formatTime(startTime);
+    const formattedEnd = formatTime(endTime);
+  
+    return `${day}/${month}/${year} (${formattedStart} - ${formattedEnd})`;
+  };
+
+  
   return (
-    <div style={{ zoom: "80%" }}>
-      <div className="custom-button-container">
+    <div className="data_viewer_card">
+      {/* <div className="custom-button-container">
         <div className="custom-button">
           <span className="button-text">
             {formatAttributeName(selectedAttribute) ||
               t("dashboard:selectAnAttribute")}
           </span>
         </div>
-      </div>
+      </div> */}
       <div className="grid p-fluid">
         <div className="col-12">
           <div className="control-container">
-            <div className="attribute-dropdown-container">
-              <p className="font-bold">{t("dashboard:selectAttribute")}</p>
-              <div className="flex justify-content-between align-items-center dashboard-dropdown">
+            <div className="control_form_field">
+              <label htmlFor="attribute" className="dashboard_control_label">{t("dashboard:selectAttribute")}</label>
+              <div className="global-button dropdown dashboard-dropdown">
                 <Dropdown
                   id="attribute"
+                  inputId="attribute"
                   name="attribute"
                   value={selectedAttribute || t("dashboard:selectAnAttribute")}
                   options={attributes}
@@ -617,18 +650,16 @@ const CombineSensorChart: React.FC = () => {
                   placeholder={t("placeholder:selectAttribute")}
                   style={{ width: "100%" }}
                   appendTo="self"
+                  panelClassName="global_dropdown_panel"
                 />
-                <img
-                  className="dropdown-icon-img"
-                  src="/dropdown-icon.svg"
-                  alt="dropdown-icon"
-                />
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
               </div>
             </div>
-            <div className="interval-dropdown-container">
-              <p className="font-bold">{t("dashboard:interval")}</p>
-              <div className="flex justify-content-between align-items-center dashboard-dropdown">
+            <div className="control_form_field">
+              <label htmlFor="intervall" className="dashboard_control_label">{t("dashboard:interval")}</label>
+              <div className="global-button dropdown dashboard-dropdown">
                 <Dropdown
+                inputId="intervall"
                   value={selectedInterval}
                   options={intervalButtons.map(({ label, interval }) => ({
                     label,
@@ -637,72 +668,76 @@ const CombineSensorChart: React.FC = () => {
                   onChange={(e) => handleIntervalChange(e as CustomChangeEvent)}
                   placeholder="Select an Interval"
                   appendTo="self"
+                  panelClassName="global_dropdown_panel"
 
                 />
-                <img
-                  className="dropdown-icon-img"
-                  src="/dropdown-icon.svg"
-                  alt="dropdown-icon"
-                />
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
               </div>
             </div>
-            <div className="date-time-container">
-              <p className="font-bold">{t("dashboard:selectDate")}</p>
-              <div className="date-time-flex">
-                <Calendar
-                  value={selectedDate}
-                  onChange={(e) => handleDateChange(e as CustomChangeEvent)}
-                  showTime={false}
-                  dateFormat="yy-mm-dd"
-                  placeholder={t("placeholder:selectDate")}
-                  className="w-full sm:w-auto"
-                  minDate={minDate}
-                  maxDate={new Date()}
-                  disabled={selectedInterval !== "custom"}
-                  appendTo="self"
+            {selectedInterval === 'custom' && (
+              <div className="control_form_field">
+                <label htmlFor="" className="dashboard_control_label">Pick Timeframe</label>
+                <Button className="timeframe_op_trigger" onClick={(e) => op.current?.toggle(e)}>
+                <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt=""></Image>
+                  <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : 'Pick a date'}</div>
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                </Button>
+              </div>)
+            }
 
-                />
-                <div className="input-with-label mt-3">
-                  <label
-                    htmlFor="startTime"
-                    className="input-label -mt-6 -ml-5"
-                  >
-                    {t("dashboard:startTime")}
-                  </label>
-                  <InputText
-                    id="startTime"
-                    type="time"
-                    value={startTime ? format(startTime, "HH:mm") : ""}
-                    onChange={(e) => handleTimeInputChange(e, "start")}
-                    placeholder="Start Time"
-                    className="w-full lg:w-8rem mt-3"
+            <OverlayPanel ref={op} className="timeframe_overlaypanel">
+              <div className="timetrame_form">
+              <div className="control_form_field">
+                <label htmlFor="date_inputt" className="dashboard_control_label">{t("dashboard:selectDate")}</label>
+                  <Calendar
+                  inputId="date_inputt"
+                    value={selectedDate}
+                    onChange={(e) => handleDateChange(e as CustomChangeEvent)}
+                    showTime={false}
+                    dateFormat="yy-mm-dd"
+                    placeholder={t("placeholder:selectDate")}
+                    className="w-full sm:w-auto"
+                    minDate={minDate}
+                    maxDate={new Date()}
                     disabled={selectedInterval !== "custom"}
+                    appendTo="self"
+
                   />
-                </div>
-                <div className="input-with-label mt-3">
-                  <label htmlFor="endTime" className="input-label -mt-6 -ml-5">
-                    {t("dashboard:endTime")}
-                  </label>
-                  <InputText
-                    id="endTime"
-                    type="time"
-                    value={endTime ? format(endTime, "HH:mm") : ""}
-                    onChange={(e) => handleTimeInputChange(e, "end")}
-                    placeholder="End Time"
-                    className="w-full lg:w-8rem mt-3"
+                  </div>
+                  <div className="control_form_field">
+                <label htmlFor="startTime" className="dashboard_control_label">{t("dashboard:startTime")}</label>
+                    <InputText
+                      id="startTime"
+                      type="time"
+                      value={startTime ? format(startTime, "HH:mm") : ""}
+                      onChange={(e) => handleTimeInputChange(e, "start")}
+                      placeholder="Start Time"
+                      className="w-full"
+                      disabled={selectedInterval !== "custom"}
+                    />
+                  </div>
+                  <div className="control_form_field">
+                    <label htmlFor="endTime" className="dashboard_control_label">{t("dashboard:endTime")}</label>
+                    <InputText
+                      id="endTime"
+                      type="time"
+                      value={endTime ? format(endTime, "HH:mm") : ""}
+                      onChange={(e) => handleTimeInputChange(e, "end")}
+                      placeholder="End Time"
+                      className="w-full "
+                      disabled={selectedInterval !== "custom"}
+                    />
+                  </div>
+                  </div>
+                  <Button
+                    label={t("button:load")}
+                    severity="info"
                     disabled={selectedInterval !== "custom"}
+                    style={{ width: "100px" }}
+                    className="global-button"
+                    onClick={handleLoad} // Call the handleLoad function when the button is clicked
                   />
-                </div>
-                <Button
-                  label={t("button:load")}
-                  severity="info"
-                  disabled={selectedInterval !== "custom"}
-                  style={{ width: "100px" }}
-                  className="load-btn"
-                  onClick={handleLoad} // Call the handleLoad function when the button is clicked
-                />
-              </div>
-            </div>
+            </OverlayPanel>
           </div>
           <div>
             {!entityIdValue ? (
