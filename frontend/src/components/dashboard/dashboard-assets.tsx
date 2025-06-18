@@ -34,6 +34,10 @@ import axios from "axios";
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { fetchAssets } from '@/redux/assetManagement/assetManagementSlice';
 import { RootState } from '@/redux/store';
+import Image from "next/image";
+import AssetSelector from "./asset-selector";
+import IfricIdBadge from "./ifric-id-badge";
+import { Skeleton } from "primereact/skeleton";
 
 interface PrefixedAssetProperty {
   key: string;
@@ -219,86 +223,88 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     setAssetCount(assets.length)
   }, [assets])
 
+  const getProductType = (name: string) => {
+    if(!name){
+      return null
+    }
+    const lastSegment = name.split('/').pop();
+    if (!lastSegment) return null;
+    const spaced = lastSegment.replace(/([a-z])([A-Z])/g, '$1 $2');
+    const capitalized = spaced.replace(/\b\w/g, c => c.toUpperCase());
+    return capitalized;
+  }
+
+  
+  const loadingSkeleton = () =>{
+    return(
+      <div className='flex flex-column gap-4'>
+         <Skeleton height='205px'></Skeleton>
+         <div className='flex gap-3'>
+         <Skeleton height='88px'></Skeleton>
+         <Skeleton height='88px'></Skeleton>
+         <Skeleton height='88px'></Skeleton>
+         <Skeleton height='88px'></Skeleton>
+         </div>
+         <Skeleton height='400px'></Skeleton>
+      </div>
+
+    )
+   }
+
+
 
   return (
     <>
       <Toast ref={toast} />
-      <div style={{ zoom: "74%", width:"33%" }}>
+      <div>
         <div className="dashboard-assets">
-          <div className="card h-auto " style={{ width: "100%" }}>
+          {loading ? (
+            loadingSkeleton()
+          ):(
+            <div className="data_viewer_card">
             <div className=" flex justify-content-between">
-              <h5 className="heading-text">Assets</h5>
+              <label className="select_asset_heading" htmlFor="asset_selector">Select Asset</label>
               {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
             </div>
-            <div className="mb-5 flex justify-content-center align-items-center">
-              <span className="p-input-icon-left">
-                <i className="pi pi-search" />
-                <InputText
-                  type="search"
-                  value={searchedAsset}
-                  onChange={searchAsset}
-                  placeholder={t('placeholder:searchByProduct')}
-                  className="mb-10" style={{ borderRadius: "10px", width: "460px"}} />
-              </span>
-              <Button 
-                icon="pi pi-refresh" 
-                onClick={handleRefresh} 
-                className="p-button-outlined refresh-button" 
-                tooltip="Refresh Assets"
-                tooltipOptions={{ position: 'left' }}
-                label='Refresh'
+            <div className="product_selector_wrapper">
+              <AssetSelector
+                assets={assetData}
+                selectedAsset={selectedRow}
+                setSelectedAsset={setSelectedRow}
+                loading={loading}
+                handleClick={handleClick}
               />
             </div>
-            {loading ? (
-              <div className="dashboard-spinner">
-                <ProgressSpinner />
-              </div>
-              ) : (
-                <DataTable
-                  ref={dataTableRef}
-                  rows={6}
-                  paginator
-                  value={assetData}
-                  className="dashboard-assets"
-                  scrollable={true}
-                  scrollHeight="750px"
-                  onRowClick={(e) => handleClick(e.data as Asset)}
-                  selectionMode="single"
-                  selection={selectedRow}
-                  onSelectionChange={(e) => setSelectedRow(e.value as Asset)}
-                  rowClassName={rowClassName}
-                >
-                  <Column
-                    header={t('dashboard:productImage')}
-                    field="product_image"
-                    body={productIconTemplate}
-                  />
-                  <Column
-                    header={t('dashboard:productName')}
-                    field="product_name"
-                    body={productNameBodyTemplate}
-                  />
-                  <Column
-                    header={t('dashboard:assetType')}
-                    field="asset_type"
-                    body={assetTypeBodyTemplate}
-                  />
-                  <Column
-                    header={t('dashboard:onboard')}
-                    style={{ width: '10%' }}
-                    body={viewBodyTemplateNew}
+                {selectedRow && (
+                  <div className="selected_product_header">
+                    <div className="selected_product_details">
+                      <div className="selected_product_image_wrapper">
+                        {selectedRow.product_image !== 'NULL' ? (
+                          <img src={selectedRow.product_image} alt={selectedRow.product_name} className="selected_product_image" />
+                        ) : (
+                          <div className="product-no-img" style={{ width: '60px', height: '60px' }}>
+                            <Image src="/no-image-icon.svg" width={20} height={20} alt="Missing image"></Image>
+                          </div>
+                        )}
 
-                  />
-                  <Column
-                    header={t('dashboard:view')}
-                    style={{ width: '15%' }}
-                    body={viewBodyTemplate}
-
-                  />
-                </DataTable>
-              )
-            }
+                        <div className="selected_product_status">
+                        </div>
+                      </div>
+                      <div className="flex flex-column gap-1">
+                        <div className="selected_product_title">{selectedRow.product_name}</div>
+                        <div className="selected_product_room_name">{getProductType(selectedRow.type)}</div>
+                        <div className="selected_product_status_text">Running <span className="time_span">(32m)</span></div>
+                      </div>
+                    </div>
+                    <div className="selected_product_actions">
+                      {selectedRow.id && (
+                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} />
+                      )}
+                    </div>
+                  </div>
+                )}
           </div>
+          )}
         </div>
         {showBlocker &&
           <OnboardForm

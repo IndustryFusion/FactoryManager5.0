@@ -1,0 +1,25 @@
+.global-button.company_ifric_id_badge {
+    background-color: var(--grey-box);
+    border: none !important;
+    color: var(--black);
+    border-radius: 4px !important;
+    display: flex;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 400;
+    align-items: center;
+    padding: 4px 6px;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: none !important;
+}
+
+.global-button.company_ifric_id_badge:focus-visible {
+    outline: 2px solid var(--blue);
+}
+
+.company_ifric_id_badge>div {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}

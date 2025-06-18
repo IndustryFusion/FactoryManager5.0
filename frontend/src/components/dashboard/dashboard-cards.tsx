@@ -27,6 +27,7 @@ import { useTranslation } from "next-i18next";
 import { AlertsResponse } from "@/types/alert-response";
 import { AssetData } from "@/types/dashboard-cards";
 import { Asset } from "@/types/asset-types";
+import Image from "next/image";
 
 const DashboardCards: React.FC = () => {
 
@@ -226,10 +227,10 @@ const DashboardCards: React.FC = () => {
 
     return (
         <>
-            <div className="grid p-4 dashboard-card-container" style={{ zoom: "80%" }}>
-                <div className="col-12 lg:col-6 xl:col-3  dashboard-card">
+            <div className="dashboard-card-container">
+                <div className="dashboard-card">
                     <div className="card mb-0">
-                        <div className="flex justify-content-between mb-3">
+                        {/* <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('machineState')}</span>
                                 <div className="text-900 font-medium text-xl">{machineStateValue == "2" ? "Online" : "Offline"}</div>
@@ -241,12 +242,19 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500">{t('registered')}</span>
+                        <span className="text-500">{t('registered')}</span> */}
+                        <div className="dashboard_card_image_wrapper">
+                        <Image src="/dashboard-collapse/card-1.svg" width={24} height={24} alt=""></Image>
+                        </div>
+                        <div className="flex flex-column gap-1">
+                            <div className="dashboard-card-text">{t('machineState')}</div>
+                            <div className="dashboard-card-value">{machineStateValue == "2" ? "Online" : "Offline"}</div>
+                        </div>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" suppressHydrationWarning>
+                <div className="dashboard-card" suppressHydrationWarning>
                     <div className="card mb-0 d">
-                        <div className="flex justify-content-between mb-3">
+                        {/* <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('runningSince')}</span>                              
                                 <div className="text-900 font-medium text-xl">{difference}</div>
@@ -256,12 +264,19 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">%{onlineAverage} </span>
-                        <span className="text-500">{t('sinceLastWeek')}</span>
+                        <span className="text-500">{t('sinceLastWeek')}</span> */}
+                        <div className="dashboard_card_image_wrapper">
+                        <Image src="/dashboard-collapse/card-2.svg" width={24} height={24} alt=""></Image>
+                        </div>
+                        <div className="flex flex-column gap-1">
+                            <div className="dashboard-card-text">{t('runningSince')}</div>
+                            <div className="dashboard-card-value">{difference}</div>
+                        </div>
                     </div>
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 dashboard-card" >
+                <div className="dashboard-card" >
                     <div className="card mb-0 " onClick={() => setRelations(true)}>
-                        <div className="flex justify-content-between mb-3">
+                        {/* <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('relations')}</span>
                                 <div className="flex gap-1">
@@ -275,7 +290,14 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">{relationsCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500">{t('machinesConnected')}</span>
+                        <span className="text-500">{t('machinesConnected')}</span> */}
+                        <div className="dashboard_card_image_wrapper">
+                        <Image src="/dashboard-collapse/card-3.svg" width={24} height={24} alt=""></Image>
+                        </div>
+                        <div className="flex flex-column gap-1">
+                            <div className="dashboard-card-text">{t('relations')}</div>
+                            <div className="dashboard-card-value">{childCount.toString().padStart(3, '0')} <span>Child</span></div>
+                        </div>
                     </div>
                     {relations &&
                         <RelationDialog
@@ -284,9 +306,9 @@ const DashboardCards: React.FC = () => {
                         />
                     }
                 </div>
-                <div className="col-12 lg:col-6 xl:col-3 0 dashboard-card">
+                <div className="dashboard-card">
                     <div className="card mb-0" onClick={() => setNotification(true)}>
-                        <div className="flex justify-content-between mb-3">
+                        {/* <div className="flex justify-content-between mb-3">
                             <div>
                                 <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('notifications')}</span>
                                 <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
@@ -296,8 +318,14 @@ const DashboardCards: React.FC = () => {
                             </div>
                         </div>
                         <span className="text-green-500 font-medium">00 </span>
-                        <span className="text-500">{t('responded')}</span>
-
+                        <span className="text-500">{t('responded')}</span> */}
+                        <div className="dashboard_card_image_wrapper">
+                        <Image src="/dashboard-collapse/card-4.svg" width={24} height={24} alt=""></Image>
+                        </div>
+                        <div className="flex flex-column gap-1">
+                            <div className="dashboard-card-text">{t('notifications')}</div>
+                            <div className="dashboard-card-value">{notificationData?.length} <span>Unread</span></div>
+                        </div>
                     </div>
                     {notification &&
                         <NotificationDialog
