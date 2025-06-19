@@ -28,10 +28,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.use(cors({
+  app.enableCors({
     origin: allowedOrigins,
-    credentials: true, 
-  }));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
   app.use(cookieParser());
   app.use(
     session({

@@ -13,7 +13,7 @@ import { IoArrowBack } from "react-icons/io5";
 import ContractFolders from "@/components/contractManager/contract-folders";
 import { Toast, ToastMessage } from "primereact/toast";
 import axios from "axios";
-import { fetchContractsRedux } from "@/redux/contract/contractSlice";
+import { updateContracts } from "@/redux/contract/contractSlice";
 import { useDispatch, useSelector } from "react-redux";
 import "@/styles/sidebar.css";
 import Sidebar from "@/components/navBar/sidebar";
@@ -21,7 +21,7 @@ const ContractManager = () => {
   const [nodes, setNodes] = useState([]);
   const [companyIfricId, setCompanyIfricId] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
-  // const [contractsData, setContractsData] = useState([]);
+  const [contractsData, setContractsData] = useState([]);
   const [predictiveFilteredContractsData, setpredictiveFilteredContractsData] =
     useState([]);
   const [iotAnalyticsContractsData, setIotAnalyticsContractsData] = useState([]);
@@ -36,7 +36,7 @@ const ContractManager = () => {
   const dispatch = useDispatch();
 
   // Access the contracts data from Redux
-  const contractsData = useSelector((state: any) => state.contracts.contracts);
+  const reduxData = useSelector((state: any) => state.contracts.contracts);
 
   const showToast = (
     severity: ToastMessage["severity"],
@@ -59,7 +59,10 @@ const ContractManager = () => {
     try {
     const details = await getAccessGroup();
     setCompanyIfricId(details.company_ifric_id);
-    dispatch(fetchContractsRedux(companyIfricId));
+    const response = await getContracts(details.company_ifric_id);
+    if(response?.length) {
+      dispatch(updateContracts(response));
+    }
     } catch(error: any) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
@@ -70,9 +73,14 @@ const ContractManager = () => {
       }
     }
   };
+
   useEffect(() => {
     getCompanyId();
-  });
+  },[]);
+
+  useEffect(() => {
+    setContractsData(reduxData);
+  },[reduxData]);
 
 
 

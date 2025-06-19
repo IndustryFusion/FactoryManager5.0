@@ -95,14 +95,14 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
     const [validateInput, setValidateInput] = useState({
         ip_address: false,
-        main_topic: false,
         app_config: false,
         pdt_mqtt_hostname: false,
         pdt_mqtt_port: false,
         keycloak_url: false,
         realm_password: false,
         dataservice_image_config: false,
-        agentservice_image_config: false
+        agentservice_image_config: false,
+        protocol: false
     })
 
     const toast = useRef<Toast>(null);
@@ -134,8 +134,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         let parsedConfig;
         const {
             ip_address,
-            main_topic,
+            protocol,
             app_config,
+            pod_name,
             pdt_mqtt_hostname,
             pdt_mqtt_port,
             keycloak_url,
@@ -158,18 +159,20 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
         if (ip_address === undefined || ip_address === "" ||
             app_config === undefined || app_config === "" ||
+            protocol === undefined || protocol === "" ||
             pdt_mqtt_hostname === undefined || pdt_mqtt_hostname === "" ||
             pdt_mqtt_port === undefined || pdt_mqtt_port === 0 ||
             keycloak_url === undefined || keycloak_url === "" ||
             realm_password === undefined || realm_password === "" ||
             dataservice_image_config === undefined || dataservice_image_config === "" ||
-            agentservice_image_config === undefined || agentservice_image_config === ""
+            agentservice_image_config === undefined || agentservice_image_config === "" ||
+            pod_name === undefined || pod_name === ""
         ) {
 
             showToast('error', "Error", "Please fill all required fields")
         } else {
 
-            // Check if app_config is not empty and is valid JSON
+            // Check if app_config is not empty and is valid YAML
             try {
                 parsedConfig = YAML.parse(onboardForm.app_config);
             } catch (error) {
@@ -184,7 +187,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 }
                 const payload = YAML.stringify(obj);
                 const newpayload = JSON.stringify(YAML.parse(payload));
-                console.log("payload here", newpayload);
 
                 try {
                     const response = await axios.post(API_URL + "/onboarding-asset", newpayload, {
@@ -201,6 +203,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     } else if (success === false && status === 422) {
                         setOnboardAssetProp(true);
                         setShowBlockerProp(false);
+                    }
+                    else if (success === false && status === 409) {
+                        console.error("Error response:", response?.data.message);
+                        showToast('error', 'Error', 'Device already onboarded, please use edit form.');
                     }
                 } catch (error) {
                     if (axios.isAxiosError(error)) {
@@ -265,23 +271,13 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                             </div>
                             <div className="field">
                                 <label htmlFor="main_topic" >Main Topic</label>
-                                {onboardForm.protocol === "mqtt" ?
-                                    <InputText
-                                        id="main_topic"
-                                        value={onboardForm.main_topic}
-                                        type="text"
-                                        placeholder="ex:airtracker-74145/relay1"
-                                        onChange={(e) => handleInputChange(e.target.value, "main_topic")}
-                                        style={{ border: validateInput?.main_topic ? "1px solid red" : "" }}
-                                    />
-                                    :
-                                    <InputText
-                                        id="main_topic"
-                                        value={onboardForm.main_topic}
-                                        type="text"
-                                        disabled
-                                    />
-                                }
+                                <InputText
+                                    id="main_topic"
+                                    value={onboardForm.main_topic}
+                                    type="text"
+                                    placeholder="ex:airtracker-74145/relay1"
+                                    onChange={(e) => handleInputChange(e.target.value, "main_topic")}
+                                />
                             </div>
                             <div className="field">
                                 <label htmlFor="protocol" >Protocol</label>
@@ -289,7 +285,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="protocol"
                                     value={onboardForm.protocol}
                                     type="text"
-                                    disabled
+                                    onChange={(e) => handleInputChange(e.target.value, "protocol")}
+                                    style={{ border: validateInput?.protocol ? "1px solid red" : "" }}
                                 />
                             </div>
                             <div className="field">
@@ -309,11 +306,11 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="pod_name"
                                     value={onboardForm.pod_name}
                                     type="text"
-                                    disabled
+                                    onChange={(e) => handleInputChange(e.target.value, "pod_name")}
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="pdt_mqtt_hostname">Pdt Mqtt Hostname</label>
+                                <label htmlFor="pdt_mqtt_hostname">PDT MQTT Hostname</label>
                                 <InputText
                                     id="pdt_mqtt_hostname"
                                     value={onboardForm.pdt_mqtt_hostname}
@@ -324,7 +321,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="pdt_mqtt_port">Pdt Mqtt Port</label>
+                                <label htmlFor="pdt_mqtt_port">PDT MQTT Port</label>
                                 <InputNumber
                                     id="pdt_mqtt_port"
                                     value={onboardForm.pdt_mqtt_port}
@@ -345,7 +342,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 </div>
                             </div>
                             <div className="field">
-                                <label htmlFor="device_id">Device Id</label>
+                                <label htmlFor="device_id">Device ID</label>
                                 <InputText
                                     id="device_id"
                                     value={onboardForm.device_id}
@@ -353,7 +350,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="gateway_id">Gateway Id</label>
+                                <label htmlFor="gateway_id">Gateway ID</label>
                                 <InputText
                                     id="gateway_id"
                                     value={onboardForm.gateway_id}
@@ -361,7 +358,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="keycloak_url">KeyCloak Url</label>
+                                <label htmlFor="keycloak_url">Keycloak URL</label>
                                 <InputText
                                     id="keycloak_url"
                                     autoComplete="KeyCloak Url"

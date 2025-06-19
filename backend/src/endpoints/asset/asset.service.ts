@@ -20,6 +20,9 @@ import { ImportAssetDto } from './dto/importAsset.dto';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import { Request } from 'express';
+import { CompactEncrypt } from 'jose';
+import { createHash } from 'crypto';
+
 @Injectable()
 export class AssetService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -27,6 +30,28 @@ export class AssetService {
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
   //private readonly pdtScorpioUrl = process.env.PDT_SCORPIO_URL;
   private readonly ifxurl = process.env.IFX_PLATFORM_BACKEND_URL;
+
+  mask(input: string, key: string): string {
+    return input.split('').map((char, i) =>
+      (char.charCodeAt(0) ^ key.charCodeAt(i % key.length)).toString(16).padStart(2, '0')
+    ).join('');
+  }
+
+  deriveKey(secret: string): Uint8Array {
+    const hash = createHash('sha256');
+    hash.update(secret);
+    return new Uint8Array(hash.digest());
+  }
+  
+  async encryptData(data: string) {
+    const encoder = new TextEncoder();
+    const encryptionKey = await this.deriveKey(process.env.JWT_SECRET);
+
+    const encrypted = await new CompactEncrypt(encoder.encode(data))
+    .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+    .encrypt(encryptionKey);
+    return encrypted;
+  }
 
   async getAssetData(token: string) {
     try {
@@ -87,7 +112,7 @@ export class AssetService {
           const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
           result.push(scorpioResponse.data);
         } catch(err) {
-            console.log("Error fetching asset", i, err)
+            // console.log("Error fetching asset", i, err)
             continue;
         } 
         }
@@ -164,7 +189,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
       // console.log("typeArr",typeArr)
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {
@@ -223,14 +248,15 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const registryHeaders = {
+      const encryptedToken = await this.encryptData(req.headers['authorization'].split(" ")[1]);
+      const ifxHeaders = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': req.headers['authorization']
+        'Authorization': `Bearer ${this.mask(encryptedToken, process.env.MASK_SECRET)}`
       };
+
+      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: ifxHeaders});
       
-      
-      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: registryHeaders});
       for(let i = 0; i < response.data.length; i++) {
         const assetId = response.data[i].id;
         try {
@@ -242,6 +268,7 @@ export class AssetService {
           continue;
         }
       }
+      
       return {
         success: true,
         status: 201,
@@ -261,7 +288,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       let uniqueType = [];
       // sending multiple requests to scorpio to save the asset array

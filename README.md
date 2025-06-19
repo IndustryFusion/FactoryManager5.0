@@ -125,7 +125,7 @@ Then execute the following commands one by one,
 
 ```sql
 
-CREATE VIEW value_change_state_entries AS SELECT * FROM ( SELECT *, LAG(value) OVER (PARTITION BY "entityId" ORDER BY "observedAt" ASC) AS prev_value FROM entityhistory WHERE "attributeId"='https://industry-fusion.org/base/v0.1/machine_state' AS subquery WHERE value IS DISTINCT FROM prev_value;
+CREATE VIEW value_change_state_entries AS SELECT * FROM ( SELECT *, LAG(value) OVER (PARTITION BY "entityId" ORDER BY "observedAt" ASC) AS prev_value FROM entityhistory WHERE "attributeId"='https://industry-fusion.org/base/v0.1/machine_state') AS subquery WHERE value IS DISTINCT FROM prev_value;
 
 CREATE VIEW power_emission_entries_days AS SELECT subquery."entityId", DATE_TRUNC('day', subquery.hour) AS day, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM entityhistory WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('day', subquery.hour) ORDER BY day;
 

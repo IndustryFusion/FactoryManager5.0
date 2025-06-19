@@ -12,13 +12,14 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import "../../../styles/add-binding.css";
 import { getCompanyDetailsById, verifyCompanyCertificate } from '../../../utility/auth';
-import { getTemplateByName, getCompanyCertificate, getContractByType, getAssetByType, getAssetCertificateById, createBinding } from '@/utility/contract';
+import { getTemplateByName, getCompanyCertificate, getContractByType, getAssetManagementData, getAssetCertificateById, createBinding, mongoUserCollectionCreation, updateBinding } from '@/utility/contract';
 import { Dropdown } from 'primereact/dropdown';
 import moment from 'moment';
 import Navbar from '@/components/navBar/navbar';
 import { Dialog } from 'primereact/dialog';
 import { getContractDetails, getContractTemplatesById } from '@/utility/contract';
 import Sidebar from '@/components/navBar/sidebar';
+import { startTaskBinding } from '@/utility/bindings';
 
 interface PropertyDefinition {
     type: string;
@@ -173,12 +174,17 @@ const CreateBinding: React.FC = () => {
                     setSelectedAssetProperties(selectedProperties);
 
                     // fetch assets of template type
-                    const assetResponse = await getAssetByType(btoa(template.properties.asset_type.default));
-                    if(assetResponse?.data) {
-                        const options = assetResponse.data.map((value: { id: string }) => ({
-                            label: value.id,
-                            value: value.id
-                        }));
+                    const assetResponse = await getAssetManagementData(userData.company_ifric_id, template.properties.asset_type.default);
+                    if(assetResponse) {
+                        const options = assetResponse.map((value: Record<string,any>) => {
+                            const productKey = Object.keys(value).find(key => key.includes('product_name'));
+                            if(productKey && value[productKey]) {
+                                return {
+                                    label: value[productKey].value,
+                                    value: value.id
+                                }
+                            }
+                        });
                         setAssetOptions(options);
                     }
                 }
@@ -223,12 +229,12 @@ const CreateBinding: React.FC = () => {
                         }
                     }
                 } else {
-                    setAssetVerified(null);
+                    setAssetVerified(false);
                     toast.current?.show({ severity: 'warn', summary: 'Warn', detail: "Asset Certificate not found" });
                 }
             }
         } catch (error) {
-            setAssetVerified(null);
+            setAssetVerified(false);
             console.error('Error fetching data:', error);
             toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to load necessary data' });
         }
@@ -336,6 +342,7 @@ const CreateBinding: React.FC = () => {
                 toast.current?.show({ severity: 'warn', summary: 'Warning', detail: 'Please create company certificate' });
                 return;
             }
+            //call ifx platform to get mongo provisioning
 
             const result = {
                 asset_ifric_id: selectedAsset,
@@ -356,7 +363,33 @@ const CreateBinding: React.FC = () => {
             console.log("result ",result);
             const response = await createBinding(result);
             console.log("response ",response?.data);
-            if(response?.data.status === 201) {
+            const payload = {
+                producerId: formData.data_provider_company_ifric_id,
+                bindingId: response?.data.binding_ifric_id,
+                assetId: selectedAsset,
+                consumerId: formData.data_consumer_company_ifric_id,
+            };
+
+            console.log("payload ",payload);
+
+            const monoRes = await mongoUserCollectionCreation(payload);
+            console.log("mongoRes ",monoRes?.data);
+
+            const resultUpdate = { 
+                contract_binding_ifric_id: response?.data.binding_ifric_id,
+                binding_mongo_url: monoRes?.data.mongoUrl,
+                binding_mongo_username: monoRes?.data.username,
+                binding_mongo_password: monoRes?.data.password,
+                binding_mongo_database: monoRes?.data.database,
+                meta_data: {
+                    create_at: new Date(),
+                    last_updated_at: new Date(),
+                    created_user: userName
+                }
+            }
+            const responseUpdate = await updateBinding(resultUpdate);
+            const responseTask = await startTaskBinding(formData.data_provider_company_ifric_id, response?.data.binding_ifric_id, selectedAsset, formData.contract_ifric_id);
+            if(responseUpdate?.data.status === 201) {
                 toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding added successfully' });
                 setVisible(false)
             } else {

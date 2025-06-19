@@ -74,6 +74,7 @@ interface MachineStateLabelContext{
 };
 type FinalData = Record<string,   {[key: string]: any} >;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+const SOCKET_API_URL = process.env.NEXT_PUBLIC_BACKEND_SOCKET_URL;
 
 const MachineStateChart = () => {
     const [chartData, setChartData] = useState({});
@@ -199,22 +200,24 @@ const MachineStateChart = () => {
 
     const fetchAssets = async (assetId: string) => {
         try {
-            let attributeId: string = '';
-            const response = await axios.get(API_URL + `/asset/${assetId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                withCredentials: true,
-            });
-            const assetData: Asset = response.data;
+            if (assetId) {
+                let attributeId: string = '';
+                const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    withCredentials: true,
+                });
+                const assetData: Asset = response.data;
 
-            Object.keys(assetData).map((key) => {
-                if (key.includes("machine_state")) {
-                    attributeId = 'eq.' + key;
-                }
-            });
-            return attributeId;
+                Object.keys(assetData).map((key) => {
+                    if (key.includes("machine_state")) {
+                        attributeId = 'eq.' + key;
+                    }
+                });
+                return attributeId;
+            }
         } catch (error) {
             console.error("Error fetching asset data:", error);
         }
@@ -579,7 +582,14 @@ const MachineStateChart = () => {
 
     // useEffect to handle socket receiving data
     useEffect(() => {
-        const socket = socketIOClient(`${API_URL}/`);
+        const socket = socketIOClient(`${SOCKET_API_URL}/`,  {
+            transports: ["websocket"],
+            rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
+            reconnectionAttempts: 5, // Retry if connection fails
+            timeout: 5000, // Set connection timeout
+            secure: true
+        });
+
         socket.on("connect", () => {
             console.log('WebSocket Connected machine-state-chart.tsx');
         });
@@ -597,7 +607,7 @@ const MachineStateChart = () => {
     // useEffect to handle changes related to selectedIntervals
     useEffect(() => {
         if (router.isReady) {              
-            fetchDataAndAssign();                
+            fetchDataAndAssign();
         }
        
     }, [router.isReady, entityIdValue, selectedInterval])

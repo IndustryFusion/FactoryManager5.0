@@ -70,21 +70,29 @@ import { ContractController } from './endpoints/contract/contract.controller';
 import { ContractService } from './endpoints/contract/contract.service';
 import { BindingController } from './endpoints/binding/binding.controller';
 import { BindingService } from './endpoints/binding/binding.service';
+import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
+import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
+const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
 
 @Module({
   imports: [
     MongooseModule.forRoot(mongoURI),
+    MongooseModule.forRoot(mongoURIFactory, {
+      connectionName: 'factory', // named connection (DB2)
+    }),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
+      { name: 'PersistantTask', schema: PersistantTaskSchema }
     ]),
+    MongooseModule.forFeature([
+      { name: Onboarding.name, schema: OnboardingSchema },
+    ], 'factory'), // use the named connection (DB2)
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule
-  
-    
   ],
   controllers: [
     AppController,

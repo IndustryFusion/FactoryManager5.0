@@ -1,19 +1,27 @@
-version: '3.7'
+version: '3.9'
+
+networks:
+  shared-network:
+    external: true
 
 services:
-  if50-backend:
+  pp-backend:
     image: ${DOCKER_PREFIX:-ibn40}/factory50-backend:${DOCKER_TAG:-latest}
     build:
       context: ./backend
+      args:
+        ENV: prod
     ports:
     - "4002:4002"
-    env_file:
-      - .env
-    environment:
-      - ENV=${ENV:-dev}
-  if50-frontend:
+    networks:
+      - shared-network
+  pp-frontend:
     image: ${DOCKER_PREFIX:-ibn40}/factory50-frontend:${DOCKER_TAG:-latest}
     build:
       context: ./frontend
+      args:
+        ENV: prod
     ports:
     - "3002:3002"
+    networks:
+      - shared-network

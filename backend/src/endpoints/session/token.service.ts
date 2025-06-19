@@ -30,27 +30,37 @@ export class TokenService {
   getToken = async () => {
     try{
       let tokenData = await this.redisService.getData('token-storage');
-      if(!tokenData) {
+
+      if(!tokenData|| this.isTokenExpired(tokenData.accessToken)) {
         const token = await this.authService.login(this.username, this.password);
         let tokenKey = 'token-storage';
-        await this.redisService.saveData(tokenKey, token);
-        return token.accessToken;
-      } else {
-        // verify the expiry
-        const decodedToken = await jwt.decode(tokenData.accessToken);
-        if(decodedToken && decodedToken.exp) {
-          const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-          if (decodedToken.exp > currentTime) {
-            return tokenData.accessToken;
-          } else {
-            throw new UnauthorizedException('Token has expired');
-          }
+        const lockKey = 'token-refresh-lock';
+
+        const lock = await this.redisService.saveData(lockKey, 'locked', 10);
+        if (lock) {
+          // This process has the lock, fetch new token
+          const newToken = await this.authService.login(this.username, this.password);
+          await this.redisService.saveData(tokenKey, newToken);
+          await this.redisService.deleteKey(lockKey); // release lock
+          return newToken.accessToken;
         } else {
-          throw new UnauthorizedException('Invalid token');
+          // Another process is refreshing; wait a bit and try again
+          await this.sleep(1000); // wait 1s
+          return await this.getToken(); // retry
         }
+      } else {
+          return tokenData.accessToken;
       }
     }catch(err){
       return err;
     }
   }
+
+  isTokenExpired = (accessToken: string): boolean => {
+    const decoded = jwt.decode(accessToken);
+    if (!decoded || !decoded.exp) return true;
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decoded.exp <= currentTime;
+  }
+  sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -27,10 +27,13 @@ import EditOnboardForm from "./edit-onboard-form";
 import { Toast, ToastMessage } from "primereact/toast";
 import { InputText } from "primereact/inputtext";
 import "../../styles/dashboard.css";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { update } from '@/redux/entityId/entityIdSlice';
 import { useTranslation } from "next-i18next";
 import axios from "axios";
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { fetchAssets } from '@/redux/assetManagement/assetManagementSlice';
+import { RootState } from '@/redux/store';
 
 interface PrefixedAssetProperty {
   key: string;
@@ -61,6 +64,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder', 'dashboard']);
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const { assets, loading } = useSelector((state: RootState) => state.assetManagement);
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -70,10 +74,10 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     return <>{assetType}</>;
   };
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
-    if (rowData && rowData.product_icon && rowData.product_icon !== 'NULL') {
+    if (rowData && rowData.product_image && rowData.product_image !== 'NULL') {
       return (
         <img
-          src={rowData.product_icon}
+          src={rowData.product_image}
           style={{ width: "70px", height: "auto" }}
         />
       );
@@ -123,19 +127,21 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   const handleAsset = async () => {
     try {
-      const response = await fetchAsset();
-      if (response !== undefined) {
-        setSelectedRow(response[0]);
-        setAssetData(response);
-        setAllAssets(response);
-        setAssetCount(response.length)
-      } else {
-        console.error("Fetch returned undefined");
+      if(!assets.length) {
+        dispatch(fetchAssets());
       }
     } catch (error) {
       console.error("Fetched assets:", error)
     }
   }
+
+  const handleRefresh = () => {
+    try {
+      dispatch(fetchAssets());
+    } catch (error) {
+      console.error("Fetched assets:", error)
+    }
+  };
 
 
   const handleClick = async (selectedAsset: Asset) => {
@@ -206,18 +212,25 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   }, [onboardAsset, showBlocker])
 
+  useEffect(() => {
+    setSelectedRow(assets[0]);
+    setAssetData(assets);
+    setAllAssets(assets);
+    setAssetCount(assets.length)
+  }, [assets])
+
 
   return (
     <>
       <Toast ref={toast} />
-      <div style={{ zoom: "74%" }}>
+      <div style={{ zoom: "74%", width:"33%" }}>
         <div className="dashboard-assets">
           <div className="card h-auto " style={{ width: "100%" }}>
             <div className=" flex justify-content-between">
               <h5 className="heading-text">Assets</h5>
               {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
             </div>
-            <div className="mb-5" style={{paddingLeft: "15px"}}>
+            <div className="mb-5 flex justify-content-center align-items-center">
               <span className="p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText
@@ -227,49 +240,64 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   placeholder={t('placeholder:searchByProduct')}
                   className="mb-10" style={{ borderRadius: "10px", width: "460px"}} />
               </span>
+              <Button 
+                icon="pi pi-refresh" 
+                onClick={handleRefresh} 
+                className="p-button-outlined refresh-button" 
+                tooltip="Refresh Assets"
+                tooltipOptions={{ position: 'left' }}
+                label='Refresh'
+              />
             </div>
-            <DataTable
-              ref={dataTableRef}
-              rows={6}
-              paginator
-              value={assetData}
-              className="dashboard-assets"
-              scrollable={true}
-              scrollHeight="750px"
-              onRowClick={(e) => handleClick(e.data as Asset)}
-              selectionMode="single"
-              selection={selectedRow}
-              onSelectionChange={(e) => setSelectedRow(e.value as Asset)}
-              rowClassName={rowClassName}
-            >
-              <Column
-                header={t('dashboard:productImage')}
-                field="product_icon"
-                body={productIconTemplate}
-              />
-              <Column
-                header={t('dashboard:productName')}
-                field="product_name"
-                body={productNameBodyTemplate}
-              />
-              <Column
-                header={t('dashboard:assetType')}
-                field="asset_type"
-                body={assetTypeBodyTemplate}
-              />
-              <Column
-                header={t('dashboard:onboard')}
-                style={{ width: '10%' }}
-                body={viewBodyTemplateNew}
+            {loading ? (
+              <div className="dashboard-spinner">
+                <ProgressSpinner />
+              </div>
+              ) : (
+                <DataTable
+                  ref={dataTableRef}
+                  rows={6}
+                  paginator
+                  value={assetData}
+                  className="dashboard-assets"
+                  scrollable={true}
+                  scrollHeight="750px"
+                  onRowClick={(e) => handleClick(e.data as Asset)}
+                  selectionMode="single"
+                  selection={selectedRow}
+                  onSelectionChange={(e) => setSelectedRow(e.value as Asset)}
+                  rowClassName={rowClassName}
+                >
+                  <Column
+                    header={t('dashboard:productImage')}
+                    field="product_image"
+                    body={productIconTemplate}
+                  />
+                  <Column
+                    header={t('dashboard:productName')}
+                    field="product_name"
+                    body={productNameBodyTemplate}
+                  />
+                  <Column
+                    header={t('dashboard:assetType')}
+                    field="asset_type"
+                    body={assetTypeBodyTemplate}
+                  />
+                  <Column
+                    header={t('dashboard:onboard')}
+                    style={{ width: '10%' }}
+                    body={viewBodyTemplateNew}
 
-              />
-              <Column
-                header={t('dashboard:view')}
-                style={{ width: '15%' }}
-                body={viewBodyTemplate}
+                  />
+                  <Column
+                    header={t('dashboard:view')}
+                    style={{ width: '15%' }}
+                    body={viewBodyTemplate}
 
-              />
-            </DataTable>
+                  />
+                </DataTable>
+              )
+            }
           </div>
         </div>
         {showBlocker &&

@@ -17,113 +17,90 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import * as YAML from 'js-yaml';
+import { Onboarding } from '../schemas/onboarding.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { OnboardingDto } from './dto/onboarding.dto';
 
 @Injectable()
 export class OnboardingAssetService {
-  private readonly gatwayUrl = process.env.GATEWAY_BASE_URL;
-  private readonly token = process.env.GATEWAY_TOKEN;
 
-  async create(data: any) {
+  constructor(
+    @InjectModel(Onboarding.name, 'factory')
+    private onboardingModel: Model<Onboarding>,
+  ) { }
+
+  async create(data: OnboardingDto) {
     try {
-      let fileName = `${data['device_id']}.yaml`;
-      fileName = encodeURIComponent(fileName);
-      const fileContent = YAML.dump(data);
-      const headers = {
-        Authorization: 'Bearer ' + this.token,
-        'Content-Type': 'application/vnd.github+json',
-      };
-      let url = this.gatwayUrl + '/' + fileName;
-      const response = await axios.put(url,
-        {
-          message: 'Add new file',
-          content: Buffer.from(fileContent).toString('base64'),
-        },
-        { headers }
-      );
-      if(response.data){
-        return {
-          "success": true,
-          "status": 201,
-          "message": "Added To GitHub Successfully"
-        }
-      }
-    }catch(err){
-      if (err.response && err.response.status === 422) {
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: data.device_id }).exec();
+      if (onbaordDevice) {
         return {
           "success": false,
-          "status": 422,
-          "message": "File already exist"
+          "status": 409,
+          "message": "Device already exists"
         }
-      } else {
-        throw err;
       }
+      const newOnboard = new this.onboardingModel(data);
+      newOnboard.save();
+      return {
+        "success": true,
+        "status": 201,
+        "message": "Created Successfully"
+      }
+    } catch (err) {
+      throw err;
     }
   }
 
   async findOne(id: string) {
     try {
-      let name = `${id}.yaml`;
-      const url = `${this.gatwayUrl}/${name}`;
-      const headers = {
-        Authorization: 'Bearer ' + this.token,
-        'Content-Type': 'application/json',
-      };
-      const response = await axios.get(url, {
-        headers,
-      });
-      if (response.data.encoding === 'base64' && response.data.content) {
-        // Decode Base64 content to UTF-8 string
-        const decodedContent = Buffer.from(
-          response.data.content,
-          'base64',
-        ).toString('utf-8');
-        const parsedContent = YAML.load(decodedContent);
-        return parsedContent;
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: id }).exec();
+      if (!onbaordDevice) {
+        throw new NotFoundException(`Device with id ${id} not found`);
       }
+      return onbaordDevice;
     } catch (err) {
-              throw new NotFoundException(
-          `Failed to fetch repository data: ${err.message}`,
-        );
-          }
+      throw new NotFoundException(
+        `Failed to fetch onboarding data: ${err.message}`,
+      );
+    }
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: OnboardingDto) {
     try {
-      let fileName = `${id}.yaml`;
-      const fileContent = YAML.dump(data);
-      const headers = {
-        Authorization: 'Bearer ' + this.token,
-        'Content-Type': 'application/json',
-      };
-      let url = this.gatwayUrl + '/' + fileName;
-
-      // Retrieve existing file content
-      const getResponse = await axios.get(url, { 
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          Accept: 'application/vnd.github.v3', // Specify raw content
-        } 
-      });
-
-      const response = await axios.put(url,
-        {
-          message: 'updat file coontent',
-          content: Buffer.from(fileContent).toString('base64'),
-          sha: getResponse.data.sha
-        },
-        { headers }
-      );
-      if(response.data){
-        return {
-          "success": true,
-          "status": 204,
-          "message": "Updated Successfully"
-        }
-      }else {
-        return response;
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: id }).exec();
+      if (!onbaordDevice) {
+        throw new NotFoundException(`Device with id ${id} not found`);
       }
-    }catch(err){
+
+      const updatedDevice = await this.onboardingModel.findOneAndUpdate(
+        { device_id: id },
+        { $set: data }
+      ).exec();
+
+      return {
+        "success": true,
+        "status": 204,
+        "message": "Updated Successfully"
+      }
+      
+    } catch (err) {
       throw err;
     }
   }
+
+  async findOneByIp(id: string) {
+    try {
+      const onbaordDevice = await this.onboardingModel.findOne({ ip_address: id }).exec();
+      if (!onbaordDevice) {
+        throw new NotFoundException(`Device with IP ${id} not found`);
+      }
+      return onbaordDevice;
+    } catch (err) {
+      throw new NotFoundException(
+        `Failed to fetch onboarding data: ${err.message}`,
+      );
+    }
+  }
+
 }

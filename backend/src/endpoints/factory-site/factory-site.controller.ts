@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, UnauthorizedException } from '@nestjs/common';
 import { FactorySiteService } from './factory-site.service';
 import * as jsonData from './factory-schema.json';
 import { TokenService } from '../session/token.service';
@@ -66,7 +66,10 @@ export class FactorySiteController {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findAll(token);
     } catch (err) {
-      throw new NotFoundException("Failed in factory-site/get"+err);
+      if (err.response?.status === 401) {
+        throw new UnauthorizedException('Repository unauthorized');
+      }
+      throw new err;
     }
   }
 
@@ -76,7 +79,7 @@ export class FactorySiteController {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findOne(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw new err;
     }
   }
 

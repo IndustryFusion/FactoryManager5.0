@@ -25,6 +25,7 @@ import bindingsSliceReducer from "./binding/bindingsSlice"
 import assetManagementReducer from './assetManagement/assetManagementSlice';
 import contractsSliceReducer from "./contract/contractSlice";
 import factoryUserReducer from "./auth/factoryUserSlice";
+import bindingRequestReducer from './binding/bindingRequestSlice';
 
 
 export const store = configureStore({
@@ -38,7 +39,8 @@ export const store = configureStore({
         bindings: bindingsSliceReducer,
         assetManagement: assetManagementReducer,
         contracts: contractsSliceReducer,
-        factoryUserSlice:factoryUserReducer
+        factoryUserSlice:factoryUserReducer,
+        bindingRequest:bindingRequestReducer
     },
 });
 

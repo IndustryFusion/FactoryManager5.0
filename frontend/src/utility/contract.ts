@@ -15,85 +15,87 @@
 //
 
 
+import { getAccessGroup } from "./indexed-db";
 import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
 import moment from 'moment';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const IFX_BACKEND_URL = process.env.NEXT_PUBLIC_IFX_PLATFORM_BACKEND_URL;
- 
+const IFX_CONNECTOR_URL = process.env.NEXT_PUBLIC_IFX_CONNECTOR_BACKEND_URL;
+
 export const getTemplateByName = async (templateName: string) => {
-    try {
-      return await api.get(`${BACKEND_API_URL}/templates/template-name?name=${templateName}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        return null;
-      } else {
-        throw error;
-      }
+  try {
+    return await api.get(`${BACKEND_API_URL}/templates/template-name?name=${templateName}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
     }
+  }
 };
 
 export const getTemplateByType = async (type: string) => {
-    try {
-        return await api.get(
-            `${process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL}/templates/mongo-templates/type/${type}`, {
-            headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            },
-        });
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        return null;
-      } else {
-        throw error;
-      }
+  try {
+    return await api.get(
+      `${process.env.NEXT_PUBLIC_TEMPLATE_SANDBOX_BACKEND_URL}/templates/mongo-templates/type/${type}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
     }
+  }
 };
 
 export const getCompanyCertificate = async (company_ifric_id: string) => {
-    try {
-      return await api.get(`${BACKEND_API_URL}/certificate/get-company-certificates/${company_ifric_id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-      });
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        return null;
-      } else {
-        throw error;
-      }
+  try {
+    return await api.get(`${BACKEND_API_URL}/certificate/get-company-certificates/${company_ifric_id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
     }
+  }
 };
 
 export const getContractByType = async (type: string) => {
-    try {
-      console.log("type ",type);
-      return await api.get(`${IFX_BACKEND_URL}/contract/get-contract-by-type/${type}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-      });
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        return null;
-      } else {
-        throw error;
-      }
+  try {
+    console.log("type ", type);
+    return await api.get(`${IFX_BACKEND_URL}/contract/get-contract-by-type/${type}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
     }
+  }
 };
 
 export const getContractByAssetType = async (type: string) => {
@@ -115,21 +117,21 @@ export const getContractByAssetType = async (type: string) => {
 };
 
 export const getAssetByType = async (type: string) => {
-    try {
-      return await api.get(`${BACKEND_API_URL}/asset/type/${type}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-      });
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        return null;
-      } else {
-        throw error;
-      }
+  try {
+    return await api.get(`${BACKEND_API_URL}/asset/type/${type}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+    });
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
     }
+  }
 };
 
 export const getAssetCertificateById = async (asset_ifric_id: string, company_ifric_id: string) => {
@@ -169,22 +171,54 @@ export const createBinding = async (data: Record<string, any>) => {
   }
 };
 
+export const updateBinding = async (data: Record<string, any>) => {
+  try {
+    return await api.patch(
+      `${IFX_BACKEND_URL}/binding`,
+      data
+    );
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+export const mongoUserCollectionCreation = async (data: Record<string, any>) => {
+  try {
+    console.log("data ", data);
+    return await api.post(
+      `${IFX_CONNECTOR_URL}/producer/provision`, data
+    );
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
 export const getAllContract = async (company_ifric_id: string) => {
   try {
     const certificateResponse = await getCompanyCertificate(company_ifric_id);
-    console.log("certificateResponse ",certificateResponse?.data);
-    if(certificateResponse?.data) {
+    console.log("certificateResponse ", certificateResponse?.data);
+    if (certificateResponse?.data) {
       const lastCertificateExpiry = moment(certificateResponse.data[0].expiry_on);
       const currentTime = moment();
-      if(lastCertificateExpiry.isAfter(currentTime)) {
+      if (lastCertificateExpiry.isAfter(currentTime)) {
         const contract = [];
         const response = await api.get(`${BACKEND_API_URL}/asset/get-owner-asset/${company_ifric_id}`);
-        if(response.data.length) {
-          const assetData: Record<string,any>[] = response.data;
+        if (response.data.length) {
+          const assetData: Record<string, any>[] = response.data;
           const uniqueTypes: string[] = [...new Set(assetData.map((item: Record<string, any>) => item.type as string))];
-          for(let i = 0; i < uniqueTypes.length; i++) {
+          for (let i = 0; i < uniqueTypes.length; i++) {
             const contractResponse = await getContractByAssetType(btoa(uniqueTypes[i]));
-            if(contractResponse?.data) {
+            if (contractResponse?.data) {
               contract.push(...contractResponse.data);
             }
           }
@@ -206,53 +240,53 @@ export const getAllContract = async (company_ifric_id: string) => {
   }
 };
 
-export const getContracts =async(companyIfricId: string)=>{
-  try{
-   const response = await api.get(`${IFX_BACKEND_URL}/contract/get-company-contract/${companyIfricId}`)
-   return response.data
+export const getContracts = async (companyIfricId: string) => {
+  try {
+    const response = await api.get(`${IFX_BACKEND_URL}/contract/get-company-contract/${companyIfricId}`)
+    return response.data
   }
-  catch (error:any) {
-      console.error("Error getting contracts:", error);
-      if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-      } else {
-        throw new Error(error.response?.data?.message || "Error getting contracts");
-      }
+  catch (error: any) {
+    console.error("Error getting contracts:", error);
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+    } else {
+      throw new Error(error.response?.data?.message || "Error getting contracts");
     }
   }
-
-  export const createContract = async (dataToSend: Record<string,any>) => {
-    try{
-        return await api.post(`${IFX_BACKEND_URL}/contract`, dataToSend,{
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },  
-        })
-    }
-    catch (error: any) {
-        if (error?.response && error?.response?.status === 401) {
-          updatePopupVisible(true);
-          return null;
-        } else {
-          throw error;
-        }
-      }
 }
 
-export const deleteContract = async(contractIfricId:string)=>{
-  try{
+export const createContract = async (dataToSend: Record<string, any>) => {
+  try {
+    return await api.post(`${IFX_BACKEND_URL}/contract`, dataToSend, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+  }
+  catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+}
+
+export const deleteContract = async (contractIfricId: string) => {
+  try {
     const response = await api.delete(`${IFX_BACKEND_URL}/contract/${contractIfricId}`);
     return response.data;
-  }catch (error:any) {
-        console.error("Error updating contracts:", error);
-        if (error?.response && error?.response?.status === 401) {
-          updatePopupVisible(true);
-        } else {
-          throw new Error(error.response?.data?.message || "Error deleteing contracts");
-        }
-      }
+  } catch (error: any) {
+    console.error("Error updating contracts:", error);
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+    } else {
+      throw new Error(error.response?.data?.message || "Error deleteing contracts");
     }
+  }
+}
 
 export const updateContractDetails = async (contractIfricId: string, dataToSend: Record<string, any>) => {
   try {
@@ -289,13 +323,13 @@ export const getContractDetails = async (contractIfricId: string) => {
 
 export const getContractTemplatesById = async (id: string) => {
   try {
-      return await api.get(
-          `${BACKEND_API_URL}/templates/contract/${id}`, {
-          headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          },
-      });
+    return await api.get(
+      `${BACKEND_API_URL}/templates/contract/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
   } catch (error: any) {
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
@@ -308,13 +342,13 @@ export const getContractTemplatesById = async (id: string) => {
 
 export const getContractByTemplates = async () => {
   try {
-      return await api.get(
-          `${BACKEND_API_URL}/templates/get-contract-by-template`, {
-          headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          },
-      });
+    return await api.get(
+      `${BACKEND_API_URL}/templates/get-contract-by-template`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
   } catch (error: any) {
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
@@ -324,3 +358,55 @@ export const getContractByTemplates = async () => {
     }
   }
 };
+
+export const getAllContractByAssetType = async () => {
+  try {
+    const userData = await getAccessGroup();
+    if (userData && userData.company_ifric_id) {
+      return await api.get(
+        `${BACKEND_API_URL}/contract/get-all-contract-by-asset-type/${userData.company_ifric_id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+    }
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+
+export const getAssetManagementData = async (company_ifric_id: string, type: string) => {
+  try {
+    const result: Record<string, any> = [];
+    const response = await api.get(
+      `${BACKEND_API_URL}/asset/asset-management/${company_ifric_id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    if (response.data) {
+      response.data.forEach((value: Record<string, any>) => {
+        if (value.type === type) {
+          result.push(value);
+        }
+      })
+    }
+    return result;
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+}

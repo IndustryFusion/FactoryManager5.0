@@ -51,6 +51,15 @@ export class OnboardingAssetController {
     }
   }
 
+  @Get('/ip/:id')
+  findOneByIp(@Param('id') id: string) {
+    try {
+      return this.onboardingAssetService.findOneByIp(id);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() data) {
     try{
@@ -65,7 +74,7 @@ export class OnboardingAssetController {
         return response;
       }
     }catch(err){
-      throw new Error('failed to update speecific file ' + err);
+      throw new Error('failed to update specific file ' + err);
     }
   }
 }

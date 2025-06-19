@@ -296,3 +296,21 @@ export const getUserDetails = async (dataToSend: Record<string, string>) => {
         }
     }
 };
+
+export const fetchCompanyProduct = async (dataCompanyIfricId: string) => {
+    try {
+        return await api.get(`${REGISTRY_API_URL}/auth/get-company-products/${dataCompanyIfricId}`,{
+            headers: {
+              "Content-Type": "application/json",
+            },
+        });
+    
+    } catch (error: any) {
+        console.log('err from fetch company product ',error);
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+        } else {
+          throw error;
+        }
+    }
+};

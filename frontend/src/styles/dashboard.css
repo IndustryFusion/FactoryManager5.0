@@ -352,6 +352,27 @@ textarea {
 
 }
 
+.dashboard-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+/* Refresh Button */
+.refresh-button {
+    background-color: var(--white) !important;
+    color: var(--black-primary) !important;
+    border: 1px solid #ced4da;
+    border-radius: 8px !important;
+    font-family: "League Spartan", sans-serif !important;
+    font-weight: 500 !important;
+  }
+  
+.refresh-button:hover {
+    background-color: var(--grey-box) !important;
+}
+
 @media screen and (min-width: 1550px) {
     .chart-content,
     .assets-content {
