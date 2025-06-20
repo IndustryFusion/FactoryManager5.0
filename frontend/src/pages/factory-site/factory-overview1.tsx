@@ -1,6 +1,6 @@
-import Sidebar from "@/components/navBar/sidebar";
+
 import "../../styles/factory-overview.css";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Footer from "@/components/navBar/footer";
 import Navbar from "@/components/navBar/navbar";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
@@ -23,10 +23,15 @@ import { Asset } from "@/types/asset-types";
 import { FiCopy, FiEdit3 } from "react-icons/fi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { IoEyeOutline } from "react-icons/io5";
+import dynamic from "next/dynamic";
+
+const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
+  ssr: false,
+});
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-const FactoryOverview = () => {
+const FactoryOverview1 = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
   const router = useRouter();
   const { t } = useTranslation(['overview', 'placeholder']);
@@ -46,224 +51,161 @@ const FactoryOverview = () => {
   const [factoryName, setFactoryName] = useState<string>('');
   const toast = useRef<Toast | null>(null);
   const dispatch = useDispatch();
-  const sortOptions = [
-    { label: "A-Z", value: "factory_name" },
-    { label: "Z-A", value: "!factory_name" },
-  ];
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    fetchFactoryLists(); // You likely want to load this on mount
+  }, []);
 
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
-    toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
+    toast.current?.show({ severity, summary, detail: message, life: 5000 });
   };
 
   const onFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGlobalFilterValue(value);
-    if (value.length === 0) {
-      setFilteredValue(null);
-    } else {
-      const filtered =
-        value.length > 0
-          ? factorySite?.filter((factory: Factory) => {
-              return (
-                factory.factory_name
-                  ?.toLowerCase()
-                  .includes(value.toLowerCase()) ||
-                factory?.country?.toLowerCase().includes(value.toLowerCase())
-              );
-            })
-          : factorySite;
-      setFilteredValue(filtered);
-    }
+    setFilteredValue(value
+      ? factorySite.filter(factory =>
+          factory.factory_name?.toLowerCase().includes(value.toLowerCase()) ||
+          factory.country?.toLowerCase().includes(value.toLowerCase())
+        )
+      : null
+    );
   };
 
   const onSortChange = (event: DropdownChangeEvent) => {
     const value = event.value;
-    if (value.indexOf("!") === 0) {
-      setSortOrder(-1);
-      setSortField(value.substring(1, value.length));
-      setSortKey(value);
-    } else {
-      setSortOrder(1);
-      setSortField(value);
-      setSortKey(value);
+    setSortOrder(value.startsWith('!') ? -1 : 1);
+    setSortField(value.startsWith('!') ? value.substring(1) : value);
+    setSortKey(value);
+  };
+
+  const confirmDeleteFactory = (factory: Factory) => {
+    setVisibleDelete(true);
+    setFactoryToDelete(factory);
+    setFactoryName(factory.factory_name ?? '');
+  };
+
+  const fetchFactoryLists = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/factory-site`, {
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        withCredentials: true,
+      });
+      const mappedData = mapBackendDataToFactoryLists(response.data);
+      setFactorySite(mappedData);
+      setFactoryCount(mappedData.length);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error", "Getting factory lists");
+      }
     }
   };
 
-    // Confirm deletion dialog
-    const confirmDeleteFactory = (factory: Factory) => {    
-      setVisibleDelete(true);
-      setFactoryToDelete(factory);
-      setFactoryName(factory?.factory_name ?? '')
-    
-    };
-
-     // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: Asset[]): Factory[] => {
     return backendData.map((item: any) => {
       const newItem: any = {};
-      Object.keys(item).forEach((key) => {
+      for (const key in item) {
         if (key.includes("http://www.industry-fusion.org/schema#")) {
-          const newKey = key.replace(
-            "http://www.industry-fusion.org/schema#",
-            ""
-          );
-          newItem[newKey] =
-            item[key].type === "Property" ? item[key].value : item[key];
+          const newKey = key.replace("http://www.industry-fusion.org/schema#", "");
+          newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
         } else {
           newItem[key] = item[key];
         }
-      });
+      }
       return newItem;
     });
   };
-    const fetchFactoryLists = async () => {
-      try {
-        const response = await axios.get(API_URL + "/factory-site", {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        });
-        const responseData = response.data;
-        const mappedData = mapBackendDataToFactoryLists(responseData);
-        setFactorySite(mappedData);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          showToast("error", "Error","Getting factory lists" )     
-        }
-      }
-    };
-  
-    // Handles factory deletion
-    const handleDeleteFactory = async () => {
-      if (!factoryToDelete) return;
-     
-      try {
-        await deleteFactory(factoryToDelete);
-        dispatch(reset());
-        await fetchFactoryLists();
-        setVisibleDelete(false);
-        showToast("success", "success", "Factory deleted successfully")
-  
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          showToast("error", "Error", " deleting factory")
-        }
-        console.error("Error deleting factory", error);
-      }
-    };
 
-    async function createAssets(body: string) {
-      try {
-        const response = await axios.post(API_URL + "/asset", body, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          withCredentials: true,
-        });
-        if (response.data?.status === 201 && response.data?.success === true) {
-          showToast("success", "success", "Asset imported successfully")
-          setAssetManageDialog(true);
-        }
-      } catch (error) {
-        showToast("error", "Error", "Fetching imported asset")
-        console.error("Error:", error);
+  const handleDeleteFactory = async () => {
+    if (!factoryToDelete) return;
+    try {
+      await deleteFactory(factoryToDelete);
+      dispatch(reset());
+      await fetchFactoryLists();
+      setVisibleDelete(false);
+      showToast("success", "Success", "Factory deleted successfully");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast("error", "Error", "Deleting factory");
       }
     }
-
-    const menuModel =[
-      {
-      label:"Edit",
-      icon:<FiEdit3 />,
-      command:()=>{
-        //setEditFactory(data.id);
-        setIsEdit(true)
-      }
-      },
-      {
-        label:"Delete",
-        icon: <RiDeleteBinLine />,
-        command:()=>{
-          confirmDeleteFactory(data)
-        }
-      },
-      {
-        label:"View",
-        icon:<IoEyeOutline />,
-        command:()=>{
-          router.push(`/factory-site/factory-management/${data.id}`)
-        }
-      }
-    ];
+  };
 
   return (
     <>
       <div className="flex">
-        <div
-          className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}
-        >
-          <Sidebar isOpen={isSidebarExpand} setIsOpen={setSidebarExpand} />
+        <div className={isSidebarExpand ? "sidebar-container" : "collapse-sidebar"}>
         </div>
-        <div
-          className={
-            isSidebarExpand
-              ? "factory-container"
-              : "  factory-container-collpase"
-          }
-        >
+        <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
           <Navbar navHeader={t("overview:factoryOverview")} />
-          <div>
-            <OverviewHeader
+          <OverviewHeader
             factoryCount={factoryCount}
             setVisible={setVisible}
             assetManageDialog={assetManageDialog}
             setAssetManageDialog={setAssetManageDialog}
-            />
-          </div>
-          <div>
-            <div className="factory-overview-header flex justify-content-between">
-              <div className="search-container">
-                <img src="/search_icon.jpg" alt="search-icon" />
-                <InputText
-                  className="search-input"
-                  placeholder={t("placeholder:searchByFactoryCountry")}
-                  value={globalFilterValue}
-                  onChange={onFilter}
-                />
-              </div>
-              <div>
-                <div>
-                  <img
-                    src="/sort_icon.jpg"
-                    alt="sort-icon"
-                  />
-                  <Dropdown
-                  className="sort-dropdown"
-                    optionLabel="label"
-                    placeholder={t("placeholder:sortByFactory")}
-                    options={sortOptions}
-                    onChange={onSortChange}
-                  />
-                </div>
-              </div>
+          />
+          <div className="factory-overview-header flex justify-content-between">
+            <div className="search-container">
+              <img src="/search_icon.jpg" alt="search-icon" />
+              <InputText
+                className="search-input"
+                placeholder={t("placeholder:searchByFactoryCountry")}
+                value={globalFilterValue}
+                onChange={onFilter}
+              />
             </div>
-            <FactoryCard
-            menuModel={menuModel}
-            />
+            <div>
+              <img src="/sort_icon.jpg" alt="sort-icon" />
+              <Dropdown
+                className="sort-dropdown"
+                optionLabel="label"
+                placeholder={t("placeholder:sortByFactory")}
+                options={[
+                  { label: "A-Z", value: "factory_name" },
+                  { label: "Z-A", value: "!factory_name" },
+                ]}
+                onChange={onSortChange}
+              />
+            </div>
           </div>
+          <FactoryCard
+            menuModel={[
+              {
+                label: "Edit",
+                icon: <FiEdit3 />,
+                command: () => setIsEdit(true),
+              },
+              {
+                label: "Delete",
+                icon: <RiDeleteBinLine />,
+                command: () => {
+                  if (factorySite.length > 0) confirmDeleteFactory(factorySite[0]); // Replace with selected factory
+                },
+              },
+              {
+                label: "View",
+                icon: <IoEyeOutline />,
+                command: () => {
+                  if (factorySite.length > 0)
+                    router.push(`/factory-site/factory-management/${factorySite[0].id}`);
+                },
+              },
+            ]}
+          />
+          <div>
+            <FactoryMap/>
+          </div>
+        
         </div>
       </div>
+
       {visible && (
         <CreateFactory visibleProp={visible} setVisibleProp={setVisible} />
       )}
       {isEdit && (
-        <EditFactory
-          factory={editFactory}
-          isEditProp={isEdit}
-          setIsEditProp={setIsEdit}
-        />
+        <EditFactory factory={editFactory} isEditProp={isEdit} setIsEditProp={setIsEdit} />
       )}
       {visibleDelete && (
         <DeleteDialog
@@ -291,4 +233,5 @@ export async function getStaticProps({ locale }: { locale: string }) {
     },
   };
 }
-export default FactoryOverview;
+
+export default FactoryOverview1;
