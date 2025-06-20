@@ -1,0 +1,198 @@
+.factory-card {
+  width: 360px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  flex-grow: 1;
+}
+
+.card-header-left {
+  display: flex;
+  gap: 12px;
+  padding-right: 60px;
+  align-items: center;
+}
+
+.factory-image {
+width: 70px;
+height: 70px;
+aspect-ratio: 1/1;border-radius: 70px;
+box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.10);
+}
+
+.factory-title {
+color: #2B2B2B;
+font-family: "League Spartan";
+font-size: 18px;
+font-style: normal;
+font-weight: 600;
+line-height: normal;
+margin: 0px;
+}
+
+.factory-address {
+color: var(--Grey-Primary, #5F5F5F);
+font-family: "League Spartan";
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+margin:0px
+}
+
+.card-header-right {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.factory-id {
+color: var(--Grey-Secondary, #95989A);
+text-align: right;
+font-family: "League Spartan";
+font-size: 10px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+}
+
+.more-icon {
+  font-size: 1rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.card-details {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon-detail {
+  flex-direction: row;
+  gap: 4px;
+}
+
+.detail-icon {
+  color: #3b82f6;
+  font-size: 1rem;
+}
+
+.detail-number {
+color: var(--Black, #2B2B2B);
+font-family: "League Spartan";
+font-size: 28px;
+font-style: normal;
+font-weight: 600;
+margin: 0px;
+line-height: normal;
+text-align: center;
+margin-top: 4px;
+}
+
+.detail-number.small {
+  font-size: 1rem;
+}
+
+.detail-label {
+color: var(--Grey-Secondary, #95989A);
+text-align: center;
+font-family: "League Spartan";
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+margin: 0px;
+margin-top: 2px;
+gap: 4px;
+}
+
+.factory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+.data-view .grid-nogutter {
+    margin-right: 0;
+    margin-left: 0;
+    margin-top: 0;
+}
+
+.copy-id {
+  cursor: pointer;
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.card-header-actions{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-marker-wrapper {
+  background: none;
+}
+
+.custom-blue-marker {
+  width: 18px;
+  height: 18px;
+  background-color: #2cafff;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 0 8px rgba(44, 175, 255, 0.6);
+}
+.create-factory-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #3CA0C9;
+  background-color: #f5faff;
+  min-height: 168px;
+  width: 100%;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.create-factory-card:hover {
+  background-color: #e0f3fc;
+}
+
+.create-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #3CA0C9;
+}
+
+.create-card-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.factory-card-clickable {
+  height: 100%;
+}

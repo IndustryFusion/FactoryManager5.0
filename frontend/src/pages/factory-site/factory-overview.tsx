@@ -1,30 +1,14 @@
-// 
-// Copyright (c) 2024 IB Systems GmbH 
-// 
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
-// 
-//    http://www.apache.org/licenses/LICENSE-2.0 
-// 
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
-// limitations under the License. 
-// 
-
 import { MdLocationOn } from "react-icons/md";
 import { Factory } from "../../types/factory-type";
-import axios, { AxiosError }  from "axios";
+import axios, { AxiosError } from "axios";
 import { useEffect, useState, useRef } from "react";
 import { DataView } from "primereact/dataview";
 import { InputText } from "primereact/inputtext";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 import { Button } from "primereact/button";
+import { TabView, TabPanel } from "primereact/tabview";
 import "../../styles/factory-overview.css";
-import { ConfirmDialog } from "primereact/confirmdialog";
-import { confirmDialog } from "primereact/confirmdialog";
+import "../../styles/factory-card.css";
 import { useRouter } from "next/router";
 import Navbar from "../../components/navBar/navbar";
 import Sidebar from '@/components/navBar/sidebar';
@@ -40,6 +24,18 @@ import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Asset } from "@/types/asset-types";
 import DeleteDialog from "@/components/delete-dialog";
+import { Card } from "primereact/card";
+import { Menu } from "primereact/menu";
+import { FaCogs, FaSitemap } from "react-icons/fa";
+import { FiMoreHorizontal } from "react-icons/fi";
+import { Tooltip } from "primereact/tooltip";
+import { ContextMenu } from "primereact/contextmenu";
+import dynamic from "next/dynamic";
+
+const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
+  ssr: false,
+});
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
@@ -65,8 +61,6 @@ const FactoryOverview = () => {
     { label: "A-Z", value: "factory_name" },
     { label: "Z-A", value: "!factory_name" },
   ];
-  const [isSidebarExpand, setSidebarExpand] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
@@ -105,7 +99,7 @@ const FactoryOverview = () => {
       setFactorySite(mappedData);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        showToast("error", "Error","Getting factory lists" )     
+        showToast("error", "Error", "Getting factory lists")
       }
     }
   };
@@ -116,7 +110,7 @@ const FactoryOverview = () => {
       const { } = router.query;//needed
       fetchFactoryLists();
       setGlobalFilterValue("");
-    }   
+    }
   }, [visible, isEdit, router.isReady]);
 
   const onSortChange = (event: DropdownChangeEvent) => {
@@ -196,7 +190,7 @@ const FactoryOverview = () => {
     } else {
       const filtered =
         value.length > 0
-          ? factorySite?.filter((factory:Factory) => {
+          ? factorySite?.filter((factory: Factory) => {
             return (
               factory.factory_name?.toLowerCase().includes(value.toLowerCase()) ||
               factory?.country?.toLowerCase().includes(value.toLowerCase())
@@ -207,70 +201,19 @@ const FactoryOverview = () => {
     }
   };
 
-  const dataViewHeader = (
-    <div className="flex flex-column md:flex-row md:justify-content-between  gap-8 px-2 factory-overview">
-      <div>
-      <Dropdown
-        optionLabel="label"
-        placeholder={t('placeholder:sortByFactory')}
-        options={sortOptions}
-        onChange={onSortChange}
-      
-      />
-      </div>
-      <div>
-        <span className="p-input-icon-left">
-          <i className="pi pi-search" />
-          <InputText
-            style={{ width: "30rem" }}
-            placeholder={t('placeholder:searchByFactoryCountry')}
-            value={globalFilterValue}
-            onChange={onFilter}
-          />
-        </span>
-      </div>
-      <div className=" flex justify-content-end align-items-center" >
-        <div className="mr-3">
-          <Button
-            label={t('overview:importAsset')}
-            onClick={triggerFileInput}
-            className="bg-purple-100 factory-btn"
-          />
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: 'none' }} // Hide the file input
-          />
-          {
-            assetManageDialog &&
-            < AssetManagementDialog
-              assetManageDialogProp={assetManageDialog}
-              setAssetManageDialogProp={setAssetManageDialog}
-            />
-          }
-        </div>
-        <Button
-          label={t('overview:createFactory')}
-          className="bg-blue-100 factory-btn"
-          onClick={() => setVisible(true)}
-        />
-      </div>
-    </div>
-  );
 
   // Confirm deletion dialog
-  const confirmDeleteFactory = (factory: Factory) => {    
+  const confirmDeleteFactory = (factory: Factory) => {
     setVisibleDelete(true);
     setFactoryToDelete(factory);
     setFactoryName(factory?.factory_name ?? '')
-  
+
   };
 
   // Handles factory deletion
   const handleDeleteFactory = async () => {
     if (!factoryToDelete) return;
-   
+
     try {
       await deleteFactory(factoryToDelete);
       dispatch(reset());
@@ -286,77 +229,124 @@ const FactoryOverview = () => {
     }
   };
 
+  const factoriesWithCreateCard = (filteredValue || factorySite).concat([{ isCreateCard: true } as Factory]);
+
+
   const itemTemplate = (data: Factory) => {
+  const menuRef = useRef<ContextMenu>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  if ((data as any).isCreateCard) {
     return (
-      <>
-        <div className="col-12 lg:col-3 pt-2 factory-overview "
-          style={{ padding: " 0 1rem" }}>
-          <div className="card  border-1 surface-border mt-4">
-            <div className="flex gap-2 mb-3">
-              <div className="factory-text-container">
-                <div className="flex flex-column factory-card-content">
-                  <div>
-                    <p className="card-title font-bold mt-2  capitalize">
-                      {data.factory_name}
-                    </p>
-                  </div>
-                  <div className="address-text">
-                    <p className="m-0 flex align-items-center">
-                      <MdLocationOn
-                        className="mr-1 location-icon"
-                      />
-                      <span>{data.street}, {data.country}</span>
-                    </p>
-                    <p className="mt-1 zip-text">- {data.zip}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="image-container" >
-                <div >
-                  <img
-                    src={`${data.thumbnail}`}
-                    alt={data.factory_name}
-                    className=" factory-image shadow-2 mt-3  border-round "
-                  />
-                </div>
+      <div
+        className="factory-card create-factory-card cursor-pointer"
+        onClick={() => setVisible(true)}
+      >
+        <div className="create-card-content">
+          <p className="create-card-text">+ Create Factory Site</p>
+        </div>
+      </div>
+    );
+  }
 
-              </div>
+  const menuItems = [
+    {
+      label: 'View',
+      icon: 'pi pi-eye',
+      command: () => router.push(`/factory-site/factory-management/${data.id}`)
+    },
+    {
+      label: 'Edit',
+      icon: 'pi pi-pencil',
+      command: () => {
+        setEditFactory(data.id);
+        setIsEdit(true);
+      }
+    },
+    {
+      label: 'Delete',
+      icon: 'pi pi-trash',
+      command: () => confirmDeleteFactory(data)
+    }
+  ];
 
+  return (
+    <div className="factory-card" ref={containerRef}>
+      {/* Card clickable area */}
+      <div
+        className="factory-card-clickable"
+        onClick={() => router.push(`/factory-site/factory-management/${data.id}`)}
+        style={{ cursor: "pointer" }}
+      >
+        <div className="card-header">
+          <div className="card-header-left">
+            <img
+              src={data.thumbnail || "/factory-card.svg"}
+              alt={data.factory_name}
+              className="factory-image"
+            />
+            <div className="factory-info">
+              <h2 className="factory-title">{data.factory_name}</h2>
+              <p className="factory-address">
+                {data.street}<br />
+                {data.zip} {data.city}<br />
+                {data.country}
+              </p>
             </div>
+          </div>
 
-            <div className="action-btn-container">
-              <Button
-                icon="pi pi-eye"
-                className="p-button-rounded p-button-secondary p-button-sm view-btn"
-                onClick={() =>
-                  router.push(`/factory-site/factory-management/${data.id}`)
-                }
+          <div className="card-header-right" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+            <span className="factory-id">
+              ID-...{(data.id ?? 0).toString().padStart(3, '0').slice(-3)}
+            </span>
+            <div className="card-header-actions">
+              <FiMoreHorizontal
+                className="more-icon cursor-pointer"
+                style={{ color: "black" }}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent parent click
+                  menuRef.current?.show(e);
+                }}
+                data-pr-position="top"
               />
-              <Button
-                icon="pi pi-pencil"
-                className="p-button-rounded p-button-secondary p-button-sm edit-btn"
-                onClick={() => {
-                  setEditFactory(data.id);
-                  setIsEdit(true)
-                }
-                }
-              />
-              <Button
-                icon="pi pi-trash"
-                className="p-button-rounded p-button-secondary p-button-sm delete-btn"
-                onClick={() => confirmDeleteFactory(data)}
+              <ContextMenu
+                model={menuItems}
+                ref={menuRef}
+                className="factory-menu"
               />
             </div>
-
+            <Tooltip target=".more-icon" />
           </div>
         </div>
-      </>
-    );
-  };
+
+        <div className="card-details">
+          <div className="detail-item">
+            <p className="detail-number">{data.assets || 0}</p>
+            <p className="detail-label">Assets</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px", alignItems: "flex-start" }}>
+            <div className="detail-item icon-detail">
+              <img src="/floor-plan.svg" className="detail-icon" alt="Floor Plan" />
+              <p className="detail-number small">{data.areas || 0}</p>
+              <p className="detail-label">Areas</p>
+            </div>
+            <div className="detail-item icon-detail">
+              <img src="/workflow-square-03.svg" className="detail-icon" />
+              <p className="detail-number small">{data.production_lines || 0}</p>
+              <p className="detail-label">Production Lines</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
   return (
     <div className="flex">
-      <Sidebar />   
+      <Sidebar />
       <div className='main_content_wrapper'>
         <div className='navbar-wrapper mt-5'>
           <Navbar navHeader="Factory Overview" />
@@ -365,13 +355,55 @@ const FactoryOverview = () => {
           <Toast ref={toast} />
           <div className="grid py-1 px-2 factory-overview">
             <div className="col-12">
-              <DataView
-                value={filteredValue || factorySite}
-                itemTemplate={itemTemplate}
-                header={dataViewHeader}
-                sortOrder={sortOrder}
-                sortField={sortField}
-              />
+              <div>
+                <div className="asset-header">
+                  <div className="flex justify-content-between">
+                    <div className="flex">
+                      <p className="total-assets-text">
+                        <span style={{ color: "var(--ifx-tint-blue-900-primary, #3CA0C9)", fontFamily: "League Spartan" }}>{factorySite.length}</span> {t("Factory Sites")}
+                      </p>
+                      <div>
+                        <TabView className="asset-tabs">
+                          <TabPanel header={t("overview:Active")}></TabPanel>
+                          <TabPanel header={t("overview:Drafts")}></TabPanel>
+                          <TabPanel header={t("overview:Archived")}></TabPanel>
+                        </TabView>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-content-end" style={{ gap: "10px" }}>
+                      <Button
+                        label={t("Import Assets")}
+                        className="factory-btn"
+                        onClick={() => setVisible(true)}
+                      />
+                      <Button
+                        label={t('overview:createFactory')}
+                        className="factory-btn"
+                        onClick={() => setVisible(true)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <FactoryMap factories={factorySite ?? []} />
+
+                </div>
+
+                {factorySite.length > 0 ? (
+                  <div>
+                    <DataView
+                      className="data-view"
+                      value={factoriesWithCreateCard}
+                      itemTemplate={itemTemplate}
+                      sortOrder={sortOrder}
+                      sortField={sortField}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
           {visible && (
@@ -396,8 +428,8 @@ const FactoryOverview = () => {
             />
           )}
         </div>
-        </div>
-   
+      </div>
+
       <Footer />
     </div>
   );
@@ -418,3 +450,4 @@ export async function getStaticProps({ locale }: { locale: string }) {
   }
 }
 export default FactoryOverview;
+
