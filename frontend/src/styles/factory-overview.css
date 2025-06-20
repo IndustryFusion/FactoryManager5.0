@@ -126,11 +126,7 @@ body {
 
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link .p-tabview-title {
   color: var(--Common-Text-Grey-900, #10182B);
-
-
-
   font-weight: 600;
-
 }
 
 .p-tabview .p-tabview-nav li .p-tabview-nav-link {
@@ -158,13 +154,18 @@ body {
 }
 
 .p-button .p-button-label {
-color: #FFF;
 font-family: "League Spartan";
 font-size: 16px;
 font-style: normal;
 font-weight: 500;
 line-height: normal;
+transition: none;
 }
+
+.p-button .p-button-label .factory-btn-white{
+color: black;
+}
+
 
 .factory-image {
   width: 100%;
@@ -423,21 +424,30 @@ line-height: normal;
 }
 
 .factory-btn {
-  color: #fff;
-  border: 1px solid #ced4da;
-  font-weight: 600;
+  color: #FFF;
+  border: 1px solid var(--Common-Text-Grey-900, #10182B);
+  font-weight: 500;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
-  background-color: black;
+  background-color: var(--Common-Text-Grey-900, #10182B);
   height: 30px;
-  /* padding-block: 10px; */
   margin-top: 8px;
+}
+
+.factory-btn-white{
+  color: var(--Common-Text-Grey-900, #10182B);
+  font-weight: 500;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  height: 30px;
+  margin-top: 8px;
+  border: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
+  background-color: var(--Common-Text-Grey-100, #F2F4F7);
 }
 
 .p-dataview.p-dataview-list .p-dataview-content>.p-grid>div {
   border-radius: 16px;
   border: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
   background: var(--White, #FFF);
-  margin:24px;
+  margin:12px;
 }
 
 .zip-text {

@@ -32,6 +32,8 @@ import { Tooltip } from "primereact/tooltip";
 import { ContextMenu } from "primereact/contextmenu";
 import dynamic from "next/dynamic";
 
+// Assuming you're using PrimeReact
+
 const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
   ssr: false,
 });
@@ -64,6 +66,7 @@ const FactoryOverview = () => {
   const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
     toast.current?.show({ severity: severity, summary: summary, detail: message, life: 5000 });
   };
+
 
   // Function to map the backend data to the factorylist structure
   const mapBackendDataToFactoryLists = (backendData: Asset[]): Factory[] => {
@@ -229,118 +232,125 @@ const FactoryOverview = () => {
     }
   };
 
+
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click(); // trigger hidden file input
+  };
+
   const factoriesWithCreateCard = (filteredValue || factorySite).concat([{ isCreateCard: true } as Factory]);
 
 
   const itemTemplate = (data: Factory) => {
-  const menuRef = useRef<ContextMenu>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<ContextMenu>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-  if ((data as any).isCreateCard) {
+    if ((data as any).isCreateCard) {
+      return (
+        <div
+          className="factory-card create-factory-card cursor-pointer"
+          onClick={() => setVisible(true)}
+        >
+          <div className="create-card-content">
+            <img src="/add-square.svg" style={{ width: "29px", height: "29px" }} />
+            <p className="create-card-text">Create Factory Site</p>
+          </div>
+        </div>
+      );
+    }
+
+    const menuItems = [
+      {
+        label: 'View',
+        icon: 'pi pi-eye',
+        command: () => router.push(`/factory-site/factory-management/${data.id}`)
+      },
+      {
+        label: 'Edit',
+        icon: 'pi pi-pencil',
+        command: () => {
+          setEditFactory(data.id);
+          setIsEdit(true);
+        }
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => confirmDeleteFactory(data)
+      }
+    ];
+
     return (
-      <div
-        className="factory-card create-factory-card cursor-pointer"
-        onClick={() => setVisible(true)}
-      >
-        <div className="create-card-content">
-          <p className="create-card-text">+ Create Factory Site</p>
+      <div className="factory-card" ref={containerRef}>
+        {/* Card clickable area */}
+        <div
+          className="factory-card-clickable"
+          onClick={() => router.push(`/factory-site/factory-management/${data.id}`)}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="card-header">
+            <div className="card-header-left">
+              <img
+                src={data.thumbnail || "/factory-card.svg"}
+                alt={data.factory_name}
+                className="factory-image"
+              />
+              <div className="factory-info">
+                <h2 className="factory-title">{data.factory_name}</h2>
+                <p className="factory-address">
+                  {data.street}<br />
+                  {data.zip} {data.city}<br />
+                  {data.country}
+                </p>
+              </div>
+            </div>
+
+            <div className="card-header-right" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+              <span className="factory-id">
+                ID-...{(data.id ?? 0).toString().padStart(3, '0').slice(-3)}
+              </span>
+              <div className="card-header-actions">
+                <FiMoreHorizontal
+                  className="more-icon cursor-pointer"
+                  style={{ color: "black" }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent parent click
+                    menuRef.current?.show(e);
+                  }}
+                  data-pr-position="top"
+                />
+                <ContextMenu
+                  model={menuItems}
+                  ref={menuRef}
+                  className="factory-menu"
+                />
+              </div>
+              <Tooltip target=".more-icon" />
+            </div>
+          </div>
+
+          <div className="card-details">
+            <div className="detail-item">
+              <p className="detail-number">{data.assets || 0}</p>
+              <p className="detail-label">Assets</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px", alignItems: "flex-start" }}>
+              <div className="detail-item icon-detail">
+                <img src="/floor-plan.svg" className="detail-icon" alt="Floor Plan" />
+                <p className="detail-number small">{data.areas || 0}</p>
+                <p className="detail-label">Areas</p>
+              </div>
+              <div className="detail-item icon-detail">
+                <img src="/workflow-square-03.svg" className="detail-icon" />
+                <p className="detail-number small">{data.production_lines || 0}</p>
+                <p className="detail-label">Production Lines</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
-  }
-
-  const menuItems = [
-    {
-      label: 'View',
-      icon: 'pi pi-eye',
-      command: () => router.push(`/factory-site/factory-management/${data.id}`)
-    },
-    {
-      label: 'Edit',
-      icon: 'pi pi-pencil',
-      command: () => {
-        setEditFactory(data.id);
-        setIsEdit(true);
-      }
-    },
-    {
-      label: 'Delete',
-      icon: 'pi pi-trash',
-      command: () => confirmDeleteFactory(data)
-    }
-  ];
-
-  return (
-    <div className="factory-card" ref={containerRef}>
-      {/* Card clickable area */}
-      <div
-        className="factory-card-clickable"
-        onClick={() => router.push(`/factory-site/factory-management/${data.id}`)}
-        style={{ cursor: "pointer" }}
-      >
-        <div className="card-header">
-          <div className="card-header-left">
-            <img
-              src={data.thumbnail || "/factory-card.svg"}
-              alt={data.factory_name}
-              className="factory-image"
-            />
-            <div className="factory-info">
-              <h2 className="factory-title">{data.factory_name}</h2>
-              <p className="factory-address">
-                {data.street}<br />
-                {data.zip} {data.city}<br />
-                {data.country}
-              </p>
-            </div>
-          </div>
-
-          <div className="card-header-right" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-            <span className="factory-id">
-              ID-...{(data.id ?? 0).toString().padStart(3, '0').slice(-3)}
-            </span>
-            <div className="card-header-actions">
-              <FiMoreHorizontal
-                className="more-icon cursor-pointer"
-                style={{ color: "black" }}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent parent click
-                  menuRef.current?.show(e);
-                }}
-                data-pr-position="top"
-              />
-              <ContextMenu
-                model={menuItems}
-                ref={menuRef}
-                className="factory-menu"
-              />
-            </div>
-            <Tooltip target=".more-icon" />
-          </div>
-        </div>
-
-        <div className="card-details">
-          <div className="detail-item">
-            <p className="detail-number">{data.assets || 0}</p>
-            <p className="detail-label">Assets</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px", alignItems: "flex-start" }}>
-            <div className="detail-item icon-detail">
-              <img src="/floor-plan.svg" className="detail-icon" alt="Floor Plan" />
-              <p className="detail-number small">{data.areas || 0}</p>
-              <p className="detail-label">Areas</p>
-            </div>
-            <div className="detail-item icon-detail">
-              <img src="/workflow-square-03.svg" className="detail-icon" />
-              <p className="detail-number small">{data.production_lines || 0}</p>
-              <p className="detail-label">Production Lines</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+  };
 
 
 
@@ -373,15 +383,26 @@ const FactoryOverview = () => {
 
                     <div className="flex justify-content-end" style={{ gap: "10px" }}>
                       <Button
-                        label={t("Import Assets")}
+                        label={t("+ Create Factory")}
                         className="factory-btn"
                         onClick={() => setVisible(true)}
                       />
-                      <Button
-                        label={t('overview:createFactory')}
-                        className="factory-btn"
-                        onClick={() => setVisible(true)}
-                      />
+                      <div>
+                        <Button
+                          label={t("Import Assets")}
+                          className="factory-btn-white"
+                          onClick={handleImportClick}
+                        />
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          style={{ display: "none" }}
+                          onChange={handleFileChange}
+                          multiple // optional: allow selecting multiple files
+                          accept="image/*,application/pdf" // optional: restrict file types
+                        />
+                      </div>
+
                     </div>
                   </div>
                 </div>

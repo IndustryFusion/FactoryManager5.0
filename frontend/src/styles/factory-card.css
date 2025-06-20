@@ -25,30 +25,31 @@
 }
 
 .factory-image {
-width: 70px;
-height: 70px;
-aspect-ratio: 1/1;border-radius: 70px;
-box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.10);
+  width: 70px;
+  height: 70px;
+  aspect-ratio: 1/1;
+  border-radius: 70px;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.10);
 }
 
 .factory-title {
-color: #2B2B2B;
-font-family: "League Spartan";
-font-size: 18px;
-font-style: normal;
-font-weight: 600;
-line-height: normal;
-margin: 0px;
+  color: #2B2B2B;
+  font-family: "League Spartan";
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  margin: 0px;
 }
 
 .factory-address {
-color: var(--Grey-Primary, #5F5F5F);
-font-family: "League Spartan";
-font-size: 14px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-margin:0px
+  color: var(--Grey-Primary, #5F5F5F);
+  font-family: "League Spartan";
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin: 0px
 }
 
 .card-header-right {
@@ -60,13 +61,13 @@ margin:0px
 }
 
 .factory-id {
-color: var(--Grey-Secondary, #95989A);
-text-align: right;
-font-family: "League Spartan";
-font-size: 10px;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
+  color: var(--Grey-Secondary, #95989A);
+  text-align: right;
+  font-family: "League Spartan";
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
 }
 
 .more-icon {
@@ -100,15 +101,15 @@ line-height: normal;
 }
 
 .detail-number {
-color: var(--Black, #2B2B2B);
-font-family: "League Spartan";
-font-size: 28px;
-font-style: normal;
-font-weight: 600;
-margin: 0px;
-line-height: normal;
-text-align: center;
-margin-top: 4px;
+  color: var(--Black, #2B2B2B);
+  font-family: "League Spartan";
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 600;
+  margin: 0px;
+  line-height: normal;
+  text-align: center;
+  margin-top: 4px;
 }
 
 .detail-number.small {
@@ -116,16 +117,16 @@ margin-top: 4px;
 }
 
 .detail-label {
-color: var(--Grey-Secondary, #95989A);
-text-align: center;
-font-family: "League Spartan";
-font-size: 12px;
-font-style: normal;
-font-weight: 400;
-line-height: normal;
-margin: 0px;
-margin-top: 2px;
-gap: 4px;
+  color: var(--Grey-Secondary, #95989A);
+  text-align: center;
+  font-family: "League Spartan";
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin: 0px;
+  margin-top: 2px;
+  gap: 4px;
 }
 
 .factory-grid {
@@ -134,10 +135,13 @@ gap: 4px;
   gap: 1rem;
   padding: 1rem;
 }
+
 .data-view .grid-nogutter {
-    margin-right: 0;
-    margin-left: 0;
-    margin-top: 0;
+  margin-right: 0;
+  margin-left: 0;
+  margin-top: 0;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .copy-id {
@@ -147,7 +151,7 @@ gap: 4px;
   font-size: 0.75rem;
 }
 
-.card-header-actions{
+.card-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -165,6 +169,7 @@ gap: 4px;
   border: 4px solid white;
   box-shadow: 0 0 8px rgba(44, 175, 255, 0.6);
 }
+
 .create-factory-card {
   display: flex;
   align-items: center;
@@ -182,15 +187,20 @@ gap: 4px;
 
 .create-card-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   color: #3CA0C9;
 }
 
 .create-card-text {
+  color: var(--Grey-Secondary, #95989A);
+  text-align: center;
+  font-family: "League Spartan";
+  font-size: 21.23px;
+  font-style: normal;
   font-weight: 600;
-  font-size: 1rem;
+  line-height: normal;
 }
 
 .factory-card-clickable {
