@@ -1,0 +1,99 @@
+.asset_selector_input_wrapper {
+    border-radius: 10px;
+    border: 2px solid var(--grey-box);
+    width: 100%;
+    box-shadow: 0px 0px 0px 0px var(--black);
+    padding: 4px 4px;
+    overflow: hidden
+}
+
+.asset_selector_input_wrapper:has(input) {
+    padding: 0px;
+}
+
+.asset_selector_input_wrapper:has(input:focus) {
+    border-color: var(--black);
+}
+
+.asset_selector_input input {
+    border: none;
+    box-shadow: none;
+    padding: 8px 12px;
+    min-height: 36px;
+    color: var(--black);
+    border-width: 0px !important;
+}
+
+.asset_selector_chip_template {
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    background-color: var(--black);
+    width: fit-content;
+    font-family: inherit;
+    color: white;
+    text-transform: capitalize;
+    border-radius: 50px;
+}
+
+.asset_selector_chip_template span:nth-child(2) {
+    color: var(--ifx-blue);
+    font-weight: 400
+}
+
+.asset_selector_chip_template img {
+    width: 14px;
+    height: 14px;
+    margin: 0px;
+}
+
+.asset_selector_input_panel {
+    border-radius: 12px;
+    box-shadow: 0px 2px 8px 0px #00000020;
+    padding: 0px;
+    background-color: white;
+    border: none;
+    overflow: hidden;
+}
+
+.asset_selector_input_panel .p-autocomplete-items-wrapper{
+    max-height: 300px !important;
+}
+
+.asset_selector_input_panel ul {
+    margin: 0;
+    padding: 12px;
+}
+
+.asset_selector_input_panel li {
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.asset_selector_input_panel li:hover {
+    background-color: var(--grey-box);
+}
+
+.asset_search_result_title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--black);
+    text-transform: capitalize;
+    margin-bottom: 3px;
+}
+
+.asset_search_result_type {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--grey-secondary);
+}
+
+.asset_search_result_image {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    box-shadow: 0px 0px 4px 0px #0000001b
+}

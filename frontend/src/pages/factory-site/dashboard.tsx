@@ -75,32 +75,38 @@ const Dashboard = () => {
           <div className="navbar_wrapper">
             <Navbar navHeader="Dashboard" />
           </div>
-          <div className="overflow_y_auto">
-          <div className="dashboard-container">      
-       <AutoRefresh />
-        <DashboardCards  />
-        <div className="flex flex-column md:flex-row my-3 gap-2 mx-4" style={{height:"80%", width:"97%" }}>
-          <div className="flex border-round m-2" style={{width:"77%"}}>
-            <div className="card h-auto" style={{width:"100%"}} >
-              <CombineSensorChart />
-            </div>
-          </div>
+          <div className="data_viewer_wrapper">
           <DashboardAssets 
           setBlockerProp={setBlocker}
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
-        </div>
-        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5 mx-4" style={{height:"100%", width:"97%"}}>
-          <div className="flex border-round mx-2" style={{width:"65%", margin: 0}}>
-            <PowerCo2Chart />
-          </div>
+          {/* <AutoRefresh /> */}
+          <DashboardCards  />
+          <CombineSensorChart />
+          <PowerCo2Chart />
           <MachineStateChart/>
+          </div>
+          {/* <div className="">
+          <div className="dashboard-container">      
+       
+        <div className="flex flex-column md:flex-row my-3 gap-2 mx-4" style={{height:"80%", width:"97%" }}>
+          <div className="flex border-round m-2">
+            <div className="card h-auto" style={{width:"100%"}} >
+              
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-column md:flex-row mt-3 gap-2 mb-5 mx-4">
+          <div className="flex border-round mx-2">
+            
+          </div>
+          
           </div>     
       </div>
-          </div>
+          </div> */}
       </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </DashboardProvider>
     </>
   )

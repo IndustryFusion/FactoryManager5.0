@@ -685,7 +685,7 @@ line-height: normal;
 
 .flex.gap-2 {
   box-sizing: border-box;
-  padding: 0.5rem;
+  /* padding: 0.5rem; */
 }
 
 /* Icon colors with improved contrast */

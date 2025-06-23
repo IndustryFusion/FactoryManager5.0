@@ -1,8 +1,8 @@
 .asset-overview-header {
   width: 100%;
-  padding: 1rem 1;
-  margin-left: -30px;
-  margin-top: -20px;
+  padding: 0 24px;
+  /* margin-left: -30px;
+  margin-top: -20px; */
 }
 
 .nav-items {
@@ -47,15 +47,13 @@
 .nav-breadcrumb {
   margin-top: 5px !important;
   padding: 0 !important;
-  margin-left: 58px !important;
   font-family: "League Spartan";
 }
 
 .nav-header {
-  margin-left: 65px !important;
+  /* margin-left: 8px !important; */
   margin: 0;
   font-family: "League Spartan";
-  margin-top: 0.7rem;
 }
 
 .current-page .p-menuitem-text {

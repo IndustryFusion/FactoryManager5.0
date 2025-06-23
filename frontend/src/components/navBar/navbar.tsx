@@ -265,7 +265,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
                   model={breadcrumbItems}
                   home={home}
                   className={`nav-breadcrumb p-0 border-none bg-transparent ${
-                    breadcrumbItems.length < 2 ? "mt-2 ml-2" : ""
+                    breadcrumbItems.length < 2 ? "mt-2" : ""
                   }`}
                 />
               )}
