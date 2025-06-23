@@ -204,7 +204,6 @@ const FactoryOverview = () => {
     }
   };
 
-
   // Confirm deletion dialog
   const confirmDeleteFactory = (factory: Factory) => {
     setVisibleDelete(true);
@@ -232,14 +231,11 @@ const FactoryOverview = () => {
     }
   };
 
-
-
   const handleImportClick = () => {
     fileInputRef.current?.click(); // trigger hidden file input
   };
 
   const factoriesWithCreateCard = (filteredValue || factorySite).concat([{ isCreateCard: true } as Factory]);
-
 
   const itemTemplate = (data: Factory) => {
     const menuRef = useRef<ContextMenu>(null);
@@ -352,8 +348,6 @@ const FactoryOverview = () => {
     );
   };
 
-
-
   return (
     <div className="flex">
       <Sidebar />
@@ -380,7 +374,6 @@ const FactoryOverview = () => {
                         </TabView>
                       </div>
                     </div>
-
                     <div className="flex justify-content-end" style={{ gap: "10px" }}>
                       <Button
                         label={t("+ Create Factory")}
@@ -402,7 +395,6 @@ const FactoryOverview = () => {
                           accept="image/*,application/pdf" // optional: restrict file types
                         />
                       </div>
-
                     </div>
                   </div>
                 </div>
@@ -410,7 +402,6 @@ const FactoryOverview = () => {
               <div>
                 <div>
                   <FactoryMap factories={factorySite ?? []} />
-
                 </div>
 
                 {factorySite.length > 0 ? (
