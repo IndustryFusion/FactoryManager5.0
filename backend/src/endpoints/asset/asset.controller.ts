@@ -46,11 +46,10 @@ export class AssetController {
   @Get('/asset-management/:company_ifric_id')
   async getAssetManagementData(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {
-      console.log("inside get asset ",company_ifric_id)
       const token = await this.tokenService.getToken();
       return this.assetService.getAssetManagementData(company_ifric_id, token, req);
     } catch (err) {
-      throw new NotFoundException("Error fetching assets " + err);
+      throw err;
     }
   }
 
