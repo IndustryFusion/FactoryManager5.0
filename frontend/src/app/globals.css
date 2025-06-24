@@ -1,3 +1,21 @@
+:root{
+  --fusion-blue: #3874C9;
+  --ifx-blue: #3CA0C9;
+  --black: #2b2b2b;
+  --grey-box: #F3F3F5;
+  --red: #A73737;
+  --white: #ffffff;
+  --fusion-yellow: #FCA82B;
+  --dividers: #E6E6E6;
+  --grey-secondary: #95989A;
+  --grey-primary: #5F5F5F;
+}
+
+
+
+*{
+  font-family: "League Spartan", sans-serif;
+}
 /* globals.css */
 .custom-input .p-inputtext {
   border-color: #6f6f72 !important;
@@ -80,4 +98,253 @@ ul li {
 
 .p-badge.active {
   background: #d50202;
+}
+
+/* Utility classes, please reuse this wherever necessary */
+/* button styling with or without icon */
+/* black button */
+.global-button {
+  padding: 8px 14px;
+  margin: 0px;
+  background-color: var(--black);
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  /* box-shadow: rgba(0, 0, 0, 0.25); */
+  border: none;
+  border-radius: 8px !important;
+  transition: all 100ms ease;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--black);
+  text-decoration: none;
+}
+
+.global-button:focus-visible {
+  outline: 2px solid var(--fusion-blue);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.global-button:focus{
+  box-shadow: none !important;
+}
+
+.global-button:is(:hover) {
+  box-shadow: 1px 2px 8px 0px rgba(67, 71, 78, 0.15), inset 0px 2px 2px 0px rgba(255, 255, 255, 0.25);
+}
+
+.global-button:disabled {
+  opacity: 0.5;
+}
+
+/* large button. can also be used in combinations like "global-button is-blue is-large" to get a large blue button  */
+.global-button.is-large {
+  padding: 12px 60px;
+  font-size: 18px;
+}
+
+/* button link */
+.global-button.is-link {
+  padding: 0px;
+  color: var(--fusion-blue);
+  background-color: transparent;
+  border: none;
+}
+.global-button.is-link img{
+  margin-bottom: 2px;
+}
+
+.global-button.is-link:hover {
+  filter: none;
+  box-shadow: none !important;
+  text-decoration: underline;
+}
+
+/* blue button */
+.global-button.is-blue {
+  background-color: var(--fusion-blue);
+  border: 1px solid var(--fusion-blue);
+}
+
+/* red button */
+
+.global-button.is-red {
+  background-color: var(--red);
+  border: 1px solid var(--red);
+}
+
+/* grey button */
+.global-button.is-grey {
+  background-color: var(--grey-box);
+  color: var(--black);
+  border: 1px solid #E6E6E6;
+}
+
+.global-button.is-grey:is(:hover) {
+  background-color: #E6E6E6;
+  box-shadow: 1px 2px 8px 0px rgba(67, 71, 78, 0.033), inset 0px 2px 2px 0px rgba(255, 255, 255, 0.25) ;
+}
+.global-button.p-button{
+  box-shadow: none;
+}
+.global-button.p-button:hover{
+  box-shadow: 1px 2px 8px 0px rgba(67, 71, 78, 0.15), inset 0px 2px 2px 0px rgba(255, 255, 255, 0.25);
+}
+.global-button.is-grey.p-button:hover{
+  box-shadow: 1px 2px 8px 0px rgba(67, 71, 78, 0.033), inset 0px 2px 2px 0px rgba(255, 255, 255, 0.25) ;
+}
+
+/* button loading state */
+.global-button.is-loading :is(svg, img){
+  display: none;
+}
+.global-button.is-loading::before{
+  content: "";
+  width: 16px;
+  height: 16px;
+  background-image: url('/button_icons/loading_circle_white.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  animation: button_loading_circle 0.8s infinite linear;
+}
+.global-button.is-grey.is-loading::before{
+  background-image: url('/button_icons/loading_circle_black.svg');
+}
+
+@keyframes button_loading_circle {
+  to{
+    transform: rotate(360deg);
+  }
+}
+
+/* dropdown styles */
+.global-button.action-dropdown{
+  padding: 11.5px 14px;
+  position: relative;
+}
+
+.global-button.dropdown{
+  padding: 0px;
+  position: relative;
+}
+
+.global-button.dropdown:has(.p-dropdown.p-disabled){
+  opacity: 0.5;
+}
+
+.global-button.dropdown img{
+position: absolute;
+left: 10px;
+pointer-events: none;
+user-select: none;
+}
+
+.global-button.dropdown .p-dropdown.p-component.p-inputwrapper{
+  background: transparent;
+  color: inherit;
+}
+.global-button.dropdown .p-dropdown .p-dropdown-label{
+  padding: 9px 14px 9px 35px !important;
+  color: inherit;
+}
+
+.global-button.dropdown:has(img:last-child ) .p-dropdown .p-dropdown-label {
+  padding: 9px 35px 9px 14px !important;
+}
+
+.global-button.dropdown:has(img:last-child) img {
+  right: 10px;
+  left: auto;
+}
+
+.global_dropdown_panel{
+  border-radius: 8px;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.25) !important;
+  border: none;
+  overflow: hidden;
+  margin-top: 6px;
+  max-width: 400px;
+  max-height: 300px;
+}
+.global_dropdown_panel .p-dropdown-items {
+  padding: 9px;
+}
+
+.global_dropdown_panel .p-dropdown-items .p-dropdown-item {
+  padding: 8px 10px;
+  font-size: 16px;
+  color: var(--black);
+  background-color: white;
+  border-radius: 8px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.global_dropdown_panel .p-dropdown-items .p-dropdown-item .p-dropdown-item-label{
+  width: 100%;
+  text-wrap: wrap;
+}
+
+.global_dropdown_panel .p-dropdown-items .p-dropdown-item.p-highlight {
+  color: var(--fusion-blue);
+  background-color: #F3F3F5;
+  margin: 0px;
+  margin-bottom: 6px;
+}
+
+.global_dropdown_panel .p-dropdown-items .p-dropdown-item.p-focus {
+  background-color: #F3F3F5;
+}
+.global_dropdown_panel .p-dropdown-items .p-dropdown-item:last-child{
+  margin-bottom: 0px;
+}
+
+.global_dropdown_panel .p-autocomplete-item{
+  padding: 8px 10px !important;
+  font-size: 16px;
+  color: var(--black);
+  background-color: white;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.global_dropdown_panel .p-autocomplete-items{
+  padding: 9px;
+}
+.global_dropdown_panel .p-autocomplete-items .p-autocomplete-item:hover {
+  color: var(--fusion-blue);
+  background-color: #F3F3F5;
+}
+
+.global_dropdown_panel .p-autocomplete-item.p-focus {
+  background-color: #F3F3F5;
+}
+.global_dropdown_panel .p-dropdown-header .p-inputtext{
+  border-radius: 7px !important;
+}
+.global_dropdown_panel .p-dropdown-header .p-inputtext:is(:focus, :hover){
+  border-color: var(--fusion-blue);
+}
+
+/* primereact overrides */
+.p-inputtext.p-component{
+  min-height: 36px;
+  border: 2px solid var(--grey-box);
+  background-color: white;
+  border-radius: 10px;
+  padding: 4px 12px;
+  box-shadow: none;
+  font-size: 16px;
+  color: var(--black)
+}
+.p-inputtext.p-component:focus{
+  border-color: var(--black)
+}
+.p-skeleton{
+border-radius: 12px;
 }

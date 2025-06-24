@@ -192,11 +192,13 @@ body {
 .navbar_wrapper {
   position: sticky;
   border-bottom: 1px solid #e6e6e6;
-  top: 5px;
+  top: 0px;
   left: 0;
   right: 0;
   height: 72px;
-  padding-top: 16px;
+  /* padding-top: 16px; */
+  display: flex;
+  align-items: center;
 }
 .nav_avatar {
   width: 40px;

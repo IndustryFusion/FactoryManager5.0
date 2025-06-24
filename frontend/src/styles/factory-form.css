@@ -85,7 +85,7 @@ padding: 14px 0 16px;
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
   border-radius: 10px;
   background-color: var(--grey-box);
-  color:#2b2b2b;
+  color:var(--ifx-blue);
 }
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
   border-radius: 10px;

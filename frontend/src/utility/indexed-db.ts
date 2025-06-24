@@ -29,6 +29,7 @@ if (!process.env.NEXT_PUBLIC_JWT_SECRET) {
 }
 
 interface LoginData {
+    ifricdi?: string;
     company_ifric_id: string;
     user_name: string;
     jwt_token: string;
@@ -113,6 +114,7 @@ export async function storeAccessGroup(loginData: LoginData) : Promise<void> {
             company_ifric_id: loginData.company_ifric_id,
             user_name: loginData.user_name,
             jwt_token: encryptedJWT,
+            ifricdi: loginData.ifricdi,
             user_role: loginData.user_role,
             access_group: loginData.access_group,
             access_group_Ifric_Dashboard: loginData.access_group_Ifric_Dashboard,

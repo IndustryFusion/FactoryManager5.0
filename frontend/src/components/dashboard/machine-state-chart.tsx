@@ -853,7 +853,7 @@ const MachineStateChart = () => {
     },[factoryData])
     
     return (
-        <div className="card h-auto" style={{ width: "37%" }}>
+        <div className="data_viewer_card">
             <Toast ref={toast} />
             <h5 className="heading-text">Machine State Overview</h5>
             <div className="interval-filter-container">

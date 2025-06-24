@@ -12,7 +12,14 @@
     font-family: "League Spartan", sans-serif!important;
 }
 .dashboard-card-text{
-    font-size: 19px;
+    font-size: 14px;
+    color: var(--grey-secondary)
+}
+.dashboard-card-value{
+    font-size: 26px;
+    color: var(--black);
+    font-weight: 600;
+    margin-top: 4px;
 }
 .selected-row {
     background: #ecfeff !important;
@@ -35,8 +42,8 @@
     zoom: 95%;
 }
 .dashboard-assets {
-    min-height: 45rem;
-    margin-top: 0.6rem;
+    /* min-height: 45rem; */
+    /* margin-top: 0.6rem; */
     height: auto;
 }
  
@@ -72,10 +79,17 @@
 /** dropdown style:start **/
 .dashboard-dropdown {
     background: var(--white);
+    color: var(--black);
     padding: 2px 10px;
     border-radius: 10px;
-    border: 1px solid #ced4da;
-    margin-bottom: 25px;
+    border: 2px solid var(--grey-box);
+    border-radius: 10px;
+    box-shadow: none;
+    /* margin-bottom: 25px; */
+  }
+  .dashboard-dropdown:hover{
+    background-color: var(--grey-box);
+    box-shadow: none;
   }
   
   .dashboard-dropdown .p-dropdown .p-dropdown-trigger {
@@ -95,7 +109,7 @@
     padding: 8px 0 8px
   }
   .dashboard-dropdown .p-dropdown-label {
-    color:var(--grey-primary)
+    color: var(--grey-primary)
   }
   .p-drodown:focus{
     border:none
@@ -118,9 +132,9 @@
   background: var(--white);
   font-family: "League Spartan"; 
 }
-.p-calendar .p-inputtext{
+/* .p-calendar .p-inputtext{
    padding:14px 6px 10px;
-}
+} */
 /** dropdown style:end **/
 .load-btn,
 .submit-btn{
@@ -170,10 +184,19 @@
 
 .card {
     background: #ffffff;
-    border: 1px solid #dfe7ef;
+    border: 2px solid var(--grey-box);
     border-radius: 12px !important;
-    padding: 1rem;
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 2px 0px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.data_viewer_card{
+    padding: 20px;
+    background: #ffffff;
+    border: 2px solid var(--grey-box);
+    border-radius: 12px !important;
+    margin-bottom: 24px
 }
 
 .heading-text {
@@ -222,8 +245,10 @@
 
 .dashboard-card-container {
     gap: 1.2rem;
-    justify-content: center;
-    /* margin-top: 12rem; */
+    /* margin-top: 2rem; */
+    display: flex;
+    flex-wrap: wrap;
+    padding-bottom: 24px;
 }
 
 .autorefresh-btn {
@@ -240,7 +265,9 @@
 }
 
 .dashboard-card {
-    width: 450px;
+    width: calc(25% - 16px);
+    min-width: 267px;
+    flex-grow: 1;
 }
 
 .child-key-text {
@@ -419,4 +446,111 @@ textarea {
   .dashboard-container {
     zoom: var(--page-zoom);
   }
+}
+
+/* data viewer styles */
+.data_viewer_wrapper {
+    padding: 24px 32px;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+}
+
+.select_asset_heading {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--black);
+}
+
+.product_selector_wrapper {
+    padding-block: 8px 18px;
+    border-bottom: 1px dashed var(--grey-box);
+}
+
+.selected_product_header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 18px;
+    justify-content: space-between;
+}
+
+.selected_product_details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: capitalize;
+}
+
+.selected_product_image_wrapper {
+    position: relative;
+}
+
+.selected_product_image {
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+
+.selected_product_status {
+    border-radius: 50%;
+    border: 2px solid white;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--ifx-blue);
+}
+
+.selected_product_title {
+    font-weight: 700;
+    color: var(--black);
+    font-size: 24px;
+}
+
+.selected_product_room_name {
+    font-size: 14px;
+    color: var(--grey-primary)
+}
+
+.selected_product_status_text {
+    font-weight: 700;
+    color: var(--ifx-blue);
+    font-size: 18px;
+}
+
+.selected_product_status_text .time_span {
+    font-weight: 400;
+    color: var(--grey-primary);
+}
+
+.product-no-img {
+    border-radius: 50%;
+    background-color: var(--grey-box);
+    display: grid;
+    place-content: center;
+}
+
+.dashboard_card_image_wrapper {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 2px solid var(--dividers);
+}
+
+.dashboard_control_label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--black);
+    margin: 0px;
+}
+
+.control_form_field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
