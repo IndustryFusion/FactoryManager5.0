@@ -22,6 +22,7 @@ import { AllocatedAssetService } from '../allocated-asset/allocated-asset.servic
 import { Request } from 'express';
 import { CompactEncrypt } from 'jose';
 import { createHash } from 'crypto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class AssetService {
@@ -106,19 +107,42 @@ export class AssetService {
       const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`,{headers: registryHeaders});
       
       const result = [];
-      for(let i = 0; i < response.data.length; i++) {
-        const assetId = response.data[i].asset_ifric_id;
-        try {
-          const scorpioResponse = await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
-          result.push(scorpioResponse.data);
-        } catch(err) {
-            // console.log("Error fetching asset", i, err)
-            continue;
-        } 
-        }
-        return result;
+      const batchSize = 50; 
+
+      const batches = [];
+      for (let i = 0; i < response.data.length; i += batchSize) {
+        batches.push(response.data.slice(i, i + batchSize));
+      }
+
+      for (const batch of batches) {
+        await Promise.all(
+          batch.map(async (asset) => {
+            const assetId = asset.asset_ifric_id;
+            try {
+              const response = await axios.get(`${this.scorpioUrl}/${assetId}`, { headers });
+              return result.push(response.data);
+            } catch (err) {
+              if (err.response?.status === 404) {
+                return null; 
+              } else if (err.response) {
+                throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+              } else {
+                throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+              }
+            }
+          })
+        );
+      }
+
+      return result;
     } catch(err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -189,7 +213,7 @@ export class AssetService {
       };
       let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
       let typeData = await axios.get(typeUrl,{headers});
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
+      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       // console.log("typeArr",typeArr)
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for(let i = 0; i < typeArr.length; i++) {

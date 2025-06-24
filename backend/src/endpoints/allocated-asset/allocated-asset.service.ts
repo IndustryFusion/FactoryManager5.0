@@ -209,18 +209,18 @@ async createGlobal(token: string) {
         factoryId = factoryId.split(':allocated-assets')[0];
         let factoryData = await this.factorySiteService.findOne(factoryId, token);
         let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
-        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].object;
+        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].value["https://industry-fusion.org/base/v0.1/items"];
         finalData[factoryName] = [];
         if(Array.isArray(factorySpecificAssets)){
           for(let i = 0; i < factorySpecificAssets.length; i++){
-            let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i], token);
+            let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i].id, token);
             const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
             if (productNameKey && assetData[productNameKey].value) {
               finalData[factoryName].push(assetData[productNameKey].value);
             }
           }
         } else if(factorySpecificAssets !== "json-ld-1.1") {
-          let assetData = await this.assetService.getAssetDataById(factorySpecificAssets, token);
+          let assetData = await this.assetService.getAssetDataById(factorySpecificAssets.id, token);
           const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
           if (productNameKey && assetData[productNameKey].value) {
             finalData[factoryName].push(assetData[productNameKey].value);
