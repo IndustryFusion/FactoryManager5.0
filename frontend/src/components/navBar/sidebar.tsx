@@ -61,6 +61,7 @@ function Sidebar() {
       <div className="sidebar_content">
         <div className="sidebar_link_wrapper">
           <div className="sidebar_links">
+            
           <Button
             className={`sidebar_navlink ${
               router.pathname === "/factory-site/dashboard" ? "is_active" : ""
@@ -81,6 +82,28 @@ function Sidebar() {
               }`}
             >
               Data Viewer
+            </div>
+          </Button>
+           <Button
+            className={`sidebar_navlink ${
+              router.pathname === "asset-management" ? "is_active" : ""
+            }`}
+            onClick={() => handleRoute("asset-management")}
+            tooltip={!sidebarOpen ? "Factory Assets" : undefined}
+            tooltipOptions={{ position: "right", event: "both" }}
+          >
+            <Image
+              src="/sidebar/assets_icon.svg"
+              width={18}
+              height={18}
+              alt="dashboard_icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${
+                !sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+            >
+              Assets
             </div>
           </Button>
           <Button
@@ -105,28 +128,7 @@ function Sidebar() {
               Factory Sites
             </div>
           </Button>
-          <Button
-            className={`sidebar_navlink ${
-              router.pathname === "asset-management" ? "is_active" : ""
-            }`}
-            onClick={() => handleRoute("asset-management")}
-            tooltip={!sidebarOpen ? "Factory Assets" : undefined}
-            tooltipOptions={{ position: "right", event: "both" }}
-          >
-            <Image
-              src="/sidebar/assets_icon.svg"
-              width={18}
-              height={18}
-              alt="dashboard_icon"
-            />
-            <div
-              className={`sidebar_navlink_text ${
-                !sidebarOpen ? "sidebar_collapse_fade" : ""
-              }`}
-            >
-              Factory Assets
-            </div>
-          </Button>
+         
           <Button
             className={`sidebar_navlink ${
               router.pathname === "/certificates" ? "is_active" : ""

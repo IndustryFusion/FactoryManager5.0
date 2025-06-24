@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { FilterMatchMode } from 'primereact/api';
@@ -11,8 +10,8 @@ import { MenuItem } from 'primereact/menuitem';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { fetchAssets, setSelectedAssets, Asset } from '@/redux/assetManagement/assetManagementSlice';
-import { Button } from 'primereact/button';
-import '../../styles/asset-management/asset-management-table.css'; 
+import '../../styles/asset-management.css'
+import { Dropdown } from 'primereact/dropdown';
 
 const AssetManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,36 +44,6 @@ const AssetManagement: React.FC = () => {
     dispatch(fetchAssets());
   };
 
-  const renderHeader = () => {
-    return (
-      <div className="table-header">
-        <div className="flex justify-content-between align-items-center gap-4">
-          <div className="search-wrapper">
-            <span className="p-input-icon-left">
-              <i className="pi pi-search" />
-              <InputText 
-                value={globalFilterValue} 
-                onChange={onGlobalFilterChange} 
-                placeholder="Search" 
-                className="p-inputtext-sm"
-              />
-            </span>
-          </div>
-          <Button 
-            icon="pi pi-refresh" 
-            onClick={handleRefresh} 
-            className="p-button-outlined refresh-button" 
-            tooltip="Refresh Assets"
-            tooltipOptions={{ position: 'left' }}
-            label='Refresh Assets'
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const header = renderHeader();
-
   const toggleExpansion = (rowData: Asset, field: keyof Asset) => {
     setExpandedRows(prevState => ({
       ...prevState,
@@ -85,19 +54,49 @@ const AssetManagement: React.FC = () => {
   const renderExpandableCell = (rowData: Asset, field: keyof Asset) => {
     const value = rowData[field];
     const isExpanded = expandedRows[`${rowData.id}-${field}`];
-    const displayText = typeof value === 'string' ? (isExpanded ? value : value.slice(0, 21) + '...') : '';
+
+    let displayText = '';
+    if (typeof value === 'string') {
+      if (isExpanded || value.length <= 16) {
+        displayText = value;
+      } else {
+        const start = value.slice(0, 6);
+        const end = value.slice(-6);
+        displayText = `${start}...${end}`;
+      }
+    }
+
+    const handleCopy = () => {
+      if (typeof value === 'string') {
+        navigator.clipboard.writeText(value);
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Copied',
+          detail: 'ID copied to clipboard',
+          life: 2000
+        });
+      }
+    };
 
     return (
-      <div className="flex gap-1 justify-content-center align-items-center tr-text" style={{ width: "271px" }}>
-        <p className={isExpanded ? "expand-id-text" : "id-text"}>{displayText}</p>
-        {typeof value === 'string' && value.length > 21 && (
-          <button onClick={() => toggleExpansion(rowData, field)} className="transparent-btn">
-            <i className={`pi ${isExpanded ? 'pi-angle-up' : 'pi-angle-down'}`}></i>
-          </button>
+      <div className="tr-text" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <p className={isExpanded ? "expand-id-text" : "id-text"} style={{ margin: 0 }}>{displayText}</p>
+
+        {/* Removed expand/collapse button completely */}
+
+        {/* Copy icon (image-based) */}
+        {typeof value === 'string' && (
+          <img
+            src="/copy-01.svg"  // replace with your actual icon path
+            alt="Copy"
+            style={{ cursor: 'pointer', width: 16, height: 16 }}
+            onClick={handleCopy}
+          />
         )}
       </div>
     );
   };
+
 
   const menuModel: MenuItem[] = [
     {
@@ -114,13 +113,13 @@ const AssetManagement: React.FC = () => {
       label: 'Certificates',
       icon: 'pi pi-verified',
       command: () => {
-      if (selectedProduct?.id) {
-        router.push({
-          pathname: "/certificates",
-          query: { asset_ifric_id: selectedProduct.id },
-        });
-      } 
-    },
+        if (selectedProduct?.id) {
+          router.push({
+            pathname: "/certificates",
+            query: { asset_ifric_id: selectedProduct.id },
+          });
+        }
+      },
     },
     {
       label: 'Dashboard',
@@ -135,8 +134,8 @@ const AssetManagement: React.FC = () => {
 
   const actionItemsTemplate = (rowData: Asset) => {
     return (
-      <button 
-        className="context-menu-icon-btn" 
+      <button
+        className="context-menu-icon-btn"
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           setSelectedProduct(rowData);
@@ -144,18 +143,7 @@ const AssetManagement: React.FC = () => {
         }}
         style={{ background: 'none', border: 'none', cursor: 'pointer' }}
       >
-        <svg 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path 
-            d="M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10Z" 
-            fill="#CCCCCC"
-          />
-        </svg>
+        <div><h3>...</h3></div>
       </button>
     );
   };
@@ -164,26 +152,25 @@ const AssetManagement: React.FC = () => {
     <div className="asset-management-container">
       <Toast ref={toast} />
       <ContextMenu model={menuModel} ref={cm} onHide={() => setSelectedProduct(null)} />
-      
+
       {loading ? (
         <div className="spinner-container">
           <ProgressSpinner />
         </div>
       ) : (
-        <DataTable 
-          value={assets} 
-          paginator 
-          rows={10} 
-          rowsPerPageOptions={[5, 10, 25, 50]} 
+        <DataTable
+          value={assets}
+          paginator
+          rows={40}
+          rowsPerPageOptions={[10, 20, 40, 50]}
           dataKey="id"
           filters={filters}
           filterDisplay="menu"
           loading={loading}
           responsiveLayout="scroll"
           globalFilterFields={['id', 'asset_serial_number', 'type', 'product_name', 'asset_manufacturer_name']}
-          header={renderHeader()}
           emptyMessage="No assets found."
-          className="asset-table"
+          className="asset-table custom-paginator-table"
           selectionMode="multiple"
           selection={selectedAssets}
           onSelectionChange={(e) => dispatch(setSelectedAssets(e.value as Asset[]))}
@@ -192,14 +179,64 @@ const AssetManagement: React.FC = () => {
           onContextMenu={(e) => cm.current?.show(e.originalEvent)}
           contextMenuSelection={selectedProduct as any}
           onContextMenuSelectionChange={(e) => setSelectedProduct(e.value as any)}
+          paginatorTemplate={{
+            layout: 'CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown',
+            RowsPerPageDropdown: (options) => (
+              <div className="custom-rows-dropdown">
+                <span className="display-label">Display</span>
+                <Dropdown
+                  value={options.value}
+                  options={[
+                    { label: '10 Records per Page', value: 10 },
+                    { label: '20 Records per Page', value: 20 },
+                    { label: '30 Records per Page', value: 30 },
+                    { label: '40 Records per Page', value: 40 },
+                    { label: '50 Records per Page', value: 50 },
+                    { label: '100 Records per Page', value: 100 },
+                  ]}
+                  onChange={options.onChange}
+                  className="custom-dropdown"
+                />
+
+              </div>
+            )
+          }}
+          currentPageReportTemplate="{first} - {last} Assets"
         >
-          <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
-          <Column field="id" header="Asset ID" body={(rowData) => renderExpandableCell(rowData, 'id')} />
-          <Column field="asset_serial_number" header="Machine Serial Number" />
-          <Column field="type" header="Asset Type" body={(rowData: Asset) => rowData.type.split('/').pop()}  />
-          <Column field="product_name" header="Product Name" />
-          <Column field="asset_manufacturer_name" header="Manufacturer" />
-          <Column body={actionItemsTemplate} header="Action" headerStyle={{ width: '5rem' }} />
+          <Column
+            field="icon"
+            headerStyle={{ width: '30px', paddingLeft: '28px' }}
+            bodyStyle={{ width: '30px', textAlign: 'center', paddingLeft: "28px" }}
+            body={() => (
+              <img src="/warn-img.svg" alt="icon" width={40} height={40} />
+            )}
+          />
+          <Column
+            field="product_name"
+            header="Asset Name"
+            body={(rowData: Asset) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10182B', fontFamily: '"League Spartan"', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.07px' }}>
+                <img src="/asset-img.svg" alt="asset" width={28} height={28} />
+                {rowData.product_name}
+              </div>
+            )}
+          />
+          <Column
+            field="asset_manufacturer_name"
+            header="Manufacturer"
+            body={(rowData: Asset) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10182B', fontFamily: '"League Spartan"', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.07px' }}>
+                <img src="/manufacturer-img.svg" alt="manufacturer" width={28} height={28} />
+                {rowData.asset_manufacturer_name}
+              </div>
+            )}
+          />
+          <Column field="type" header="Product Type" body={(rowData: Asset) => rowData.type.split('/').pop()} />
+          <Column field="id" header="ID" body={(rowData) => renderExpandableCell(rowData, 'id')} style={{ textAlign: 'left' }} />
+          <Column field="area" header="Area" />
+          <Column field="factory_site" header="Factory Site" />
+
+          <Column body={actionItemsTemplate} headerStyle={{ width: '5rem' }} />
         </DataTable>
       )}
     </div>
