@@ -90,7 +90,7 @@ export class AuthService {
         {
           company_id:   decoded.sub,
           email:        decoded.user,
-          product_name:data.product_name,
+          product_name:"Factory Manager",
         },
         { headers: registryHeader },
       );
