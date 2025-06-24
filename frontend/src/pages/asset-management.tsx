@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import AssetManagement from "../components/assetManagement/asset-management-new";
-import AllocatedAsset from "../components/assetManagement/allocated-asset"
 import Sidebar from '@/components/navBar/sidebar';
 import Navbar from '@/components/navBar/navbar';
 import Footer from '@/components/navBar/footer';
 import { TabView, TabPanel } from 'primereact/tabview';
-import { Card } from 'primereact/card';
-import '@/styles/asset-management/asset-management-page.css'
+import AssetManagement from '@/components/assetManagement/asset-management-new';
+import AllocatedAsset from '@/components/assetManagement/allocated-asset';
+import '@/styles/factory-card.css';
+import '@/styles/factory-overview.css';
+import '@/styles/asset-management/asset-management-page.css';
+import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
-import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
-  const { t } = useTranslation(['common', 'button']);
+  const { t } = useTranslation(['common', 'button', 'overview']);
   const [dataInitialized, setDataInitialized] = useState(false);
 
   useEffect(() => {
@@ -43,41 +44,83 @@ const AssetManagementPage = () => {
   };
 
   return (
-    <>
     <div className="flex">
-      <Sidebar />
-      <div className={isSidebarExpand ? "factory-container" : "factory-container-collpase"}>
-        <div className='navbar-wrapper mt-4'>
-          <Navbar navHeader="Asset Management" />
+      <Sidebar selectedItem="Assets" />
+      <div className='main_content_wrapper'>
+        <div className='navbar-wrapper mt-5'>
+          <Navbar navHeader={t("overview:Assets")} />
         </div>
+
         <div className="dashboard-container">
-          <div className="p-2 md:p-4">
-            <Card className="mb-4">
-              <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
-                <TabPanel header="Asset Table">
-                  <div className="p-2 md:p-3">
-                    <AssetManagement />
+          <div className="grid py-1 px-2 factory-overview">
+            <div className="col-12">
+              <div className="asset-header flex justify-content-between align-items-center">
+                <div className="flex align-items-center gap-4">
+                  <p className="total-assets-text m-0">
+                    <span className="highlighted-number">89</span> {t("overview:Assets")}
+                  </p>
+                  <div className="tab-inline-wrapper">
+                    <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs-inline">
+                      <TabPanel header={t("Asset Table")}></TabPanel>
+                      <TabPanel header={t("Allocated Assets")}></TabPanel>
+                    </TabView>
                   </div>
-                </TabPanel>
-                <TabPanel header="Allocated Assets">
-                  <div className="p-2 md:p-3">
-                    <AllocatedAsset />
-                  </div>
-                </TabPanel>
-              </TabView>
-            </Card>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="search-content">
+          <div className="toolbar-right">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                borderRadius: 8,
+                border: "2px solid #F2F4F7",
+                background: "#FFF",
+              }}
+            >
+              <img src="/search_icon.svg" alt="Search" className="search-icon" />
+              <input type="text" placeholder="Search" className="search-input" />
+            </div>
+          </div>
+
+          <div className="toolbar-right">
+            <div className="toolbar-item">
+              <img src="/Sort.svg" alt="Filter" className="search-img-container" />
+              <span>Filter</span>
+            </div>
+            <div className="toolbar-item">
+              <img src="/filter.svg" alt="Sort" />
+              <span>Sort</span>
+            </div>
+            <div className="toolbar-item">
+              <img src="/Group.svg" alt="Group" />
+              <span>Group</span>
+            </div>
+            <div className="toolbar-item">
+              <img src="/manage-column.svg" alt="Manage Columns" />
+              <span>Manage Columns</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Render Tab Content Based on Selected Index */}
+        {activeIndex === 0 && <AssetManagement />}
+        {activeIndex === 1 && <AllocatedAsset />}
+
+        <Footer />
       </div>
-    </div><Footer />
-    </>
-  
+    </div>
   );
 };
 
 export const getServerSideProps = async ({ locale }) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'button', 'header', 'placeholder'])),
+    ...(await serverSideTranslations(locale, ['common', 'button', 'header', 'placeholder', 'overview'])),
   },
 });
 

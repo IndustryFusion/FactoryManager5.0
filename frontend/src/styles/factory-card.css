@@ -15,6 +15,7 @@
   justify-content: space-between;
   align-items: start;
   flex-grow: 1;
+  padding-bottom: 15px;
 }
 
 .card-header-left {
@@ -206,3 +207,45 @@
 .factory-card-clickable {
   height: 100%;
 }
+.search-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 28px;
+  padding-bottom: 16px;
+}
+
+.search-container {
+  flex-shrink: 0;
+  padding-top: 16px;
+}
+
+.search-input {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--Common-Text-Grey-100, #f2f4f7);
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-family: "League Spartan";
+}
+
+/* Toolbar */
+.toolbar-right {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+}
+
+.toolbar-item {
+  color: var(--Common-Text-Grey-400, #98a2b3);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  cursor: pointer;
+  gap: 8px;
+  display: flex;
+  padding: 0 8px;
+}
+

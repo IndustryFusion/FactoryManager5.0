@@ -1,0 +1,203 @@
+/* General DataTable styling */
+.asset-table {
+    border: 1px solid #E4E7EC;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+/* Header (th) styling */
+.asset-table thead tr th {
+    background-color: #F9FAFB;
+    color: #6B7280;
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 1px solid #E4E7EC;
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Table rows (td) */
+.asset-table tbody tr td {
+    padding: 1rem;
+    border-bottom: 1px solid #E4E7EC;
+    color: #111827;
+    background-color: #ffffff;
+}
+
+/* Highlighted text in body (optional) */
+.asset-table tbody tr td span {
+    font-weight: 500;
+}
+
+/* Row hover effect */
+.asset-table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Checkbox column */
+.asset-table .p-selection-column {
+    width: 3rem;
+}
+
+/* Last column (Action) */
+.asset-table .p-column-header:last-child,
+.asset-table tbody tr td:last-child {
+    text-align: center;
+    width: 60px;
+}
+
+/* Pagination controls styling */
+.p-paginator {
+    border-top: 1px solid #E4E7EC;
+    padding: 0.75rem 1rem;
+    font-size: 14px;
+}
+
+/* Spinner center alignment */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+}
+
+.highlighted-number{
+color: var(--ifx-tint-blue-900-primary, #3CA0C9);
+font-family: "League Spartan";
+font-size: 24px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+}
+
+.asset-table {
+    position: relative;
+    flex-grow: 1;
+}
+
+
+
+
+.p-datatable .p-datatable-tbody>tr>td {
+    text-align: left;
+    border-width: 0px;
+    color: var(--Grey-Primary, #5F5F5F);
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.07px;
+    margin: 0px;
+}
+
+.p-datatable .p-datatable-thead>tr>th {
+    text-align: left;
+    font-weight: 500;
+    background: transparent;
+    transition: box-shadow 0.15s;
+    font-size: 16px;
+    font-family: "League Spartan", sans-serif;
+    color: var(--black-primary);
+    padding: 14px;
+    border: none;
+    background: var(--Common-Text-Grey-100, #F2F4F7);
+}
+
+.p-datatable .p-datatable-thead>tr>th:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.custom-paginator-table .p-paginator {
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Inter", sans-serif;
+}
+
+/* Current page report */
+.custom-paginator-table .p-paginator-current {
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    border: none;
+}
+
+/* Page buttons */
+.custom-paginator-table .p-paginator-page {
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    margin: 0 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+border-radius: 10px;
+border: 2px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
+background: var(--White, #FFF);
+color: var(--Common-Text-Grey-900, #10182B);
+}
+.p-dropdown-items-wrapper {
+    overflow: none;
+}
+
+/* Arrows */
+
+.custom-paginator-table .p-paginator-prev,
+.custom-paginator-table .p-paginator-next {
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    font-size: 14px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Disabled arrows */
+.custom-paginator-table .p-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Custom dropdown + label wrapper */
+.custom-rows-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.display-label {
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+/* Style PrimeReact dropdown itself */
+.custom-dropdown .p-dropdown-label {
+
+    font-size: 13px;
+    color: #111827;
+}
