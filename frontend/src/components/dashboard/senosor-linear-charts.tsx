@@ -298,9 +298,9 @@ const CombineSensorChart: React.FC = () => {
       //   return { label, value: label, selectedDatasetIndex: index + 1 };
       // })
       //   .filter(attribute => attribute.value !== "machine_state");
-
+      console.log("Selected Asset Data: AB", selectedAssetData);
       const attributeLabels: AttributeOption[] = Object.entries(selectedAssetData)
-      .filter(([key, _value]) => !isNaN(Number(key))) // keep only numeric keys like "2", "3"
+      .filter(([key, _value]) => !isNaN(Number(_value))) // keep only numeric keys like "2", "3"
       .map(([key, _value], index) => {
         const label = key.split("/").pop() || key;
         return {
