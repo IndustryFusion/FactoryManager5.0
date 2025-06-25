@@ -83,8 +83,10 @@ const Dashboard = () => {
           {/* <AutoRefresh /> */}
           <DashboardCards  />
           <CombineSensorChart />
-          <PowerCo2Chart />
-          <MachineStateChart/>
+          <div className='dashboard_submap_wrapper'>
+            <PowerCo2Chart />
+            <MachineStateChart/>
+          </div>
           </div>
           {/* <div className="">
           <div className="dashboard-container">      

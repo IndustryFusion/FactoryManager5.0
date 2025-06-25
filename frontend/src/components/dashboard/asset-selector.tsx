@@ -5,6 +5,7 @@ import { Asset } from '@/types/asset-types';
 
 import "../../styles/asset-selector.css"
 import Image from 'next/image';
+import { Dropdown } from 'primereact/dropdown';
 
 interface AssetSelectorProps {
   assets: Asset[];
@@ -90,19 +91,16 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
           <span>{selectedAsset?.product_name}</span><span>({getProductType(selectedAsset?.type ?? 'Product Type')})</span> <Image src="/dashboard-collapse/chip_close_icon.svg" width={12} height={12} alt='Remove Asset icon' onClick={() => clearSelection()} />
         </div>
       ) : (
-        <AutoComplete
-        inputId='asset_selector'
-          value={inputValue}
-          suggestions={filteredAssets}
-          completeMethod={search}
-          ref={inputRef}
-          field="product_name"
-          onChange={(e) => setInputValue(e.value)}
-          onFocus={() => search({ query: '' })}
-          onSelect={(e) => {
+        <Dropdown
+          value={null}
+          onChange={(e) => {
             handleSelect(e);
-            setInputValue('');
+            setInputValue(''); 
           }}
+          options={assets}
+          optionLabel="product_name"
+          filter
+          filterPlaceholder="Search for asset"
           placeholder={loading ? "Please wait.." : "Type to search and select"}
           className="asset_selector_input w-full"
           itemTemplate={assetItemTemplate}
