@@ -47,7 +47,7 @@ export class OnboardingAssetController {
     try {
       return this.onboardingAssetService.findOne(id);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 

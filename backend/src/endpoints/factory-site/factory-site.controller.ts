@@ -73,6 +73,19 @@ export class FactorySiteController {
     }
   }
 
+  @Get('/company-specific/:company_ifric_id')
+  async companySpecificFactories(@Param('company_ifric_id') company_ifric_id: string) {
+    try {
+      const token = await this.tokenService.getToken();
+      return await this.factorySiteService.companySpecificFactories(company_ifric_id, token);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        throw new UnauthorizedException('Repository unauthorized');
+      }
+      throw new err;
+    }
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
