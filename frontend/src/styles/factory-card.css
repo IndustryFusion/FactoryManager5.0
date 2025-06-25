@@ -1,5 +1,5 @@
 .factory-card {
-  width: 360px;
+  /* width: 360px; */
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
@@ -137,13 +137,30 @@
   padding: 1rem;
 }
 
+@media screen and (min-width: 1920px){
+  .data-view .grid-nogutter{
+    grid-template-columns: 1fr 1fr 1fr 1fr !important;
+  }
+}
+
 .data-view .grid-nogutter {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr;
   margin-right: 0;
   margin-left: 0;
-  margin-top: 0;
+  margin-top: 20px;
+  gap: 16px;
   padding-left: 12px;
   padding-right: 12px;
 }
+
+
+@media screen and (max-width: 1340px){
+  .data-view .grid-nogutter{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 
 .copy-id {
   cursor: pointer;
@@ -223,7 +240,7 @@
 .search-input {
   padding: 6px 12px;
   border-radius: 8px;
-  border: 2px solid var(--Common-Text-Grey-100, #f2f4f7);
+  border: 0px solid var(--Common-Text-Grey-100, #f2f4f7);
   background: transparent;
   outline: none;
   font-size: 14px;

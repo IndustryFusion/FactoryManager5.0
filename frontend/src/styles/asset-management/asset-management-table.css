@@ -24,7 +24,8 @@ body {
 }
 
 .asset-management-container {
-  padding: 0;
+  padding: 10px;
+  margin: 45px;
   height: 100%;
 }
 

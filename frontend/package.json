@@ -23,6 +23,7 @@
     "chartjs-plugin-zoom": "^2.0.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.3.1",
+    "echarts-for-react": "^3.0.2",
     "formik": "^2.4.5",
     "html2canvas": "^1.4.1",
     "i18next": "^23.15.1",

@@ -63,7 +63,7 @@ const FactoryMap: React.FC<FactoryMapProps> = ({ factories }) => {
     }, [factories]);
 
     return (
-        <div className="factory-map-container" style={{ height: "216px", width: "100%", padding: "24px" }}>
+        <div className="factory-map-container" style={{ height: "216px", width: "100%", padding: "16px" }}>
             <MapContainer
                 center={defaultCenter}
                 zoom={defaultZoom}
