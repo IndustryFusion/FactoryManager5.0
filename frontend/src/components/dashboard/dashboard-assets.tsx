@@ -90,23 +90,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   };
   const editOnboardBodyTemplate = () => {
-    return (
-      <>
-        <Button
-          className="onboard-btn"
-          onClick={(e) => {
-            setEditOnboardAsset(() => ({
-              ...editOnboardAsset,
-              showEditOnboard: true,
-              onboardAssetId: selectedRow?.id
-            }))
-          }}
-          title="Edit Onboard form"
-        >
-          <img src="/onboard.png" alt="" width="50px" height="50px" />
-        </Button>
-      </>
-    )
+    setEditOnboardAsset((prev) => ({
+      ...prev,
+      showEditOnboard: true,
+      onboardAssetId: selectedRow?.id ?? ""
+    }))
   }
 
   const viewBodyTemplateNew = (rowData: Asset): React.ReactNode => {
