@@ -64,61 +64,56 @@ export class ValueChangeStateService {
       let redisKey = 'machine-state-params';
       await this.redisService.saveData(redisKey,{
         assetId,
+        attributeId,
         type,
         token
       })
 
-      const finalData = {};
-      if(type == 'days'){
-        for (let i = 6; i >= 0; i--) {
-          const day = moment().subtract(i, 'days').startOf('day');
-          let startTime = day.format().split('+')[0] + '-00:00';
-          let endTime = day.endOf('day').format().split('+')[0] + '-00:00';
-          let key = day.format('MMMM Do');
-          finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
-          const response = await axios.get(url, {headers});
-          if(response.data.length > 0){
-            finalData[key].push(...response.data);
-          }
+      const finalData: Record<string, any[]> = {};
+      const requests: Promise<any>[] = [];
+      const keys: string[] = [];
+
+      const now = moment();
+
+      for (let i = 6; i >= 0; i--) {
+        let startTime: string, endTime: string, key: string;
+
+        if (type === 'days') {
+          const day = now.clone().subtract(i, 'days').startOf('day');
+          startTime = day.format('YYYY-MM-DDT00:00:00-00:00');
+          endTime = day.clone().endOf('day').format('YYYY-MM-DDT23:59:59-00:00');
+          key = day.format('MMMM Do');
+        } else if (type === 'weeks') {
+          const startOfWeek = now.clone().subtract(i, 'weeks').startOf('week');
+          const endOfWeek = now.clone().subtract(i, 'weeks').endOf('week');
+          startTime = startOfWeek.format('YYYY-MM-DDT00:00:00-00:00');
+          endTime = endOfWeek.format('YYYY-MM-DDT23:59:59-00:00');
+          key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
+        } else {
+          const startOfMonth = now.clone().subtract(i, 'months').startOf('month');
+          const endOfMonth = now.clone().subtract(i, 'months').endOf('month');
+          startTime = startOfMonth.format('YYYY-MM-DDT00:00:00-00:00');
+          endTime = endOfMonth.format('YYYY-MM-DDT23:59:59-00:00');
+          key = startOfMonth.format('MMMM');
         }
-      } else if(type == 'weeks'){
-        for (let i = 6; i >= 0; i--) {
-          // Calculate the start and end of the each week
-          let startOfWeek = moment().clone().subtract(i, 'weeks').startOf('week');
-          let endOfWeek = moment().clone().subtract(i, 'weeks').endOf('week');
-      
-          // Format the start and end dates
-          const formattedStartOfWeek = startOfWeek.format().split('+')[0] + '-00:00';
-          const formattedEndOfWeek = endOfWeek.format().split('+')[0] + '-00:00';
-      
-          let key = `Week ${startOfWeek.format('YYYY-MM-DD')}`;
-          finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${formattedStartOfWeek}&observedAt=lte.${formattedEndOfWeek}`;
-          const response = await axios.get(url, {headers});
-          if(response.data.length > 0){
-            finalData[key].push(...response.data);
-          }
-        }
-      } else{
-        for (let i = 6; i >= 0; i--) {
-          // Calculate the start and end of the current month
-          const startOfMonth = moment().clone().subtract(i, 'months').startOf('month');
-          const endOfMonth = moment().clone().subtract(i, 'months').endOf('month');
-      
-          // Format the start and end dates
-          const formattedStartOfMonth = startOfMonth.format().split('+')[0] + '-00:00';
-          const formattedEndOfMonth = endOfMonth.format().split('+')[0] + '-00:00';
-      
-          const key = moment(startOfMonth).format('MMMM');
-          finalData[key] = [];
-          const url = this.timescaleUrl + `/value_change_state_entries?attributeId=${attributeId}&entityId=${assetId}&observedAt=gte.${formattedStartOfMonth}&observedAt=lte.${formattedEndOfMonth}`;
-          const response = await axios.get(url, {headers});
-          if(response.data.length > 0){
-            finalData[key].push(...response.data);
-          }
-        }
+
+        const url = `${this.timescaleUrl}/value_change_state_entries?` +
+          `${attributeId ? `attributeId=${attributeId}&` : ''}` +
+          `entityId=${assetId}&observedAt=gte.${startTime}&observedAt=lte.${endTime}`;
+
+        keys.push(key);
+        finalData[key] = [];
+        requests.push(axios.get(url, { headers }));
       }
+      console.log("requests ",requests)
+      const responses = await Promise.allSettled(requests);
+      responses.forEach((res, idx) => {
+        if (res.status === 'fulfilled' && res.value?.data?.length > 0) {
+          finalData[keys[idx]].push(...res.value.data);
+        } else if (res.status === 'rejected') {
+          console.warn(`Request for ${keys[idx]} failed:`, res.reason?.message || res.reason);
+        }
+      });
       return finalData;
     }catch(err) {
       throw new NotFoundException(
