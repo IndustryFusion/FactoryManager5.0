@@ -52,6 +52,8 @@ interface DashboardContextValue {
   setAllOnlineTime: React.Dispatch<React.SetStateAction<any[]>>; 
   relationsCount: number; 
   setRelationsCount: React.Dispatch<React.SetStateAction<number>>;
+  setRunningSince: React.Dispatch<React.SetStateAction<string>>;
+  runningSince: string;
 }
 
 const DashboardContext = createContext<DashboardContextValue | undefined>(undefined);
@@ -68,6 +70,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
   const [allOnlineTime, setAllOnlineTime]= useState<any[]>([]); 
   const [relationsCount, setRelationsCount] = useState<number>(0);
   const [assetCount, setAssetCount] = useState<number>(0);
+  const [runningSince, setRunningSince] = useState<string>("0");
 
   return (
     <DashboardContext.Provider
@@ -82,7 +85,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({
         notificationData, setNotificationData,
         allOnlineTime, setAllOnlineTime,
         relationsCount, setRelationsCount,
-        assetCount, setAssetCount
+        assetCount, setAssetCount, setRunningSince, runningSince
       }}
     >
       {children}

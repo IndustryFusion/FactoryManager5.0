@@ -560,3 +560,14 @@ textarea {
     grid-template-columns: 60% 40%;
     gap: 24px;
 }
+
+.selected_product_actions p {
+    color: var(--Common-Text-Grey-600, #475467);
+    font-family: "League Spartan";
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.284px;
+    padding-top: 3px;
+}

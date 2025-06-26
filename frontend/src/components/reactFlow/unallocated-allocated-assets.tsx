@@ -82,11 +82,13 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
           dispatch(create(fetchedAssetIds));
         }
         
-        const fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
+        let fetchedAllocatedAssets = await fetchAllocatedAssets(factoryId);
 
         if (Array.isArray(fetchedAllocatedAssets)) {
           allocatedAssetsArray = fetchedAllocatedAssets;
           setAllocatedAssets(fetchedAllocatedAssets);
+        } else {
+          fetchedAllocatedAssets = [];
         }
         // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
       const fetchedUnallocatedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key:any) => {
