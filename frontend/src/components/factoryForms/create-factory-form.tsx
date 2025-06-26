@@ -42,6 +42,8 @@ import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
 import { Dropdown } from "primereact/dropdown";
+import { getAccessGroup } from '@/utility/indexed-db';
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibleProp, setVisibleProp }) => {
@@ -151,6 +153,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                     country: factory.country,
                     thumbnail: factory.thumbnail,
                     hasShopFloor: "",
+                    company_ifric_id: ""
                 },
             };
         }
@@ -158,6 +161,10 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
 
         try {
+            const accessGroupData = await getAccessGroup();
+            if(payload?.properties) {
+                payload.properties.company_ifric_id = accessGroupData.company_ifric_id;
+            }
             const response = await axios.post(API_URL + "/factory-site/", payload, {
                 headers: {
                     "Content-Type": "application/json",

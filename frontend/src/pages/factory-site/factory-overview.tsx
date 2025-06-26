@@ -31,6 +31,8 @@ import { FiMoreHorizontal } from "react-icons/fi";
 import { Tooltip } from "primereact/tooltip";
 import { ContextMenu } from "primereact/contextmenu";
 import dynamic from "next/dynamic";
+import { getAccessGroup } from '@/utility/indexed-db';
+
 
 // Assuming you're using PrimeReact
 
@@ -90,7 +92,8 @@ const FactoryOverview = () => {
 
   const fetchFactoryLists = async () => {
     try {
-      const response = await axios.get(API_URL + "/factory-site", {
+      const accessGroupData = await getAccessGroup();
+      const response = await axios.get(API_URL + `/factory-site/company-specific/${accessGroupData.company_ifric_id}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

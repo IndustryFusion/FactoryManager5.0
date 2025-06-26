@@ -161,6 +161,36 @@ export class FactorySiteService {
     }
   }
 
+  async companySpecificFactories(company_ifric_id: string, token: string) {
+    try {
+      const factorySiteData = [];
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+
+      let factorySiteType = "https://industry-fusion.org/types/v0.1/factorySite";
+      const url = this.scorpioUrl + '/?type=' + factorySiteType;
+      let companyIfricIdKey = "";
+      const response = await axios.get(url, {headers});
+      if(response.data.length > 0) {
+        response.data.forEach(data => {
+          if(!companyIfricIdKey) {
+            companyIfricIdKey = Object.keys(data).find(key => key.includes("#company_ifric_id"));
+          }
+          
+          if(companyIfricIdKey && data[companyIfricIdKey] && data[companyIfricIdKey].value === company_ifric_id) {
+            factorySiteData.push(data);
+          }
+        });
+      }
+      return factorySiteData;
+    } catch (err) {
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+
   async findOne(id: string, token: string) {
     try {
       const headers = {

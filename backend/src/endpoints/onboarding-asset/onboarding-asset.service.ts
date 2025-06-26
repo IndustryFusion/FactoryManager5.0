@@ -60,9 +60,7 @@ export class OnboardingAssetService {
       }
       return onbaordDevice;
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch onboarding data: ${err.message}`,
-      );
+      throw new NotFoundException(err.message);
     }
   }
 

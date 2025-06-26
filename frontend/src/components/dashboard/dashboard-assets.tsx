@@ -89,24 +89,12 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       return <span>No Image</span>;
     }
   };
-  const viewBodyTemplate = (rowData: Asset): React.ReactNode => {
-    return (
-      <>
-        <Button
-          className="onboard-btn"
-          onClick={(e) => {
-            setEditOnboardAsset(() => ({
-              ...editOnboardAsset,
-              showEditOnboard: true,
-              onboardAssetId: rowData?.id
-            }))
-          }}
-          title="Edit Onboard form"
-        >
-          <img src="/onboard.png" alt="" width="50px" height="50px" />
-        </Button>
-      </>
-    )
+  const editOnboardBodyTemplate = () => {
+    setEditOnboardAsset((prev) => ({
+      ...prev,
+      showEditOnboard: true,
+      onboardAssetId: selectedRow?.id ?? ""
+    }))
   }
 
   const viewBodyTemplateNew = (rowData: Asset): React.ReactNode => {
@@ -298,7 +286,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                     </div>
                     <div className="selected_product_actions">
                       {selectedRow.id && (
-                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} />
+                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate}/>
                       )}
                     </div>
                   </div>

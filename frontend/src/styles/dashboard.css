@@ -266,7 +266,7 @@
 
 .dashboard-card {
     width: calc(25% - 16px);
-    min-width: 267px;
+    min-width: 220px;
     flex-grow: 1;
 }
 
@@ -406,9 +406,9 @@ textarea {
         width: 34.4%
     }
 
-    .dashboard-card {
+    /* .dashboard-card {
         width: 500px;
-    }
+    } */
 
     .dashboard-card-container {
         gap: 2rem;
@@ -553,4 +553,10 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.dashboard_submap_wrapper{
+    display: grid;
+    grid-template-columns: 60% 40%;
+    gap: 24px;
 }

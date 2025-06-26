@@ -292,12 +292,24 @@ const CombineSensorChart: React.FC = () => {
         .filter((key: string) => temp.data.properties[key].segment === 'realtime')
         .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
 
-      const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
-        let index = 0;
+      // const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
+      //   let index = 0;
+      //   const label = key.split("/").pop() || key;
+      //   return { label, value: label, selectedDatasetIndex: index + 1 };
+      // })
+      //   .filter(attribute => attribute.value !== "machine_state");
+      console.log("Selected Asset Data: AB", selectedAssetData);
+      const attributeLabels: AttributeOption[] = Object.entries(selectedAssetData)
+      .filter(([key, _value]) => !isNaN(Number(_value))) // keep only numeric keys like "2", "3"
+      .map(([key, _value], index) => {
         const label = key.split("/").pop() || key;
-        return { label, value: label, selectedDatasetIndex: index + 1 };
+        return {
+          label,
+          value: label,
+          selectedDatasetIndex: index + 1
+        };
       })
-        .filter(attribute => attribute.value !== "machine_state");
+      .filter(attribute => attribute.value !== "machine_state");
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
