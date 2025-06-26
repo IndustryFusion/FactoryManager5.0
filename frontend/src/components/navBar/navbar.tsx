@@ -202,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         { label: "Factory Flow", url: "#" }
       ],
       "/factory-site/dashboard": [
-        { label: "Dashboard", }
+        { label: "Data Viewer", }
       ],
       "/asset-management": [
         { label: "Asset Management", url: "#" }
