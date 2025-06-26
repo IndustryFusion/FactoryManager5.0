@@ -115,6 +115,10 @@ body {
 
 .p-tabview .p-tabview-nav {
   border: 0px solid transparent;
+ 
+}
+.p-tabview .p-tabview-nav li .p-tabview-nav-link{
+ border-width: 0px;
 }
 
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {

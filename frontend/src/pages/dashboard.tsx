@@ -1,50 +1,47 @@
-import React from "react";
-import { Chart } from "primereact/chart";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/navBar/sidebar";
 import Navbar from "@/components/navBar/navbar";
 import "../styles/dashboard-page.css";
+import StackedPercentageBarChart from "@/components/dashboard/dashboard-charts";
+import { getAccessGroup } from "@/utility/indexed-db";
+import axios from "axios";
+import { showToast } from "@/utility/toast";
+import { Toast } from "primereact/toast"; // Update path if needed
 
+
+const getGreetings = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+};
 export default function DashboardPage() {
-    const barData = {
-        labels: ["17.05", "18.05", "19.05", "20.05", "21.05", "22.05", "23.05", "24.05", "25.05", "26.05"],
-        datasets: [
-            {
-                label: "Running",
-                backgroundColor: "#46a0fc",
-                data: [3.26, 4.5, 3.9, 4.1, 4.6, 3.8, 4.2, 4.3, 4.0, 4.5]
-            },
-            {
-                label: "Idle",
-                backgroundColor: "#fdd835",
-                data: [0.4, 0.5, 0.3, 0.2, 0.4, 0.3, 0.5, 0.4, 0.4, 0.3]
-            },
-            {
-                label: "Maintenance",
-                backgroundColor: "#ffb300",
-                data: [1.41, 1.2, 1.3, 1.1, 1.5, 1.4, 1.3, 1.2, 1.2, 1.3]
-            },
-            {
-                label: "Error",
-                backgroundColor: "#ef5350",
-                data: [1.15, 0.8, 1.1, 0.9, 1.0, 0.95, 1.1, 1.05, 0.9, 1.0]
-            },
-            {
-                label: "Offline",
-                backgroundColor: "#9e9e9e",
-                data: [3.26, 3.5, 3.8, 3.9, 3.6, 3.7, 3.8, 3.9, 3.7, 3.8]
-            }
-        ]
-    };
+    const [userName, setUserName] = useState("User");
+    const toast = useRef<Toast>(null);
 
-    const barOptions = {
-        plugins: {
-            legend: {
-                position: "bottom"
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const data = await getAccessGroup();
+                if (!data) {
+                    showToast(toast, "error", "Error", "No user data found");
+                    return;
+                }
+                const fullName = data.user_name || "User";
+                const firstName = fullName.trim().split(" ")[0];
+                setUserName(firstName);
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response?.data?.message) {
+                    showToast(toast, "error", "Error", error.response.data.message);
+                } else {
+                    showToast(toast, "error", "Error", "Error fetching user data");
+                }
             }
-        },
-        responsive: true,
-        maintainAspectRatio: false
-    };
+        };
+
+        fetchUserData();
+    }, []);
+ 
 
     return (
         <div className="flex">
@@ -54,14 +51,24 @@ export default function DashboardPage() {
                     <Navbar navHeader={"Dashboard"} />
                 </div>
                 <div className="dashboardpage-container">
-                    <main className="col-span-4">
+                    <main>
                         <div className="header">
-                            <div>
-                                <div className="header-title">Good afternoon, Frederick 👋</div>
+                            <div style={{ display: "flex", flexDirection: "column", padding: "16px" }}>
+                                <div className="header-title-greet">{getGreetings()}, {userName} 👋</div>
                                 <div className="header-subtitle">Factory Manager is your home-base for all your Machines and Assets</div>
                             </div>
-                            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "24px" }}>
-                                <img src="/Ellipse 5947.svg" alt="User avatar" />
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: "24px",
+                                    borderRadius: 16,
+                                    background: "var(--Secondary-Grey, #F7F8FA)",
+                                    padding: "16px",
+                                }}
+                            >
+                                <img src="/Ellipse 5947.svg" alt="User avatar" width={51} height={51} />
                                 <div style={{ display: "flex", flexDirection: "column" }}>
                                     <div className="header-title">Eckelmann Group</div>
                                     <div className="header-subtitle">Wiesbaden, Germany</div>
@@ -78,22 +85,72 @@ export default function DashboardPage() {
                                         <button className="tab-button">Intra-Day</button>
                                     </div>
                                 </div>
-                                <Chart type="bar" data={barData} options={barOptions} className="barchart" />
+                                <StackedPercentageBarChart />
                             </div>
 
                             <div className="notification-card">
                                 <div className="card-header">
-                                    <span className="card-title">Todays Notifications</span>
+                                    <span className="card-title">Today's Notifications</span>
                                     <a href="#" className="view-all">View all Notifications →</a>
                                 </div>
-                                <div className="notification-badge">16</div>
                                 <ul className="notification-list">
-                                    <li className="notification error">• ‘Laser Cutter 1’ error <span>12:21:34</span></li>
-                                    <li className="notification alert">• Injection mold reached critical temperature <span>10:38:14</span></li>
-                                    <li className="notification highlight">• OEE of production line ‘Welding 1’ 24% lower <span>09:01:12</span></li>
-                                    <li className="notification highlight">• OEE of production line ‘Cutting 2’ 11% lower <span>09:01:08</span></li>
-                                    <li className="notification muted">Finish setup of new Asset ‘Powdercoating Cabin’ <span>06:48:30</span></li>
+                                    <li className="notification">
+                                        CNC laser cutting machine is burning <span>12:21:34</span>
+                                        <img src="/go-next.svg" alt="next" />
+                                    </li>
+                                    <li className="notification">
+                                        Injection mold reached critical temperature <span>10:38:14</span>
+                                        <img src="/go-next.svg" alt="next" />
+                                    </li>
+                                    <li className="notification">
+                                        OEE of production line ‘Welding 1’ 24% lower <span>09:01:12</span>
+                                        <img src="/go-next.svg" alt="next" />
+                                    </li>
+                                    <li className="notification-alert">
+                                        OEE of production line ‘Cutting 2’ 11% lower <span>09:01:08</span>
+                                        <img src="/go-next.svg" alt="next" />
+                                    </li>
+                                    <li className="notification-li">
+                                        Finish setup of new Asset ‘Powdercoating Cabin’ <span>06:48:30</span>
+                                        <img src="/go-next.svg" alt="next" />
+                                    </li>
                                 </ul>
+                            </div>
+                        </div>
+
+                        <div className="small-card">
+                            <div className="small-card-list">
+                                <img src="/3d-printer.svg" className="img-smallcard" alt="Monitor Assets" />
+                                <div className="small-card-name">Monitor Assets</div>
+                            </div>
+                            <div className="small-card-list">
+                                <img src="/workflow-square.svg" className="img-smallcard" alt="Monitor Production Line" />
+                                <div className="small-card-name">Monitor Production Line</div>
+                            </div>
+                            <div className="small-card-list">
+                                <img src="/warehouse.svg" className="img-smallcard" alt="Manage Factory Sites" />
+                                <div className="small-card-name">Manage Factory Sites</div>
+                            </div>
+                            <div className="small-card-list">
+                                <img src="/analytics.svg" className="img-smallcard" alt="Get Reports" />
+                                <div className="small-card-name">Get Reports</div>
+                            </div>
+                        </div>
+
+                        <div className="xana-container">
+                            <div className="xana-content">
+                                <img src="/ai-magic.svg" width={60} height={60} alt="AI Magic Icon" />
+                                <div>
+                                    <h1 className="xana-heading">Ask Xana what's going on in your factory</h1>
+                                    <p className="xana-subheading">What was the downtime of my Lasers last week?</p>
+                                    <p className="xana-subheading-section">
+                                        The core component for running IndustryFusion-X on your machines. Includes <br />
+                                        essential services for robust operation and data management
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <button className="xana-button">Ask Xana now</button>
                             </div>
                         </div>
                     </main>
@@ -102,3 +159,7 @@ export default function DashboardPage() {
         </div>
     );
 }
+function useToast() {
+    throw new Error("Function not implemented.");
+}
+
