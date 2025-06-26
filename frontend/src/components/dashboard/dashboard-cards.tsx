@@ -39,7 +39,8 @@ const DashboardCards: React.FC = () => {
         allOnlineTime,
         relationsCount,
         setRelationsCount,
-        assetCount
+        assetCount,
+        setRunningSince
     } = useDashboard();
     const entityIdValue = useSelector((state: RootState) => state.entityId.id);
     const [notification, setNotification] = useState(false);
@@ -136,6 +137,7 @@ const DashboardCards: React.FC = () => {
                     newHours += 1;
                 }
                 const timerValue = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+                setRunningSince(newHours > 0 ? `${newHours}h` : newMinutes > 0 ? `${newMinutes}m`: `${newSeconds}s`);
                 localStorage.setItem("runningTime", timerValue);
                 return timerValue;
             });

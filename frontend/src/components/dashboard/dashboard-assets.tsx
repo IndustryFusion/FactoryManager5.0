@@ -63,7 +63,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
   const router = useRouter();
-  const { setMachineStateValue, setSelectedAssetData, setAssetCount } = useDashboard();
+  const { machineStateValue, setMachineStateValue, setSelectedAssetData, setAssetCount, relationsCount, notificationData, runningSince } = useDashboard();
   const toast = useRef<Toast>(null);
   const dispatch = useDispatch();
   const { t } = useTranslation(['placeholder', 'dashboard']);
@@ -161,8 +161,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
 
     const machineStateKey = Object.keys(selectedAsset).find(key => key.includes('machine_state'));
-    if (machineStateKey) {
-      setMachineStateValue(selectedAsset[machineStateKey]?.value)
+    if (machineStateKey && selectedAsset[machineStateKey]) {
+      setMachineStateValue(selectedAsset[machineStateKey])
     }
   };
 
@@ -281,13 +281,23 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                       <div className="flex flex-column gap-1">
                         <div className="selected_product_title">{selectedRow.product_name}</div>
                         <div className="selected_product_room_name">{getProductType(selectedRow.type)}</div>
-                        <div className="selected_product_status_text">Running <span className="time_span">(32m)</span></div>
+                        <div className="selected_product_status_text">{machineStateValue === "2" ? "Running " : "Offline"}<span className="time_span">{runningSince}</span></div>
                       </div>
                     </div>
                     <div className="selected_product_actions">
                       {selectedRow.id && (
                         <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate}/>
                       )}
+                      <div className="flex gap-3" style={{paddingRight: "70px", minWidth: "110px"}}>
+                        <div className="flex align-items-center gap-2">
+                          <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
+                          <p>{`${notificationData.length} Notifications`}</p>
+                        </div>
+                        <div className="flex align-items-center gap-2">
+                          <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
+                          <p>{`${relationsCount} Connections`}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

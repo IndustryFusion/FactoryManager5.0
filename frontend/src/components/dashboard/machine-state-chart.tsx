@@ -227,24 +227,17 @@ const MachineStateChart = () => {
 
         const documentStyle = getComputedStyle(document.documentElement);
         let labels = Object.keys(dataset);
-        const finalData = [];
+        const finalData = [], labelMap: Record<string,any> = {};
         for (let key in dataset) {
-            let eachDateArr = dataset[key];
-            for (let i = 0; i < eachDateArr.length; i++) {
-                let check = false;
-                for (let idx = 0; idx < finalData.length; idx++) {
-                    if (finalData[idx].label == eachDateArr[i].type) {
-                        finalData[idx].data.push(eachDateArr[i].time);
-                        check = true;
-                    }
+            for (let i = 0; i < dataset[key].length; i++) {
+                const type = dataset[key][i].type;
+
+                if (!labelMap[type]) {
+                    labelMap[type] = { label: type, data: [], backgroundColor: type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400') };
+                    finalData.push(labelMap[type]); 
                 }
-                if (!check) {
-                    finalData.push({
-                        label: eachDateArr[i].type,
-                        backgroundColor: eachDateArr[i].type.includes('online') ? documentStyle.getPropertyValue('--green-400') : documentStyle.getPropertyValue('--red-400'),
-                        data: [eachDateArr[i].time]
-                    })
-                }
+
+                labelMap[type].data.push(dataset[key][i].time);
             }
         }
         labels = labels?.reverse();
@@ -275,23 +268,18 @@ const MachineStateChart = () => {
                     })
                 }
                 if (data[key].length > 1) {
+                    const typeMap: Record<string, any> = {};
                     for (let idx = 1; idx < data[key].length; idx++) {
                         let startTime = data[key][idx - 1].observedAt.split('T')[1].split('.')[0];
                         let endTime = data[key][idx].observedAt.split('T')[1].split('.')[0];
                         const difference = Math.abs(convertToSecondsTime(endTime) - convertToSecondsTime(startTime));
                         let type = data[key][idx - 1].value == '0' ? 'offline' : 'online';
-                        let check = false;
-                        groupedByDate[key].forEach(obj => {
-                            if (obj.type == type) {
-                                obj.time = obj.time + difference;
-                                check = true;
-                            }
-                        })
-                        if (!check) {
-                            groupedByDate[key].push({
-                                time: difference,
-                                type
-                            })
+                        if (typeMap[type]) {
+                            typeMap[type].time += difference;
+                        } else {
+                            const newEntry = { time: difference, type };
+                            groupedByDate[key].push(newEntry);
+                            typeMap[type] = newEntry;
                         }
                     }
 

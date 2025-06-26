@@ -26,7 +26,7 @@ export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboa
         const prefix = 'urn:ifric:ifx-';
         const suffix = id.slice(-8);
 
-        return `${prefix}........${suffix}`;
+        return `${prefix}....${suffix}`;
     };
 
 
@@ -46,7 +46,7 @@ export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboa
   ];
 
     return (
-        <div className="flex gap-3">
+        <div className="flex gap-3 justify-content-end">
             <Button type="button" className="global-button company_ifric_id_badge" onClick={() => copyToClipboard(ifricId, toast || "")}>
                 <Image width={16} height={16} src='/dashboard-collapse/company_id_icon.svg' alt='company ifric id' />
                 <div>{trimIfricId(ifricId)}</div>

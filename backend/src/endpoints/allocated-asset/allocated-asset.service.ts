@@ -153,13 +153,18 @@ async createGlobal(token: string) {
       if (Array.isArray(assetIds) && assetIds.length > 0) {
         for (let i = 0; i < assetIds.length; i++) {
           let id = assetIds[i].id;
-          const assetData = await this.assetService.getAssetDataById(id, token);
-          const finalData = {
-            id,
-            product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value, 
-            asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
-          };
-          finalArray.push(finalData);
+          try {
+            const assetData = await this.assetService.getAssetDataById(id, token);
+            const finalData = {
+              id,
+              product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value, 
+              asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
+            };
+            finalArray.push(finalData);
+          } catch(err) {
+            continue;
+          }
+          
         }
       } else if(assetIds && assetIds.includes('urn')){
         const assetData = await this.assetService.getAssetDataById(assetIds, token);
