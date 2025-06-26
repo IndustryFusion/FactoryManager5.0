@@ -233,8 +233,8 @@ const AssetManagement: React.FC = () => {
           />
           <Column field="type" header="Product Type" body={(rowData: Asset) => rowData.type.split('/').pop()} />
           <Column field="id" header="ID" body={(rowData) => renderExpandableCell(rowData, 'id')} style={{ textAlign: 'left' }} />
-          <Column field="area" header="Area" />
-          <Column field="factory_site" header="Factory Site" />
+          <Column field="area" header="Area" body="--" />
+          <Column field="factory_site" header="Factory Site" body="--" />
 
           <Column body={actionItemsTemplate} headerStyle={{ width: '5rem' }} />
         </DataTable>

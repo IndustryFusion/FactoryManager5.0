@@ -47,7 +47,7 @@ const AssetManagementPage = () => {
     <div className="flex">
       <Sidebar selectedItem="Assets" />
       <div className='main_content_wrapper'>
-        <div className='navbar-wrapper mt-5'>
+        <div className='navbar_wrapper'>
           <Navbar navHeader={t("overview:Assets")} />
         </div>
 
@@ -59,8 +59,8 @@ const AssetManagementPage = () => {
                   <p className="total-assets-text m-0">
                     <span className="highlighted-number">89</span> {t("overview:Assets")}
                   </p>
-                  <div className="tab-inline-wrapper">
-                    <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs-inline">
+                  <div>
+                    <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
                       <TabPanel header={t("Asset Table")}></TabPanel>
                       <TabPanel header={t("Allocated Assets")}></TabPanel>
                     </TabView>
@@ -81,6 +81,7 @@ const AssetManagementPage = () => {
                 borderRadius: 8,
                 border: "2px solid #F2F4F7",
                 background: "#FFF",
+                paddingLeft:"12px"
               }}
             >
               <img src="/search_icon.svg" alt="Search" className="search-icon" />
@@ -112,16 +113,24 @@ const AssetManagementPage = () => {
         {activeIndex === 0 && <AssetManagement />}
         {activeIndex === 1 && <AllocatedAsset />}
 
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </div>
   );
 };
 
-export const getServerSideProps = async ({ locale }) => ({
-  props: {
-    ...(await serverSideTranslations(locale, ['common', 'button', 'header', 'placeholder', 'overview'])),
-  },
-});
+export async function getStaticProps({ locale }: { locale: string }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'header',
+        'overview',
+        'placeholder',
+        'dashboard',
+        'button'
+      ])),
+    },
+  }
+}
 
 export default AssetManagementPage;

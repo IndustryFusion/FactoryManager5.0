@@ -1,203 +1,198 @@
-/* General DataTable styling */
+/* General DataTable styling aligned with League Spartan theme */
 .asset-table {
-    border: 1px solid #E4E7EC;
-    border-radius: 12px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
+  border-radius: 12px;
+  font-family: "League Spartan", sans-serif;
+  font-size: 16px;
+  background-color: var(--card-background);
+  position: relative;
+  flex-grow: 1;
 }
 
 /* Header (th) styling */
 .asset-table thead tr th {
-    background-color: #F9FAFB;
-    color: #6B7280;
-    font-weight: 600;
-    padding: 1rem;
-    border-bottom: 1px solid #E4E7EC;
-    text-align: left;
-    white-space: nowrap;
+  background-color: #F2F4F7;
+  color: var(--text-color);
+  font-weight: 600;
+  padding: 16px;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 16px;
 }
 
-/* Table rows (td) */
+/* Table body rows (td) */
 .asset-table tbody tr td {
-    padding: 1rem;
-    border-bottom: 1px solid #E4E7EC;
-    color: #111827;
-    background-color: #ffffff;
+  padding: 5px;
+  color: var(--text-color);
+  background-color: #ffffff;
+  font-weight: 400;
+  font-size: 16px;
+  font-family: "League Spartan", sans-serif;
 }
 
-/* Highlighted text in body (optional) */
-.asset-table tbody tr td span {
-    font-weight: 500;
-}
-
-/* Row hover effect */
+/* Hover effect */
 .asset-table tbody tr:hover {
-    background-color: #f1f5f9;
+  background-color: #f1f5f9;
 }
 
-/* Checkbox column */
-.asset-table .p-selection-column {
-    width: 3rem;
+/* Emphasized content inside cells */
+.asset-table tbody tr td span {
+  font-weight: 500;
 }
 
-/* Last column (Action) */
+
+/* Last column (actions) */
 .asset-table .p-column-header:last-child,
 .asset-table tbody tr td:last-child {
-    text-align: center;
-    width: 60px;
+  text-align: center;
+
 }
 
-/* Pagination controls styling */
-.p-paginator {
-    border-top: 1px solid #E4E7EC;
-    padding: 0.75rem 1rem;
-    font-size: 14px;
+.asset-management-container {
+  padding: 0 12px; /* Adds left/right spacing */
+  box-sizing: border-box;
+}
+.asset-table .p-datatable-thead > tr > th:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px; 
 }
 
-/* Spinner center alignment */
-.spinner-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 300px;
+.asset-table .p-datatable-thead > tr > th:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
-.highlighted-number{
-color: var(--ifx-tint-blue-900-primary, #3CA0C9);
-font-family: "League Spartan";
-font-size: 24px;
-font-style: normal;
-font-weight: 700;
-line-height: normal;
+/* PrimeReact DataTable overrides */
+.p-datatable .p-datatable-tbody > tr > td {
+  text-align: left;
+  font-family: "League Spartan", sans-serif;
+  font-size: 16px;
+  color: var(--text-color);
+}
+.p-datatable .p-datatable-tbody > tr > td {
+  border: none;
+  border-bottom: 1px solid var(--Common-Text-Grey-100, #F2F4F7);
 }
 
-.asset-table {
-    position: relative;
-    flex-grow: 1;
+.p-datatable .p-datatable-thead > tr > th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 16px;
+  font-family: "League Spartan", sans-serif;
+  color: var(--text-color);
+  margin-left: 20px;
+  border: none;
+  padding: 16px 5px;
 }
 
 
-
-
-.p-datatable .p-datatable-tbody>tr>td {
-    text-align: left;
-    border-width: 0px;
-    color: var(--Grey-Primary, #5F5F5F);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: -0.07px;
-    margin: 0px;
+/* Highlighted number styling */
+.highlighted-number {
+  color: var(--primary-color);
+  font-family: "League Spartan", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
 }
 
-.p-datatable .p-datatable-thead>tr>th {
-    text-align: left;
-    font-weight: 500;
-    background: transparent;
-    transition: box-shadow 0.15s;
-    font-size: 16px;
-    font-family: "League Spartan", sans-serif;
-    color: var(--black-primary);
-    padding: 14px;
-    border: none;
-    background: var(--Common-Text-Grey-100, #F2F4F7);
-}
-
-.p-datatable .p-datatable-thead>tr>th:last-child {
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
+/* Pagination styles */
 .custom-paginator-table .p-paginator {
-    border-top: 1px solid #E5E7EB;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: "Inter", sans-serif;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "League Spartan", sans-serif;
+  font-size: 16px;
+  padding: 5px
 }
 
-/* Current page report */
+/* Current page text */
 .custom-paginator-table .p-paginator-current {
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: normal;
-    border: none;
+color: var(--Common-Text-Grey-400, #98A2B3);
+font-family: "League Spartan";
+font-size: 16px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+border: none;
 }
 
-/* Page buttons */
+.custom-dropdown {
+height: 30px;
+align-items: center;
+gap: 6px;
+border-radius: 8px;
+border: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
+background: var(--White, #FFF);
+}
+
+/* Pagination buttons */
 .custom-paginator-table .p-paginator-page {
-    border-radius: 10px;
-    border: 1px solid #E5E7EB;
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    margin: 0 4px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  color: var(--Common-Text-Grey-400, #98A2B3);
+  font-family: "League Spartan";
+  margin: 0 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-border-radius: 10px;
-border: 2px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
-background: var(--White, #FFF);
-color: var(--Common-Text-Grey-900, #10182B);
-}
-.p-dropdown-items-wrapper {
-    overflow: none;
+  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  background: var(--card-background);
+  color: var(--text-color);
 }
 
 /* Arrows */
-
 .custom-paginator-table .p-paginator-prev,
 .custom-paginator-table .p-paginator-next {
-    background: transparent;
-    border: none;
-    color: #9CA3AF;
-    font-size: 14px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Disabled arrows */
+/* Disabled state */
 .custom-paginator-table .p-disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-/* Custom dropdown + label wrapper */
+/* Custom dropdown wrapper */
 .custom-rows-dropdown {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+/* Label next to dropdown */
 .display-label {
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: normal;
+  color: #98A2B3;
+  font-family: "League Spartan", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
 }
 
-/* Style PrimeReact dropdown itself */
+/* PrimeReact dropdown text */
 .custom-dropdown .p-dropdown-label {
+  font-size: 13px;
+  color: var(--text-color);
+}
 
-    font-size: 13px;
-    color: #111827;
+/* Spinner loader center */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
 }

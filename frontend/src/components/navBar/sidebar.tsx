@@ -61,17 +61,16 @@ function Sidebar() {
       <div className="sidebar_content">
         <div className="sidebar_link_wrapper">
           <div className="sidebar_links">
-            
-          <Button
+              <Button
             className={`sidebar_navlink ${
-              router.pathname === "/factory-site/dashboard" ? "is_active" : ""
+              router.pathname === "dashboard" ? "is_active" : ""
             }`}
-            onClick={() => handleRoute("factory-site/dashboard")}
+            onClick={() => handleRoute("dashboard")}
             tooltip={!sidebarOpen ? "Dashboard" : undefined}
             tooltipOptions={{ position: "right", event: "both" }}
           >
             <Image
-              src="/sidebar/home_icon.svg"
+              src="/dashboard-circle.svg"
               width={18}
               height={18}
               alt="dashboard_icon"
@@ -81,9 +80,11 @@ function Sidebar() {
                 !sidebarOpen ? "sidebar_collapse_fade" : ""
               }`}
             >
-              Data Viewer
+            Dashboard
             </div>
           </Button>
+            
+        
            <Button
             className={`sidebar_navlink ${
               router.pathname === "asset-management" ? "is_active" : ""
@@ -126,6 +127,28 @@ function Sidebar() {
               }`}
             >
               Factory Sites
+            </div>
+          </Button>
+            <Button
+            className={`sidebar_navlink ${
+              router.pathname === "/factory-site/dashboard" ? "is_active" : ""
+            }`}
+            onClick={() => handleRoute("factory-site/dashboard")}
+            tooltip={!sidebarOpen ? "Dashboard" : undefined}
+            tooltipOptions={{ position: "right", event: "both" }}
+          >
+            <Image
+              src="/sidebar/home_icon.svg"
+              width={18}
+              height={18}
+              alt="dashboard_icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${
+                !sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+            >
+              Data Viewer
             </div>
           </Button>
          

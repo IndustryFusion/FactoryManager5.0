@@ -188,6 +188,7 @@ body {
   position: relative;
   overflow: hidden;
   width: 100%;
+  background-color: #fff;
 }
 .navbar_wrapper {
   position: sticky;

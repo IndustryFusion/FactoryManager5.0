@@ -355,52 +355,52 @@ const FactoryOverview = () => {
     <div className="flex">
       <Sidebar />
       <div className='main_content_wrapper'>
-        <div className='navbar-wrapper mt-5'>
+        <div className='navbar_wrapper'>
           <Navbar navHeader="Factory Overview" />
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
           <div className="grid py-1 px-2 factory-overview">
             <div className="col-12">
-              <div>
-                <div className="asset-header">
-                  <div className="flex justify-content-between">
-                    <div className="flex">
-                      <p className="total-assets-text">
-                        <span style={{ color: "var(--ifx-tint-blue-900-primary, #3CA0C9)", fontFamily: "League Spartan" }}>{factorySite.length}</span> {t("Factory Sites")}
-                      </p>
-                      <div>
-                        <TabView className="asset-tabs">
-                          <TabPanel header={t("overview:Active")}></TabPanel>
-                          <TabPanel header={t("overview:Drafts")}></TabPanel>
-                          <TabPanel header={t("overview:Archived")}></TabPanel>
-                        </TabView>
-                      </div>
-                    </div>
-                    <div className="flex justify-content-end" style={{ gap: "10px" }}>
-                      <Button
-                        label={t("+ Create Factory")}
-                        className="factory-btn"
-                        onClick={() => setVisible(true)}
-                      />
-                      <div>
-                        <Button
-                          label={t("Import Assets")}
-                          className="factory-btn-white"
-                          onClick={handleImportClick}
-                        />
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          style={{ display: "none" }}
-                          onChange={handleFileChange}
-                          multiple // optional: allow selecting multiple files
-                          accept="image/*,application/pdf" // optional: restrict file types
-                        />
-                      </div>
-                    </div>
+
+              <div className="asset-header flex justify-content-between align-items-center">
+
+                <div className="flex align-items-center gap-4">
+                  <p className="total-assets-text m-1">
+                    <span className="highlighted-number">89</span> {t("Factory Site")}
+                  </p>
+                  <div>
+                    <TabView className="asset-tabs">
+                      <TabPanel header={t("overview:Active")}></TabPanel>
+                      <TabPanel header={t("overview:Drafts")}></TabPanel>
+                      <TabPanel header={t("overview:Archived")}></TabPanel>
+                    </TabView>
                   </div>
                 </div>
+                <div className="flex justify-content-end" style={{ gap: "10px" }}>
+                  <Button
+                    label={t("+ Create Factory")}
+                    className="factory-btn"
+                    onClick={() => setVisible(true)}
+                  />
+                  <div>
+                    <Button
+                      label={t("Import Assets")}
+                      className="factory-btn-white"
+                      onClick={handleImportClick}
+                    />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                      multiple // optional: allow selecting multiple files
+                      accept="image/*,application/pdf" // optional: restrict file types
+                    />
+                  </div>
+                </div>
+
+
               </div>
               <div>
                 <div>
@@ -408,7 +408,7 @@ const FactoryOverview = () => {
                 </div>
 
                 {factorySite.length > 0 ? (
-                  <div>
+                  <div className="dataview_wrapper">
                     <DataView
                       className="data-view"
                       value={factoriesWithCreateCard}
