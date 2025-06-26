@@ -266,6 +266,12 @@ const CombineSensorChart: React.FC = () => {
     ).padStart(2, "0")}`;
   }
 
+  type AttributeOption = {
+    label: string;
+    value: string;
+    selectedDatasetIndex: number;
+  };
+
   const fetchAsset = async () => {
     try {
       const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name"));
@@ -298,18 +304,33 @@ const CombineSensorChart: React.FC = () => {
       //   return { label, value: label, selectedDatasetIndex: index + 1 };
       // })
       //   .filter(attribute => attribute.value !== "machine_state");
-      console.log("Selected Asset Data: AB", selectedAssetData);
+      const storedValues: Record<string, number> = {}; // keeps state across calls
+
       const attributeLabels: AttributeOption[] = Object.entries(selectedAssetData)
-      .filter(([key, _value]) => !isNaN(Number(_value))) // keep only numeric keys like "2", "3"
-      .map(([key, _value], index) => {
-        const label = key.split("/").pop() || key;
-        return {
-          label,
-          value: label,
-          selectedDatasetIndex: index + 1
-        };
-      })
-      .filter(attribute => attribute.value !== "machine_state");
+        .filter(([key, value]) => {
+          const isNumeric = !isNaN(Number(value));
+          const label = key.split("/").pop() || key;
+
+          if (!isNumeric || label === "machine_state") return false;
+
+          const numericValue = Number(value);
+          const hasChanged = storedValues[key] !== numericValue;
+
+          // Store or update the value
+          storedValues[key] = numericValue;
+
+          return hasChanged || !(key in storedValues); // first time or changed
+        })
+        .map(([key, _value], index) => {
+          const label = key.split("/").pop() || key;
+          return {
+            label,
+            value: label,
+            selectedDatasetIndex: index + 1,
+          };
+        });
+
+      console.log("Labels", attributeLabels);
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
@@ -615,7 +636,7 @@ const CombineSensorChart: React.FC = () => {
     endTime: Date | undefined
   ): string => {
     if (!date || !startTime || !endTime) return '--';
-  
+
     const formatTime = (time: Date): string => {
       return time.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -624,18 +645,18 @@ const CombineSensorChart: React.FC = () => {
         hour12: true
       });
     };
-  
+
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
-  
+
     const formattedStart = formatTime(startTime);
     const formattedEnd = formatTime(endTime);
-  
+
     return `${day}/${month}/${year} (${formattedStart} - ${formattedEnd})`;
   };
 
-  
+
   return (
     <div className="data_viewer_card">
       {/* <div className="custom-button-container">
@@ -671,7 +692,7 @@ const CombineSensorChart: React.FC = () => {
               <label htmlFor="intervall" className="dashboard_control_label">{t("dashboard:interval")}</label>
               <div className="global-button dropdown dashboard-dropdown">
                 <Dropdown
-                inputId="intervall"
+                  inputId="intervall"
                   value={selectedInterval}
                   options={intervalButtons.map(({ label, interval }) => ({
                     label,
@@ -690,19 +711,19 @@ const CombineSensorChart: React.FC = () => {
               <div className="control_form_field">
                 <label htmlFor="" className="dashboard_control_label">Pick Timeframe</label>
                 <Button className="timeframe_op_trigger" onClick={(e) => op.current?.toggle(e)}>
-                <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt=""></Image>
+                  <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt=""></Image>
                   <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : 'Pick a date'}</div>
-                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                  <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
                 </Button>
               </div>)
             }
 
             <OverlayPanel ref={op} className="timeframe_overlaypanel">
               <div className="timetrame_form">
-              <div className="control_form_field">
-                <label htmlFor="date_inputt" className="dashboard_control_label">{t("dashboard:selectDate")}</label>
+                <div className="control_form_field">
+                  <label htmlFor="date_inputt" className="dashboard_control_label">{t("dashboard:selectDate")}</label>
                   <Calendar
-                  inputId="date_inputt"
+                    inputId="date_inputt"
                     value={selectedDate}
                     onChange={(e) => handleDateChange(e as CustomChangeEvent)}
                     showTime={false}
@@ -715,40 +736,40 @@ const CombineSensorChart: React.FC = () => {
                     appendTo="self"
 
                   />
-                  </div>
-                  <div className="control_form_field">
-                <label htmlFor="startTime" className="dashboard_control_label">{t("dashboard:startTime")}</label>
-                    <InputText
-                      id="startTime"
-                      type="time"
-                      value={startTime ? format(startTime, "HH:mm") : ""}
-                      onChange={(e) => handleTimeInputChange(e, "start")}
-                      placeholder="Start Time"
-                      className="w-full"
-                      disabled={selectedInterval !== "custom"}
-                    />
-                  </div>
-                  <div className="control_form_field">
-                    <label htmlFor="endTime" className="dashboard_control_label">{t("dashboard:endTime")}</label>
-                    <InputText
-                      id="endTime"
-                      type="time"
-                      value={endTime ? format(endTime, "HH:mm") : ""}
-                      onChange={(e) => handleTimeInputChange(e, "end")}
-                      placeholder="End Time"
-                      className="w-full "
-                      disabled={selectedInterval !== "custom"}
-                    />
-                  </div>
-                  </div>
-                  <Button
-                    label={t("button:load")}
-                    severity="info"
+                </div>
+                <div className="control_form_field">
+                  <label htmlFor="startTime" className="dashboard_control_label">{t("dashboard:startTime")}</label>
+                  <InputText
+                    id="startTime"
+                    type="time"
+                    value={startTime ? format(startTime, "HH:mm") : ""}
+                    onChange={(e) => handleTimeInputChange(e, "start")}
+                    placeholder="Start Time"
+                    className="w-full"
                     disabled={selectedInterval !== "custom"}
-                    style={{ width: "100px" }}
-                    className="global-button"
-                    onClick={handleLoad} // Call the handleLoad function when the button is clicked
                   />
+                </div>
+                <div className="control_form_field">
+                  <label htmlFor="endTime" className="dashboard_control_label">{t("dashboard:endTime")}</label>
+                  <InputText
+                    id="endTime"
+                    type="time"
+                    value={endTime ? format(endTime, "HH:mm") : ""}
+                    onChange={(e) => handleTimeInputChange(e, "end")}
+                    placeholder="End Time"
+                    className="w-full "
+                    disabled={selectedInterval !== "custom"}
+                  />
+                </div>
+              </div>
+              <Button
+                label={t("button:load")}
+                severity="info"
+                disabled={selectedInterval !== "custom"}
+                style={{ width: "100px" }}
+                className="global-button"
+                onClick={handleLoad} // Call the handleLoad function when the button is clicked
+              />
             </OverlayPanel>
           </div>
           <div>
