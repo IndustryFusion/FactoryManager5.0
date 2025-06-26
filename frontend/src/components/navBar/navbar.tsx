@@ -17,14 +17,15 @@ import Alerts from "@/components/alert/alerts"
 import Language from "./language";
 import ProfileMenu from "./profile-menu";
 
+import { ReactNode } from "react";
+
 type NavbarProps = {
-  navHeader?: string;
+  navHeader?: string | ReactNode;
   previousRoute?: {
     path: string;
     label: string;
   };
 };
-
 type UserData = {
   user_name: string;
   company_id: string;
@@ -107,35 +108,36 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     router.back();
   };
 
-  const home = {
-    label: "",
-    url: "/factory-site/factory-overview",
-    template: () => (
-      <div className="flex gap-1 align-items-center">
-        {showBackButton && (
-          <Button
-            icon="pi pi-angle-double-left"
-            onClick={handleBackClick}
-            className="p-button-text p-button-rounded p-button-secondary -ml-3"
-            style={{ color: "#6c757d", padding: "0px 2px 0px 12px", height: "auto", width: "fit-content" }}
-            aria-label="Go back"
-          />
-        )}
+  const home = router.pathname === "/dashboard" ? undefined : {
+  label: "",
+  url: "/factory-site/factory-overview",
+  template: () => (
+    <div className="flex gap-1 align-items-center">
+      {showBackButton && (
         <Button
-          className="p-button-text p-button-rounded"
-          onClick={() => router.push("/factory-site/factory-overview")}
-          style={{ padding: 0 }}
-        >
-          <Image
-            src="/bread-crum/home_icon.svg"
-            alt="Home"
-            width={18}
-            height={17}
-          />
-        </Button>
-      </div>
-    ),
-  };
+          icon="pi pi-angle-double-left"
+          onClick={handleBackClick}
+          className="p-button-text p-button-rounded p-button-secondary -ml-3"
+          style={{ color: "#6c757d", padding: "0px 2px 0px 12px", height: "auto", width: "fit-content" }}
+          aria-label="Go back"
+        />
+      )}
+      <Button
+        className="p-button-text p-button-rounded"
+        onClick={() => router.push("/factory-site/factory-overview")}
+        style={{ padding: 0 }}
+      >
+        <Image
+          src="/bread-crum/home_icon.svg"
+          alt="Home"
+          width={18}
+          height={17}
+        />
+      </Button>
+    </div>
+  ),
+};
+
 
   function generateBreadcrumbItems(): BreadcrumbItem[] {
     const createLastItem = (label: string): BreadcrumbItem => ({
@@ -200,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         { label: "Factory Flow", url: "#" }
       ],
       "/factory-site/dashboard": [
-        { label: "Dashboard", url: "#" }
+        { label: "Dashboard", }
       ],
       "/asset-management": [
         { label: "Asset Management", url: "#" }

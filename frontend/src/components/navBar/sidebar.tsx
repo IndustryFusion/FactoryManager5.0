@@ -83,6 +83,12 @@ function Sidebar() {
             Dashboard
             </div>
           </Button>
+            <div
+            className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+          >
+           My Factory
+          </div>
             
         
            <Button
@@ -94,7 +100,7 @@ function Sidebar() {
             tooltipOptions={{ position: "right", event: "both" }}
           >
             <Image
-              src="/sidebar/assets_icon.svg"
+              src="/3d-printer.svg"
               width={18}
               height={18}
               alt="dashboard_icon"
@@ -107,11 +113,13 @@ function Sidebar() {
               Assets
             </div>
           </Button>
-          <Button
+
+
+            <Button
             className={`sidebar_navlink ${
-              router.pathname === "/factory-site/factory-overview" ? "is_active" : ""
+              router.pathname === "" ? "is_active" : ""
             }`}
-            onClick={() => handleRoute("factory-site/factory-overview")}
+            onClick={() => handleRoute("")}
             tooltip={!sidebarOpen ? "Factory Sites" : undefined}
             tooltipOptions={{ position: "right", event: "both" }}
           >
@@ -126,9 +134,69 @@ function Sidebar() {
                 !sidebarOpen ? "sidebar_collapse_fade" : ""
               }`}
             >
+            Production Lines
+            </div>
+          </Button>
+
+          
+          <Button
+            className={`sidebar_navlink ${
+              router.pathname === "/factory-site/factory-overview" ? "is_active" : ""
+            }`}
+            onClick={() => handleRoute("factory-site/factory-overview")}
+            tooltip={!sidebarOpen ? "Factory Sites" : undefined}
+            tooltipOptions={{ position: "right", event: "both" }}
+          >
+            <Image
+              src="/warehouse.svg"
+              width={18}
+              height={18}
+              alt="dashboard_icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${
+                !sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+            >
               Factory Sites
             </div>
           </Button>
+
+       
+            <div
+            className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+          >
+        Data Management
+          </div>
+          <Button
+            className={`sidebar_navlink ${
+              router.pathname === "/contract-manager" ? "is_active" : ""
+            }`}
+            onClick={() => handleRoute("contract-manager")}
+            tooltip={!sidebarOpen ? "Contract Manager" : undefined}
+            tooltipOptions={{ position: "right", event: "both" }}
+          >
+            <Image
+              src="/sidebar/contract_icon.svg"
+              width={18}
+              height={18}
+              alt="dashboard_icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${
+                !sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+            >
+              Contract Manager
+            </div>
+          </Button>
+            <div
+            className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""
+              }`}
+          >
+        Analytics
+          </div>
             <Button
             className={`sidebar_navlink ${
               router.pathname === "/factory-site/dashboard" ? "is_active" : ""
@@ -174,28 +242,7 @@ function Sidebar() {
               Certificate Manager
             </div>
           </Button>
-          <Button
-            className={`sidebar_navlink ${
-              router.pathname === "/contract-manager" ? "is_active" : ""
-            }`}
-            onClick={() => handleRoute("contract-manager")}
-            tooltip={!sidebarOpen ? "Contract Manager" : undefined}
-            tooltipOptions={{ position: "right", event: "both" }}
-          >
-            <Image
-              src="/sidebar/contract_icon.svg"
-              width={18}
-              height={18}
-              alt="dashboard_icon"
-            />
-            <div
-              className={`sidebar_navlink_text ${
-                !sidebarOpen ? "sidebar_collapse_fade" : ""
-              }`}
-            >
-              Contract Manager
-            </div>
-          </Button>
+          
           <Button
             className={`sidebar_navlink ${
               router.pathname === "/binding-manager" ? "is_active" : ""

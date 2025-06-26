@@ -162,14 +162,7 @@ body {
     color: var(--Black, #2B2B2B);
 }
 
-.notification-text-blue {
-    color: var(--Common-Text-Grey-900, #10182B);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-}
+
 
 .notification-li {
     color: var(--Common-Text-Grey-400, #98A2B3);
@@ -184,28 +177,41 @@ body {
 }
 
 /* ✅ Structured layout */
-.notification-text {
-    flex: 1;
+.notification-text,
+.notification-text-blue,
+.notification-text-gray {
     margin-left: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--Common-Text-Grey-900, #10182B);
-    font-family: "League Spartan";
     font-size: 16px;
-    font-style: normal;
+    font-family: "League Spartan";
+}
+
+.notification-text {
     font-weight: 600;
-    line-height: normal;
+    color: #10182B;
+}
+
+.notification-text-blue {
+    font-weight: 400;
+    color: #10182B;
+}
+
+.notification-text-gray {
+    font-weight: 400;
+    color: #98A2B3;
 }
 
 .notification-time {
-    font-family: "League Spartan";
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    margin-left: 12px;
     white-space: nowrap;
+    font-size: 14px;
+    color: #98A2B3;
+    font-family: "League Spartan";
+    font-weight: 400;
+    margin-left: 12px;
 }
+
 
 /* ✅ Small cards */
 .small-card {
