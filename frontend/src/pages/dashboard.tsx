@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
         fetchUserData();
     }, []);
- 
+
 
     return (
         <div className="flex">
@@ -55,7 +55,7 @@ export default function DashboardPage() {
                         <div className="header">
                             <div style={{ display: "flex", flexDirection: "column", padding: "16px" }}>
                                 <div className="header-title-greet">{getGreetings()}, {userName} 👋</div>
-                                <div className="header-subtitle">Factory Manager is your home-base for all your Machines and Assets</div>
+                                <div className="header-subtitle-greet">Factory Manager is your home-base for all your Machines and Assets</div>
                             </div>
                             <div
                                 style={{
@@ -95,45 +95,60 @@ export default function DashboardPage() {
                                 </div>
                                 <ul className="notification-list">
                                     <li className="notification">
-                                        CNC laser cutting machine is burning <span>12:21:34</span>
-                                        <img src="/go-next.svg" alt="next" />
+                                        <img src="/dot-blue.svg" alt="status" className="dot" />
+                                        <span className="notification-text">‘Laser Cutter 1’ error</span>
+                                        <span className="notification-time">12:21:34</span>
                                     </li>
                                     <li className="notification">
-                                        Injection mold reached critical temperature <span>10:38:14</span>
-                                        <img src="/go-next.svg" alt="next" />
+                                        <img src="/dot-blue.svg" alt="status" className="dot" />
+                                        <span className="notification-text">Injection mold reached critical temperature</span>
+                                        <span className="notification-time">10:38:14</span>
                                     </li>
                                     <li className="notification">
-                                        OEE of production line ‘Welding 1’ 24% lower <span>09:01:12</span>
-                                        <img src="/go-next.svg" alt="next" />
+                                        <img src="/dot-blue.svg" alt="status" className="dot" />
+                                        <span className="notification-text">OEE of production line ‘Welding 1’ 24% lower</span>
+                                        <span className="notification-time">09:01:12</span>
                                     </li>
-                                    <li className="notification-alert">
-                                        OEE of production line ‘Cutting 2’ 11% lower <span>09:01:08</span>
-                                        <img src="/go-next.svg" alt="next" />
+                                    <li className="notification notification-alert">
+                                        <img src="/grey-dot.svg" alt="status" className="dot" />
+                                        <span className="notification-text-blue">OEE of production line ‘Cutting 2’ 11% lower</span>
+                                        <span className="notification-time">09:01:08</span>
                                     </li>
-                                    <li className="notification-li">
-                                        Finish setup of new Asset ‘Powdercoating Cabin’ <span>06:48:30</span>
-                                        <img src="/go-next.svg" alt="next" />
+                                    <li className="notification notification-li">
+                                        <img src="/grey-dot.svg" alt="status" className="dot" />
+                                        <span className="notification-text-gray">Finish setup of new Asset ‘Powdercoating Cabin’</span>
+                                        <span className="notification-time">06:48:30</span>
                                     </li>
                                 </ul>
+
                             </div>
                         </div>
 
                         <div className="small-card">
                             <div className="small-card-list">
-                                <img src="/3d-printer.svg" className="img-smallcard" alt="Monitor Assets" />
-                                <div className="small-card-name">Monitor Assets</div>
+                                <img src="/3d-printer-icon.svg" className="img-smallcard" alt="Monitor Assets" />
+                                <div className="small-card-section">
+                                    <div className="small-card-title">Monitor</div>
+                                    <div className="small-card-name">Assets</div>
+                                </div>
                             </div>
                             <div className="small-card-list">
-                                <img src="/workflow-square.svg" className="img-smallcard" alt="Monitor Production Line" />
-                                <div className="small-card-name">Monitor Production Line</div>
+                                <img src="/workspace.svg" className="img-smallcard" alt="Monitor Production Line" />
+                                <div className="small-card-section">
+                                    <div className="small-card-title">Monitor</div>
+                                    <div className="small-card-name">Production Lines</div>
+                                </div>
+                            </div>
+                            <div className="small-card-list" style={{ padding: "0px" }}>
+                                <img src="/factory-site-map.svg" alt="Manage Factory Sites" style={{ maxWidth: "100%" }} />
+                                <div className="small-card-name" style={{ paddingLeft: "10px" }}>Factory Sites</div>
                             </div>
                             <div className="small-card-list">
-                                <img src="/warehouse.svg" className="img-smallcard" alt="Manage Factory Sites" />
-                                <div className="small-card-name">Manage Factory Sites</div>
-                            </div>
-                            <div className="small-card-list">
-                                <img src="/analytics.svg" className="img-smallcard" alt="Get Reports" />
-                                <div className="small-card-name">Get Reports</div>
+                                <img src="/analytics-icon.svg" className="img-smallcard" alt="Get Reports" />
+                                <div className="small-card-section">
+                                    <div className="small-card-title">View</div>
+                                    <div className="small-card-name">Reports</div>
+                                </div>
                             </div>
                         </div>
 
@@ -141,16 +156,16 @@ export default function DashboardPage() {
                             <div className="xana-content">
                                 <img src="/ai-magic.svg" width={60} height={60} alt="AI Magic Icon" />
                                 <div>
-                                    <h1 className="xana-heading">Ask Xana what's going on in your factory</h1>
-                                    <p className="xana-subheading">What was the downtime of my Lasers last week?</p>
+                                    <h1 className="xana-heading">What’s going on in your factory? Ask Xana.</h1>
+                                    <p className="xana-subheading">Your intelligent assistant for smarter decisions.</p>
                                     <p className="xana-subheading-section">
-                                        The core component for running IndustryFusion-X on your machines. Includes <br />
-                                        essential services for robust operation and data management
+                                        Why is my cutting line underperforming?, How can I reduce idle time on Station 4?
+                                        <br /> Xana helps you get answers – and act on them.
                                     </p>
                                 </div>
                             </div>
                             <div>
-                                <button className="xana-button">Ask Xana now</button>
+                                <button className="xana-button"><span><img src="/ai-audio.svg" /></span>Ask Xana AI</button>
                             </div>
                         </div>
                     </main>
@@ -158,8 +173,5 @@ export default function DashboardPage() {
             </div>
         </div>
     );
-}
-function useToast() {
-    throw new Error("Function not implemented.");
 }
 

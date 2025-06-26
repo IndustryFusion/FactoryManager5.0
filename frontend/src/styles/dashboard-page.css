@@ -1,8 +1,7 @@
 /* dashboard-page.css */
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f9fafc;
+    font-family: "League Spartan";
     margin: 0;
     padding: 0;
 }
@@ -31,7 +30,6 @@ body {
     font-weight: 600;
     line-height: normal;
     margin-bottom: 6px;
-
 }
 
 .header-title-greet {
@@ -44,9 +42,21 @@ body {
 }
 
 .header-subtitle {
-    font-size: 14px;
+    color: var(--Common-Text-Grey-600, #475467);
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
     font-weight: 400;
-    color: #6c6c70;
+    line-height: normal;
+}
+
+.header-subtitle-greet {
+    color: var(--Common-Text-Grey-600, #475467);
+    font-family: "League Spartan";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 .dashboard-content-grid {
@@ -63,6 +73,7 @@ body {
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     position: relative;
+    border: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
 }
 
 .card-header {
@@ -118,17 +129,23 @@ body {
     padding: 4px 10px;
 }
 
+/* ✅ Updated notification list for alignment */
 .notification-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .notification-list li {
-    padding: 6px 0;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    font-weight: 500;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -136,25 +153,17 @@ body {
     border-bottom: none;
 }
 
-.notification-list li span {
-    font-size: 12px;
-    color: #888;
-    margin-left: 12px;
-    white-space: nowrap;
-}
-
 .notification {
-    color: var(--Black, #2B2B2B);
     font-family: "League Spartan";
     font-size: 16px;
     font-style: normal;
     font-weight: 600;
     line-height: normal;
-    padding: 0px 8px;
+    color: var(--Black, #2B2B2B);
 }
 
-.notification-alert {
-    color: var(--ifx-tint-blue-900-primary, #3CA0C9);
+.notification-text-blue {
+    color: var(--Common-Text-Grey-900, #10182B);
     font-family: "League Spartan";
     font-size: 16px;
     font-style: normal;
@@ -163,14 +172,42 @@ body {
 }
 
 .notification-li {
-    color: var(--Black, #2B2B2B);
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    font-weight: 400;
+}
+
+/* ✅ For dot icon */
+.dot {
+    width: 10px;
+    height: 10px;
+    margin-right: 12px;
+}
+
+/* ✅ Structured layout */
+.notification-text {
+    flex: 1;
+    margin-left: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--Common-Text-Grey-900, #10182B);
     font-family: "League Spartan";
     font-size: 16px;
     font-style: normal;
-    font-weight: 400;
+    font-weight: 600;
     line-height: normal;
 }
 
+.notification-time {
+    font-family: "League Spartan";
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+/* ✅ Small cards */
 .small-card {
     display: flex;
     flex-direction: row;
@@ -178,12 +215,11 @@ body {
     gap: 24px;
     justify-content: space-between;
     margin-bottom: 36px;
-
 }
 
 .img-smallcard {
-    width: 24px;
-    height: 24px;
+    width: 42px;
+    height: 42px;
 }
 
 .small-card-list {
@@ -196,6 +232,24 @@ body {
     gap: 20px;
     border-radius: 12px;
     border: 2px solid var(--Grey-Box, #F3F3F5);
+    width: 25%;
+}
+
+.small-card-title {
+    color: var(--Common-Text-Grey-400, #98A2B3);
+    font-family: "League Spartan";
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.small-card-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
 }
 
 .small-card-name {
@@ -205,8 +259,10 @@ body {
     font-style: normal;
     font-weight: 600;
     line-height: normal;
+    gap: 4px;
 }
 
+/* ✅ Xana AI assistant */
 .xana-container {
     display: flex;
     flex-direction: row;
@@ -263,6 +319,16 @@ body {
     color: #FFF;
     font-family: "League Spartan";
     font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.view-all {
+    color: var(--ifx-tint-blue-900-primary, #3CA0C9);
+    text-align: right;
+    font-family: "League Spartan";
+    font-size: 14px;
     font-style: normal;
     font-weight: 500;
     line-height: normal;
