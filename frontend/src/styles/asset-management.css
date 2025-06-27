@@ -87,10 +87,12 @@
 
 /* Highlighted number styling */
 .highlighted-number {
-  color: var(--primary-color);
-  font-family: "League Spartan", sans-serif;
-  font-size: 24px;
-  font-weight: 700;
+color: var(--ifx-tint-blue-900-primary, #3CA0C9);
+font-family: "League Spartan";
+font-size: 24px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
 }
 
 /* Pagination styles */

@@ -1,18 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Factory } from "@/types/factory-type";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "../../styles/factory-card.css" // Import this for marker styling
+import "../../styles/factory-card.css";
 
-// Default map center (India)
-const defaultCenter: [number, number] = [20.5937, 78.9629];
-const defaultZoom = 4;
-
-// Geocoding function using OpenStreetMap Nominatim
+// Geocoding using OpenStreetMap
 const geocodeZip = async (zip: string, country: string): Promise<{ lat: number; lng: number } | null> => {
     try {
         const res = await fetch(
@@ -33,8 +28,23 @@ interface FactoryMapProps {
     factories: Factory[] | null;
 }
 
+const MapAutoFit: React.FC<{ markers: { lat: number; lng: number }[] }> = ({ markers }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (markers.length === 0) return;
+
+        const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]));
+        map.fitBounds(bounds, { padding: [40, 40] });
+    }, [markers, map]);
+
+    return null;
+};
+
 const FactoryMap: React.FC<FactoryMapProps> = ({ factories }) => {
-    const [markerData, setMarkerData] = useState<{ lat: number; lng: number; name: string; zip: string }[]>([]);
+    const [markerData, setMarkerData] = useState<
+        { lat: number; lng: number; name: string; zip: string }[]
+    >([]);
 
     useEffect(() => {
         const fetchCoordinates = async () => {
@@ -65,21 +75,20 @@ const FactoryMap: React.FC<FactoryMapProps> = ({ factories }) => {
     return (
         <div className="factory-map-container" style={{ height: "216px", width: "100%", padding: "16px" }}>
             <MapContainer
-                center={defaultCenter}
-                zoom={defaultZoom}
+                center={[0, 0]} // Neutral center
+                zoom={2}         // Low initial zoom
                 scrollWheelZoom
                 style={{
                     height: "100%",
                     width: "100%",
-                    position: "relative",
-                    outlineStyle: "none",
-                    borderRadius: "20px"
+                    borderRadius: "20px",
                 }}
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <MapAutoFit markers={markerData} />
                 {markerData.map((marker, index) => (
                     <Marker
                         key={index}
