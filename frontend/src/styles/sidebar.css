@@ -456,3 +456,57 @@ line-height: normal;
 .dropdown_arrow.flip {
   transform: scaleY(-1);
 }
+
+.sidebar_bottom_section {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar_profile_section {
+  display: flex;
+  align-items: center;
+  padding: 10px 11px;
+  background-color: #f9f9fc;
+  border-radius: 12px;
+  margin-top: 12px;
+  cursor: pointer;
+  gap: 10px;
+
+
+}
+
+.sidebar_profile_avatar {
+  border-radius: 50%;
+}
+
+.sidebar_profile_info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sidebar_profile_name {
+color: var(--Common-Text-Grey-900, #10182B);
+font-family: "League Spartan";
+font-size: 16px;
+font-style: normal;
+font-weight: 600;
+line-height: normal;
+}
+
+.sidebar_profile_company {
+color: var(--Common-Text-Grey-600, #475467);
+font-family: "League Spartan";
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+}
+
+.sidebar_profile_dropdown_icon {
+  width: 14px;
+  height: 14px;
+}

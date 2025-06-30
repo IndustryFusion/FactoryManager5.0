@@ -1,22 +1,52 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../../styles/sidebar.css";
 import Image from "next/image";
 import { Button } from "primereact/button";
+import { getAccessGroup } from "@/utility/indexed-db";
+import { getCompanyDetailsById } from "@/utility/auth";
+import { showToast } from "@/utility/toast";
+import { Toast } from "primereact/toast";
+import axios from "axios"; // You need this for error handling
+import { Coming_Soon } from "next/font/google";
 
 function Sidebar() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [contractMenuOpen, setContractMenuOpen] = useState(false);
-
-  const [showProductionComingSoon, setShowProductionComingSoon] = useState(false);
-  const [showReportsComingSoon, setShowReportsComingSoon] = useState(false);
-  const [showXanaComingSoon, setShowXanaComingSoon] = useState(false);
-
+  const [userName, setUserName] = useState("User");
+  const [companyName, setCompanyName] = useState("Company");
+  const [companyId, setCompanyId] = useState("ID");
+  const toast = useRef<Toast>(null);
 
   useEffect(() => {
+    const fetchUserData = async (): Promise<void> => {
+      try {
+        const data = await getAccessGroup();
+        if (!data) {
+          showToast(toast, "error", "Error", "No user data found");
+          return;
+        }
 
-  }, [router.pathname]);
+        const fullName = data.user_name || "User";
+        const firstName = fullName.trim().split(" ")[0];
+        setUserName(firstName);
+        setCompanyId(data.company_ifric_id || "ID");
+
+        const companyDetails = await getCompanyDetailsById(data.company_ifric_id || "ID");
+        const name = companyDetails?.data?.[0]?.company_name;
+        if (name) setCompanyName(name);
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.data?.message) {
+          showToast(toast, "error", "Error", error.response.data.message);
+        } else {
+          showToast(toast, "error", "Error", "Error fetching user data");
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   function handleSidebarClose() {
     setSidebarOpen(false);
@@ -92,15 +122,11 @@ function Sidebar() {
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Assets</div>
             </Button>
 
-            <div
-              className="sidebar_navlink_with_tooltip"
-              onMouseEnter={() => setShowProductionComingSoon(true)}
-              onMouseLeave={() => setShowProductionComingSoon(false)}
-            >
+            <div>
               <Button
                 className={`sidebar_navlink ${router.pathname === "/" ? "is_active" : ""}`}
-                onClick={() =>{}}
-                tooltip={!sidebarOpen ? "Production Lines" : undefined}
+                onClick={() => {}}
+                tooltip={!sidebarOpen ? "Production Lines" : "Coming soon"}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
                 <Image src="/Component 1.svg" width={18} height={18} alt="line_icon" />
@@ -108,11 +134,7 @@ function Sidebar() {
                   Production Lines
                 </div>
               </Button>
-              {showProductionComingSoon && sidebarOpen && (
-                <div className="coming_soon_badge">Coming Soon</div>
-              )}
             </div>
-
 
             <Button
               className={`sidebar_navlink ${router.pathname === "/factory-site/factory-overview" ? "is_active" : ""}`}
@@ -194,18 +216,12 @@ function Sidebar() {
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Certificate Manager</div>
             </Button>
 
-            {/* Reports Button with Coming Soon */}
-            <div style={{ display: "flex", flexDirection: "column"}}>
-              {/* Reports Button with Coming Soon */}
-              <div
-                className="sidebar_navlink_with_tooltip"
-                onMouseEnter={() => setShowReportsComingSoon(true)}
-                onMouseLeave={() => setShowReportsComingSoon(false)}
-              >
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div>
                 <Button
                   className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
                   onClick={() => {}}
-                  tooltip={!sidebarOpen ? "Reports" : undefined}
+                  tooltip={!sidebarOpen ? "Reports" : "Coming soon"}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
                   <Image src="/reports-grey.svg" width={18} height={18} alt="report_icon" />
@@ -213,21 +229,13 @@ function Sidebar() {
                     Reports
                   </div>
                 </Button>
-                {showReportsComingSoon && sidebarOpen && (
-                  <div className="coming_soon_badge">Coming Soon</div>
-                )}
               </div>
 
-              {/* Xana AI Button with Coming Soon */}
-              <div
-                className="sidebar_navlink_with_tooltip"
-                onMouseEnter={() => setShowXanaComingSoon(true)}
-                onMouseLeave={() => setShowXanaComingSoon(false)}
-              >
+              <div>
                 <Button
                   className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
                   onClick={() => {}}
-                  tooltip={!sidebarOpen ? "Xana AI" : undefined}
+                  tooltip={!sidebarOpen ? "Xana AI" : "Coming Soon"}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
                   <Image src="/xana-ai-grey.svg" width={18} height={18} alt="xana_icon" />
@@ -235,50 +243,68 @@ function Sidebar() {
                     Xana AI
                   </div>
                 </Button>
-                {showXanaComingSoon && sidebarOpen && (
-                  <div className="coming_soon_badge">Coming Soon</div>
-                )}
               </div>
             </div>
 
-
-
-            <div>
-              <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>controls</div>
+            {/* CONTROLLS SECTION */}
+            <div className="sidebar_bottom_section">
+              <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
+                CONTROLLS
+              </div>
 
               <Button
                 className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => { }}
-                tooltip={!sidebarOpen ? "Binding Manager" : undefined}
+                onClick={() => {}}
+                tooltip={!sidebarOpen ? "Plans" : undefined}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
-                <Image src="/layers-01.svg" width={18} height={18} alt="bind_icon" />
+                <Image src="/layers-01.svg" width={18} height={18} alt="plans_icon" />
                 <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Plans</div>
               </Button>
+
               <Button
                 className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => { }}
-                tooltip={!sidebarOpen ? "Binding Manager" : undefined}
+                onClick={() => {}}
+                tooltip={!sidebarOpen ? "Settings" : undefined}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
-                <Image src="/settings-02.svg" width={18} height={18} alt="bind_icon" />
+                <Image src="/settings-02.svg" width={18} height={18} alt="settings_icon" />
                 <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Settings</div>
               </Button>
+
               <Button
                 className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => { }}
-                tooltip={!sidebarOpen ? "Binding Manager" : undefined}
+                onClick={() => {}}
+                tooltip={!sidebarOpen ? "Helpcenter" : undefined}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
-                <Image src="/book-04.svg" width={18} height={18} alt="bind_icon" />
+                <Image src="/book-04.svg" width={18} height={18} alt="help_icon" />
                 <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Helpcenter</div>
               </Button>
+
+              <div className="sidebar_profile_section">
+                <Image
+                  src="/avatar.svg"
+                  alt="user_avatar"
+                  width={36}
+                  height={36}
+                  className="sidebar_profile_avatar"
+                />
+                <div className="sidebar_profile_info">
+                  <div className="sidebar_profile_name">{companyName}</div>
+                  <div className="sidebar_profile_company">{userName}</div>
+                </div>
+                <img
+                  src="/arrow-down.svg"
+                  alt="dropdown_arrow"
+                  className="sidebar_profile_dropdown_icon"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
   );
 }
 
