@@ -180,15 +180,29 @@ export class BindingService implements OnModuleInit {
   // }
 
 
-  extractTimeSeriesValues(
+  async extractTimeSeriesValues(
     asset: any,
-    timeSeries: { attributeId: string; observedAt: string; value: any }[],
+    task: any,
+    token: string,
     allowedProperties: string[]
-  ): Record<string, ValueEntry[]> {
+  ): Promise<Record<string, ValueEntry[]>> {
 
+    const toStamp = new Date().toISOString();
+    const interval = task.interval || 60;
+    const fromStamp = new Date(Date.now() - interval * 1000).toISOString();
     const results: Record<string, ValueEntry[]> = {};
 
     for (const property of allowedProperties) {
+      const params = {
+        intervalType: "custom",
+        order: "observedAt.desc",
+        entityId: `eq.${task.assetId}`,
+        attributeId: `eq.https://industry-fusion.org/base/v0.1/${property}`,
+        observedAt: `gte.${fromStamp}&observedAt=lt.${toStamp}`,
+      };
+
+      const timeSeries = await this.pgrestService.findAll(token, params);
+
       const attributeId = `https://industry-fusion.org/base/v0.1/${property}`;
       const assetProperty = asset[attributeId];
 
@@ -347,23 +361,10 @@ export class BindingService implements OnModuleInit {
       // }
 
       if (key === 'live') {
-        const toStamp = new Date().toISOString();
-        const interval = task.interval || 60;
-        const fromStamp = new Date(Date.now() - interval * 1000).toISOString();
-
-        const params = {
-          intervalType: "custom",
-          order: "observedAt.desc",
-          entityId: `eq.${task.assetId}`,
-          attributeId: `eq.https://industry-fusion.org/base/v0.1/${key1}`,
-          observedAt: `gte.${fromStamp}&observedAt=lt.${toStamp}`,
-        };
-
-        const timeSeries = await this.pgrestService.findAll(token, params);
 
         const asset = await this.assetService.getAssetDataById(task.assetId, token);
 
-        const extractedValues = this.extractTimeSeriesValues(asset, timeSeries, task.assetProperties);
+        const extractedValues = this.extractTimeSeriesValues(asset, task, token, task.assetProperties);
 
         // if (Object.keys(live).length === 0) return;
         for (const [key1, value] of Object.entries(extractedValues)) {
@@ -383,7 +384,7 @@ export class BindingService implements OnModuleInit {
         const alerts = await this.alertsService.findOne(task.assetId);
         const asset = await this.assetService.getAssetDataById(task.assetId, token);
         for (const key1 of task.assetProperties) {
-          const extractedValues = this.extractTimeSeriesValues(asset, alerts, task.assetProperties);
+          const extractedValues = this.extractAlertValues(asset, alerts, task.assetProperties);
           // if (Object.keys(live).length === 0) return;
 
           for (const [key1, value] of Object.entries(extractedValues)) {
