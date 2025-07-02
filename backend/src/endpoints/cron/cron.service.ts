@@ -91,7 +91,7 @@ export class CronService  {
   @Cron('* * * * *')
   async handleMachineStateRefresh(){
     let machineStateParams = await this.redisService.getData('machine-state-params');
-    if(machineStateParams && machineStateParams.type == 'days'){
+    if(machineStateParams && machineStateParams.type == 'days' && machineStateParams.attributeId){
       let newData = await this.valueChangeStateService.findAll(machineStateParams.assetId, machineStateParams.attributeId, machineStateParams.type, machineStateParams.token);
       let storedData = await this.redisService.getData('machine-state-data');
       if(storedData){

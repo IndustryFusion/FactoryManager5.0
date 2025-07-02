@@ -131,81 +131,85 @@ body {
 
 /* ✅ Updated notification list for alignment */
 .notification-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .notification-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 14px;
-    font-weight: 500;
-    border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .notification-list li:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
-.notification {
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-    color: var(--Black, #2B2B2B);
+/* ✅ NEW: Ensure left side (dot + text) is aligned properly */
+.notification-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ✅ Dot styling */
+.dot {
+  width: 10px;
+  height: 10px;
+}
+
+/* ✅ Text styles */
+.notification-text,
+.notification-text-blue,
+.notification-text-gray {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-family: "League Spartan";
+}
+
+.notification-text {
+  font-weight: 600;
+  color: #10182B;
 }
 
 .notification-text-blue {
-    color: var(--Common-Text-Grey-900, #10182B);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
+  font-weight: 400;
+  color: #10182B;
 }
 
-.notification-li {
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    font-weight: 400;
+.notification-text-gray {
+  font-weight: 400;
+  color: #98A2B3;
 }
 
-/* ✅ For dot icon */
-.dot {
-    width: 10px;
-    height: 10px;
-    margin-right: 12px;
-}
-
-/* ✅ Structured layout */
-.notification-text {
-    flex: 1;
-    margin-left: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--Common-Text-Grey-900, #10182B);
-    font-family: "League Spartan";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-}
-
+/* ✅ Timestamp */
 .notification-time {
-    font-family: "League Spartan";
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--Common-Text-Grey-400, #98A2B3);
-    margin-left: 12px;
-    white-space: nowrap;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #98A2B3;
+  font-family: "League Spartan";
+  font-weight: 400;
+  margin-left: 12px;
 }
+
+/* ✅ Optional override for last line styling */
+.notification-li {
+  color: #98A2B3;
+  font-weight: 400;
+}
+
 
 /* ✅ Small cards */
 .small-card {

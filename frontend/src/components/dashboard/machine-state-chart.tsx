@@ -116,7 +116,7 @@ const MachineStateChart = () => {
             setFactoryData({});
             setIsLoading(true);
            
-            if((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0)){
+            if(attributeId && ((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0))){
                 let response = await axios.get(API_URL + `/value-change-state/chart`, {
                     params: {
                         attributeId,
@@ -182,7 +182,6 @@ const MachineStateChart = () => {
                     setFactoryData(machineStateData.months);
                 }
             }
-            setIsLoading(false);
           } catch (error) {
                 if (axios.isAxiosError(error)) {
                     console.error("Error response:", error.response?.data.message);
@@ -194,6 +193,8 @@ const MachineStateChart = () => {
                     console.error("Unknown error:", error);
                     showToast('error', 'Error', 'An unknown error occurred');
                 }
+            } finally {
+                setIsLoading(false);
             }
 
     };
@@ -594,7 +595,7 @@ const MachineStateChart = () => {
 
     // useEffect to handle changes related to selectedIntervals
     useEffect(() => {
-        if (router.isReady) {              
+        if (router.isReady && entityIdValue) {              
             fetchDataAndAssign();
         }
        

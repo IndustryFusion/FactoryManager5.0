@@ -42,7 +42,14 @@
   line-height: normal;
   margin: 0px;
 }
-
+.highlighted-number-one {
+  color: var(--ifx-tint-blue-900-primary, #3CA0C9);
+  font-family: "League Spartan";
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
 .factory-address {
   color: var(--Grey-Primary, #5F5F5F);
   font-family: "League Spartan";
@@ -112,6 +119,7 @@
   text-align: center;
   margin-top: 4px;
 }
+
 
 .detail-number.small {
   font-size: 1rem;

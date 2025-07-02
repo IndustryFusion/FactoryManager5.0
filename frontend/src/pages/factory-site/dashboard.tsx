@@ -73,7 +73,7 @@ const Dashboard = () => {
           <Sidebar />
         <div className='main_content_wrapper'>
           <div className="navbar_wrapper">
-            <Navbar navHeader="Dashboard" />
+            <Navbar navHeader="Data Viewer" />
           </div>
           <div className="data_viewer_wrapper">
           <DashboardAssets 

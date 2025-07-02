@@ -367,7 +367,7 @@ const FactoryOverview = () => {
 
                 <div className="flex align-items-center gap-4">
                   <p className="total-assets-text m-1">
-                    <span className="highlighted-number">89</span> {t("Factory Site")}
+                    <span className="highlighted-number-one">{factorySite.length}</span> {t("Factory Site")}
                   </p>
                   <div>
                     <TabView className="asset-tabs">

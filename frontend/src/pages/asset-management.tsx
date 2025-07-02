@@ -56,7 +56,7 @@ const AssetManagementPage = () => {
             <div className="col-12">
               <div className="asset-header flex justify-content-between align-items-center">
                 <div className="flex align-items-center gap-4">
-                  <p className="total-assets-text m-0">
+                  <p className="total-assets-text m-1">
                     <span className="highlighted-number">89</span> {t("overview:Assets")}
                   </p>
                   <div>

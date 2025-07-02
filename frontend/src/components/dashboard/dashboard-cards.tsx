@@ -154,20 +154,20 @@ const DashboardCards: React.FC = () => {
                 propertiesArray.push({ [propertyName]: propertyValue });
             }
         }
+        console.log("propertiesArray ",propertiesArray)
         propertiesArray.forEach(property => {
             const key = Object.keys(property)[0];
             const value = property[key];
-            if (value.object !== "json-ld-1.1") {
-                setRelationsCount((prev) => prev + 1);
-                setChildCount((prev) => prev + 1);
-            }
-            if (value.length > 0) {
+            if (Array.isArray(value) && value.length > 0) {
                 value.forEach((item:AssetData) => {
-                    if (item.object !== "json-ld-1.1") {
+                    if (item.object !== "json-ld-1.1" && item.object !== "NULL") {
                         setChildCount((prev) => prev + 1);
                         setRelationsCount((prev) => prev + 1);
                     }
                 })
+            } else if (typeof value === "object" && value.object !== "json-ld-1.1" && value.object !== "NULL") {
+                setRelationsCount((prev) => prev + 1);
+                setChildCount((prev) => prev + 1);
             }
         })
 
