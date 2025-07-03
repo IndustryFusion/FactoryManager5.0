@@ -254,7 +254,7 @@ export class BindingService implements OnModuleInit {
       const segment = assetProperty["https://industry-fusion.org/base/v0.1/segment"]?.value;
 
       // Match alerts where event contains the attribute URI
-      console.log("Matching alerts", alertList, typeof alertList);
+    
       const matchingAlerts = alertList.filter((alert) =>
         alert.event?.includes(attributeId)
       );
@@ -385,7 +385,7 @@ export class BindingService implements OnModuleInit {
         const alerts = await this.alertsService.findOne(task.assetId);
         const asset = await this.assetService.getAssetDataById(task.assetId, token);
         for (const key1 of task.assetProperties) {
-          const extractedValues = this.extractAlertValues(asset, alerts, task.assetProperties);
+          const extractedValues = this.extractAlertValues(asset, alerts["alerts"], task.assetProperties);
           // if (Object.keys(live).length === 0) return;
 
           for (const [key1, value] of Object.entries(extractedValues)) {
