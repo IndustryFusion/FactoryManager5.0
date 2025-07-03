@@ -101,7 +101,7 @@ export class BindingService implements OnModuleInit {
     }
   }
 
-  @Cron(CronExpression.EVERY_HOUR) // optional: refresh tasks hourly
+  @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
   async loadAndStartTasks() {
     const taskList = await this.persistantModel.find();
     console.log("Task list:", taskList);
