@@ -254,6 +254,7 @@ export class BindingService implements OnModuleInit {
       const segment = assetProperty["https://industry-fusion.org/base/v0.1/segment"]?.value;
 
       // Match alerts where event contains the attribute URI
+      console.log("Matching alerts", alertList, typeof alertList);
       const matchingAlerts = alertList.filter((alert) =>
         alert.event?.includes(attributeId)
       );
