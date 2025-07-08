@@ -68,9 +68,9 @@ jobs:
     uses: IndustryFusion/GitOpsRepo/.github/workflows/deploy.yaml@main
     with:
       APPS: factory50
-      NAMESPACE: iff50        
+      NAMESPACE: factory-manager        
       DOCKER_TAG: ${{ needs.build.outputs.DOCKER_TAG }}
-      CLUSTER: IFF-Dev-SmartFactory      
+      CLUSTER: IFF-DEV-DPP-IFRIC
     secrets:
       PRIVATE_GITHUB_TOKEN: ${{ secrets.PRIVATE_GITHUB_TOKEN }}
       S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
