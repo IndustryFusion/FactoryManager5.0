@@ -4,7 +4,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
   padding: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -200,15 +200,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #3CA0C9;
-  background-color: #f5faff;
+  /* border: 2px dashed #3ca0c9; */
+  /* background-color: #f5faff; */
   min-height: 168px;
   width: 100%;
   transition: background-color 0.2s ease-in-out;
 }
 
 .create-factory-card:hover {
-  background-color: #e0f3fc;
+  /* background-color: #e0f3fc; */
 }
 
 .create-card-content {
@@ -216,17 +216,24 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  color: #3CA0C9;
+  color: #3ca0c9;
 }
 
 .create-card-text {
   color: var(--Grey-Secondary, #95989A);
   text-align: center;
   font-family: "League Spartan";
-  font-size: 21.23px;
+  font-size: 20px;
   font-style: normal;
-  font-weight: 600;
+  font-weight: 400;
   line-height: normal;
+}
+.factory-create-add {
+  margin: 16px;
+  max-width: 360px;
+  border-radius: 16px;
+  border: 1px solid var(--Common-Text-Grey-200-Stroke, #e4e7ec) !important;
+  background: var(--White, #fff);
 }
 
 .factory-card-clickable {
@@ -273,4 +280,3 @@
   display: flex;
   padding: 0 8px;
 }
-
