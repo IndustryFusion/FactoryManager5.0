@@ -238,28 +238,31 @@ const FactoryOverview = () => {
     fileInputRef.current?.click(); // trigger hidden file input
   };
 
- const factoriesToShow = filteredValue || factorySite;
+  const factoriesToShow = [...(filteredValue || factorySite), { isCreateCard: true }];
+
 
   const itemTemplate = (data: Factory) => {
     const menuRef = useRef<ContextMenu>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // if ((data as any).isCreateCard) {
-    //   return (
-    //     <div
-    //       className="factory-card create-factory-card cursor-pointer"
-    //       onClick={() => setVisible(true)}
-    //     >
-    //       <div className="create-card-content">
-    //         <img
-    //           src="/add-square.svg"
-    //           style={{ width: "29px", height: "29px" }}
-    //         />
-    //         <p className="create-card-text">Create Factory Site</p>
-    //       </div>
-    //     </div>
-    //   );
-    // }
+ if ((data as any).isCreateCard) {
+  return (
+    <div
+      className="factory-card create-factory-card dotted-border cursor-pointer"
+      style={{  border:" 2px dashed var(--Common-Text-Grey-200-Stroke, #E4E7EC)" }}
+      onClick={() => setVisible(true)}
+    >
+      <div className="create-card-content">
+        <img
+          src="/add-square.svg"
+          style={{ width: "29px", height: "29px" }}
+        />
+        <p className="create-card-text">Create Factory Site</p>
+      </div>
+    </div>
+  );
+}
+
 
     const menuItems = [
       {
@@ -351,6 +354,7 @@ const FactoryOverview = () => {
           </div>
         </div>
       </div>
+
     );
   };
 
@@ -410,7 +414,7 @@ const FactoryOverview = () => {
                   <FactoryMap factories={factorySite ?? []} />
                 </div>
 
-                {factorySite.length > 0 ? (
+             
                   <div className="dataview_wrapper">
                     <DataView
                       className="data-view"
@@ -420,22 +424,7 @@ const FactoryOverview = () => {
                       sortField={sortField}
                     />
                   </div>
-                ) : null}
-                <div className="factory-create-add">
-                  <div
-                    className="factory-card create-factory-card cursor-pointer separate-create-card"
-                    onClick={() => setVisible(true)}
-                  >
-                    <div className="create-card-content">
-                      <img
-                        src="/add-square.svg"
-                        alt="Create"
-                        style={{ width: "29px", height: "29px" }}
-                      />
-                      <p className="create-card-text">Create Factory Site</p>
-                    </div>
-                  </div>
-                </div>
+      
               </div>
             </div>
           </div>

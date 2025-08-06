@@ -264,7 +264,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
           <div className="flex align-items-center">
             <div>
               <h2 className="nav-header">{navHeader}</h2>
-              {fullPath !== "/factory-site/factory-overview" && (
+              {fullPath == "/factory-site/factory-overview" && (
                 <BreadCrumb
                   model={breadcrumbItems}
                   home={home}
