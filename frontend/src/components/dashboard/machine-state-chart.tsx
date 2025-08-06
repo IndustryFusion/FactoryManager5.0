@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { create } from "@/redux/machineState/machineStateSlice";
 import { useTranslation } from "next-i18next";
+import Image from "next/image";
 
 export interface Datasets {
     label?: string;
@@ -844,35 +845,28 @@ const MachineStateChart = () => {
     return (
         <div className="data_viewer_card">
             <Toast ref={toast} />
-            <h5 className="heading-text">Machine State Overview</h5>
+            <h3 className="dashboard_card_title">Machine State Overview</h3>
             <div className="interval-filter-container">
-                <p>{t('filterInterval')}</p>
-                {/* <div
-                    className="dropdown-container custom-button"
-                    style={{ padding: "0" , width:"100px"}}
-                > */}
-                     <div className="flex justify-content-between align-items-center dashboard-dropdown"
-                     style={{width: "100px",
-                        marginTop: "1rem"}}
-                     >
-                <Dropdown
-                        value={selectedInterval}
-                        options={intervalButtons.map(({ label, interval }) => ({
-                            label,
-                            value: interval,
-                        }))}
-                        onChange={(e) => setSelectedInterval(e.value)}
-                        placeholder="Select an Interval"
-                      
-                        appendTo="self"
-                    />
-                <img
-                  className="dropdown-icon-img"
-                  src="/dropdown-icon.svg"
-                  alt="dropdown-icon"
-                />
-              </div>
-                {/* </div> */}
+                <p className="mb-2">{t('filterInterval')}</p>
+                <div className="flex flex-column align-items-start w-full">
+                    <p style={{ marginBottom: '6px' }}>{t("dashboard:interval")}</p>
+                    <div className="global-button dropdown dashboard-dropdown"
+                        style={{ minWidth: '150px' }}>
+                        <Dropdown
+                            value={selectedInterval}
+                            options={intervalButtons.map(({ label, interval }) => ({
+                                label,
+                                value: interval,
+                            }))}
+                            onChange={(e) => setSelectedInterval(e.value)}
+                            placeholder="Select an Interval"
+                            panelClassName="global_dropdown_panel"
+                            appendTo="self"
+                            style={{ textTransform: 'capitalize' }}
+                        />
+                        <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                    </div>
+                </div>
             </div>
             {
                  noChartData ?

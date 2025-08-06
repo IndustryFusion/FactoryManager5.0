@@ -66,7 +66,8 @@ const AssetManagement: React.FC = () => {
       }
     }
 
-    const handleCopy = () => {
+    const handleCopy = (e:any) => {
+      e.stopPropagation();
       if (typeof value === 'string') {
         navigator.clipboard.writeText(value);
         toast.current?.show({
@@ -90,7 +91,7 @@ const AssetManagement: React.FC = () => {
             src="/copy-01.svg"  // replace with your actual icon path
             alt="Copy"
             style={{ cursor: 'pointer', width: 16, height: 16 }}
-            onClick={handleCopy}
+            onClick={((e) => handleCopy(e))}
           />
         )}
       </div>
@@ -175,6 +176,7 @@ const AssetManagement: React.FC = () => {
           selection={selectedAssets}
           onSelectionChange={(e) => dispatch(setSelectedAssets(e.value as Asset[]))}
           scrollable
+          onRowClick={(asset) => asset?  router.push(`/factory-site/dashboard?asset=${asset.data.product_name}`) : undefined}
           scrollHeight="calc(100vh - 230px)"
           onContextMenu={(e) => cm.current?.show(e.originalEvent)}
           contextMenuSelection={selectedProduct as any}
