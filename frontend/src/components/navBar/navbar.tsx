@@ -197,7 +197,9 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         }
     // Route-specific breadcrumbs
     const routeBreadcrumbs: Record<string, BreadcrumbItem[]> = {
-      "/factory-site/factory-overview": [], // No breadcrumb for this route
+      "/factory-site/factory-overview": [
+        { label: "Factory site", url: "/factory-overview" }
+      ], // No breadcrumb for this route
       "/factory-site/factory-management/urn:ngsi-ld:factories": [
         { label: "Factory Flow", url: "#" }
       ],
@@ -262,7 +264,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
           <div className="flex align-items-center">
             <div>
               <h2 className="nav-header">{navHeader}</h2>
-              {fullPath !== "/factory-site/factory-overview" && (
+              {fullPath == "/factory-site/factory-overview" && (
                 <BreadCrumb
                   model={breadcrumbItems}
                   home={home}
