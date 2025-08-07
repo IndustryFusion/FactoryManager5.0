@@ -128,7 +128,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
       >
         {
           count > 0 ? (
-            console.log("Alerts", alerts),
             alerts.map((alert, index) => {
               try {
                 const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource));
@@ -149,7 +148,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                 } else {
                   updatedText = text;
                 }
-                
+
                 return (
                   <>
                     <div key={index} className="alerts-container  card mb-4">
@@ -211,23 +210,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                                   <div className="alert-detail-item">
                                     <label className="alert-label">Type</label>
                                     <span className="alert-value">{alert?.type || ""}</span>
-                                  </div>
-
-                                  {/* <div className="alert-detail-item">
-                                    <label className="alert-label">Status</label>
-                                    <span className="alert-value flex align-items-center gap-2">
-                                      <span
-                                        className="px-2 py-1"
-                                        style={{
-                                          color: getStatusTextColor(alert?.status),
-                                          border: `1px solid ${getStatusTextColor(alert?.status)}`,
-                                          borderRadius: "4px"
-                                        }}
-                                      >
-                                        {alert?.status}
-                                      </span>
-                                    </span>
-                                  </div> */}
+                                  </div>       
 
                                   <div className="alert-detail-item">
                                     <label className="alert-label">Status</label>
@@ -277,8 +260,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                                       )}
                                     </span>
                                   </div>
-
-
 
                                   <div className="alert-detail-item">
                                     <label className="alert-label">Origin</label>
