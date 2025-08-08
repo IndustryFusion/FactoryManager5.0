@@ -69,6 +69,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   const { t } = useTranslation(['placeholder', 'dashboard']);
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   const { assets, loading } = useSelector((state: RootState) => state.assetManagement);
+  const [showSelector, setShowSelector] = useState<boolean>(true);
 
   const productNameBodyTemplate = (rowData: Asset): React.ReactNode => {
     return <>{rowData?.product_name}</>;
@@ -205,11 +206,17 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   }, [onboardAsset, showBlocker])
 
   useEffect(() => {
-    setSelectedRow(assets[0]);
+    if (router.isReady && router.query.asset) {
+      const matchedAsset = assets.find(asset => asset.product_name === router.query.asset);
+      setSelectedRow(matchedAsset || assets[0] || null);
+      setShowSelector(false)
+    } else {
+      setSelectedRow(assets[0]);
+    }
     setAssetData(assets);
     setAllAssets(assets);
-    setAssetCount(assets.length)
-  }, [assets])
+    setAssetCount(assets.length);
+  }, [assets, router])
 
   const getProductType = (name: string) => {
     if(!name){
@@ -225,7 +232,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
   
   const loadingSkeleton = () =>{
     return(
-      <div className='flex flex-column gap-4'>
+      <div className='flex flex-column gap-4 factory_dashboard_loader'>
          <Skeleton height='205px'></Skeleton>
          <div className='flex gap-3'>
          <Skeleton height='88px'></Skeleton>
@@ -249,19 +256,21 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
           {loading ? (
             loadingSkeleton()
           ):(
-            <div className="data_viewer_card">
-            <div className=" flex justify-content-between">
-              <label className="select_asset_heading" htmlFor="asset_selector">Select Asset</label>
-              {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
-            </div>
-            <div className="product_selector_wrapper">
-              <AssetSelector
-                assets={assetData}
-                selectedAsset={selectedRow}
-                setSelectedAsset={setSelectedRow}
-                loading={loading}
-                handleClick={handleClick}
-              />
+            <div className="data_viewer_card asset_details_main_header">
+            <div style={{display: `${showSelector ? "block" : "none"}`}}>
+              <div className=" flex justify-content-between">
+                <label className="select_asset_heading" htmlFor="asset_selector">Select Asset</label>
+                {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
+              </div>
+              <div className="product_selector_wrapper">
+                <AssetSelector
+                  assets={assetData}
+                  selectedAsset={selectedRow}
+                  setSelectedAsset={setSelectedRow}
+                  loading={loading}
+                  handleClick={handleClick}
+                />
+              </div>
             </div>
                 {selectedRow && (
                   <div className="selected_product_header">

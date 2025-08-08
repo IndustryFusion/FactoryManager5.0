@@ -40,6 +40,7 @@ import Sidebar from '@/components/navBar/sidebar';
 import Navbar from '@/components/navBar/navbar';
 import "../../styles/factory-overview.css"
 import "@/styles/sidebar.css"
+import { getAssetDetailsTabPosition, setAssetDetailsTabPosition } from "@/utility/sidebar-utils";
 
 interface PrefixedAssetProperty {
   key: string;
@@ -55,10 +56,25 @@ const Dashboard = () => {
   const router = useRouter();
   const toast = useRef<Toast>(null);
   const { t } = useTranslation('button');
+  const [showSelector, setShowSelector] = useState<boolean>(true);
+  const [currentTab, setCurrentTab] = useState("data-viewer");
 
   const DashboardCards = dynamic(() => import('../../components/dashboard/dashboard-cards'), {
     ssr: false,
    });
+
+   useEffect(() => {
+       getAssetDetailsTabPosition().then((savedTab) => {
+         if (savedTab) {
+           setCurrentTab(savedTab);
+         }
+       });
+     }, []);
+
+     const handleTabChange = (tab: string) => {
+    setCurrentTab(tab);
+    setAssetDetailsTabPosition(tab);
+  }
 
   return (
     <>
@@ -75,18 +91,65 @@ const Dashboard = () => {
           <div className="navbar_wrapper">
             <Navbar navHeader="Data Viewer" />
           </div>
-          <div className="data_viewer_wrapper">
+          <div className="data_viewer_wrapper" style={{position: 'relative'}}>
           <DashboardAssets 
           setBlockerProp={setBlocker}
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
+          <div className="model_details_tab">
+                <div className="model_details_tab_header">
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "performance" ? "active" : ""}`} onClick={() => { handleTabChange("performance") }}>Performance</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "data-viewer" ? "active" : ""}`} onClick={() => { handleTabChange("data-viewer") }}>Data Viewer</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "product-info" ? "active" : ""}`} onClick={() => { handleTabChange("product-info") }}>Product Info</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "maintenance" ? "active" : ""}`} onClick={() => { handleTabChange("maintenance") }}>Maintenance</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "documents" ? "active" : ""}`} onClick={() => { handleTabChange("documents") }}>Documents</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "app" ? "active" : ""}`} onClick={() => { handleTabChange("app") }}>App</button>
+                  <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "settings" ? "active" : ""}`} onClick={() => { handleTabChange("settings") }}>Settings</button>
+                </div>
+                <div className="model_details_tab_content">
+                  {currentTab === "data-viewer" && (
+                    <div className="model_details_tab_panel">
+                      <DashboardCards />
+                      <CombineSensorChart />
+                      <div className='dashboard_submap_wrapper'>
+                        <PowerCo2Chart />
+                        <MachineStateChart />
+                      </div>
+                    </div>
+                  )}
+                  {currentTab === "performance" && (
+                    <div className="model_details_tab_panel">
+                      Performance Content
+                    </div>
+                  )}
+                  {currentTab === "product-info" && (
+                    <div className="model_details_tab_panel">
+                      Product Info Content
+                    </div>
+                  )}
+                  {currentTab === "maintenance" && (
+                    <div className="model_details_tab_panel">
+                      Maintenance Content
+                    </div>
+                  )}
+                  {currentTab === "documents" && (
+                    <div className="model_details_tab_panel">
+                      Documents Content
+                    </div>
+                  )}
+                  {currentTab === "app" && (
+                    <div className="model_details_tab_panel">
+                      App Content
+                    </div>
+                  )}
+                  {currentTab === "settings" && (
+                    <div className="model_details_tab_panel">
+                      Settings Content
+                    </div>
+                  )}
+                </div>
+              </div>
           {/* <AutoRefresh /> */}
-          <DashboardCards  />
-          <CombineSensorChart />
-          <div className='dashboard_submap_wrapper'>
-            <PowerCo2Chart />
-            <MachineStateChart/>
-          </div>
           </div>
           {/* <div className="">
           <div className="dashboard-container">      
