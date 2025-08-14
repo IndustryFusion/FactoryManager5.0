@@ -57,8 +57,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     }));
   };
 
-
-  // Get the icon and color based on severity
   const getIcon = (severity: string) => {
     switch (severity) {
       case 'ok':
@@ -86,7 +84,6 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
     }
   };
 
-  // Get the text color for status
   const getStatusTextColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -109,198 +106,263 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
   }
 
   return (
-    <>
-      <Dialog
-        visible={visible}
-        header={
-          <div className="header-notification-container">
-            <h3 className="asset-header-title">Notifications</h3>
-            <p className="asset-header-sub-title">
-              View all Notifications
-              <span className="arrow-icon">
-                <img src="/arrow-right-02.svg" alt="View All" />
-              </span>
-            </p>
-          </div>
-        }
-        onHide={() => setVisible(false)}
-        style={{ width: '50vw' }}
-      >
-        {
-          count > 0 ? (
-            alerts.map((alert, index) => {
-              try {
-                const findAsset = assetData.find(({ id }: { id: string }) => (id === alert?.resource));
-                const text = alert?.text;
-                const parts = text.split('. ');
-                const extractedTextAfterFirstPeriod = parts[parts.length - 1];
+    <Dialog
+      contentClassName="alerts-details-content"
+      headerClassName="alert-details-header"
+      visible={visible}
+      header={
+        <div className="header-notification-container">
+          <h3 className="asset-header-title">Notifications</h3>
+          <p className="asset-header-sub-title">
+            View all Notifications
+            <span className="arrow-icon">
+              <img src="/arrow-right-02.svg" alt="View All" />
+            </span>
+          </p>
+        </div>
+      }
+      onHide={() => setVisible(false)}
+      style={{ width: "40vw" }}
+    >
+      {count > 0 ? (
+        alerts
+          .map((alert, index) => {
+            try {
+              const findAsset = assetData.find(
+                ({ id }: { id: string }) => id === alert?.resource
+              );
 
-                let updatedText;
-                // Regular expression to extract the URL and last text in fragment          
-                const urlRegex = /(https?:\/\/[^\s]+)/g;
-                const match = text.match(urlRegex);
+              const text = alert?.text || "";
+              const parts = text.split(". ");
+              const extractedTextAfterFirstPeriod = parts[parts.length - 1];
 
-                if (Array.isArray(match) && match?.length > 0) {
-                  const fragment = match[0].toString().split("/").pop();
-                  updatedText = `Property ${fragment} : ${extractedTextAfterFirstPeriod}`;
-                } else if (text === "All ok") {
-                  return;
+              const urlRegex = /(https?:\/\/[^\s]+)/g;
+              const match = text.match(urlRegex);
+
+              let updatedText: React.ReactNode = "";
+              let propertyName = "";
+
+              const knownProperties = [
+                "temperature",
+                "humidity",
+                "noise",
+                "pressure",
+                "vibration"
+              ];
+
+              if (Array.isArray(match) && match.length > 0) {
+                propertyName = match[0].split("/").pop() || "";
+                propertyName = propertyName.charAt(0).toUpperCase() + propertyName.slice(1); // Capitalize first letter
+
+                updatedText = (
+                  <>
+                    <span className="asset-property">
+                      {propertyName}
+                    </span>
+                    : {extractedTextAfterFirstPeriod}
+                  </>
+                );
+              }
+
+              else {
+                const foundProperty = knownProperties.find((prop) =>
+                  text.toLowerCase().includes(prop.toLowerCase())
+                );
+                if (foundProperty) {
+                  propertyName = foundProperty;
+                  updatedText = `Property ${propertyName} : ${extractedTextAfterFirstPeriod}`;
+                } else if (text.toLowerCase() === "all ok") {
+                  return null;
                 } else {
                   updatedText = text;
                 }
+              }
 
-                return (
-                  <>
-                    <div key={index} className="alerts-container  card mb-4">
-                      <div className="alert-content">
-                        <div className="asset-first-content">
-                          <div className="asset-first-left">
-                            <i
-                              className={getIcon(alert?.severity).icon}
-                              style={{ fontSize: '1.3rem', color: getIcon(alert?.severity).color }}
-                            ></i>
-                            <span className="asset-property">{findAsset?.product_name}</span>
-                            <span className="asset-warning">{updatedText}</span>
+              return (
+                <div key={index} className="alerts-container card mb-4" style={{ borderBottom: "1px solid #e0e0e0", marginTop:"0px" }}>
+                  <div className="alert-content">
+                    <div className="asset-first-content">
+                      <div className="asset-first-left">
+                        <i
+                          className={getIcon(alert?.severity).icon}
+                          style={{
+                            fontSize: "1.3rem",
+                            color: getIcon(alert?.severity).color
+                          }}
+                        ></i>
+                        <span className="asset-warning">{updatedText}</span>
+                      </div>
+                      <div className="asset-time">{alert?.updateTime}</div>
+                    </div>
+
+                    <div className="asset-second-content">
+                      <Panel
+                        className="alert-panel"
+                        onClick={() => toggleExpand(alert.id)}
+                      >
+                        <div className="product-panel-header flex align-items-center justify-content-between width-full">
+                          <div className="flex align-items-center gap-3">
+                            <img
+                              src={findAsset?.image || "/avatar.svg"}
+                              alt="product"
+                              className="product-image"
+                              onError={(e) =>
+                                (e.currentTarget.src = "/placeholder-image.svg")
+                              }
+                            />
+                            <div className="flex flex-column gap-1">
+                              <span className="alert-product-name">
+                                {findAsset?.product_name}
+                              </span>
+                              <span className="alert-factory-name">
+                                <span className="alert-factory-sub-name">
+                                  Area Name -{" "}
+                                </span>
+                                {findAsset?.factory_site || "Factory name"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="asset-time">
-                            {alert?.updateTime}
+                          <div className="arrow-wrapper">
+                            <img
+                              src={
+                                expandedAlerts[alert.id]
+                                  ? "/arrow-up.svg"
+                                  : "/arrow-down.svg"
+                              }
+                              alt="toggle arrow"
+                              className="dropdown-icon"
+                            />
                           </div>
                         </div>
 
-                        <div className="asset-second-content">
-                          <Panel className="alert-panel" onClick={() => toggleExpand(alert.id)}>
-                            <div className="product-panel-header flex align-items-center justify-content-between width-full">
-                              <div className="flex align-items-center gap-3">
-                                <img
-                                  src={findAsset?.image || "/avatar.svg"}
-                                  alt="product"
-                                  className="product-image"
-                                  onError={(e) => (e.currentTarget.src = "/placeholder-image.svg")}
-                                />
-                                <div className="flex flex-column gap-1">
-                                  <span className="alert-product-name">{findAsset?.product_name}</span>
-                                  <span className="alert-factory-name">
-                                    <span className="alert-factory-sub-name">Area Name - </span>
-                                    {findAsset?.factory_site || "Factory name"}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="arrow-wrapper">
-                                <img
-                                  src={expandedAlerts[alert.id] ? "/arrow-up.svg" : "/arrow-down.svg"}
-                                  alt="toggle arrow"
-                                  className="dropdown-icon"
-                                />
-                              </div>
+                        {expandedAlerts[alert.id] && (
+                          <div className="alert-details-content">
+                            <div className="alert-detail-item">
+                              <label className="alert-label">Machine ID</label>
+                              <span className="alert-value">
+                                {findAsset?.id || ""}
+                              </span>
                             </div>
 
-                            {expandedAlerts[alert.id] && (
-                              <div className="alert-details-content">
-                                <div className="alert-detail-item">
-                                  <label className="alert-label">Machine ID</label>
-                                  <span className="alert-value">{findAsset?.id || ""}</span>
-                                </div>
-
-                                <div className="alert-detail-grid">
-                                  <div className="alert-detail-item">
-                                    <label className="alert-label">Category</label>
-                                    <span className="alert-value">{findAsset?.asset_category || ""}</span>
-                                  </div>
-
-                                  <div className="alert-detail-item">
-                                    <label className="alert-label">Type</label>
-                                    <span className="alert-value">{alert?.type || ""}</span>
-                                  </div>       
-
-                                  <div className="alert-detail-item">
-                                    <label className="alert-label">Status</label>
-                                    <span className="alert-value flex align-items-center gap-2">
-                                      {alert?.status?.toLowerCase() === "closed" ? (
-                                        <span
-                                          className="px-2 py-1"
-                                          style={{
-                                            color: getStatusTextColor(alert?.status),
-                                            border: `1px solid ${getStatusTextColor(alert?.status)}`,
-                                            borderRadius: "4px",
-                                          }}
-                                        >
-                                          Closed
-                                        </span>
-                                      ) : (
-                                        <>
-                                          {alert?.previousSeverity && (
-                                            <span className="flex align-items-center gap-1">
-                                              <img
-                                                src={
-                                                  alert.previousSeverity.toLowerCase() === "warning"
-                                                    ? "/alerts.svg"
-                                                    : "/checkmark-circle-green.svg"
-                                                }
-                                                alt="Previous Severity"
-                                                className="status-icon"
-                                              />
-                                            </span>
-                                          )}
-                                          <img src="/arrow-left.svg" alt="arrow" className="arrow-icon" />
-                                          Previously
-                                          {alert?.severity && (
-                                            <span className="flex align-items-center gap-1">
-                                              <img
-                                                src={
-                                                  alert.severity.toLowerCase() === "warning"
-                                                    ? "/alerts.svg"
-                                                    : "/checkmark-circle-green.svg"
-                                                }
-                                                alt="Current Severity"
-                                                className="status-icon"
-                                              />
-                                            </span>
-                                          )}
-                                        </>
-                                      )}
-                                    </span>
-                                  </div>
-
-                                  <div className="alert-detail-item">
-                                    <label className="alert-label">Origin</label>
-                                    <span className="alert-value">{alert?.origin || ""}</span>
-                                  </div>
-                                </div>
+                            <div className="alert-detail-grid">
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Category</label>
+                                <span className="alert-value">
+                                  {findAsset?.asset_category || ""}
+                                </span>
                               </div>
-                            )}
-                          </Panel>
 
-                          <div className="alert-btn">
-                            <Button className="global-button" style={{ marginTop: "16px" }} severity="warning">
-                              {t("acknowledge")}
-                              <img src="/checkmark-circle-02 (1).svg" alt="ack" className="ack-icon" />
-                            </Button>
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Type</label>
+                                <span className="alert-value">
+                                  {alert?.type || ""}
+                                </span>
+                              </div>
+
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Status</label>
+                                <span className="alert-value flex align-items-center gap-2">
+                                  {alert?.status?.toLowerCase() === "closed" ? (
+                                    <span
+                                      className="px-2 py-1"
+                                      style={{
+                                        color: getStatusTextColor(alert?.status),
+                                        border: `1px solid ${getStatusTextColor(
+                                          alert?.status
+                                        )}`,
+                                        borderRadius: "4px"
+                                      }}
+                                    >
+                                      Closed
+                                    </span>
+                                  ) : (
+                                    <>
+                                      {alert?.previousSeverity && (
+                                        <span className="flex align-items-center gap-1">
+                                          <img
+                                            src={
+                                              alert.previousSeverity.toLowerCase() ===
+                                                "warning"
+                                                ? "/alerts.svg"
+                                                : "/checkmark-circle-green.svg"
+                                            }
+                                            alt="Previous Severity"
+                                            className="status-icon"
+                                          />
+                                        </span>
+                                      )}
+                                      <img
+                                        src="/arrow-left.svg"
+                                        alt="arrow"
+                                        className="arrow-icon"
+                                      />
+                                      Previously
+                                      {alert?.severity && (
+                                        <span className="flex align-items-center gap-1">
+                                          <img
+                                            src={
+                                              alert.severity.toLowerCase() ===
+                                                "warning"
+                                                ? "/alerts.svg"
+                                                : "/checkmark-circle-green.svg"
+                                            }
+                                            alt="Current Severity"
+                                            className="status-icon"
+                                          />
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Origin</label>
+                                <span className="alert-value">
+                                  {alert?.origin || ""}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
+                      </Panel>
+
+                      <div className="alert-btn">
+                        <Button
+                          className="global-button"
+                          style={{ marginTop: "16px" }}
+                          severity="warning"
+                        >
+                          {t("acknowledge")}
+                          <img
+                            src="/checkmark-circle-02 (1).svg"
+                            alt="ack"
+                            className="ack-icon"
+                          />
+                        </Button>
                       </div>
                     </div>
-                  </>
-                );
-
-              }
-              catch (err) {
-                console.log("alertlist skip", err);
-                return null;
-              }
-
+                  </div>
+                </div>
+              );
+            } catch (err) {
+              console.log("alertlist skip", err);
+              return null;
             }
-            ).filter(component => component !== null)
-          ) : (
-            <div className="notification mt-2 notification--empty flex flex-row gap-3 items-center">
-              <Avatar icon="pi pi-inbox" shape="circle"></Avatar>
-              <div className="flex flex-col text-sm">
-                <span className="font-semibold" style={{ paddingTop: '5px' }}>No notifications</span>
-              </div>
+          })
+          .filter((component) => component !== null)
+      ) : (
+        <div className="notification mt-2 notification--empty flex flex-row gap-3 items-center">
+          <Avatar icon="pi pi-inbox" shape="circle"></Avatar>
+          <div className="flex flex-col text-sm">
+            <span className="font-semibold" style={{ paddingTop: "5px" }}>
+              No notifications
+            </span>
             </div>
-          )
-        }
-      </Dialog>
-    </>
+          </div>
+        )
+      }
+    </Dialog>
   );
 };
 
