@@ -467,13 +467,11 @@ line-height: normal;
   display: flex;
   align-items: center;
   padding: 10px 11px;
-  background-color: #f9f9fc;
+  background-color: var(--Common-Text-Grey-100, #F2F4F7);
   border-radius: 12px;
-  margin-top: 12px;
+  margin-top: 24px;
   cursor: pointer;
   gap: 10px;
-
-
 }
 
 .sidebar_profile_avatar {

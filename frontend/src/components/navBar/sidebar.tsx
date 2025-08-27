@@ -4,7 +4,7 @@ import "../../styles/sidebar.css";
 import Image from "next/image";
 import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getCompanyDetailsById } from "@/utility/auth";
+import { getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
@@ -18,31 +18,43 @@ function Sidebar() {
   const [companyName, setCompanyName] = useState("Company");
   const [companyId, setCompanyId] = useState("ID");
   const toast = useRef<Toast>(null);
+  const [userImage, setUserImage] = useState("/avatar.svg");  
+  const [laoding, setLoading] =useState(false)
 
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
       try {
+        setLoading(true);
         const data = await getAccessGroup();
         if (!data) {
           showToast(toast, "error", "Error", "No user data found");
           return;
         }
-
         const fullName = data.user_name || "User";
-        const firstName = fullName.trim().split(" ")[0];
-        setUserName(firstName);
+        setUserName(fullName);
         setCompanyId(data.company_ifric_id || "ID");
-
         const companyDetails = await getCompanyDetailsById(data.company_ifric_id || "ID");
-        const name = companyDetails?.data?.[0]?.company_name;
+        const userDetails = await getUserDetails({
+          user_email: data.user_email,
+          company_ifric_id: data.company_ifric_id
+        })
+         const name = companyDetails?.data?.[0]?.company_name;  
+         const userImage = userDetails?.data?.[0]?.user_image;
+         if (userImage) {
+           setUserImage(userImage);
+         } else {
+           setUserImage("/avatar.svg");
+        }
         if (name) setCompanyName(name);
-      } catch (error: unknown) {
+        } catch (error: unknown) {
+        setLoading(false);
         if (axios.isAxiosError(error) && error.response?.data?.message) {
           showToast(toast, "error", "Error", error.response.data.message);
         } else {
           showToast(toast, "error", "Error", "Error fetching user data");
         }
       }
+      setLoading(false);
     };
 
     fetchUserData();
@@ -146,7 +158,7 @@ function Sidebar() {
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Factory Sites</div>
             </Button>
 
-            <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Management</div>
+            {/* <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Management</div>
 
             <Button
               className={`sidebar_navlink ${contractMenuOpen ? "is_active" : ""}`}
@@ -157,9 +169,9 @@ function Sidebar() {
               <Image src="/sidebar/contract_icon.svg" width={18} height={18} alt="contract_icon" />
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Contract Manager</div>
               {sidebarOpen && <span className={`dropdown_arrow ${contractMenuOpen ? "flip" : ""}`}><img src="/arrow-down.svg" /></span>}
-            </Button>
+            </Button> */}
 
-            {contractMenuOpen && sidebarOpen && (
+            {/* {contractMenuOpen && sidebarOpen && (
               <div className="contract-dropdown-container">
                 <div className="contract-line" />
                 <div className="contract-dropdown-items">
@@ -192,7 +204,7 @@ function Sidebar() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Analytics</div>
 
@@ -247,6 +259,8 @@ function Sidebar() {
             </div>
 
             {/* CONTROLLS SECTION */}
+          
+          </div>
             <div className="sidebar_bottom_section">
               <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
                 CONTROLLS
@@ -283,8 +297,8 @@ function Sidebar() {
               </Button>
 
               <div className="sidebar_profile_section">
-                <Image
-                  src="/avatar.svg"
+                <img
+                  src={userImage} 
                   alt="user_avatar"
                   width={36}
                   height={36}
@@ -301,7 +315,6 @@ function Sidebar() {
                 />
               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
