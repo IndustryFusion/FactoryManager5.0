@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import unAllocatedAssetReducer from './unAllocatedAsset/unAllocatedAssetSlice';
 import machineStateReducer from "./machineState/machineStateSlice";
 import entityIdReducer from "./entityId/entityIdSlice";
@@ -26,23 +26,41 @@ import assetManagementReducer from './assetManagement/assetManagementSlice';
 import contractsSliceReducer from "./contract/contractSlice";
 import factoryUserReducer from "./auth/factoryUserSlice";
 import bindingRequestReducer from './binding/bindingRequestSlice';
+import { persistStore } from 'redux-persist';
+
+
+export const appReducer = combineReducers({
+    unAllocatedAsset: unAllocatedAssetReducer,
+    machineState: machineStateReducer,
+    entityId: entityIdReducer,
+    auth: authReducer,
+    relations: relationsReducer,
+    powerConsumption: powerConsumptionReducer,
+    bindings: bindingsSliceReducer,
+    assetManagement: assetManagementReducer,
+    contracts: contractsSliceReducer,
+    factoryUserSlice:factoryUserReducer,
+    bindingRequest:bindingRequestReducer
+});
+
+const rootReducer = (state: any, action: any) => {
+    if (action.type === "RESET_STORE") {
+      state = undefined; // Reset all state
+    }
+    return appReducer(state, action);
+};
 
 
 export const store = configureStore({
-    reducer: {
-        unAllocatedAsset: unAllocatedAssetReducer,
-        machineState: machineStateReducer,
-        entityId: entityIdReducer,
-        auth: authReducer,
-        relations: relationsReducer,
-        powerConsumption: powerConsumptionReducer,
-        bindings: bindingsSliceReducer,
-        assetManagement: assetManagementReducer,
-        contracts: contractsSliceReducer,
-        factoryUserSlice:factoryUserReducer,
-        bindingRequest:bindingRequestReducer
-    },
+    reducer: rootReducer
 });
+
+const persistor = persistStore(store);
+
+export const resetReduxState = async () => {
+    await persistor.purge(); // Clears persisted state
+    store.dispatch({ type: "RESET_STORE" }); // Resets Redux state
+};
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
