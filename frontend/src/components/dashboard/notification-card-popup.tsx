@@ -16,9 +16,10 @@
 
 import { useDashboard } from "@/context/dashboard-context";
 import { Dialog } from "primereact/dialog";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "primereact/button";
 import { useTranslation } from "next-i18next";
+import { Panel } from "primereact/panel";
 
 interface NotificationPopupProps {
   notificationProp: boolean;
@@ -41,6 +42,16 @@ interface Notification {
 const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp, setNotificationProp }) => {
   const { notificationData, selectedAssetData } = useDashboard();
   const { t } = useTranslation('button');
+  const [expandedAlerts, setExpandedAlerts] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  const toggleExpand = (notificationId: string) => {
+    setExpandedAlerts((prev) => ({
+      ...prev,
+      [notificationId]: !prev[notificationId],
+    }));
+  };
 
   const getStatusTextColor = (status: string) => {
     switch (status) {
@@ -89,122 +100,246 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
     }
   };
 
+  const parseAlertMessage = (message: string) => {
+    const regex =
+      /(https:\/\/[^\s]+) failed for ([^\s]+)\. Value ([0-9.]+) is not ([<>=!]+) ([0-9.]+)/;
+    const match = message.match(regex);
+    if (!match) return null;
+    const [, url, urn, value, condition, threshold] = match;
+    const metricMatch = url.match(/\/v0\.1\/([^/]+)/);
+    let metric = metricMatch ? metricMatch[1] : null;
+    if (metric) {
+      metric = metric.charAt(0).toUpperCase() + metric.slice(1);
+    }
 
+    return {
+      metric,
+      url,
+      status: "failed",
+      urn,
+      value: parseFloat(value),
+      condition,
+      threshold: parseFloat(threshold),
+    };
+  };
 
   return (
     <>
       <Dialog
-
-        header={notificationData.length > 0 ? <h3 className="m-0">Notifications</h3> : <h3 className="m-0">No Notifications</h3>}
-        visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
+        contentClassName="alerts-details-content"
+        header={
+          notificationData.length > 0 ? (
+            <h3 className="m-0">Notifications</h3>
+          ) : (
+            <h3 className="m-0">No Notifications</h3>
+          )
+        }
+        visible={notificationProp}
+        style={{ width: "40vw" }}
+        onHide={() => setNotificationProp(false)}
+      >
         <div className="alerts-container">
-          {notificationData.length > 0 ?
+          {notificationData.length > 0 ? (
             notificationData.map((notification: Notification, index) => {
+              const parsed = parseAlertMessage(notification?.text);
+              let updatedText = notification?.text;
 
-              const text = notification?.text;
-              let updatedText;
-              let noiseKey = Object.keys(text).find(key => key.includes('noise'));
-              if (text && noiseKey) {
-                const regex = /Value.*$/;
-                const match = text.match(regex);
-                if (match) {
-                  updatedText = "Property #noise : " + match[0];
-                }
+              if (parsed?.metric) {
+                updatedText = `Property ${parsed.metric}: Value ${parsed.value} is not ${parsed.condition} ${parsed.threshold}`;
               }
-              else {
-                updatedText = text;
-              }
+
               const iconData = getIcon(notification?.severity);
+
               return (
-                <div key={index} className="alerts-container card mb-4">
-                  <div className="flex gap-3  ">
-                    <div className="mt-4">
-                      {/* <i className={getIcon(notification?.severity).icon} style={{ fontSize: '1.3rem', color: getIcon(notification?.severity).color }}></i> */}
-                      {iconData && <i className={iconData.icon} style={{ fontSize: '1.3rem', color: iconData.color }}></i>}
-                    </div>
-                    <div style={{ flex: "0 90%" }} className="data-container">
-                      <div>
-                        <div className=" align-center">
-                          {/* <p className="font-medium">Product name: </p> */}
-                          <p className="ml-2 mb-0"
+                <div key={index} className="alerts-container"  style={{ borderBottom: "1px solid #e0e0e0", marginTop:"0px" }}>
+                  <div className="alert-content">
+                    <div className="asset-first-content">
+                      <div className="asset-first-left">
+                        {iconData && (
+                          <i
+                            className={iconData.icon}
                             style={{
-                              fontStyle: 'italic',
-                              color: "#d5d5d5",
-                              fontSize: "15px"
+                              fontSize: "1.3rem",
+                              color: iconData.color,
                             }}
-                          >{selectedAssetData?.product_name} - {selectedAssetData?.id}  </p>
+                          ></i>
+                        )}
+                        <span className="asset-warning">{updatedText}</span>
+                      </div>
+                      <div className="asset-time">
+                        {notification?.updateTime}
+                      </div>
+                    </div>
+
+                    <div className="asset-second-content">
+                      <Panel
+                        className="alert-panel"
+                        onClick={() => toggleExpand(notification.id)}
+                      >
+                        <div className="product-panel-header flex align-items-center justify-content-between width-full">
+                          <div className="flex align-items-center gap-3">
+                            <img
+                              src={selectedAssetData?.image || "/avatar.svg"}
+                              alt="product"
+                              className="product-image"
+                              onError={(e) =>
+                                (e.currentTarget.src = "/placeholder-image.svg")
+                              }
+                            />
+                            <div className="flex flex-column gap-1">
+                              <span className="alert-product-name">
+                                {selectedAssetData?.product_name}
+                              </span>
+                              <span className="alert-factory-name">
+                                <span className="alert-factory-sub-name">
+                                  {" "}
+                                  Area Name -{" "}
+                                </span>
+                                {selectedAssetData?.factory_site ||
+                                  "Factory name"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="arrow-wrapper">
+                            <img
+                              src={
+                                expandedAlerts[notification.id]
+                                  ? "/arrow-up.svg"
+                                  : "/arrow-down.svg"
+                              }
+                              alt="toggle arrow"
+                              className="dropdown-icon"
+                            />
+                          </div>
                         </div>
 
-                        <div className="flex align-center">
-                          <p className="ml-2 alert-type-text mb-0"> {updatedText}</p>
-                        </div>
-                        <div className="flex align-center">
-                          <p className="ml-2 alert-text mb-0 "></p>
-                        </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "9rem" }}>
-                          <div>
-                            <p className="ml-2 alert-time mt-2"> {notification?.updateTime}</p>
-                            <p className="label-text ml-2">Update Time</p>
+                        {expandedAlerts[notification.id] && (
+                          <div className="alert-details-content">
+                            <div className="alert-detail-item">
+                              <label className="alert-label">Machine ID</label>
+                              <span className="alert-value">
+                                {selectedAssetData?.id || ""}
+                              </span>
+                            </div>
+                           
+                            <div className="alert-detail-grid">
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Category</label>
+                                <span className="alert-value">
+                                  {selectedAssetData?.asset_category || ""}
+                                </span>
+                              </div>
+
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Type</label>
+                                <span
+                                  className="alert-value"
+                                  style={{ textTransform: "capitalize" }}
+                                >
+                                  {notification?.type || ""}
+                                </span>
+                              </div>
+
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Status</label>
+                                <span className="alert-value flex align-items-center gap-2">
+                                  {notification?.status?.toLowerCase() ===
+                                  "closed" ? (
+                                    <span
+                                      className="px-2 py-1"
+                                      style={{
+                                        color: getStatusTextColor(
+                                          notification?.status
+                                        ),
+                                        border: `1px solid ${getStatusTextColor(
+                                          notification?.status
+                                        )}`,
+                                        borderRadius: "4px",
+                                      }}
+                                    >
+                                      Closed
+                                    </span>
+                                  ) : (
+                                    <>
+                                      {notification?.previousSeverity && (
+                                        <span className="flex align-items-center gap-1">
+                                          <img
+                                            src={
+                                              notification.previousSeverity.toLowerCase() ===
+                                              "warning"
+                                                ? "/alerts.svg"
+                                                : "/checkmark-circle-green.svg"
+                                            }
+                                            alt="Previous Severity"
+                                            className="status-icon"
+                                          />
+                                        </span>
+                                      )}
+                                      <img
+                                        src="/arrow-left.svg"
+                                        alt="arrow"
+                                        className="arrow-icon"
+                                      />
+                                      Previously
+                                      {notification?.severity && (
+                                        <span className="flex align-items-center gap-1">
+                                          <img
+                                            src={
+                                              notification.severity.toLowerCase() ===
+                                              "warning"
+                                                ? "/alerts.svg"
+                                                : "/checkmark-circle-green.svg"
+                                            }
+                                            alt="Current Severity"
+                                            className="status-icon"
+                                          />
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="alert-detail-item">
+                                <label className="alert-label">Origin</label>
+                                <span className="alert-value">
+                                  {notification?.origin || ""}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="ml-2 mt-2 "
-                              style={{ color: "#212529", textTransform: "capitalize" }}
-                            >{notification?.type}</p>
-                            <p className="label-text ml-2">Type</p>
-                          </div>
-                        </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "14.4rem" }}>
-                          <div>
-                            <p className="ml-2 "> {selectedAssetData?.asset_category}</p>
-                            <p className="label-text ml-2">Product category</p>
-                          </div>
-                          <div>
-                            <p>{notification?.origin}</p>
-                            <p className="label-text">Origin</p>
-                          </div>
-                        </div>
-                        <div className="flex align-center  mb-2" style={{ gap: "16.8rem" }}>
-                          <div> <p className="ml-2 "> {notification?.severity}</p>
-                            <p className="label-text ml-2">Severity</p>
-                          </div>
-                          <div>
-                            <p className="ml-2 mt-2" style={{ color: "#212529" }}
-                            >{notification?.previousSeverity}</p>
-                            <p className="label-text ml-2">Previous Severity</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex  flex-column ">
-                        <p className="ml-2 mt-2 px-1 "
-                          style={{
-                            color: getStatusTextColor(notification?.status),
-                            border: `1px solid ${getStatusTextColor(notification?.status)}`,
-                            borderRadius: "4px"
-                          }}
-                        > {notification?.status}</p>
+                        )}
+                      </Panel>
+
+                      <div className="alert-btn">
+                        <Button
+                          className="global-button"
+                          style={{ marginTop: "16px" }}
+                          severity="warning"
+                        >
+                          {t("acknowledge")}
+                          <img
+                            src="/checkmark-circle-02 (1).svg"
+                            alt="ack"
+                            className="ack-icon"
+                          />
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  <div className='alert-btn'>
-                    <Button
-                      className="alert-btn-text"
-                      label={t('acknowledge')}
-                      severity="warning"
-                    />
                   </div>
                 </div>
-              )
+              );
             })
-            :
-            <>
-              <div className="flex flex-column justify-content-center align-items-center">
-                <p>When you have notification , you'll see them here</p>
-                <img src="/no-notification2.png" alt="no notifications icon"
-                  width="15%" height="15%"
-                />
-              </div>
-            </>
-          }
+          ) : (
+            <div className="flex flex-column justify-content-center align-items-center">
+              <p>When you have notifications, you'll see them here</p>
+              <img
+                src="/no-notification2.png"
+                alt="no notifications icon"
+                width="15%"
+                height="15%"
+              />
+            </div>
+          )}
         </div>
       </Dialog>
     </>
