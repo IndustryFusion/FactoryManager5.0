@@ -363,7 +363,7 @@ const FactoryOverview = () => {
       <Sidebar />
       <div className='main_content_wrapper'>
         <div className='navbar_wrapper'>
-          <Navbar navHeader="Factory Overview" />
+          <Navbar navHeader="Factory Site Overview" />
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
@@ -451,8 +451,6 @@ const FactoryOverview = () => {
           )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };

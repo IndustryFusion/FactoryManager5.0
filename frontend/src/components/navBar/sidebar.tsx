@@ -218,16 +218,6 @@ function Sidebar() {
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Viewer</div>
             </Button>
 
-            <Button
-              className={`sidebar_navlink ${router.pathname === "/certificates" ? "is_active" : ""}`}
-              onClick={() => handleRoute("certificates")}
-              tooltip={!sidebarOpen ? "Certificate Manager" : undefined}
-              tooltipOptions={{ position: "right", event: "both" }}
-            >
-              <Image src="/sidebar/certificates_icon.svg" width={18} height={18} alt="cert_icon" />
-              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Certificate Manager</div>
-            </Button>
-
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div>
                 <Button
@@ -257,45 +247,9 @@ function Sidebar() {
                 </Button>
               </div>
             </div>
-
-            {/* CONTROLLS SECTION */}
           
           </div>
             <div className="sidebar_bottom_section">
-              <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
-                CONTROLLS
-              </div>
-
-              <Button
-                className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => {}}
-                tooltip={!sidebarOpen ? "Plans" : undefined}
-                tooltipOptions={{ position: "right", event: "both" }}
-              >
-                <Image src="/layers-01.svg" width={18} height={18} alt="plans_icon" />
-                <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Plans</div>
-              </Button>
-
-              <Button
-                className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => {}}
-                tooltip={!sidebarOpen ? "Settings" : undefined}
-                tooltipOptions={{ position: "right", event: "both" }}
-              >
-                <Image src="/settings-02.svg" width={18} height={18} alt="settings_icon" />
-                <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Settings</div>
-              </Button>
-
-              <Button
-                className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                onClick={() => {}}
-                tooltip={!sidebarOpen ? "Helpcenter" : undefined}
-                tooltipOptions={{ position: "right", event: "both" }}
-              >
-                <Image src="/book-04.svg" width={18} height={18} alt="help_icon" />
-                <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Helpcenter</div>
-              </Button>
-
               <div className="sidebar_profile_section">
                 <img
                   src={userImage} 

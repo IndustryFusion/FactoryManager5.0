@@ -263,16 +263,22 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         <div className="flex justify-content-between">
           <div className="flex align-items-center">
             <div>
-              <h2 className="nav-header">{navHeader}</h2>
-              {fullPath == "/factory-site/factory-overview" && (
+              <h2 className="nav-header">{navHeader}</h2>         
                 <BreadCrumb
                   model={breadcrumbItems}
                   home={home}
+                  separatorIcon={
+                    <Image
+                      src="/arrow-right-grey.svg"  
+                      alt="separator"
+                      width={14}
+                      height={14}
+                    />
+                  }
                   className={`nav-breadcrumb p-0 border-none bg-transparent ${
                     breadcrumbItems.length < 2 ? "mt-2" : ""
                   }`}
                 />
-              )}
             </div>
           </div>
         </div>
