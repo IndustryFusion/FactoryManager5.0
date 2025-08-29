@@ -20,6 +20,8 @@ import { Asset } from "@/types/asset-types";
 import { MdQueryBuilder } from "react-icons/md";
 import html2canvas from "html2canvas";
 import { AllocatedAssets } from "@/types/asset-types";
+import { getAccessGroup } from "./indexed-db";
+import api from "./jwt";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -287,9 +289,11 @@ export const getshopFloorById = async (factoryId: string) => {
 };
 
 export const getNonShopFloorAsset = async (factoryId: string) => {
+  const data = await getAccessGroup()
+  const company_ifric_id = data.company_ifric_id;
   try {
-    const response = await axios.get(
-      `${API_URL}/non-shop-floor-assets/${factoryId}`,
+    const response = await api.get(
+      `${API_URL}/non-shop-floor-assets/${company_ifric_id}/${factoryId}`,
       {
         headers: {
           "Content-Type": "application/json",

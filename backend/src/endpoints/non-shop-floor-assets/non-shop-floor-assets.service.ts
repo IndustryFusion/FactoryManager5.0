@@ -17,24 +17,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AssetService } from '../asset/asset.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
-
+import { Request } from 'express';
 @Injectable()
 export class NonShopFloorAssetsService {
   constructor(
     private readonly assetService: AssetService,
     private readonly allocatedAssetService: AllocatedAssetService,
   ) {}
-
-async findAll(id: string, token: string) {
+  
+  async findAll(id: string, token: string, company_ifric_id: string, req: Request) {
     try {
-      // Get all asset IDs and remove duplicates
-      let assetIds = await this.assetService.getAssetIds(token) || [];
-      assetIds = [...new Set(assetIds)].filter(Boolean); // Remove duplicates and falsy values
-      console.log("Unique available assets:", assetIds);
+
+      let data = await this.assetService.getAssetManagementData(company_ifric_id, token, req);
+      data = Array.isArray(data) ? data : []; 
+      const assetIds = [...new Set(data .map((e: any) => e?.id ?? e?.['@id'] ?? e?.asset_ifric_id) .filter(Boolean))];
 
       // Get allocated assets (now returns array of IDs directly)
       const allocatedAssetIds = await this.allocatedAssetService.getGlobalAllocatedAssets(token);
-      console.log("Allocated assets to exclude:", allocatedAssetIds);
 
       // Filter out allocated assets and special cases, ensure uniqueness
       const availableAssetIds = [...new Set(
@@ -44,7 +43,6 @@ async findAll(id: string, token: string) {
           assetId !== "json-ld-1.1"
         )
       )];
-      console.log("Filtered unique available assets:", availableAssetIds);
 
       // Get details for available assets
       const processedIds = new Set(); // Track processed IDs
@@ -54,13 +52,11 @@ async findAll(id: string, token: string) {
         try {
           // Skip if we've already processed this ID
           if (processedIds.has(id)) {
-            console.log(`Skipping duplicate asset ID: ${id}`);
             continue;
           }
 
           const assetData = await this.assetService.getAssetDataById(id, token);
           if (!assetData) {
-            console.log(`No data found for asset ID: ${id}`);
             continue;
           }
 
@@ -95,16 +91,13 @@ async findAll(id: string, token: string) {
           
           filteredArray.push(filteredObject);
         } catch (innerError) {
-          console.error(`Error processing asset ID ${id}:`, innerError.message);
           continue;
         }
       }
 
-      console.log(`Successfully processed ${filteredArray.length} unique non-shop floor assets`);
       return filteredArray;
 
     } catch (err) {
-      console.error('Error in findAll:', err);
       throw new NotFoundException(
         `Failed to fetch repository data: ${err.message}`,
       );
