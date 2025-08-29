@@ -31,20 +31,22 @@
   z-index: 400; 
 }
 
-/* Handle Positioning */
-.react-flow__handle-top {
-  top: 1px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
+.react-flow__handle,
+.react-flow__handle-top,
 .react-flow__handle-bottom {
-  bottom: 0;
-  left: 55%;
-  transform: translate(-50%, 50%);
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;          
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  pointer-events: auto !important; 
 }
 
 
+.flow-editor-container {
+  flex: 1;
+}
 
 
 /* Layer Organization */

@@ -37,6 +37,7 @@ import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Sidebar from "@/components/navBar/sidebar";
 import "@/styles/react-flow-page.css"
+import { TabPanel, TabView } from "primereact/tabview";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -45,7 +46,7 @@ const ShopFloorManager: React.FC = () => {
   const [deletedShopFloors, setDeletedShopFloors] = useState<string[]>([]);
   const [shopfloor, setShopfloor] = useState({});
   const [isSidebarExpand, setSidebarExpand] = useState(false);
-
+  const [leftTabIndex, setLeftTabIndex] = useState(0);
   const factoryId =
     typeof router.query.factoryId === "string"
       ? router.query.factoryId
@@ -57,7 +58,6 @@ const ShopFloorManager: React.FC = () => {
     const fetchShopFloorById = async (factoryId: string) => {
       try {
         const details = await getShopFloors(factoryId);
-        console.log("details",details)
         setFactoryDetails(details);
       } catch (error) {
         console.error("Failed to fetch factory details", error);
@@ -87,13 +87,26 @@ const ShopFloorManager: React.FC = () => {
           </div>
           <div className="main-content bg-gray-100">
             <ShopFloorProvider>
-              <div className="shopfloor-list-container">
-                <ShopFloorList
-                  factoryId={factoryId}
-                  onShopFloorDeleted={handleShopFloorDeleted}
-                  setShopfloorProp={setShopfloor}
-                />
+              <div className="assets-tabview">
+                <TabView
+                  className="left-rail-tabs"
+                  activeIndex={leftTabIndex}
+                  onTabChange={(e) => setLeftTabIndex(e.index)}
+                >
+                  <TabPanel header="Shop Floors">
+                    <ShopFloorList
+                      factoryId={factoryId}
+                      onShopFloorDeleted={handleShopFloorDeleted}
+                      setShopfloorProp={setShopfloor}
+                    />
+                  </TabPanel>
+
+                  <TabPanel header="Unallocated Assets">
+                    <UnallocatedAssets factoryId={factoryId} product_name="" />
+                  </TabPanel>
+                </TabView>
               </div>
+
               <div ref={elementRef} className="flow-editor-container">
                 {factoryDetails ? (
                   <FlowEditor
@@ -104,9 +117,6 @@ const ShopFloorManager: React.FC = () => {
                 ) : (
                   <div className="loading-state">Loading factory details...</div>
                 )}
-              </div>
-              <div className="unallocated-assets-container">
-                <UnallocatedAssets factoryId={factoryId} product_name="" />
               </div>
             </ShopFloorProvider>
           </div>

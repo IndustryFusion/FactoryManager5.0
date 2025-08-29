@@ -2,13 +2,13 @@
 .customNode {
   position: relative;
   background-color: #caf1d8;
-  width: 120%;
-  min-height: 100px;
-  padding: 10px;
+  width: 100%;
+  min-height: 10px;
+  padding: 6px;       
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-radius: 16px;
+  border-radius: 10px;
 }
  .custom-multiselect-panel .p-inputwrapper-filled{
   border-radius: 15px;
@@ -25,6 +25,7 @@
   margin: 0;
   padding: 0;
   z-index: 1;
+  background: transparent !important;
 }
 
 /* Handle Positioning */
@@ -44,13 +45,13 @@
   border-radius: 15px;
 }
 .customHandle[data-handlepos="bottom"] {
-  bottom: -6px !important;
+  bottom: -4px !important;      
   left: 95px;
   transform: translate(-50%, 0);
-  width: 13px;
-  height: 13px;
+  width: 8px;                    
+  height: 8px;                 
+  border-radius: 50%;
 }
-
 /* Connection Handles */
 .react-flow__handle, 
 .react-flow__handle-bottom, 
@@ -79,8 +80,8 @@
 
 /* Node Label */
 .node-label {
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 10px;
+  margin-bottom: 4px;
   color: #333;
   text-align: center;
 }
@@ -101,7 +102,8 @@
 
 /* MultiSelect Spacing */
 .customNode .p-multiselect {
-  margin: 10px 0;
+  margin: 0px 0;
+  margin-left:-15px
 }
 
 /* Edge Layer Management */
