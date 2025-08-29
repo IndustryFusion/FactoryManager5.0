@@ -236,7 +236,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       <>
         {property.type === "string" && (
           <div className="field mb-3">
-            <label htmlFor={key}>{property.title}</label>
+            <label htmlFor={key} className="label-factory-create">{property.title}</label>
             {key === "description" ? (
               <InputTextarea
                 value={value}
@@ -282,7 +282,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
               value={value}
               options={property.enum}
               onChange={(e) => handleDropdownChange(e, key)}
-              className="p-inputtext-lg mt-2"
+              className="p-inputtext-lg mt-2 create-shopfloor-dropdown"
             />
           </div>
         )}
@@ -291,46 +291,52 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   };
 
   const footerContent = (
-    <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
+    <div className="dialog-footer">
       <Button
         label={t('cancel')}
         severity="danger"
         outlined
-        className="mr-2"
+        className="global-button is-white"
         type="button"
-        onClick={() => setIsVisibleProp(false)}
-      />
+        onClick={() => setIsVisibleProp(false)}>
+       
+        </Button>
+  
       <Button
         severity="secondary"
         text
         raised
         label={t('reset')}
-        className="mr-2 reset-btn"
+        className="global-button is-red"
         type="button"
-        onClick={handleReset}
-      />
+        onClick={handleReset}>
+       <img src="/cancel-circle-wht.svg"/>
+        </Button>
+   
       <Button
         label={t('submit')}
         onClick={handleSave}
-        className="border-none  ml-2 mr-2"
-        disabled={submitDisabled}
-      />
+        className="global-button is-blue"
+        disabled={submitDisabled}>
+        <img src="/checkmark-circle-02 (1).svg"/>
+        </Button>
+  
     </div>
   );
 
   return (
-    <div className=" flex justify-content-center">
-   
+    <div className=" flex justify-content-center">   
       <Dialog
         visible={isVisibleProp}
+        header={"Shop Floor"}
         modal
         footer={footerContent}
         style={{ width: "50rem" }}
         onHide={() => setIsVisibleProp(false)}
+        className="create-shop-floor"
       >
         <Toast ref={toast} />
         <div className="p-fluid p-formgrid p-grid ">
-          <h2 className="form-title">Shop Floor</h2>
           <Card className="factory-form-container mt-4 center-button-container ">
             {shopFloorTemplate &&
               shopFloorTemplate?.properties &&

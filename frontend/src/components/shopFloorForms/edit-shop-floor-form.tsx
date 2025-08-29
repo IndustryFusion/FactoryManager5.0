@@ -219,7 +219,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             <>
                 {property.type === "string" &&
                     <div className="field mb-3">
-                        <label htmlFor={key}>{property.title}</label>
+                        <label htmlFor={key} className="label-factory-create">{property.title}</label>
                         {key === "description" ?
                             <InputTextarea
                                 value={value || ""}
@@ -271,7 +271,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                                 value={value}
                                 options={property.enum}
                                 onChange={(e) => handleDropdownChange(e, key)}
-                                className="p-inputtext-lg mt-2"
+                                className="p-inputtext-lg mt-2 create-shopfloor-dropdown"
 
                             />
                         </div>
@@ -282,62 +282,76 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     }
 
     const footerContent = (
-        <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
+        <div className="dialog-footer">
             <Button
                 label={t('cancel')}
                 severity="danger" outlined
-                className="mr-2"
+                className="global-button is-white"
                 type="button"
-                onClick={() => setIsEditProp(false)}
-            />
+                onClick={() => setIsEditProp(false)}></Button>
+
             <Button
                 severity="secondary" text raised
                 label={t('reset')}
-                className="mr-2 reset-btn"
+                className="global-button is-red"
                 type="button"
-                onClick={handleReset}
-            />
+                onClick={handleReset}>
+                <img src="/cancel-circle-wht.svg" />
+            </Button>
+
             <Button
                 label={t('submit')}
                 onClick={handleSave}
-                className="border-none  ml-2 mr-2"
-                disabled={submitDisabled}
-            />
+                className="global-button is-blue"
+                disabled={submitDisabled}>
+                <img src="/checkmark-circle-02 (1).svg" />
+            </Button>
+
         </div>
     )
 
 
     return (
-        <>
-            <div className=" flex justify-content-center">
-                <Dialog visible={isEditProp} modal footer={footerContent} style={{ width: '50rem' }} onHide={() => setIsEditProp(false)}>
-                    <Toast ref={toast} />
-                    <div className="p-fluid p-formgrid p-grid ">
-                        <h2 className="form-title mb-3">Edit Shop Floor</h2>
-                        <Card className="factory-form-container  center-button-container py-3">
-                            <div className="align-center">
-                                <p className=" mb-3 mt-0"
-                                    style={{
-                                        fontStyle:'italic',
-                                        color: "#a8a8ff",
-                                        fontSize: "15px"
-                                    }}
-                                >
-                                    {shopFloor?.id} </p>
-                            </div>
-                            {
-                                shopFloorTemplate &&
-                                shopFloorTemplate?.properties &&
-                                Object.keys(shopFloorTemplate.properties).map((key) =>
-                                    renderFields(key, shopFloorTemplate.properties[key])
-                                )
-                            }
-                        </Card>
-                    </div>
-                </Dialog>
+      <>
+        <div className="flex justify-content-center">
+          <Dialog
+            visible={isEditProp}
+            modal
+            footer={footerContent}
+            header={"Edit Shop Floor"}
+            className="create-shop-floor"
+            style={{ width: "50rem" }}
+            onHide={() => setIsEditProp(false)}
+          >
+            <Toast ref={toast} />
+            <div className="p-fluid p-formgrid p-grid ">
+              
+              <Card className="factory-form-container center-button-container py-3">
+                <div style={{marginBottom:"20px"}}>
+                <p
+                  className=" mb-3 mt-0"
+                  style={{
+                    fontSize: "14px",
+                    borderRadius: "6px",
+                    background:"var(--IF-X-Tint-Blue-50, #EBF5FA)",
+                    width: "fit-content",
+                    padding:"4px 8px"
+                  }}
+                >
+                  {shopFloor?.id}{" "}
+                </p>
+              </div>
+                {shopFloorTemplate &&
+                  shopFloorTemplate?.properties &&
+                  Object.keys(shopFloorTemplate.properties).map((key) =>
+                    renderFields(key, shopFloorTemplate.properties[key])
+                  )}
+              </Card>
             </div>
-        </>
-    )
+          </Dialog>
+        </div>
+      </>
+    );
 }
 
 export default EditShopFloor;

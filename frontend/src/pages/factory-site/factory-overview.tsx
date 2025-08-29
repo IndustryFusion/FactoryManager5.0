@@ -363,7 +363,7 @@ const FactoryOverview = () => {
       <Sidebar />
       <div className='main_content_wrapper'>
         <div className='navbar_wrapper'>
-          <Navbar navHeader="Factory Site Overview" />
+          <Navbar navHeader="Factory Site" />
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
@@ -379,8 +379,6 @@ const FactoryOverview = () => {
                   <div>
                     <TabView className="asset-tabs">
                       <TabPanel header={t("overview:Active")}></TabPanel>
-                      <TabPanel header={t("overview:Drafts")}></TabPanel>
-                      <TabPanel header={t("overview:Archived")}></TabPanel>
                     </TabView>
                   </div>
                 </div>

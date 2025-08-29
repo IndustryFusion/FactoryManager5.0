@@ -281,6 +281,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             id={key}
                             value={value}
                             placeholder={property?.description}
+                            className="placeholder-create-factory"
                             onChange={(e: Factory) => setFactory({ ...factory, zip: e.value })}                           
                             useGrouping={false}
                             onKeyDown={onKeyDownHandler}
@@ -290,7 +291,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
                 {property.type === "string" && (
                     <div className="field mb-4">
-                        <label htmlFor={key}>
+                        <label htmlFor={key} className="label-factory-create">
                             {key === "factory_name" && (
                                 <FontAwesomeIcon className="form-icons" icon={faBuilding} style={{ color: "grey" }} />
                             )}
@@ -361,60 +362,81 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         )
     }
 
-    const footerContent = (
-        <div className="form-btn-container mb-2 flex justify-content-end align-items-center">
-            <Button
-                label={t('cancel')}
-                severity="danger" outlined
-                className="mr-2"
-                type="button"
-                onClick={() => setVisibleProp(false)}
-            />
-            <Button
-                severity="secondary" text raised               
-                label={t('reset')}
-                className="mr-2 reset-btn"
-                type="button"
-                onClick={handleReset}
-            />
-            <Button
-                label={t('submit')}
-                onClick={handleSave}
-                className="border-none  ml-2 mr-2"
-                disabled={submitDisabled}
-            />
-        </div>
-    );
+   const footerContent = (
+  <div className="dialog-footer">
+    <Button
+      label={t('cancel')}
+      severity="danger"
+      outlined
+      className="global-button is-white flex items-center gap-2"
+      type="button"
+      onClick={() => setVisibleProp(false)}
+    >
+      <img src="/reset.svg" alt="cancel" className="w-4 h-4" />
+    </Button>
+
+    <Button
+      label={t('reset')}
+      severity="secondary"
+      text
+      raised
+      className="global-button is-red flex items-center gap-2"
+      type="button"
+      onClick={handleReset}
+    >
+      <img src="/cancel-circle-wht.svg" alt="reset" className="w-4 h-4" />
+    </Button>
+
+    <Button
+      label={t('submit')}
+      onClick={handleSave}
+      className="global-button is-blue flex items-center gap-2"
+      disabled={submitDisabled}
+    >
+      <img src="/checkmark-circle-02 (1).svg" alt="submit" className="w-4 h-4" />
+    </Button>
+  </div>
+);
+
     const header=()=>{
         return(
             <h2 className="form-title">Create Factory</h2>
         )
     }
 
-
     return (
-        <>
-            <div className=" flex justify-content-center create-factory-form">
-                <Button label={t('show')} icon="pi pi-external-link" onClick={() => setVisibleProp(true)} />
-                <Dialog 
-                header={header}
-                visible={visibleProp} modal footer={footerContent}
-                    draggable={false} resizable={false}
-                    style={{ width: '50rem' }} onHide={() => setVisibleProp(false)}>
-                    <Toast ref={toast} />
-                    <div className="p-fluid p-formgrid p-grid factory-form-container">       
-                        {/* <Card className="factory-form-container mt-4 center-button-container "> */}
-                            {schema &&
-                                schema?.properties &&
-                                Object.keys(schema.properties).map((key) =>
-                                    <div key={key}> {renderFields(key, schema.properties[key])}</div>
-                                   
-                                )}
-                        {/* </Card> */}
-                    </div>
-                </Dialog>
+      <>
+        <div className=" flex justify-content-center create-factory-form">
+          <Button
+            label={t("show")}
+            icon="pi pi-external-link"
+            onClick={() => setVisibleProp(true)}
+          />
+          <Dialog
+            header={header}
+            visible={visibleProp}
+            modal
+            footer={footerContent}
+            draggable={false}
+            resizable={false}
+            style={{ width: "50rem" }}
+            onHide={() => setVisibleProp(false)}
+          >
+            <Toast ref={toast} />
+            <div className="p-fluid p-formgrid p-grid factory-form-container">
+              {/* <Card className="factory-form-container mt-4 center-button-container "> */}
+              {schema &&
+                schema?.properties &&
+                Object.keys(schema.properties).map((key) => (
+                  <div key={key}>
+                    {" "}
+                    {renderFields(key, schema.properties[key])}
+                  </div>
+                ))}
             </div>
-        </>
-    )
+          </Dialog>
+        </div>
+      </>
+    );
 }
 export default CreateFactory;
