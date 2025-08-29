@@ -1,8 +1,7 @@
-
 @import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap");
 
 .factory-form-container {
-  font-family: "League Spartan", sans-serif!important;
+  font-family: "League Spartan", sans-serif !important;
   width: 70%;
   margin: 0rem auto;
   margin-top: 1.5rem;
@@ -12,7 +11,7 @@
   margin: 0 auto;
   width: 100%;
   padding: 20px;
-  font-family: "League Spartan", sans-serif!important;
+  font-family: "League Spartan", sans-serif !important;
 }
 
 .factory-form-container .p-field label {
@@ -30,68 +29,83 @@
   font-family: "League Spartan";
   padding: 14px 0px 11px 16px;
 }
+
 .p-dialog-header {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
-  /* border-bottom: 1px solid #e6e6e6; */
+  border-bottom: 1px solid #e6e6e6;
 }
-.p-dialog .p-dialog-content:last-of-type, .p-dialog .p-dialog-footer {
+
+.p-dialog .p-dialog-content:last-of-type,
+.p-dialog .p-dialog-footer {
   border-bottom-right-radius: 10px;
   border-bottom-left-radius: 10px;
 }
-.p-button{
+
+.p-button {
   border-radius: 8px
 }
+
 .country-dropdown {
   background: var(--white);
   padding: 2px 10px;
   border-radius: 10px;
-  border: 1px solid #ced4da;
+  border: 2px solid #f5f5f5;
   margin-bottom: 25px;
 }
 
 .country-dropdown .p-dropdown .p-dropdown-trigger {
   display: none;
 }
-.dropdown-icon-img{
+
+.dropdown-icon-img {
   margin-top: 8px;
   width: 6px;
   cursor: pointer;
 }
+
 .country-dropdown .p-dropdown {
   background: transparent;
   border: none;
-    width: 100%;
+  width: 100%;
 }
-.country-dropdown .p-dropdown .p-inputtext{
-padding: 14px 0 16px;
+
+.country-dropdown .p-dropdown .p-inputtext {
+  padding: 14px 0 16px;
 }
+
 .country-dropdown .p-dropdown-label {
-  color:var(--grey-primary)
+  color: var(--grey-primary)
 }
-.p-drodown:focus{
-  border:none
+
+.p-drodown:focus {
+  border: none
 }
-.p-dropdown:not(.p-disabled).p-focus{
+
+.p-dropdown:not(.p-disabled).p-focus {
   border-color: none;
   box-shadow: none;
 }
-.country-dropdown .p-dropdown-panel{
+
+.country-dropdown .p-dropdown-panel {
   border-radius: 8px;
   background: var(--White, #FFF);
   box-shadow: 0px 0px 8px 3px rgba(0, 0, 0, 0.25);
   width: 500px;
 }
+
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
   border-radius: 10px;
   background-color: var(--grey-box);
-  color:var(--ifx-blue);
+  color: var(--ifx-blue);
 }
+
 .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
   border-radius: 10px;
   background-color: var(--grey-box);
-  color:#138ab6;
+  color: #138ab6;
 }
+
 /** form input ,dialog style:end **/
 .center-button-container .small-button {
   margin: auto;
@@ -114,6 +128,7 @@ padding: 14px 0 16px;
 .p-card {
   padding-top: 1rem;
 }
+
 .shop-floors {
   background: #efefef;
   color: #212529;
@@ -159,6 +174,14 @@ textarea {
   padding-right: 5rem;
   z-index: 100;
   background-color: #fff;
+  gap: 8px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  height: 30px;
 }
 
 .form-icons {
@@ -167,9 +190,8 @@ textarea {
 }
 
 .edit-thumbnail-container {
-
   padding: 1rem 1rem;
-  border: 1px solid #dee2e6;
+  border: 2px solid #f5f5f5;
   color: #212529;
   border-bottom-right-radius: 4px;
   border-bottom-left-radius: 4px;
@@ -183,10 +205,70 @@ textarea {
   display: flex;
   align-items: center;
   margin: 0;
-  margin-left: 7rem;
+  padding: 0px 8px;
+  font-size: 24px;
+  color: var(--Common-Text-Grey-900, #10182B);
+  font-family: "League Spartan";
+  font-weight: 700;
 }
-.input-invalid-text{
+
+.input-invalid-text {
   font-size: 12px;
   color: #ff0000;
   font-weight: bold;
+}
+
+.label-factory-create {
+  color: var(--Common-Text-Grey-600, #475467);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.create-shop-floor.p-dialog .p-dialog-header {
+  padding: 16px 24px;
+}
+
+.create-shop-floor.p-dialog .p-dialog-header .p-dialog-title {
+  color: var(--Common-Text-Grey-900, #10182B);
+  font-family: "League Spartan";
+  font-size: 24px;
+  font-weight: 700
+}
+
+.create-shop-floor.p-dialog .p-dialog-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.factory-form-container ::placeholder {
+  color: var(--Common-Text-Grey-400, #98A2B3);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.p-inputtext.p-component:focus {
+  border: 2px solid #3874C9 !important;
+}
+
+ .factory-form-container.p-card{
+  box-shadow: none;
+ }
+
+ .create-shopfloor-dropdown.p-dropdown {
+  background: #ffffff;
+  border: 2px solid #f5f5f5;
+  border-radius: 8px;
+  outline-color: transparent;
+}
+
+.p-fileupload .p-fileupload-buttonbar {
+  border: 2px solid #f5f5f5;
+}
+
+.p-fileupload .p-fileupload-content {
+  border: 2px solid #f5f5f5;
 }

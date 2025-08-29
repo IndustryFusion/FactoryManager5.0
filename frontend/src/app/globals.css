@@ -172,6 +172,12 @@ ul li {
   border: 1px solid var(--fusion-blue);
 }
 
+.global-button.is-white {
+  background-color: #fff;
+  border: 1px solid #E4E7EC !important;
+  color: var(--black)
+}
+
 /* red button */
 
 .global-button.is-red {
