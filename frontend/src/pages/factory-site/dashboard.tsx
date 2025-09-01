@@ -97,7 +97,7 @@ const Dashboard = () => {
           setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
           />
           <div className="model_details_tab">
-                <div className="model_details_tab_header">
+                {/* <div className="model_details_tab_header">
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "performance" ? "active" : ""}`} onClick={() => { handleTabChange("performance") }}>Performance</button>
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "data-viewer" ? "active" : ""}`} onClick={() => { handleTabChange("data-viewer") }}>Data Viewer</button>
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "product-info" ? "active" : ""}`} onClick={() => { handleTabChange("product-info") }}>Product Info</button>
@@ -105,7 +105,7 @@ const Dashboard = () => {
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "documents" ? "active" : ""}`} onClick={() => { handleTabChange("documents") }}>Documents</button>
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "app" ? "active" : ""}`} onClick={() => { handleTabChange("app") }}>App</button>
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "settings" ? "active" : ""}`} onClick={() => { handleTabChange("settings") }}>Settings</button>
-                </div>
+                </div> */}
                 <div className="model_details_tab_content">
                   {currentTab === "data-viewer" && (
                     <div className="model_details_tab_panel">
