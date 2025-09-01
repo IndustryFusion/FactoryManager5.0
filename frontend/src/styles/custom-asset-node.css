@@ -1,4 +1,4 @@
-/* Custom Node Container */
+
 .customNode {
   position: relative;
   background-color: #caf1d8;
@@ -13,6 +13,7 @@
  .custom-multiselect-panel .p-inputwrapper-filled{
   border-radius: 15px;
  }
+
 /* Handle Base Styles */
 .customHandle {
   width: 40%;
@@ -26,6 +27,35 @@
   padding: 0;
   z-index: 1;
   background: transparent !important;
+}
+.customNode .react-flow__handle-top,
+.customNode .react-flow__handle-bottom {
+  left: 50% !important;
+  transform: translateX(-50%) !important; 
+}
+
+.customNode .react-flow__handle-left,
+.customNode .react-flow__handle-right {
+  top: 50% !important;
+  transform: translateY(-50%) !important; 
+}
+
+
+.assetNode .customHandle[data-handlepos="top"] {
+  top: -10px !important;
+  left: 50% !important;
+  transform: translate(-50%, 0);
+  background-color: transparent;
+  border: none;
+}
+
+.assetNode .customHandle[data-handlepos="bottom"] {
+  bottom: -4px !important;
+  left: 50% !important;           
+  transform: translate(-50%, 0);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
 /* Handle Positioning */
@@ -142,4 +172,34 @@
   stroke-width: 2;
   stroke-dasharray: 5 5;
   z-index: 1000;
+}
+
+
+.add-relation-center {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  z-index: 5;
+}
+
+
+.add-relation-btn,
+.add-relation-btn .p-button-icon,
+.add-relation-btn.p-button .p-button-icon {
+  color: #000 !important;
+  border: none !important;
+  box-shadow: none !important;  
+}
+
+
+.add-relation-btn .p-button-icon {
+  font-size: 0.5rem; 
+}
+
+
+.add-relation-btn.p-button:enabled:active,
+.add-relation-btn.p-button:enabled:active .p-button-icon {
+  color: #000 !important;
 }

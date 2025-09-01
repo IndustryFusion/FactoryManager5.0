@@ -48,6 +48,7 @@ import { Toast } from "primereact/toast";
 import {
   exportElementToJPEG,
   getAssetRelationById,
+  relationToAssetCategory,
 } from "@/utility/factory-site-utility";
 import { Factory } from "../../types/factory-type";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -75,6 +76,7 @@ import {
 } from "../../utility/react-flow-utility";
 import { HistoryState } from "next/dist/shared/lib/router/router";
 import { handleUpdateRelations } from '@/utility/react-flow';
+import CustomRelationNode from "./custom-relation-node";
 interface RelationPayload {
   [key: string]: {
     [relationKey: string]: string[];
@@ -83,6 +85,7 @@ interface RelationPayload {
 
 const nodeTypes = {
   asset: CustomAssetNode,
+  relation: CustomRelationNode,
 };
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -222,7 +225,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       console.error("Selected asset node not found");
       return;
     }
-
+    console.log("selectedAsset",selectedAsset)
     // handle both single and multiple relations uniformly
     const relations = Array.isArray(relationsInput)
       ? relationsInput
@@ -249,7 +252,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       const relationNodeId = `relation_${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
-
+      const expectedAssetCategory = relationToAssetCategory(relationName);
       const newRelationNode = {
         id: relationNodeId,
         style: {
@@ -263,6 +266,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
           type: "relation",
           class: relationClass,
           parentId: selectedAsset,
+          asset_category: expectedAssetCategory,
         },
         position: {
           x: assetNode.position.x + baseXOffset, // adjusted x offset
@@ -281,6 +285,42 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       setNodes((prevNodes) => [...prevNodes, newRelationNode]);
       setEdges((prevEdges) => addEdge(newEdge, prevEdges));
     });
+  };
+  const createAssetNodeAndEdgeFromRelation = (
+    relationNodeId: string,
+    asset: { id: string; label: string; asset_category: string }
+  ) => {
+    
+    const relationNode = nodes.find(n => n.id === relationNodeId);
+    if (!relationNode) return;
+
+    const newAssetNodeId = `asset_${asset.id}_${Date.now()}`;
+    const newAssetNode: Node = {
+      id: newAssetNodeId,
+      type: "asset",
+      position: {
+        x: relationNode.position.x + 220,
+        y: relationNode.position.y,
+      },
+      asset_category: asset.asset_category,      
+      data: {
+        type: "asset",
+        label: asset.label,
+        id: asset.id,
+      },
+      style: { backgroundColor: "#caf1d8", border: "none", borderRadius: 10 }
+    };
+
+    const newEdge = {
+      id: `reactflow__edge-${relationNodeId}-${newAssetNodeId}_${Date.now()}`,
+      source: relationNodeId,
+      target: newAssetNodeId,
+      animated: true,
+    };
+
+    setNodes(prev => [...prev, newAssetNode]);
+    setEdges(prev => addEdge(newEdge, prev));
+    addToHistory([...nodes, newAssetNode], [...edges, newEdge]);
   };
 
   useEffect(() => {
@@ -432,7 +472,6 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      
       onEdgesChangeProvide(changes);
       const newEdges = [...edges];
       changes.forEach(change => {
@@ -1188,6 +1227,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
 const onElementClick: NodeMouseHandler = useCallback(
   (event, element) => {
+    console.log("element",element)
     if (element.type === "asset" || element.type === "shopFloor") {
       const isAsset = element.type === "asset";
       const newExpandedState = isAsset
@@ -1385,10 +1425,7 @@ const onElementClick: NodeMouseHandler = useCallback(
 
   //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
 const handleBackspacePress = useCallback(() => {
-  if (
-    !selectedElements ||
-    (!selectedElements.nodes && !selectedElements.edges)
-  ) {
+  if (!selectedElements || (!selectedElements.nodes?.length && !selectedElements.edges?.length)) {
     toast.current?.show({
       severity: "warn",
       summary: "No selection",
@@ -1398,80 +1435,38 @@ const handleBackspacePress = useCallback(() => {
     return;
   }
 
-  // Initialize deletable edge IDs
-  let edgeIdsToDelete: string[] = [];
-
-  // Filter edges that are not connecting a factory to a shopFloor
-  if (selectedElements.edges) {
-    edgeIdsToDelete = selectedElements.edges
-      .filter((edge) => {
-        const sourceNode = nodes.find((node) => node.id === edge.source);
-        const targetNode = nodes.find((node) => node.id === edge.target);
-        return !(
-          sourceNode?.data.type === "factory" &&
-          targetNode?.data.type === "shopFloor"
-        );
-      })
-      .map((edge) => edge.id);
-  }
-
-  // Exclude the factory and shopFloor nodes from deletion
-  const containsNonDeletableNodes = selectedElements.nodes?.some(
-    (node: Node<any>) =>
-      node.data.type === "factory" || node.data.type === "shopFloor"
+  const { nodeIdsToDelete, edgeIdsToDelete } = buildCascadeDeletion(
+    selectedElements,
+    nodes,
+    edges
   );
 
-  if (containsNonDeletableNodes) {
+  if (!nodeIdsToDelete.size && !edgeIdsToDelete.size) {
     toast.current?.show({
-      severity: "warn",
-      summary: "Deletion Not Allowed",
-      detail: "Cannot delete factory or shopFloor nodes.",
-      life: 3000,
+      severity: "info",
+      summary: "Nothing to delete",
+      life: 2000,
     });
     return;
   }
 
-  // Collect IDs of nodes to delete
-  const nodeIdsToDelete = new Set<string>(
-    selectedElements.nodes?.map((node) => node.id) ?? []
-  );
+  const newNodes = nodes.filter((n) => !nodeIdsToDelete.has(n.id));
+  const newEdges = edges.filter((e) => !edgeIdsToDelete.has(e.id));
 
-  // Collect edges associated with the nodes to delete
-  const additionalEdgeIdsToDelete = edges
-    .filter(
-      (edge) =>
-        nodeIdsToDelete.has(edge.source) || nodeIdsToDelete.has(edge.target)
-    )
-    .map((edge) => edge.id);
+  setNodes(newNodes);
+  setEdges(newEdges);
+  addToHistory(newNodes, newEdges);
 
-  // Combine the edge IDs to delete
-  edgeIdsToDelete = [...edgeIdsToDelete, ...additionalEdgeIdsToDelete];
-
-  // Update nodes and edges state
-  setNodes((prevNodes) => {
-    const updatedNodes = prevNodes.filter((node) => !nodeIdsToDelete.has(node.id));
-    console.log("Updated nodes:", updatedNodes);
-    return updatedNodes;
-  });
-
-  setEdges((prevEdges) => {
-    const updatedEdges = prevEdges.filter(
-      (edge) => !edgeIdsToDelete.includes(edge.id)
-    );
-    console.log("Updated edges:", updatedEdges);
-    return updatedEdges;
-  });
-
-  // Clear the selected elements
   setSelectedElements(null);
-}, [
-  selectedElements,
-  edges,
-  setNodes,
-  setEdges,
-  setSelectedElements,
-  toast,
-]);
+
+
+  toast.current?.show({
+    severity: "success",
+    summary: "Deleted",
+    detail: `Removed ${edgeIdsToDelete.size} edge(s) and ${nodeIdsToDelete.size} node(s).`,
+    life: 2000,
+  });
+}, [selectedElements, nodes, edges, setNodes, setEdges, addToHistory, toast]);
 
   useHotkeys(
     "backspace",
@@ -1588,6 +1583,66 @@ const handleBackspacePress = useCallback(() => {
   const onInit = useCallback((instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
   }, []);
+  const onEdgeClick = useCallback((_, __) => {
+    setNodes(prev =>
+      prev.map(n => {
+        if (n.style?.outline || n.style?.outlineOffset) {
+          const { outline, outlineOffset, ...rest } = n.style as any;
+          return { ...n, style: rest };
+        }
+        return n;
+      })
+    );
+  }, [setNodes]);
+
+
+
+  const getNodeType = (node: any) => (node?.type ?? node?.data?.type) as string | undefined;
+
+
+  const buildCascadeDeletion = (
+    selection: OnSelectionChangeParams | null,
+    nodesArr: Node[],
+    edgesArr: Edge[]
+  ) => {
+    const nodeById = new Map(nodesArr.map((n) => [n.id, n]));
+    const nodeIdsToDelete = new Set<string>();
+    const edgeIdsToDelete = new Set<string>();
+
+    const selectedEdges = selection?.edges ?? [];
+    const selectedNodes = selection?.nodes ?? [];
+
+
+    selectedEdges.forEach((e) => {
+      edgeIdsToDelete.add(e.id);
+    });
+
+
+    selectedNodes.forEach((n) => {
+      const nType = getNodeType(n);
+      if (nType === "factory" || nType === "shopFloor") return; // protected
+      nodeIdsToDelete.add(n.id);
+    });
+
+
+    edgesArr.forEach((e) => {
+      if (nodeIdsToDelete.has(e.source) || nodeIdsToDelete.has(e.target)) {
+        edgeIdsToDelete.add(e.id);
+      }
+    });
+
+
+    for (const id of Array.from(nodeIdsToDelete)) {
+      const n = nodeById.get(id);
+      const nType = n ? getNodeType(n) : undefined;
+      if (nType === "factory" || nType === "shopFloor") {
+        nodeIdsToDelete.delete(id);
+      }
+    }
+
+    return { nodeIdsToDelete, edgeIdsToDelete };
+  };
+
 
   return (
     <>
@@ -1606,7 +1661,7 @@ const handleBackspacePress = useCallback(() => {
           </p>
         </Dialog>
 
-        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge }}>
+        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
 
           <div className="flex justify-content-between">
@@ -1684,6 +1739,7 @@ const handleBackspacePress = useCallback(() => {
               fitView
               ref={elementRef}
               onNodeClick={onElementClick}
+              onEdgeClick={onEdgeClick}
               nodeTypes={nodeTypes}
               deleteKeyCode={null}
             >

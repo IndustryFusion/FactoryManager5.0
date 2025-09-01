@@ -9,7 +9,6 @@
 
 
 .react-flow__edge {
-  pointer-events: stroke;
   z-index: 300;
 }
 
@@ -29,6 +28,10 @@
   transform: translate(-50%, -50%);
   margin-left: -10px;
   z-index: 400; 
+}
+
+.react-flow__edge path {
+  pointer-events: visibleStroke !important;
 }
 
 .react-flow__handle,
@@ -55,7 +58,7 @@
 }
 .react-flow__nodes {
   z-index: 500; 
-  pointer-events: all !important;
+  pointer-events: none  !important;
 }
 
 

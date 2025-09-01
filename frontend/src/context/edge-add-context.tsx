@@ -16,8 +16,25 @@
 
 import React from "react";
 
-const EdgeAddContext = React.createContext({
-  createRelationNodeAndEdge: (assetId: string, relationName: string,relationClass:string) => {},
+export type CreateRelationNodeAndEdgeFn = (
+  assetId: string,
+  relationName: string,
+  relationClass?: string
+) => void;
+
+export type CreateAssetNodeAndEdgeFromRelationFn = (
+  relationNodeId: string,
+  asset: { id: string; label: string; asset_category: string }
+) => void;
+
+export interface EdgeAddContextType {
+  createRelationNodeAndEdge: CreateRelationNodeAndEdgeFn;
+  createAssetNodeAndEdgeFromRelation: CreateAssetNodeAndEdgeFromRelationFn;
+}
+
+const EdgeAddContext = React.createContext<EdgeAddContextType>({
+  createRelationNodeAndEdge: () => {},
+  createAssetNodeAndEdgeFromRelation: () => {},
 });
 
 export default EdgeAddContext;
