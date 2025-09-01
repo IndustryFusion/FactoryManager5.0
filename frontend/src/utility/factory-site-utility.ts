@@ -68,13 +68,12 @@ interface RelationshipDetail {
   class?: string;
 }
 
-export interface ExtractedRelations {
-  [key: string]: {
-    type: string;
-    class?: string;
-    objects: string[]; // Use an array to accommodate multiple objects
-  };
-}
+
+
+type ExtractedRelations = Record<
+  string,
+  { type: "Relationship"; segment: "component"; objects?: string[] }
+>;
 
 export const handleUpload = async (file: File): Promise<string> => {
   const uploadData = new FormData();
@@ -498,40 +497,57 @@ export async function getShopFloorAndAssetData(factoryId: string) {
   }
 }
 
+
+
+const segVal = (x: any) => (x && typeof x === "object" ? x.value : undefined);
+const SEGMENT_IRI = "https://industry-fusion.org/base/v0.1/segment";
+
+export const relationToAssetCategory = (relationName: string) => {
+  const token = relationName
+    .replace(/^has[_-]?/i, "")           
+    .replace(/_/g, " ")                   
+    .replace(/([a-z])([A-Z])/g, "$1 $2")  
+    .trim()
+    .replace(/\s+/g, " ");               
+
+  const title = token.replace(/\b\w/g, c => c.toUpperCase());
+  return `${title}`;
+};
+
 export function extractHasRelations(assetData: { [key: string]: any }): ExtractedRelations {
-  const hasRelations: ExtractedRelations = {};
+  const entity = (assetData && (assetData as any).data) || assetData; 
+  const out: ExtractedRelations = {};
 
-  Object.entries(assetData).forEach(([key, value]) => {
-    // Check if the key includes with the required value and the value is either an object or an array
-    if (key.includes('/') && (typeof value === "object" || Array.isArray(value))) {
-      // Initialize an array to hold all objects related to this relationship
-      let objects: any[] = [];
+  for (const [key, value] of Object.entries(entity)) {
+    if (!key.includes("/") || !value || typeof value !== "object") continue;
 
-      // Check if value is an array, if so, iterate through it
-      if (key.includes('has')) {
-        if(Array.isArray(value)) {
-          value.forEach((val) => {
-            objects.push(val.object);
-          });
-        } else {
-          objects.push(value.object);
-        }
-      }
-  
-      if (objects.length > 0) {
-        // Remove the prefix from the key
-        const cleanedKey = key.split('/').pop() || '';
-        // Create or update the relationship in the hasRelations object
-        hasRelations[cleanedKey] = {
-          type: value.type || 'Relationship',
-          class: value.class ? value.class.value : undefined,
-          objects: objects
-        };
-      }
+
+    // segment === "component"
+    const segment = segVal((value as any)[SEGMENT_IRI]);
+    if (String(segment || "").toLowerCase() !== "component") continue;
+
+    const cleanedKey = key.split("/").pop() || key;
+
+
+    const rawObj = (value as any).object;
+    let objects: string[] | undefined;
+
+    if (Array.isArray(rawObj)) {
+      objects = rawObj
+        .map((o) => (typeof o === "string" ? o : o?.id ?? o?.object ?? undefined))
+        .filter((v): v is string => !!v && v !== "NULL");
+    } else if (typeof rawObj === "string" && rawObj !== "NULL") {
+      objects = [rawObj];
     }
-  });
 
-  return hasRelations;
+    out[cleanedKey] = {
+      type: "Relationship",
+      segment: "component",
+      ...(objects && objects.length ? { objects } : {}),
+    };
+  }
+
+  return out;
 }
 export const saveFlowchartData = async (
   factoryId: string,

@@ -92,6 +92,7 @@ const ShopFloorManager: React.FC = () => {
                   className="left-rail-tabs"
                   activeIndex={leftTabIndex}
                   onTabChange={(e) => setLeftTabIndex(e.index)}
+                  renderActiveOnly={false} 
                 >
                   <TabPanel header="Shop Floors">
                     <ShopFloorList

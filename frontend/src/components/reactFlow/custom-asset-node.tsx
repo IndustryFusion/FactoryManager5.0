@@ -23,6 +23,8 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css"
+import { Button } from "primereact/button";      
+import { Dialog } from "primereact/dialog"; 
 interface RelationOption {
   label: string;
   value: string;
@@ -55,52 +57,65 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const [relationOptions, setRelationOptions] = useState<RelationOption[]>([]);
 
   const [selectedRelations, setSelectedRelations] = useState<string[]>([]);
+  
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
   const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
   const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const getAssetDetails = async () => {
-      if (data.id) {
-        try {
-          const assetDetails= await getAssetRelationById(data.id) as Record<string, AssetDetail>;
+  const openDialogAndFetch = async () => {
+    try {
+      setIsLoading(true);
+      setDialogVisible(true);
 
-          const options: RelationOption[] = Object.entries(assetDetails)
-            .filter(([key, value]) => value.type === "Relationship")
-            //value.class
-            .map(([key,value]) => ({
-              label: key,
-              value:key,
-              class:value.class
-              
-            }));
-    
-          setRelationOptions(options);
-          const dropdownPanel = document.querySelector('.custom-multiselect-panel');
-          if (dropdownPanel) {
-            dropdownPanel.addEventListener('click', handleDropdownClick as EventListener);
-          }
+      if (!data.id) return;
 
-          return () => {
-            if (dropdownPanel) {
-              dropdownPanel.removeEventListener('click', handleDropdownClick as EventListener);
-            }
-          };
+      const assetDetails = (await getAssetRelationById(
+        data.id
+      )) as any ;
 
+      const options: RelationOption[] = Object.entries(assetDetails)
+        .filter(([, value]) => value?.type === "Relationship")
+        .map(([key, value]) => ({
+          label: key,
+          value: key,
+          class: value.class,
+        }));
 
-        } catch (error) {
-          console.log("Error from getAssetRelationById  function from custom-asset-node.tsx", error);
-        }
-      }
-    };
+      setRelationOptions(options);
+    } catch (err) {
+      setRelationOptions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    getAssetDetails();
-  }, [data.id]);
+  const handleAdd = () => {
+    if (!selectedRelations.length) return;
 
-  
-  const handleDropdownClick = (event: MouseEvent) => {
-    event.stopPropagation();
+    const toAdd = selectedRelations.filter(
+      (r) => !processedRelations.includes(r)
+    );
+
+    toAdd.forEach((relationLabel) => {
+      const opt = relationOptions.find(
+        (o) => o.value === relationLabel || o.label === relationLabel
+      );
+      const relationClass = opt?.class ?? "";
+      const relationName = opt?.label ?? relationLabel;
+
+      createRelationNodeAndEdge(data.id, relationName, relationClass);
+    });
+
+   
+    if (toAdd.length) {
+      setProcessedRelations((prev) => [...prev, ...toAdd]);
+    }
+
+    setDialogVisible(false);
+    setSelectedRelations([]);
   };
   const handleRelationsChange = (e: { value: string[] }) => {
     const currentSelectedRelations = e.value;
@@ -151,27 +166,68 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       />
     )}
     <Handle 
-      className="customHandle"
+      className="customHandle assetNode"
       position={Position.Top}
       type="target"
       data-handlepos="top"
       isConnectable={isConnectable}
     />
     <small className="node-label">{data.label}</small>
-    <div style={{ marginTop: "10px", marginLeft:"20px" }} className="multi-select">
-      <MultiSelect
-        value={selectedRelations}
-        options={relationOptions}
-        onChange={handleRelationsChange}
-        optionLabel="label"
-        placeholder="Select Relations"
-        display="chip"
-        style={{ width: "100%" }}
-        className="w-full sm:w-10rem"
-        appendTo="self"
-        panelClassName="custom-multiselect-panel"
-      />
+    <div className="flex align-items-center" style={{ marginTop: 8 }}>
+      <div
+        className="add-relation-center nodrag nopan"            
+        onMouseDown={(e) => e.stopPropagation()}              
+        onClick={(e) => e.stopPropagation()}                  
+      >
+        <Button
+          icon="pi pi-plus"
+          rounded
+          text
+          aria-label="Add relations"
+          className="add-relation-btn"
+          tooltip="Add relations"
+          tooltipOptions={{ position: "top" }}
+
+
+          onMouseDown={(e) => e.stopPropagation()}             
+          onClick={(e) => {
+            e.stopPropagation();
+            openDialogAndFetch();                         
+          }}
+        />
+      </div>
+
     </div>
+
+      <Dialog
+        header="Select Relations"           
+        visible={dialogVisible}             
+        onHide={() => setDialogVisible(false)}
+        style={{ width: "28rem" }}
+        modal
+      >
+        <div className="p-field" style={{ marginTop: 8 }}>
+          <MultiSelect
+            value={selectedRelations}
+            options={relationOptions}
+            onChange={handleRelationsChange}
+            optionLabel="label"
+            placeholder="Select relations…"
+            display="chip"
+            className="w-full"
+          />
+        </div>
+
+        <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
+          <Button label="Close" onClick={() => setDialogVisible(false)} text  className="global-button is-grey"/>  
+          <Button
+            label="Add"
+            onClick={handleAdd}
+            disabled={!selectedRelations.length}
+            className="global-button"
+          />
+        </div>
+      </Dialog>
   </div>
 );
 };
