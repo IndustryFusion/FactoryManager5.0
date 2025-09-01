@@ -293,44 +293,30 @@ const CombineSensorChart: React.FC = () => {
         withCredentials: true,
       });
 
-      // Collect keys where the segment is 'realtime'and remove eclass in the key if present
       const prefixedKeys = Object.keys(temp.data.properties)
-        .filter((key: string) => temp.data.properties[key].segment === 'realtime')
-        .map((key: string) => key.includes("eclass:") ? key.split("eclass:").pop() || key : key);
+        .filter((key: string) => temp.data.properties[key].segment !== 'realtime');
 
-      // const attributeLabels: AttributeOption[] = prefixedKeys.map(key => {
-      //   let index = 0;
-      //   const label = key.split("/").pop() || key;
-      //   return { label, value: label, selectedDatasetIndex: index + 1 };
-      // })
-      //   .filter(attribute => attribute.value !== "machine_state");
-      const storedValues: Record<string, number> = {}; // keeps state across calls
+      const excluded = new Set(prefixedKeys);
 
-      const attributeLabels: AttributeOption[] = Object.entries(selectedAssetData)
-        .filter(([key, value]) => {
-          const isNumeric = !isNaN(Number(value));
-          const label = key.split("/").pop() || key;
+      // helper to normalize keys the same way
+      const normalize = (k: string) => (k.includes('eclass:') ? k.split('eclass:').pop() || k : k);
 
-          if (!isNumeric || label === "machine_state") return false;
+      // 2) Collect allowed labels from selectedAssetData (unique, filtered)
+      const seen = new Set<string>();
+      const attributeLabels: AttributeOption[] = [];
 
-          const numericValue = Number(value);
-          const hasChanged = storedValues[key] !== numericValue;
-
-          // Store or update the value
-          storedValues[key] = numericValue;
-
-          return hasChanged || !(key in storedValues); // first time or changed
-        })
-        .map(([key, _value], index) => {
-          const label = key.split("/").pop() || key;
-          return {
-            label,
-            value: label,
-            selectedDatasetIndex: index + 1,
-          };
-        });
-
-      console.log("Labels", attributeLabels);
+      for (const key of Object.keys(selectedAssetData)) {
+        const label = normalize(key);
+        if (label === 'machine_state') continue;
+        if (label === '@context') continue;
+        if (label === 'type') continue;
+        if (label === 'id') continue;
+        if (label === "kafkaSyncOn") continue;
+        if (excluded.has(label)) continue; // remove prefixed keys
+        if (seen.has(label)) continue; // avoid duplicates if normalization collides
+        seen.add(label);
+        attributeLabels.push({ label, value: label, selectedDatasetIndex: 1 });
+      }
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);

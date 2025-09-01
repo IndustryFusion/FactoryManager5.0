@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Dialog } from 'primereact/dialog';
 import { Avatar } from "primereact/avatar";
 import "../../app/globals.css"
@@ -23,6 +23,26 @@ import { Button } from "primereact/button";
 import { useTranslation } from "next-i18next";
 import { Asset } from "@/types/asset-types";
 import { Panel } from "primereact/panel";
+import { Dropdown } from 'primereact/dropdown';
+
+
+type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
+
+const ALL_STATES: { label: string; value: AlertaState }[] = [
+  { label: "Open", value: "open" },
+  { label: "Assign", value: "assign" },
+  { label: "Acknowledge", value: "ack" },
+  { label: "Closed", value: "closed" },
+  { label: "Expired", value: "expired" },
+];
+
+const NEXT_STATES: Record<AlertaState, AlertaState[]> = {
+  open: ["assign", "ack", "closed", "expired"],
+  assign: ["open", "ack", "closed", "expired"],
+  ack: ["open", "assign", "closed", "expired"],
+  closed: ["assign", "ack", "expired"], // omit "open" to avoid manual reopen (add it back if you want)
+  expired: ["open"], // allow explicit reopen from expired (or set [] to disallow)
+};
 
 interface AlertDetailsProps {
   alerts: Alerts[];
@@ -30,6 +50,7 @@ interface AlertDetailsProps {
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
   assetData: Asset[];
+  handleAcknowledge: (id: string, status: AlertaState) => void;
 }
 
 interface Alerts {
@@ -46,8 +67,9 @@ interface Alerts {
   updateTime: string;
 }
 
-const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData }) => {
+const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData, handleAcknowledge }) => {
   const { t } = useTranslation('button');
+  const [selected, setSelected] = useState<AlertaState | null>(null);
   const [expandedAlerts, setExpandedAlerts] = useState<Record<string, boolean>>({});
 
   const toggleExpand = (alertId: string) => {
@@ -103,6 +125,45 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
       case 'unknown':
         return '';
     }
+  }
+
+  function AlertRow({
+    alert,
+    handleChangeStatus,
+    t,
+  }: {
+    alert: Alerts;
+    handleChangeStatus: (id: string, status: AlertaState) => void;
+    t: (key: string) => string;
+  }) {
+    const [selected, setSelected] = useState<AlertaState | null>(null);
+
+    const current = (alert.status || "").toLowerCase() as AlertaState;
+    const allowed = (NEXT_STATES[current] ?? []).filter((s) => s !== current);
+    const options = ALL_STATES.filter((o) => allowed.includes(o.value));
+
+    return (
+      <div key={alert.id} className="alert-row" style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "12px" }}>
+        <Dropdown
+          value={selected}
+          options={options}
+          onChange={(e) => setSelected(e.value)}
+          placeholder={t("select_status")}
+          style={{ width: "10px"}}
+          className="w-full md:w-9rem"
+        />
+        <Button
+          className="global-button"
+          severity="warning"
+          disabled={!selected}
+          onClick={() => selected && handleChangeStatus(alert.id, selected)}
+          tooltip={t("acknowledge_warn")}
+        >
+          {t("change_status")}
+          <img src="/checkmark-circle-02 (1).svg" alt="change" className="ack-icon" />
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -179,7 +240,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
               }
 
               return (
-                <div key={index} className="alerts-container card mb-4" style={{ borderBottom: "1px solid #e0e0e0", marginTop:"0px" }}>
+                <div key={index} className="alerts-container card mb-4" style={{ borderBottom: "1px solid #e0e0e0", marginTop: "0px" }}>
                   <div className="alert-content">
                     <div className="asset-first-content">
                       <div className="asset-first-left">
@@ -219,6 +280,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                                   Area Name -{" "}
                                 </span>
                                 {findAsset?.factory_site || "Factory name"}
+                              </span>
+                              <span className="alert-factory-name">
+                                <span className="alert-factory-sub-name">
+                                  Status -{" "}
+                                </span>
+                                {alert?.status || "Unknown"}
                               </span>
                             </div>
                           </div>
@@ -277,12 +344,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                                     </span>
                                   ) : (
                                     <>
-                                      {alert?.previousSeverity && (
+                                      {alert?.severity && (
                                         <span className="flex align-items-center gap-1">
                                           <img
                                             src={
-                                              alert.previousSeverity.toLowerCase() ===
-                                                "warning"
+                                              alert.severity.toLowerCase() ===
+                                                "ok"
                                                 ? "/alerts.svg"
                                                 : "/checkmark-circle-green.svg"
                                             }
@@ -297,12 +364,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                                         className="arrow-icon"
                                       />
                                       Previously
-                                      {alert?.severity && (
+                                      {alert?.previousSeverity && (
                                         <span className="flex align-items-center gap-1">
                                           <img
                                             src={
-                                              alert.severity.toLowerCase() ===
-                                                "warning"
+                                              alert.previousSeverity.toLowerCase() !==
+                                                "ok"
                                                 ? "/alerts.svg"
                                                 : "/checkmark-circle-green.svg"
                                             }
@@ -327,20 +394,15 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
                         )}
                       </Panel>
 
-                      <div className="alert-btn">
-                        <Button
-                          className="global-button"
-                          style={{ marginTop: "16px" }}
-                          severity="warning"
-                        >
-                          {t("acknowledge")}
-                          <img
-                            src="/checkmark-circle-02 (1).svg"
-                            alt="ack"
-                            className="ack-icon"
+                      <div>
+                          <AlertRow
+                            key={alert.id}
+                            alert={alert}
+                            handleChangeStatus={handleAcknowledge}
+                            t={t}
                           />
-                        </Button>
                       </div>
+
                     </div>
                   </div>
                 </div>
@@ -358,9 +420,9 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
             <span className="font-semibold" style={{ paddingTop: "5px" }}>
               No notifications
             </span>
-            </div>
           </div>
-        )
+        </div>
+      )
       }
     </Dialog>
   );

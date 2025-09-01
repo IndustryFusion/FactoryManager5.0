@@ -15,7 +15,7 @@
 // 
 
 import { useEffect, useState } from "react";
-import { getAlerts } from "./alert-service";
+import { getAlerts, postStatusForAlert } from "./alert-service";
 import axios from "axios";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
@@ -67,6 +67,18 @@ const Alerts = () => {
     }
   }
 
+  const handleAcknowledge = async (id: string, status: string) => {
+    try {
+      const response = await postStatusForAlert(id, { status, text: 'Manual change.' });
+      if (response.status === 'ok') {
+        // Optionally, you can update the local state to reflect the acknowledged status
+        const response = await getAlerts();
+        setAlerts(response.alerts);
+      }
+    } catch (error) {
+      console.error("Error acknowledging alert:", error);
+    }
+  };
 
  // useEffect hook to fetch all alerts and their associated asset data
   useEffect(() => {
@@ -74,7 +86,7 @@ const Alerts = () => {
       try {
         const response = await getAlerts();
         setAlerts(response.alerts)
-        setAlertsCount(response.total);
+        setAlertsCount(response.alerts.length);
         const assetsData = [];
         for (const alert of response.alerts) {
     
@@ -128,6 +140,7 @@ const Alerts = () => {
           visible={visible}
           setVisible={setVisible}
           assetData={assetData}
+          handleAcknowledge={handleAcknowledge}
         />
       }
     </>

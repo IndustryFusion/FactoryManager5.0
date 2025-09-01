@@ -13,6 +13,9 @@
     "refresh": "Refresh",
     "exportJPEG": "Export as JPEG",
     "acknowledge": "Acknowledge",
+    "acknowledge_warn": "Set the status of the alert",
+    "select_status": "Status",
+    "change_status": "Change status",
     "show": "Show",
     "dashboard": "Dashboard",
     "assets": "Assets"

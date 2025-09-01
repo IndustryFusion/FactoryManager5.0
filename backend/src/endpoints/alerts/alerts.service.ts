@@ -14,8 +14,9 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Body, Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
+import { AlertStatusDto } from './dto/alerta-status.dto';
 
 @Injectable()
 export class AlertsService {
@@ -62,6 +63,21 @@ export class AlertsService {
       };
       let url = this.alertaUrl + '/alerts?resource=' + id;
       const response = await axios.get(url, {headers});
+      return response.data;
+    } catch (err) {
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+
+  async updateStatus(id: string, data: AlertStatusDto) {
+    try {
+      const headers = {
+        Authorization: 'Key ' + this.alertaKey,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+      let url = this.alertaUrl + '/alert/' + id + '/status';
+      const response = await axios.put(url, data, {headers});
       return response.data;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
