@@ -16,6 +16,7 @@
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException } from '@nestjs/common';
 import { AlertsService } from './alerts.service';
+import { AlertStatusDto } from './dto/alerta-status.dto';
 
 @Controller('alerts')
 export class AlertsController {
@@ -34,6 +35,16 @@ export class AlertsController {
   findOne(@Param('id') id: string) {
     try {
       return this.alertsService.findOne(id);
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
+
+
+  @Post('/:id/status')
+  updateStatus(@Param('id') id: string, @Body() data: AlertStatusDto) {
+    try {
+      return this.alertsService.updateStatus(id, data);
     } catch (err) {
       throw new NotFoundException();
     }
