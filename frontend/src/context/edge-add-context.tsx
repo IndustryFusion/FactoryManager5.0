@@ -19,7 +19,8 @@ import React from "react";
 export type CreateRelationNodeAndEdgeFn = (
   assetId: string,
   relationName: string,
-  relationClass?: string
+  relationClass?: string,
+  asset_category?:string
 ) => void;
 
 export type CreateAssetNodeAndEdgeFromRelationFn = (

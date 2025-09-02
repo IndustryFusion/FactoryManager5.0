@@ -68,7 +68,6 @@ const ShopFloorManager: React.FC = () => {
       const { factoryId } = router.query;
       if (typeof factoryId === 'string') {
         const data = fetchShopFloorById(factoryId);
-        console.log("data",data)
       }
     }
   }, [factoryId, router.isReady]);

@@ -29,15 +29,17 @@ interface RelationOption {
   label: string;
   value: string;
   class:string
+  asset_category?:string
 }
 
 interface CustomAssetNodeProps {
   data: {
     id:string,
     label:string,
-    type:string
+    type:string,
+    asset_category?:string
   }
-  createRelationNodeAndEdge?: (assetId: string, relationName: string) => void;
+  createRelationNodeAndEdge?: (assetId: string, relationName: string, asset_category?:string) => void;
 }
 
 interface AssetDetail {
@@ -51,6 +53,7 @@ interface FlowState {
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
+
   const connectionNodeId = useStore(connectionNodeIdSelector);
   const isConnecting = connectionNodeId != null;
   const isConnectable = connectionNodeId !== data.id;
@@ -82,8 +85,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           label: key,
           value: key,
           class: value.class,
+          asset_category:value?.product_type
         }));
-
+      console.log("options",options)
       setRelationOptions(options);
     } catch (err) {
       setRelationOptions([]);
@@ -105,8 +109,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       );
       const relationClass = opt?.class ?? "";
       const relationName = opt?.label ?? relationLabel;
+      const relationAssetCategory = opt?.asset_category ?? ""; 
 
-      createRelationNodeAndEdge(data.id, relationName, relationClass);
+      createRelationNodeAndEdge(data.id, relationName, relationClass,relationAssetCategory);
     });
 
    
@@ -135,8 +140,8 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     newlySelectedRelations.forEach((relationLabel: string) => {
       const relationOption = relationOptions.find(option => option.label === relationLabel);
       const relationClass = relationOption ? relationOption.class : '';
-
-      createRelationNodeAndEdge(data.id, relationLabel ,relationClass);
+      const relationAssetCategory = relationOption?.asset_category ?? "";
+      createRelationNodeAndEdge(data.id, relationLabel ,relationClass,relationAssetCategory);
 
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>
@@ -172,32 +177,21 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       data-handlepos="top"
       isConnectable={isConnectable}
     />
-    <small className="node-label">{data.label}</small>
-    <div className="flex align-items-center" style={{ marginTop: 8 }}>
-      <div
-        className="add-relation-center nodrag nopan"            
-        onMouseDown={(e) => e.stopPropagation()}              
-        onClick={(e) => e.stopPropagation()}                  
-      >
-        <Button
-          icon="pi pi-plus"
-          rounded
-          text
-          aria-label="Add relations"
-          className="add-relation-btn"
-          tooltip="Add relations"
-          tooltipOptions={{ position: "top" }}
+    <small className="node-label-name">{data.label}</small>
+    <small className="node-label-type">{data.asset_category}</small>
+  
+      <Button
+        icon="pi pi-plus"
+        aria-label="Add relations"
+        className="global-button is-grey nodrag nopan asset-add-btn"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          openDialogAndFetch();
+        }}
+      />
 
 
-          onMouseDown={(e) => e.stopPropagation()}             
-          onClick={(e) => {
-            e.stopPropagation();
-            openDialogAndFetch();                         
-          }}
-        />
-      </div>
-
-    </div>
 
       <Dialog
         header="Select Relations"           
