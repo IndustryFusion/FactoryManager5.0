@@ -27,3 +27,15 @@ export const getAlerts = async () => {
     }
 
 }
+
+
+export const postStatusForAlert = async (id: string, data: any) => {
+    const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+    try {
+        let url =  API_URL + '/alerts/' + id + '/status';
+        const response = await axios.post(url, data);
+        return response.data;
+    } catch (err) {
+        console.log('Error From @component/alert/alert-service.ts ',err);
+    }
+}

@@ -13,6 +13,9 @@
     "refresh": "Aktualisierung",
     "exportJPEG": "Als JPEG exportieren",
     "acknowledge": "Anerkennen",
+    "acknowledge_warn": "Den Status der Warnung setzen.",
+    "select_status": "Status",
+    "change_status": "Status ändern",
     "show": "Zeigen",
     "dashboard": "Armaturenbrett",
     "assets": "Vermögenswerte"
