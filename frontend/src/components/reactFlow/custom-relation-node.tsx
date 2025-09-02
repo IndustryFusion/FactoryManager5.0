@@ -81,26 +81,25 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
         const rawCategory =
           asset?.asset_category?.value ?? asset?.asset_category ?? "";
 
-        // Clean versions for matching/search
         const label_clean = String(rawLabel).toLowerCase().replace(/\btemplate\b/gi, "").trim();
         const asset_category_clean = String(rawCategory).toLowerCase().replace(/\btemplate\b/gi, "").trim();
 
-        // keep only strictly matching category (post-clean)
+
         if (asset_category_clean !== desiredCategory) return null;
 
-        // exclude already-connected + parent asset
+
         if (connectedBackendIds.has(asset?.id)) return null;
         if (data?.parentId) {
           const parentNode = (nodes ?? []).find((n: any) => n.id === data.parentId);
           if (parentNode?.data?.id && parentNode.data.id === asset?.id) return null;
         }
 
-        // Store both raw and clean for filtering & display
+
         return {
           label: rawLabel,
           value: asset?.id,
           asset_category: rawCategory,
-          // extra fields used by MultiSelect's filter
+
           label_clean,
           asset_category_clean,
         } as Option & { label_clean: string; asset_category_clean: string };
