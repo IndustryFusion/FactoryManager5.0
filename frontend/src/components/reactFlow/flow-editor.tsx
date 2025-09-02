@@ -218,7 +218,8 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   const createRelationNodeAndEdge = (
     assetId: string,
     relationsInput: string,
-    relationClass: string
+    relationClass: string,
+    asset_category?:string
   ) => {
     const assetNode = nodes.find((node) => node.id === selectedAsset);
     if (!assetNode) {
@@ -252,7 +253,6 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       const relationNodeId = `relation_${relationName}_${String(
         newCount
       ).padStart(3, "0")}`;
-      const expectedAssetCategory = relationToAssetCategory(relationName);
       const newRelationNode = {
         id: relationNodeId,
         style: {
@@ -266,7 +266,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
           type: "relation",
           class: relationClass,
           parentId: selectedAsset,
-          asset_category: expectedAssetCategory,
+          asset_category,
         },
         position: {
           x: assetNode.position.x + baseXOffset, // adjusted x offset
@@ -307,6 +307,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
         type: "asset",
         label: asset.label,
         id: asset.id,
+        asset_category: asset.asset_category
       },
       style: { backgroundColor: "#caf1d8", border: "none", borderRadius: 10 }
     };
@@ -1554,6 +1555,7 @@ const handleBackspacePress = useCallback(() => {
                   type: type,
                   label,
                   id: item.id,
+                  asset_category:item.asset_category
                 },
               };
 

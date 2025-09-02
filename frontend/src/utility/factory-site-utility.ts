@@ -72,7 +72,7 @@ interface RelationshipDetail {
 
 type ExtractedRelations = Record<
   string,
-  { type: "Relationship"; segment: "component"; objects?: string[] }
+  { type: "Relationship"; segment: "component"; objects?: string[], product_type?: string; }
 >;
 
 export const handleUpload = async (file: File): Promise<string> => {
@@ -498,10 +498,22 @@ export async function getShopFloorAndAssetData(factoryId: string) {
 }
 
 
-
+function humanizeIRI(value?: string): string | undefined {
+  if (!value) return undefined;
+  const last = (value.split(/[\/#]/).filter(Boolean).pop() || value)
+    .replace(/[_-]+/g, " ")
+    // split camelCase & ALLCAPSNextWord
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .trim();
+  return last
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 const segVal = (x: any) => (x && typeof x === "object" ? x.value : undefined);
 const SEGMENT_IRI = "https://industry-fusion.org/base/v0.1/segment";
-
+const PRODUCT_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship";
 export const relationToAssetCategory = (relationName: string) => {
   const token = relationName
     .replace(/^has[_-]?/i, "")           
@@ -540,9 +552,17 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       objects = [rawObj];
     }
 
+    let product_type: string | undefined;
+    const pt = (value as any)[PRODUCT_TYPE_IRI];
+    if (pt && typeof pt === "object") {
+      const rawPT = segVal(pt) || (typeof pt.value === "string" ? pt.value : undefined);
+      product_type = humanizeIRI(rawPT);
+    }
+
     out[cleanedKey] = {
       type: "Relationship",
       segment: "component",
+      ...(product_type ? { product_type } : {}),
       ...(objects && objects.length ? { objects } : {}),
     };
   }

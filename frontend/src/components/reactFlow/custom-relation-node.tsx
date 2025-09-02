@@ -42,45 +42,6 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
 
   const unAllocated = useSelector((state: RootState) => state.unAllocatedAsset);
 
-  const desiredCategory = (data?.asset_category || "").toLowerCase().trim();
-
-  ///later it will reomved by product_type or asset_category
-  const normalize = (s: string) =>
-    (s || "")
-        .toLowerCase()
-        .replace(/[_-]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    const lastWord = (s: string) => {
-    const parts = normalize(s).split(" ");
-    return parts[parts.length - 1] || "";
-    };
-
-    const isCategoryCompatible = (assetCategory: string, relationCategory: string) => {
-    const a = normalize(assetCategory);
-    const r = normalize(relationCategory);
-    if (!a || !r) return false;
-
-
-    if (a === r) return true;
-
-
-    if (lastWord(a) === r) return true;
-
-
-    if (new RegExp(`\\b${r}\\b`).test(a)) return true;
-
-    return false;
-    };
-
-
-  const relationTypeFallback = useMemo(() => {
-    return (data?.label ?? "")
-      .split("_")[0]
-      .replace(/^has/i, "")
-      .toLowerCase();
-  }, [data?.label]);
 
   const connectedBackendIds = useMemo(() => {
     const ids = new Set<string>();
@@ -94,40 +55,60 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
     return ids;
   }, [edges, nodes, id]);
 
-const options: Option[] = useMemo(() => {
-  const list = Object.values(unAllocated ?? {}) as any[];
 
-  return list
-    .map((asset: any) => {
-      const label =
-        asset?.product_name?.value ?? asset?.product_name ?? asset?.label ?? asset?.id;
-      const asset_category =
-        asset?.asset_category?.value ?? asset?.asset_category ?? "";
 
-      let passes = true;
 
-      if (desiredCategory) {
 
-        passes = isCategoryCompatible(asset_category, desiredCategory);
-      } else {
+  const desiredCategory = (data?.asset_category ?? "")
+    .toLowerCase()
+    .replace(/\btemplate\b/gi, "")
+    .trim();
 
-        if (relationTypeFallback) {
-          passes = isCategoryCompatible(asset_category, relationTypeFallback);
+  const options: Option[] = useMemo(() => {
+
+    if (!desiredCategory) return [];
+
+    const list = Object.values(unAllocated ?? {}) as any[];
+
+    return list
+      .map((asset: any) => {
+        const rawLabel =
+          asset?.product_name?.value ??
+          asset?.product_name ??
+          asset?.label ??
+          asset?.id;
+
+        const rawCategory =
+          asset?.asset_category?.value ?? asset?.asset_category ?? "";
+
+        // Clean versions for matching/search
+        const label_clean = String(rawLabel).toLowerCase().replace(/\btemplate\b/gi, "").trim();
+        const asset_category_clean = String(rawCategory).toLowerCase().replace(/\btemplate\b/gi, "").trim();
+
+        // keep only strictly matching category (post-clean)
+        if (asset_category_clean !== desiredCategory) return null;
+
+        // exclude already-connected + parent asset
+        if (connectedBackendIds.has(asset?.id)) return null;
+        if (data?.parentId) {
+          const parentNode = (nodes ?? []).find((n: any) => n.id === data.parentId);
+          if (parentNode?.data?.id && parentNode.data.id === asset?.id) return null;
         }
-      }
 
-      if (!passes) return null;
+        // Store both raw and clean for filtering & display
+        return {
+          label: rawLabel,
+          value: asset?.id,
+          asset_category: rawCategory,
+          // extra fields used by MultiSelect's filter
+          label_clean,
+          asset_category_clean,
+        } as Option & { label_clean: string; asset_category_clean: string };
+      })
+      .filter(Boolean) as Option[];
+  }, [unAllocated, desiredCategory, connectedBackendIds, data?.parentId, nodes]);
 
-      if (connectedBackendIds.has(asset?.id)) return null;
-      if (data?.parentId) {
-        const parentNode = (nodes ?? []).find((n: any) => n.id === data.parentId);
-        if (parentNode?.data?.id && parentNode.data.id === asset?.id) return null;
-      }
 
-      return { label, value: asset?.id, asset_category } as Option;
-    })
-    .filter(Boolean) as Option[];
-}, [unAllocated, desiredCategory, relationTypeFallback, connectedBackendIds, data?.parentId, nodes]);
 
 
   const onConfirm = () => {
@@ -152,22 +133,22 @@ const options: Option[] = useMemo(() => {
 
       <small className="node-label">{data.label}</small>
 
-      <div className="add-relation-center nodrag nopan" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-        <Button
-          icon="pi pi-plus"
-          rounded
-          text
-          aria-label="Add target assets"
-          className="add-relation-btn"
-          tooltip="Add target assets"
-          tooltipOptions={{ position: "top" }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            setDialogVisible(true);
-          }}
-        />
-      </div>
+      <Button
+        icon="pi pi-plus"
+        rounded
+        text
+        aria-label="Add target assets"
+        className="global-button is-grey nodrag nopan asset-add-btn"
+        tooltip="Add target assets"
+        tooltipOptions={{ position: "top" }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          setDialogVisible(true);
+        }}
+      />
+
 
       <Dialog header="Pick target assets" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: "26rem" }} modal>
         <div className="p-field" style={{ marginTop: 8 }}>
