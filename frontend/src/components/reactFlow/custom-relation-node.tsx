@@ -15,7 +15,7 @@
 // limitations under the License. 
 // 
 
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { Handle, Position, useStore } from "reactflow";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
@@ -24,21 +24,25 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css";
+import { Toast } from "primereact/toast";
 
-type Option = { label: string; value: string; asset_category: string };
+
+type Option = {
+  asset_serial_number: string; label: string; value: string; asset_category: string 
+};
 
 interface CustomRelationNodeProps {
-  data: { label: string; type: "relation"; parentId?: string; class?: string; asset_category?: string };
+  data: { label: string; type: "relation"; parentId?: string; class?: string; asset_category?: string ,asset_serial_number?:string};
   id: string;
 }
 
 const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => {
-  const { createAssetNodeAndEdgeFromRelation } = useContext(EdgeAddContext);
+  const { createAssetNodeAndEdgeFromRelation, setNodes, setEdges } = useContext(EdgeAddContext);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-
-  const nodes = useStore((s: any) => s.nodes);
-  const edges = useStore((s: any) => s.edges);
+  const toast = useRef<Toast>(null);
+  const nodes = useStore((s: any) => s.nodes ?? []);
+  const edges = useStore((s: any) => s.edges ?? []);
 
   const unAllocated = useSelector((state: RootState) => state.unAllocatedAsset);
 
@@ -99,7 +103,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
           label: rawLabel,
           value: asset?.id,
           asset_category: rawCategory,
-
+          asset_serial_number:asset?.asset_serial_number?.value,
           label_clean,
           asset_category_clean,
         } as Option & { label_clean: string; asset_category_clean: string };
@@ -111,6 +115,24 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
 
 
   const onConfirm = () => {
+    if (data.class === "machine") {
+      const existingEdge = edges.find((e: any) => e.source === id);
+      if (existingEdge) {
+        const oldTargetId = existingEdge.target;
+
+
+        setNodes((prev: any[]) => prev.filter((n) => n.id !== oldTargetId));
+        setEdges((prev: any[]) => prev.filter((e) => e.id !== existingEdge.id));
+
+        toast.current?.show({
+          severity: "info",
+          summary: "Old node removed",
+          detail: "Machine relation can only connect to one asset. Replaced with your new selection.",
+          life: 3000,
+        });
+      }
+    }
+
     options
       .filter((o) => selected.includes(o.value))
       .forEach((o) => {
@@ -118,12 +140,15 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
           id: o.value,
           label: o.label,
           asset_category: o.asset_category,
+          asset_serial_number: o.asset_serial_number,
         });
       });
 
     setDialogVisible(false);
     setSelected([]);
   };
+
+
 
   return (
     <div className="customNode relationNode" style={{ backgroundColor: "#ead6fd", borderRadius: 16 }}>
@@ -149,18 +174,63 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
       />
 
 
-      <Dialog header="Pick target assets" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: "26rem" }} modal>
+      <Dialog header="Pick target assets" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: "26rem" }}  modal dismissableMask>
         <div className="p-field" style={{ marginTop: 8 }}>
-          <MultiSelect
-            value={selected}
-            options={options}
-            onChange={(e) => setSelected(e.value)}
-            optionLabel="label"
-            optionValue="value"
-            placeholder={options.length ? "Select assets…" : "No compatible unallocated assets"}
-            display="chip"
-            className="w-full"
-          />
+         {data.class === "machine" ? (
+            options.length > 0 ? (
+              <div className="flex flex-column gap-2">
+                {options.map((o) => {
+                  const active = selected[0] === o.value;
+                  const iconSrc = active
+                    ? "/button_icons/radio-active-blue.svg"
+                    : "/button_icons/radio-active-grey.svg";
+
+                  return (
+                    <div
+                      key={o.value}
+                      className="flex align-items-center gap-2 cursor-pointer"
+                      onClick={() => setSelected([o.value])}
+                    >
+                      <img src={iconSrc} alt="radio" width={20} height={20} />
+                      <span>{o.label} ({o.asset_serial_number})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 mt-2">
+                No products available
+              </div>
+            )
+          ) : (
+            options.length > 0 ? (
+              <div className="flex flex-column gap-2">
+                {options.map((o) => (
+                  <div key={o.value} className="flex align-items-center gap-2">
+                    <input
+                        type="checkbox"
+                        className="custom-checkbox"
+                        checked={selected.includes(o.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelected((prev) => [...prev, o.value]);
+                          } else {
+                            setSelected((prev) => prev.filter((v) => v !== o.value));
+                          }
+                        }}
+                      />
+
+                    <span>{o.label} ({o.asset_serial_number})</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 mt-2">
+                No compatible unallocated assets
+              </div>
+            )
+          )}
+
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>

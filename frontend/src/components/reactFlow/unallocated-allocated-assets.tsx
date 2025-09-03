@@ -96,14 +96,16 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
       return {
         id: asset.id,
         product_name: asset.product_name?.value ,
-        asset_category: asset.asset_category?.value 
+        asset_category: asset.asset_category?.value ,
+        asset_serial_number:asset.asset_serial_number?.value
        };
       });
         // destructuring the asset id, product_name, asset_catagory for allocated Asset
       const unifiedAllocatedAssets = fetchedAllocatedAssets.map((asset:Asset) => ({
       id: asset.id,
       product_name: asset.product_name , 
-      asset_category: asset.asset_category
+      asset_category: asset.asset_category,
+      asset_serial_number:asset.asset_serial_number?.value
     }));
 
         // combined asset catagories from both allocated asset and un allocated asset

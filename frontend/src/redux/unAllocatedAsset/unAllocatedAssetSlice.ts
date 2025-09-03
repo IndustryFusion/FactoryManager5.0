@@ -18,6 +18,9 @@ import { createSlice } from '@reduxjs/toolkit';
 import { string } from 'prop-types';
 
 interface unAllocatedAssetState {
+    asset_serial_number: {
+        value:string
+    } ;
     id: string;
     product_name:{
         value:string

@@ -76,7 +76,7 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
           </div>
         )}
         <div>
-          <div className="asset_search_result_title">{asset.product_name}</div>
+          <div className="asset_search_result_title">{asset.product_name} ({asset.asset_serial_number})</div>
           <div className="asset_search_result_type">{getProductType(asset.type)}</div>
         </div>
       </div>

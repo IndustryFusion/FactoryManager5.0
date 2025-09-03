@@ -514,6 +514,7 @@ function humanizeIRI(value?: string): string | undefined {
 const segVal = (x: any) => (x && typeof x === "object" ? x.value : undefined);
 const SEGMENT_IRI = "https://industry-fusion.org/base/v0.1/segment";
 const PRODUCT_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship";
+const CLASS_TYPE_IRI ="https://industry-fusion.org/base/v0.1/class"
 export const relationToAssetCategory = (relationName: string) => {
   const token = relationName
     .replace(/^has[_-]?/i, "")           
@@ -542,6 +543,7 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
 
 
     const rawObj = (value as any).object;
+
     let objects: string[] | undefined;
 
     if (Array.isArray(rawObj)) {
@@ -558,15 +560,19 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       const rawPT = segVal(pt) || (typeof pt.value === "string" ? pt.value : undefined);
       product_type = humanizeIRI(rawPT);
     }
-
+    let relation_class: string | undefined;
+    const cls = (value as any)[CLASS_TYPE_IRI];
+    if (cls && typeof cls === "object" && typeof cls.value === "string") {
+      relation_class = cls.value;
+    }
     out[cleanedKey] = {
       type: "Relationship",
       segment: "component",
       ...(product_type ? { product_type } : {}),
+      ...(relation_class ? { class: relation_class } : {}),
       ...(objects && objects.length ? { objects } : {}),
     };
   }
-
   return out;
 }
 export const saveFlowchartData = async (
@@ -600,6 +606,7 @@ export const getAssetRelationById = async (assetId: string) => {
       withCredentials: true,
     });
     const responseData = response.data;
+    console.log("responseData",responseData)
     const mappedData = extractHasRelations(responseData);
     return mappedData;
   } catch (error) {
