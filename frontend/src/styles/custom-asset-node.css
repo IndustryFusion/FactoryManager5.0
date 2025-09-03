@@ -40,6 +40,21 @@
   transform: translateY(-50%) !important; 
 }
 
+.node-label-serial-number {
+  font-weight: 500;
+  margin-bottom: 7px;
+  color: var(--black);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.0;
+  text-align: center;   
+  width: 100%;                
+  display: block;             
+  margin-left: auto;          
+  margin-right: auto;
+}
 
 .assetNode .customHandle[data-handlepos="top"] {
   top: -10px !important;
@@ -111,7 +126,7 @@
 /* Node Label */
 .node-label-name {
   font-weight: 500;
-  margin-bottom: 16px;
+  margin-bottom: 5px;
   color: var(--black);
 
   -webkit-box-orient: vertical;
@@ -120,6 +135,11 @@
   word-wrap: break-word;
   max-width: 100%;
   line-height: 1.0;
+  text-align: center;   
+  width: 100%;                
+  display: block;             
+  margin-left: auto;          
+  margin-right: auto;
 }
 .customNode .node-label-name + .node-label-type { text-align: center; width: 100%; display: block; }
 
@@ -130,6 +150,11 @@
   color: var(--grey-secondary);
   margin: 0 auto 8px;  
   line-height: 0.1;
+  text-align: center;   
+  width: 100%;                
+  display: block;             
+  margin-left: auto;          
+  margin-right: auto;
 }
 /* Handle Visibility */
 .react-flow__handle {
@@ -253,3 +278,29 @@
   display: none;
 }
 
+/* Custom checkbox styling */
+.custom-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.custom-checkbox:checked {
+  background-color: var(--ifx-blue, #3CA0C9);
+  border-color: var(--ifx-blue, #3CA0C9);
+}
+
+.custom-checkbox:checked::after {
+  content: "✔";
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  font-size: 14px;
+  color: #fff;
+}

@@ -64,7 +64,8 @@ export class NonShopFloorAssetsService {
           const filteredObject = {
             id,
             product_name: '',
-            asset_category: ''
+            asset_category: '',
+            asset_serial_number:''
           };
 
           // Find and set product name
@@ -79,6 +80,11 @@ export class NonShopFloorAssetsService {
             filteredObject.asset_category = assetData[assetCategoryKey];
           }
 
+          // Find and set asset serial number
+          const assetSerialKey = Object.keys(assetData).find(key => key?.includes("asset_serial_number"));
+          if (assetSerialKey) {
+            filteredObject.asset_serial_number = assetData[assetSerialKey];
+          }
           // Add properties that include 'has'
           Object.entries(assetData).forEach(([key, value]) => {
             if (key?.includes('has')) {

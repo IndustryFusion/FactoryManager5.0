@@ -278,6 +278,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       const newEdge = {
         id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${new Date().getTime()}`,
         source: selectedAsset ?? "",
+        type: "smoothstep",
         target: relationNodeId ?? "",
       };
 
@@ -288,7 +289,9 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   };
   const createAssetNodeAndEdgeFromRelation = (
     relationNodeId: string,
-    asset: { id: string; label: string; asset_category: string }
+    asset: {
+      asset_serial_number: string; id: string; label: string; asset_category: string 
+}
   ) => {
     
     const relationNode = nodes.find(n => n.id === relationNodeId);
@@ -298,16 +301,13 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
     const newAssetNode: Node = {
       id: newAssetNodeId,
       type: "asset",
-      position: {
-        x: relationNode.position.x + 220,
-        y: relationNode.position.y,
-      },
       asset_category: asset.asset_category,      
       data: {
         type: "asset",
         label: asset.label,
         id: asset.id,
-        asset_category: asset.asset_category
+        asset_category: asset.asset_category,
+        asset_serial_number:asset.asset_serial_number
       },
       style: { backgroundColor: "#caf1d8", border: "none", borderRadius: 10 }
     };
@@ -316,10 +316,16 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       id: `reactflow__edge-${relationNodeId}-${newAssetNodeId}_${Date.now()}`,
       source: relationNodeId,
       target: newAssetNodeId,
+      type: "smoothstep",
       animated: true,
     };
 
-    setNodes(prev => [...prev, newAssetNode]);
+    setNodes((prevNodes) => {
+      const newNodes = [...prevNodes, newAssetNode];
+      const layouted = applyDagreLayout(newNodes, [...edges, newEdge], false);
+      return layouted;
+    });
+
     setEdges(prev => addEdge(newEdge, prev));
     addToHistory([...nodes, newAssetNode], [...edges, newEdge]);
   };
@@ -367,6 +373,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
         const newEdge = {
           id: `reactflow__edge-${factoryNodeId}-${shopFloorNodeId}_${new Date().getTime()}`,
           source: factoryNodeId,
+          type: "smoothstep",
           target: shopFloorNodeId,
         };
 
@@ -1309,8 +1316,21 @@ const onElementClick: NodeMouseHandler = useCallback(
       //   sourceNode.data.class = "machine";
       //   console.log("Classified as machine:", sourceNode);
       // }
-      //before logic :   if (sourceNode.data.type === "relation" && sourceNode.data.class === "machine") {
+      if (sourceNode?.data.type === "relation") {
+        const relationClass = sourceNode.data.class;
 
+          if (relationClass === "machine") {
+            const existingConnections = edges.filter((e) => e.source === sourceNode.id);
+            if (existingConnections.length >= 1) {
+              toast.current?.show({
+                severity: "warn",
+                summary: "Operation not allowed",
+                detail: "Machine relation can only connect to one asset.",
+              });
+              return;
+            } 
+        }
+      }
       if (!sourceNode || !targetNode) return;
       // Check if the source node is a relation and it already has an outgoing connection
       if (
@@ -1397,6 +1417,7 @@ const onElementClick: NodeMouseHandler = useCallback(
         const newEdge = {
           id: `reactflow_edge-${newRelationNodeId}_${new Date().getTime()}`,
           source: newRelationNodeId,
+          type: "smoothstep",
           target: targetNode.id,
 
           animated: true,
@@ -1555,7 +1576,8 @@ const handleBackspacePress = useCallback(() => {
                   type: type,
                   label,
                   id: item.id,
-                  asset_category:item.asset_category
+                  asset_category:item.asset_category,
+                  asset_serial_number:item.asset_serial_number
                 },
               };
 
@@ -1648,6 +1670,7 @@ const handleBackspacePress = useCallback(() => {
 
   return (
     <>
+      <Toast ref={toast} />
       <ReactFlowProvider>
         <Dialog
           header="Factory Details"
@@ -1663,7 +1686,7 @@ const handleBackspacePress = useCallback(() => {
           </p>
         </Dialog>
 
-        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation }}>
+        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,setNodes, setEdges}}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
 
           <div className="flex justify-content-between">

@@ -78,7 +78,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       const assetDetails = (await getAssetRelationById(
         data.id
       )) as any ;
-
+      console.log("assetDetails",assetDetails)
       const options: RelationOption[] = Object.entries(assetDetails)
         .filter(([, value]) => value?.type === "Relationship")
         .map(([key, value]) => ({
@@ -95,6 +95,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       setIsLoading(false);
     }
   };
+
+  function getShortSerial(serial = "") {
+    if (serial.length > 7) {
+      return `${serial.slice(0, 3)}..${serial.slice(-4)}`;
+    }
+    return serial;
+  }
 
   const handleAdd = () => {
     if (!selectedRelations.length) return;
@@ -178,6 +185,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       isConnectable={isConnectable}
     />
     <small className="node-label-name">{data.label}</small>
+    <small className="node-label-serial-number">{getShortSerial(data.asset_serial_number)}</small>
     <small className="node-label-type">{data.asset_category}</small>
   
       <Button
@@ -199,6 +207,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
         onHide={() => setDialogVisible(false)}
         style={{ width: "28rem" }}
         modal
+        dismissableMask
       >
         <div className="p-field" style={{ marginTop: 8 }}>
           <MultiSelect

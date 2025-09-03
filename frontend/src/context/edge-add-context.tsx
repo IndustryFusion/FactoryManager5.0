@@ -15,27 +15,33 @@
 // 
 
 import React from "react";
+import { Node, Edge } from "reactflow";
 
 export type CreateRelationNodeAndEdgeFn = (
   assetId: string,
   relationName: string,
   relationClass?: string,
-  asset_category?:string
+  asset_category?:string,
+  asset_serial_number?:string
 ) => void;
 
 export type CreateAssetNodeAndEdgeFromRelationFn = (
   relationNodeId: string,
-  asset: { id: string; label: string; asset_category: string }
+  asset: { id: string; label: string; asset_category: string ,asset_serial_number:string}
 ) => void;
 
 export interface EdgeAddContextType {
   createRelationNodeAndEdge: CreateRelationNodeAndEdgeFn;
   createAssetNodeAndEdgeFromRelation: CreateAssetNodeAndEdgeFromRelationFn;
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
 }
 
 const EdgeAddContext = React.createContext<EdgeAddContextType>({
   createRelationNodeAndEdge: () => {},
   createAssetNodeAndEdgeFromRelation: () => {},
+  setNodes: () => {},
+  setEdges: () => {},
 });
 
 export default EdgeAddContext;
