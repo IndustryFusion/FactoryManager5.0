@@ -94,22 +94,28 @@ body {
 
 .tab-buttons {
     display: flex;
-    gap: 8px;
+    align-items: stretch;
+    background-color: var(--common-text-grey-100);
+    border-radius: 10px;
+    padding: 4px;
 }
 
 .tab-button {
     background: transparent;
-    border: 1px solid #e0e0e0;
+    border: none;
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 14px;
-    color: #1d1d1f;
+    color: #475467;
+    font-weight: 400;
     cursor: pointer;
+    min-width: 80px;
 }
 
 .tab-button.active {
-    background: #1d1d1f;
-    color: #fff;
+    background: white;
+    color: #1d1d1f;
+    font-weight: 500;
 }
 
 .barchart {
@@ -336,4 +342,71 @@ body {
     font-style: normal;
     font-weight: 500;
     line-height: normal;
+}
+/* bar chart styles */
+
+div:has(>.machine_uptime_chart_tooltip) {
+    background-color: white !important;
+    border-radius: 8px !important;
+    box-shadow: 3px 10px 24px 0px rgba(67, 71, 78, 0.24) !important;
+    font-family: "inherit" !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    padding: 0px !important
+}
+
+.muct_header {
+    width: 100%;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--black);
+    border-bottom: 1px solid var(--common-text-grey-200);
+    padding: 8px 12px;
+}
+
+.muct_header span {
+    font-weight: 400;
+    color: var(--common-text-grey-400);
+}
+
+.muct_details {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0px;
+    padding: 10px 12px;
+}
+
+.muct_row {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 76px 27px 34px;
+}
+
+.muct_row>div:not(:first-child) {
+    justify-self: end;
+}
+
+.muct_row>div {
+    font-size: 14px;
+    color: var(--black)
+}
+
+.muct_row div span {
+    color: var(--common-text-grey-400)
+}
+
+.muct_row>div:last-child {
+    font-weight: 500;
+    color: #475467
+}
+
+.muct_row>div:last-child>span {
+    padding-left: 3px;
+}
+
+.muct_row>div:first-child>span {
+    width: 8px !important;
+    height: 8px !important;
 }
