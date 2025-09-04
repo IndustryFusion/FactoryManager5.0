@@ -69,7 +69,11 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
 
+
+  const getInitial = (s?: string) =>
+    (s?.trim()?.charAt(0) || "?").toUpperCase();
   const openDialogAndFetch = async () => {
     try {
       setIsLoading(true);
@@ -195,16 +199,20 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     <small className="node-label-type">{data.asset_category}</small> */}
 
       <div className="an-card">
+
         <div className="an-thumb">
-          <img
-            className="an-img"
-            alt="asset"
-            src={data.image_url || "/factory-flow-buttons/asset-placeholder.png"}
-            onError={(e: any) => {
-              e.currentTarget.src = "/factory-flow-buttons/asset-placeholder.png";
-            }}
-          />
+          {data.image_url && !imgErr ? (
+            <img
+              className="an-img"
+              alt="asset"
+              src={data.image_url}
+              onError={() => setImgErr(true)}
+            />
+          ) : (
+            <span className="an-initial">{getInitial(data.label)}</span>
+          )}
         </div>
+
 
         <div className="an-body">
           <div className="an-title-row">
