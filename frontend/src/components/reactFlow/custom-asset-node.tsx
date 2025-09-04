@@ -37,7 +37,9 @@ interface CustomAssetNodeProps {
     id:string,
     label:string,
     type:string,
-    asset_category?:string
+    asset_category?:string,
+    image_url?: string;             
+    manufacturer?: string;          
   }
   createRelationNodeAndEdge?: (assetId: string, relationName: string,relationClass: string, asset_category?:string) => void;
 }
@@ -67,7 +69,11 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
 
+
+  const getInitial = (s?: string) =>
+    (s?.trim()?.charAt(0) || "?").toUpperCase();
   const openDialogAndFetch = async () => {
     try {
       setIsLoading(true);
@@ -167,7 +173,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       );
     });
   };
-
+  const title = data.label ?? "Asset";
+  const sub = data.asset_category ?? "";
+  const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
   return (
   <div className="customNode">
     {!isConnecting && isConnectable && (
@@ -186,9 +194,37 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       data-handlepos="top"
       isConnectable={isConnectable}
     />
-    <small className="node-label-name">{data.label}</small>
+    {/* <small className="node-label-name">{data.label}</small>
     <small className="node-label-serial-number">{getShortSerial(data.asset_serial_number)}</small>
-    <small className="node-label-type">{data.asset_category}</small>
+    <small className="node-label-type">{data.asset_category}</small> */}
+
+      <div className="an-card">
+
+        <div className="an-thumb">
+          {data.image_url && !imgErr ? (
+            <img
+              className="an-img"
+              alt="asset"
+              src={data.image_url}
+              onError={() => setImgErr(true)}
+            />
+          ) : (
+            <span className="an-initial">{getInitial(data.label)}</span>
+          )}
+        </div>
+
+
+        <div className="an-body">
+          <div className="an-title-row">
+            <span className="an-title" title={title}>{title}</span>
+          </div>
+          {sub ? <div className="an-sub">{sub}</div> : null}
+          {vendorOrSerial ? <div className="an-link" title={vendorOrSerial}>{vendorOrSerial}</div> : null}
+        </div>
+
+        <div className="an-pill">Asset</div>
+      </div>
+
   
       <Button
         icon="pi pi-plus"

@@ -77,6 +77,8 @@ import {
 import { HistoryState } from "next/dist/shared/lib/router/router";
 import { handleUpdateRelations } from '@/utility/react-flow';
 import CustomRelationNode from "./custom-relation-node";
+import CustomFactoryNode from "./factory-node";
+import CustomShopFloorNode from "./shop-floor-node";
 interface RelationPayload {
   [key: string]: {
     [relationKey: string]: string[];
@@ -84,6 +86,8 @@ interface RelationPayload {
 }
 
 const nodeTypes = {
+  factory: CustomFactoryNode,
+  shopFloor: CustomShopFloorNode, 
   asset: CustomAssetNode,
   relation: CustomRelationNode,
 };
@@ -217,99 +221,114 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   // @desc : when in asset Node we get dropdown Relation then its creating relation node & connecting asset to hasRelation Edge
   const createRelationNodeAndEdge = (
     assetId: string,
-    relationsInput: string,
+    relationsInput: string | string[],
     relationClass: string,
-    asset_category?:string
+    asset_category?: string
   ) => {
-    const assetNode = nodes.find((node) => node.id === selectedAsset);
+    const assetNode = nodes.find(n => n.id === selectedAsset);
     if (!assetNode) {
       console.error("Selected asset node not found");
       return;
     }
-    console.log("selectedAsset",selectedAsset)
-    // handle both single and multiple relations uniformly
-    const relations = Array.isArray(relationsInput)
-      ? relationsInput
-      : [relationsInput];
 
-    relations.forEach((relationName) => {
-      // Increment the count for this specific relation, or initialize it if not present
-      const newCount = (relationCounts[relationName] || 0) + 1;
-      const updatedRelationCounts = {
-        ...relationCounts,
-        [relationName]: newCount,
-      };
-      // Persist the updated counts
-      setRelationCounts(updatedRelationCounts);
+    const relations = Array.isArray(relationsInput) ? relationsInput : [relationsInput];
 
-      // Calculate position based on existing relations to avoid overlap
-      let existingRelationsCount = nodes.filter(
-        (node) =>
-          node.data.type === "relation" && node.data.parentId === selectedAsset
-      ).length;
-      let baseXOffset = 200 + existingRelationsCount * 200;
+    const maxIndexByName = relations.reduce<Record<string, number>>((acc, name) => {
+      const maxExisting = Math.max(
+        0,
+        ...nodes
+          .filter(n => n.type === "relation" && n.id.startsWith(`relation_${name}_`))
+          .map(n => parseInt(n.id.split("_").pop() || "0", 10))
+      );
+      acc[name] = maxExisting;
+      return acc;
+    }, {});
+    const existingForThisAsset = nodes.filter(
+      n => n.type === "relation" && n.data?.parentId === selectedAsset
+    ).length;
 
-      // Create the ID using the updated count
-      const relationNodeId = `relation_${relationName}_${String(
-        newCount
-      ).padStart(3, "0")}`;
-      const newRelationNode = {
+    const newRelationNodes: Node[] = [];
+    const newRelationEdges: Edge[] = [];
+
+    relations.forEach((relationName, i) => {
+      const count = (maxIndexByName[relationName] ?? 0) + 1 + i;
+      const relationNodeId = `relation_${relationName}_${String(count).padStart(3, "0")}`;
+
+      const x = assetNode.position.x + 200 + (existingForThisAsset + i) * 200;
+      const y = assetNode.position.y + 200;
+
+      newRelationNodes.push({
         id: relationNodeId,
-        style: {
-          backgroundColor: "#ead6fd",
-          border: "none",
-          borderRadius: "45%",
-        },
         type: "relation",
+        position: { x, y },                           // ✅ ensure position
+        style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
         data: {
-          label: `${relationName}_${String(newCount).padStart(3, "0")}`,
+          label: `${relationName}_${String(count).padStart(3, "0")}`,
           type: "relation",
           class: relationClass,
           parentId: selectedAsset,
           asset_category,
         },
-        position: {
-          x: assetNode.position.x + baseXOffset, // adjusted x offset
-          y: assetNode.position.y + 200, // fixed y offset for visual consistency
-        },
-      };
+      });
 
-      //  new edge connecting the asset node to the new relation node
-      const newEdge = {
-        id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${new Date().getTime()}`,
+      newRelationEdges.push({
+        id: `reactflow__edge-${selectedAsset}-${relationNodeId}_${Date.now()}_${i}`,
         source: selectedAsset ?? "",
         type: "smoothstep",
-        target: relationNodeId ?? "",
-      };
+        target: relationNodeId,
+      });
+    });
 
-      // Update state with the new node and edge
-      setNodes((prevNodes) => [...prevNodes, newRelationNode]);
-      setEdges((prevEdges) => addEdge(newEdge, prevEdges));
+
+    setNodes(prev => {
+      const merged = [...prev, ...newRelationNodes];
+      const layouted = applyDagreLayout(merged, [...edges, ...newRelationEdges], false);
+      return layouted;
+    });
+
+    setEdges(prev => newRelationEdges.reduce((acc, e) => addEdge(e, acc), prev));
+
+    setRelationCounts(prev => {
+      const next = { ...prev };
+      relations.forEach((name) => {
+        next[name] = Math.max(next[name] ?? 0, maxIndexByName[name] + relations.length);
+      });
+      return next;
     });
   };
+
   const createAssetNodeAndEdgeFromRelation = (
     relationNodeId: string,
-    asset: {
-      asset_serial_number: string; id: string; label: string; asset_category: string 
-}
+    asset: { asset_serial_number: string; id: string; label: string; asset_category: string }
   ) => {
-    
     const relationNode = nodes.find(n => n.id === relationNodeId);
     if (!relationNode) return;
 
-    const newAssetNodeId = `asset_${asset.id}_${Date.now()}`;
+
+    const currentChildCount =
+      edges.filter(e => e.source === relationNodeId).length;
+
+    const newAssetNodeId = `asset_${asset.id}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+
+
+    const provisionalPos = {
+      x: relationNode.position.x + 220 * currentChildCount,
+      y: relationNode.position.y + 150,
+    };
+
     const newAssetNode: Node = {
       id: newAssetNodeId,
       type: "asset",
-      asset_category: asset.asset_category,      
+      position: provisionalPos,                 
+      asset_category: asset.asset_category,
       data: {
         type: "asset",
         label: asset.label,
         id: asset.id,
         asset_category: asset.asset_category,
-        asset_serial_number:asset.asset_serial_number
+        asset_serial_number: asset.asset_serial_number,
       },
-      style: { backgroundColor: "#caf1d8", border: "none", borderRadius: 10 }
+      style: { backgroundColor: "", border: "none", borderRadius: 10 },
     };
 
     const newEdge = {
@@ -320,13 +339,22 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       animated: true,
     };
 
-    setNodes((prevNodes) => {
-      const newNodes = [...prevNodes, newAssetNode];
-      const layouted = applyDagreLayout(newNodes, [...edges, newEdge], false);
+
+    setNodes(prevNodes => {
+      const merged = [...prevNodes, newAssetNode];
+      const layouted = applyDagreLayout(merged, [...edges, newEdge], false);
       return layouted;
     });
 
-    setEdges(prev => addEdge(newEdge, prev));
+
+  setEdges(prevEdges => {
+    const nextEdges = addEdge(newEdge, prevEdges);
+    setNodes(prevNodes =>
+      applyDagreLayout([...prevNodes, newAssetNode], nextEdges, false)
+    );
+    return nextEdges;
+  });
+
     addToHistory([...nodes, newAssetNode], [...edges, newEdge]);
   };
 
