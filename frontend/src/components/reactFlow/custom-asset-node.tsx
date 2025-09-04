@@ -39,7 +39,7 @@ interface CustomAssetNodeProps {
     type:string,
     asset_category?:string
   }
-  createRelationNodeAndEdge?: (assetId: string, relationName: string, asset_category?:string) => void;
+  createRelationNodeAndEdge?: (assetId: string, relationName: string,relationClass: string, asset_category?:string) => void;
 }
 
 interface AssetDetail {
@@ -145,11 +145,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
 
     // Process newly selected relations
     newlySelectedRelations.forEach((relationLabel: string) => {
-      const relationOption = relationOptions.find(option => option.label === relationLabel);
-      const relationClass = relationOption ? relationOption.class : '';
+      const relationOption = relationOptions.find(
+        option => option.label === relationLabel || option.value === relationLabel
+      );
+      const relationClass = relationOption?.class ?? "";  
       const relationAssetCategory = relationOption?.asset_category ?? "";
-      createRelationNodeAndEdge(data.id, relationLabel ,relationClass,relationAssetCategory);
-
+     const labelToUse = relationOption?.label ?? relationLabel;
+     createRelationNodeAndEdge(data.id, labelToUse ,relationClass,relationAssetCategory);
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>
         prev.filter((rel) => rel !== relationLabel)
@@ -210,15 +212,32 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
         dismissableMask
       >
         <div className="p-field" style={{ marginTop: 8 }}>
-          <MultiSelect
-            value={selectedRelations}
-            options={relationOptions}
-            onChange={handleRelationsChange}
-            optionLabel="label"
-            placeholder="Select relations…"
-            display="chip"
-            className="w-full"
-          />
+          {isLoading ? (
+            <div className="text-center text-gray-500 p-2">Loading…</div>
+          ) : relationOptions.length ? (
+           <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
+             {relationOptions.map((opt) => {
+               const checked =
+                  selectedRelations.includes(opt.value) || selectedRelations.includes(opt.label);
+                const nextArray = checked
+                  ? selectedRelations.filter(v => v !== opt.value && v !== opt.label)
+                  : [...selectedRelations.filter(v => v !== opt.value && v !== opt.label), opt.value];
+                return (
+                  <div key={opt.value} className="flex align-items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={checked}
+                      onChange={() => handleRelationsChange({ value: nextArray })}
+                    />
+                    <span>{opt.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 p-2">No relations available</div>
+          )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
