@@ -1,0 +1,88 @@
+.shopfloor-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  min-width: 240px;
+  background: #ffffff;
+  border: 1px solid #ebeff5;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.shopfloor-node.is-selected {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.sf-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e9f2ff;             
+  border: 1px solid #bfdcff;       
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sf-gear {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #3b82f6;                
+  stroke-width: 1.5;
+}
+
+
+.sf-titlewrap {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sf-title {
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.sf-pill {
+  color: var(--IFRIC-Shades-900, #3874C9);
+  font-family: "League Spartan";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 10px; /* 76.923% */
+  display: flex;
+  height: 20px;
+  padding: 4px 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  align-self: stretch;
+  border-radius: 4px;
+  background: rgba(56, 116, 201, 0.20);
+  margin-top: 4px;
+}
+
+
+.shopfloor-node .handle-in.react-flow__handle,
+.shopfloor-node .handle-out.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #6b7280;
+  border: 1px solid #fff;
+}
+.shopfloor-node .handle-in.react-flow__handle { top: -4px; }
+.shopfloor-node .handle-out.react-flow__handle { bottom: -4px; }
+
+.shopfloor-node.is-selected {
+  border-radius: 8px;
+  border: 2px solid var(--Black, #2B2B2B);
+  background: var(--White, #FFF);
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.15);
+}

@@ -73,44 +73,83 @@ export const updateFlowData = async (factoryId: string, payload: any) => {
   }
 };
 
+
+const nodeTypeOf = (n: any) => (n?.type ?? n?.data?.type) as string | undefined;
+const sizeOf = (n: any) => {
+  const isRelation = nodeTypeOf(n) === "relation";
+  const w = n.width ?? (isRelation ? 120 : 160);
+  const h = n.height ?? (isRelation ? 40 : 80);
+  return { w, h };
+};
+
+
+function nudgeSingleRelationLeft(nodes: Node[], edges: Edge[], gapX = 220, gapY = 150) {
+  const byId = new Map(nodes.map(n => [n.id, n]));
+
+  const relChildrenByAsset = new Map<string, string[]>();
+
+  edges.forEach(e => {
+    const s = byId.get(e.source);
+    const t = byId.get(e.target);
+    if (nodeTypeOf(s) === "asset" && nodeTypeOf(t) === "relation") {
+      const list = relChildrenByAsset.get(s.id) ?? [];
+      list.push(t.id);
+      relChildrenByAsset.set(s.id, list);
+    }
+  });
+
+  const out = nodes.map(n => ({ ...n }));
+  for (const [assetId, relationIds] of relChildrenByAsset) {
+    if (relationIds.length !== 1) continue;           
+    const asset = byId.get(assetId);
+    const relId = relationIds[0];
+    const idx = out.findIndex(n => n.id === relId);
+    if (asset && idx !== -1) {
+      const { w: relW } = sizeOf(out[idx]);
+      const ax = asset.position?.x ?? 0;
+      const ay = asset.position?.y ?? 0;
+
+      out[idx].position = {
+        x: ax - (gapX + relW),                        
+        y: ay + gapY,                                
+      };
+    }
+  }
+  return out;
+}
+
 export const applyDagreLayout = (
   nodes: ExtendedNode[],
   edges: Edge[],
   isHorizontal: boolean
 ) => {
-  const visibleNodes = nodes.filter((node) => !node.hidden);
-  const visibleEdges = edges.filter((edge) => !edge.hidden);
+  const visibleNodes = nodes.filter(n => !n.hidden);
+  const visibleEdges = edges.filter(e => !e.hidden);
 
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setGraph({
-    rankdir: isHorizontal ? "LR" : "TB",
-    ranksep: 50,
-    nodesep: 90,
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: isHorizontal ? "LR" : "TB", ranksep: 50, nodesep: 90 });
+  g.setDefaultEdgeLabel(() => ({}));
+
+  visibleNodes.forEach(n => {
+    const { w, h } = sizeOf(n);
+    g.setNode(n.id, { width: w, height: h });
   });
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  visibleEdges.forEach(e => g.setEdge(e.source, e.target));
 
-  visibleNodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 100, height: 100 });
-  });
+  dagre.layout(g);
 
-  visibleEdges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  const layoutedNodes = nodes.map((node) => {
-    if (node.hidden) {
-      return node;
-    }
-    const nodeWithPosition = dagreGraph.node(node.id);
-    return {
-      ...node,
-      position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
-    };
+  let layouted = nodes.map(n => {
+    if (n.hidden) return n;
+    const p = g.node(n.id);
+    if (!p) return n;
+    const { w, h } = sizeOf(n);
+    return { ...n, position: { x: p.x - w / 2, y: p.y - h / 2 } };
   });
 
-  return layoutedNodes;
+
+  layouted = nudgeSingleRelationLeft(layouted, edges, 220, 150);
+
+  return layouted;
 };
 
 export const getAllConnectedNodesBelow = (

@@ -1,7 +1,6 @@
 
 .customNode {
   position: relative;
-  background-color: #caf1d8;
   width: 100%;
   min-height: 10px;
   padding: 6px;       
@@ -303,4 +302,70 @@
   left: 2px;
   font-size: 14px;
   color: #fff;
+}
+
+
+.an-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #ebeff5;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.react-flow__node.selected .an-card,
+.an-card:hover {
+  border-color: #000;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.an-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.an-img { width: 100%; height: 100%; object-fit: cover; }
+
+.an-body { min-width: 0; flex: 1 1 auto; }
+.an-title-row { display: flex; align-items: center; gap: 8px; }
+.an-title {
+  font-weight: 600; color: #111827;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 160px;
+}
+.an-sub { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.an-link { font-size: 12px; color: #2563eb; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.an-pill {
+  display: flex;
+  height: 20px;
+  padding: 4px 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  background: rgba(252, 168, 43, 0.20);
+  color: var(--Fusion-Yellow, #FCA82B);
+  font-family: "League Spartan";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 10px; /* 76.923% */
+}
+
+
+.an-add-btn { height: 26px; min-width: 26px; padding: 0 6px; }
+
+
+.customHandle.assetNode,
+.customHandle {
+  width: 8px; height: 8px; background: #6b7280; border: 1px solid #fff;
 }
