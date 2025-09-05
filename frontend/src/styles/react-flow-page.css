@@ -1,4 +1,6 @@
-
+:root {
+  --left-rail-width: 470px; 
+}
 .flex {
   display: flex;
 }
@@ -24,7 +26,7 @@
 /* Main Content Layout */
 .main-content {
   display: flex;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 70px);
   background-color: rgb(243, 244, 246);
   zoom: 90%;
 }
@@ -47,6 +49,7 @@
   max-height: 100%;
   width: 120%;
   flex-shrink: 0;
+  position: relative;   
 }
 
 /* Unallocated Assets Section */
@@ -187,3 +190,180 @@
 .transition-all {
   transition: all 0.3s ease-in-out;
 }
+
+.overlay-panel{
+  display: flex;
+  width: var(--left-rail-width);
+  flex-direction: column;
+  align-items: flex-start;
+  border-radius: 8px;
+  box-sizing: border-box;
+   min-width: var(--left-rail-width);
+  background: var(--White, #FFF);
+  box-shadow: 0 1px 7px 0 rgba(0, 0, 0, 0.15);
+}
+.overlay-panel .p-overlaypanel-content {
+  width: 100%;
+  box-sizing: border-box;
+}.overlay-panel .p-overlaypanel-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+.add-shopFloor-header{
+  color: var(--Common-Text-Grey-900, #10182B);
+
+  font-family: "League Spartan";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.left-rail-tabs .p-tabview-nav {
+  border: 0;
+  background: transparent;
+  padding: 0 0 8px;
+  margin: 0;
+}
+.left-rail-tabs .p-tabview-ink-bar { display: none; } 
+.left-rail-tabs .p-tabview-panels {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+
+.left-rail-tabs .p-tabview-nav li {
+  margin-right: 8px;
+}
+.left-rail-tabs .p-tabview-nav li .p-tabview-nav-link {
+  border: 0;
+  background: transparent;         
+  color: #6b7280;               
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 6px 10px;
+  transition: background .15s ease, color .15s ease;
+  box-shadow: none;
+}
+.left-rail-tabs .p-tabview-nav li .p-tabview-nav-link:focus {
+  box-shadow: none;
+}
+
+
+.left-rail-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: #F3F3F5;         
+  color: #10182B;                   
+  font-weight: 600;
+}
+
+
+.left-rail-tabs .p-tabview-nav li:not(.p-highlight) .p-tabview-nav-link:hover {
+  background: #F9FAFB;
+  color: #111827;
+}
+.overlay-panel .overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.overlay-panel .overlay-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.overlay-panel .overlay-close-btn:hover {
+  background: #f3f4f6;
+}
+
+.add-shopFloor-header { margin: 0; }
+
+
+.rf-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #E7EAEE;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+  z-index: 2000;             
+  pointer-events: auto;
+}
+
+.rf-toolbar .p-button.rf-btn {
+  --btn-size: 36px;
+  padding: 0 !important;
+  width: var(--btn-size) !important;
+  height: var(--btn-size) !important;
+  min-width: var(--btn-size) !important;
+  flex: 0 0 var(--btn-size);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff !important;
+  border: 1px solid #EFF1F4 !important;
+  border-radius: 8px;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+
+
+
+
+.rf-toolbar .p-button.rf-btn:enabled:hover,
+.rf-toolbar .p-button.rf-btn:enabled:focus,
+.rf-toolbar .p-button.rf-btn:enabled:active {
+  background: #F6F7F9 !important;
+  border-color: #E5E7EB !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+
+.rf-toolbar .p-button.rf-btn[disabled] {
+  opacity: 0.5;
+}
+
+
+.rf-toolbar .p-ink { display: none !important; }
+
+
+
+.rf-toolbar .p-button.rf-btn--primary img {
+  filter: brightness(0) invert(1);
+}
+
+
+#create-flow-overlay.p-overlaypanel {
+  left: 0 !important;          /* extreme left inside React Flow */
+  top: 16px !important;        /* adjust vertical offset as you like */
+  transform: none !important;  /* cancel PrimeReact auto-translate */
+}
+
+
+#create-flow-overlay.p-overlaypanel:before,
+#create-flow-overlay.p-overlaypanel:after {
+  display: none !important;
+}
+
+.rf-tip { display: inline-flex; }

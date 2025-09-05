@@ -15,10 +15,13 @@
 
 .search-container .p-input-icon-left {
   position: relative;
-  width: 100%;
   margin: 15px 0;
 }
-
+.form-btn-container1 {
+  bottom: 0.1rem;
+  z-index: 100;
+  background-color: #fff;
+}
 
 .search-container .p-input-icon-left .p-inputtext {
   padding: 12px 12px 12px 40px;
@@ -33,20 +36,19 @@
 
 .search-container .p-input-icon-left .p-inputtext:hover {
   background-color: #fff;
-  border-color: #6366f1;
+  border-color: #3CA0C9
+
 }
 
 .search-container .p-input-icon-left i.pi-search {
-  color: #6366f1;
+  color: #98A2B3;
 }
 
 
-.search-container .p-input-icon-left:hover i.pi-search {
-  color: #6366f1;
-}
+
 
 .search-container .p-input-icon-left .p-inputtext:focus + i.pi-search {
-  color: #6366f1;
+  color: #3CA0C9;
 }
 .search-icon{
   margin-top: -7px;
@@ -76,9 +78,14 @@
 
 /* Search container wrapper */
 .search-container {
-  position: relative;
-  margin: 20px 0;
-  padding: 0 15px;
+  display: flex;
+  height: 47px;
+  padding-right: 28px;
+  align-items: center;
+  gap: 16px;
+  align-self: stretch;
+  border-bottom: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
+  background: var(--White, #FFF);
 }
 
 /* Input group styling */
@@ -100,26 +107,50 @@
 /* List Item Styling */
 .list-item {
   display: flex;
+  padding: 12px;
+  justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  margin: 8px 12px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  align-self: stretch;
+  border-radius: 8px;
+  margin-left:-35px;
+  border: 1px solid var(--Grey-Box, #F3F3F5);
+  background: var(--White, #FFF);
+  transition: background 0.2s ease, border-color 0.2s ease;
+  width: 100%;           
+  margin-bottom: 3px;  
 }
 
 .list-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
-  border-color: #6366f1;
+  border-color: #e5e7eb;
 }
-
+.list-item .item-actions {
+  margin-left: auto;              
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(6px);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+}
+.list-item.selected .item-actions {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  pointer-events: auto;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.list-item .item-action.p-button {
+  padding: 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
 .list-item.selected {
-  background-color: #f8fafc;
-  border-color: #6366f1;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15);
+  border-radius: 8px;
+  background: var(--Grey-Box, #F3F3F5);
 }
 
 /* Floor Icon Styling */
@@ -142,26 +173,31 @@
 
 /* Floor Name Styling */
 .floor-name {
-  flex: 1;
+  color: var(--Black, #2B2B2B);
+  font-family: "League Spartan";
+  font-size: 16px;
+  font-style: normal;
   font-weight: 500;
-  color: #1e293b;
-  font-size: 0.95rem;
-  margin: 0 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: normal;
 }
 
 /* Floor Type Badge Styling */
 .floor-type-badge {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.025em;
-  text-transform: capitalize;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  height: 20px;
+  padding: 4px 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+
+
+  font-family: "League Spartan";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 10px;
+
 }
 
 /* Card Styling Enhancement */
@@ -230,3 +266,84 @@ ul {
     font-size: 0.7rem;
   }
 }
+
+
+.add-area-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  width: 100%;
+  max-width: none; 
+  border-radius: 10px;
+  border: 2px dashed #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.add-area-cta:hover,
+.add-area-cta:focus {
+  background: #f9fafb;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  outline: none;
+}
+.add-area-cta__icon {
+  font-size: 1rem;
+  color: #6b7280; 
+}
+.add-area-cta__text {
+  color: #374151;
+  font-weight: 600;
+}
+
+
+
+
+.add-area-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  margin: 0 0 12px 0;
+  max-width: 93%;
+  border-radius: 10px;
+  border: 2px dashed #e5e7eb; 
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.add-area-cta:hover,
+.add-area-cta:focus {
+  background: #f9fafb;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  outline: none;
+}
+.add-area-cta__icon {
+  font-size: 1rem;
+  color: #6b7280;
+}
+.add-area-cta__text {
+  color: #374151;
+  font-weight: 600;
+}
+
+.item-actions .p-button.item-action {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
+.item-actions .p-button.item-action:hover {
+  background: #f3f4f6; 
+}
+
+
+.floor-type-badge {
+  margin-left: 6px;
+}
+
+
+

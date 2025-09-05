@@ -62,6 +62,7 @@ import dagre from "@dagrejs/dagre";
 import { Dialog } from "primereact/dialog";
 import "../../styles/react-flow.css";
 import { useTranslation } from "next-i18next";
+import { Tooltip } from "primereact/tooltip";
 import {
   FlowEditorProps,
   RelationCounts,
@@ -94,8 +95,8 @@ const nodeTypes = {
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const FlowEditor: React.FC<
-  FlowEditorProps & { deletedShopFloors: string[] }
-> = ({ factory, factoryId, deletedShopFloors }) => {
+  FlowEditorProps & { deletedShopFloors: string[],  onOpenAssetsDialog?: (e: React.MouseEvent) => void;}
+> = ({ factory, factoryId, deletedShopFloors,onOpenAssetsDialog   }) => {
   const [nodes, setNodes, onNodesChangeProvide] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeProvide] = useEdgesState([]);
   const [selectedElements, setSelectedElements] =
@@ -1717,65 +1718,11 @@ const handleBackspacePress = useCallback(() => {
         <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,setNodes, setEdges}}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
 
-          <div className="flex justify-content-between">
-            <div className="mt-2">
-              <Button
-                label={t("button:saveAndUpdate")}
-                onClick={saveOrUpdate}
-                className="m-2 bold-text"
-                raised
-              />
-              <Button
-              label={t("button:undo")}
-              onClick={handleUndo}
-              disabled={currentHistoryIndex <= 0}
-              className="p-button-secondary m-2 bold-text"
-              raised
-            />
-            <Button
-              label="Redo"
-              onClick={handleRedo}
-              disabled={currentHistoryIndex >= history.length - 1}
-              className="m-2 bold-text"
-              raised
-            />
-              <Button
-                label={t("button:refresh")}
-                onClick={refreshFromScorpio}
-                className="m-2 bold-text"
-                severity="help"
-                raised
-              />
-              <Button
-                label={t("button:reset")}
-                onClick={deleteMongoAndScorpio}
-                className="p-button-danger m-2 bold-text"
-                raised
-              />
-              <Button
-                label={t("button:exportJPEG")}
-                className="m-2 bold-text"
-                onClick={handleExportClick}
-                severity="info"
-              />
-            </div>
-            <div className="flex align-items-center gap-2 mt-2">
-              <span>{t("reactflow:switchView")}</span>
-              <InputSwitch
-                checked={switchView}
-                onChange={(e) => {
-                  setSwitchView(e.value);
-                  saveOrUpdate();
-                  router.push(`/factory-site/factory-shopfloor/${factoryId}`);
-                }}
-              />
-            </div>
-            <Toast ref={toast} />
-          </div>
+     
 
           <div
             ref={reactFlowWrapper}
-            style={{ height: "95%", width: "100%" }}
+            style={{ height: "100%", width: "100%" }}
             onDrop={assetNodeDrop}
             onDragOver={onDragOver}
           >
@@ -1799,8 +1746,81 @@ const handleBackspacePress = useCallback(() => {
               <MiniMap />
               <Controls />
               <Background />
+              
             </ReactFlow>
-            {/* <BlockUI/> */}
+           <div className="rf-toolbar">
+              <Tooltip target=".rf-tip" position="top" showDelay={150} hideDelay={0} />
+
+              <span className="rf-tip" data-pr-tooltip="Create flow">
+                <Button
+                  aria-label="Create flow"
+                  className="rf-btn"
+                  onClick={(e) => onOpenAssetsDialog?.(e)}
+                >
+                  <img src="/factory-flow-buttons/create-flow-icon.svg" alt="" />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Undo (Ctrl+Z)">
+                <Button
+                  aria-label="Undo"
+                  className="rf-btn"
+                  onClick={handleUndo}
+                  disabled={currentHistoryIndex <= 0}
+                >
+                  <img src="/factory-flow-buttons/undo-03.svg" alt="" />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Redo (Ctrl+Shift+Z)">
+                <Button
+                  aria-label="Redo"
+                  className="rf-btn"
+                  onClick={handleRedo}
+                  disabled={currentHistoryIndex >= history.length - 1}
+                >
+                  <img src="/factory-flow-buttons/redo.svg" alt="" />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Save">
+                <Button aria-label="Save" className="rf-btn" onClick={saveOrUpdate}>
+                  <img src="/factory-flow-buttons/file-icon.svg" alt="" />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Refresh">
+                <Button aria-label="Refresh" className="rf-btn" onClick={refreshFromScorpio}>
+                  <img src="/factory-flow-buttons/refresh-icon.svg" alt="" />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Reset">
+                <Button aria-label="Reset" className="rf-btn" onClick={deleteMongoAndScorpio}>
+                  <img src="/factory-flow-buttons/erase-icon.svg" alt=""  />
+                </Button>
+              </span>
+
+              <span className="rf-tip" data-pr-tooltip="Export JPEG">
+                <Button aria-label="Export JPEG" className="rf-btn" onClick={handleExportClick}>
+                  <img src="/factory-flow-buttons/image-icon.svg" alt=""/>
+                </Button>
+              </span>
+            </div>
+
+
+              {/* <div className="flex align-items-center gap-2 mt-2">
+              <span>{t("reactflow:switchView")}</span>
+              <InputSwitch
+                checked={switchView}
+                onChange={(e) => {
+                  setSwitchView(e.value);
+                  saveOrUpdate();
+                  router.push(`/factory-site/factory-shopfloor/${factoryId}`);
+                }}
+              />
+            </div> */}
+          <Toast ref={toast} />
           </div>
         </EdgeAddContext.Provider>
       </ReactFlowProvider>

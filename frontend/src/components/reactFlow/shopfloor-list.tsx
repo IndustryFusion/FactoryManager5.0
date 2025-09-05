@@ -256,10 +256,9 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       <Card className={formViewPage ? "" : "card-full-height"} style={{ fontSize: "15px", overflowY: "scroll" }}>
         <Toast ref={toast} style={{ top: '60px' }} />
         <div>
-          <h3 className="font-medium text-xl ml-5">Shop Floors</h3>
           <div className="search-container">
             <div className="input-group">
-              <div className="p-input-icon-left flex align-items-center ml-4">
+              <div className="p-input-icon-left flex align-items-center">
                 <i className="pi pi-search search-icon" />
                 <InputText
                   value={searchValue}
@@ -272,36 +271,21 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
               </div>
             </div>
           </div>
-          <div className="form-btn-container mb-2 flex  ml-2 mt-4">
-
-            <Button
-              label={t('button:new')}
-              severity="success"
-              outlined
-              raised
+          <div className="form-btn-container1 mb-1   ml-2 mt-1">
+            <div
+              className="add-area-cta"
+              role="button"
+              tabIndex={0}
               onClick={() => setIsVisible(true)}
-              className="bold-button border-none mr-2 ml-2 p-2"
-            />
-            <Button
-              severity="secondary"
-              text
-              raised
-              label={t('button:edit')}
-              className="bold-button mr-2 ml-2 p-2"
-              type="button"
-              onClick={handleEdit}
-            />
-            <Button
-              label={t('button:delete')}
-              severity="danger"
-              text
-              raised
-              className="bold-button mr-2 ml-2 p-2"
-              type="button"
-              onClick={confirmDelete}
-            />
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setIsVisible(true)}
+            >
+              <i className="pi pi-plus-circle add-area-cta__icon" />
+              <span className="add-area-cta__text">
+                {t('button:addArea', 'Add Area')}
+              </span>
+            </div>
           </div>
-          <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: "10%" , marginLeft:"-10%"}}>
+         <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: 12 }}>
           {filteredShopFloors.map((floor, index) => {
             // Get the actual floor type from the mapped data
             const floorType = floor.type_of_floor || "No Type Set";
@@ -318,17 +302,13 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                   setSelectedShopFloorId(floor.id);
                   setShopFloorValue({ id: floor.id, floorName: floor.floorName });
                 }}
-                className="ml-3 mb-3 list-item flex items-center gap-3 p-3 rounded-lg transition-all duration-300"
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: selectedShopFloorId === floor.id
-                    ? "#e3e3e3a6"
-                    : index === 0 && !selectedShopFloorId
-                      ? "#e3e3e3a6"
-                      : "#fff",
-                  maxWidth: "93%",
-                  border: "1px solid #e2e8f0",
-                }}
+                className={`list-item ${
+                selectedShopFloorId === floor.id ||
+                (!selectedShopFloorId && index === 0)
+                  ? 'selected'
+                  : ''
+              }`}
+              style={{ cursor: "pointer" }}  
               >
                 <i 
                   className={`${getFloorTypeIcon(floorType)} floor-icon`}
@@ -339,6 +319,42 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
                 />
                 <span className="floor-name flex-1">
                   {floor.floorName}
+                </span>
+                <span className="item-actions flex gap-2">
+                  <Button
+                    text
+                    rounded
+                    className="item-action"
+                    aria-label={t('button:edit')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShopFloorId(floor.id);
+                      setEditShopFloor(floor.id);
+                      setIsEdit(true);
+                    }}
+                  >  <img
+                  src="/factory-flow-buttons/edit-icon.svg"
+                  alt=""
+                  width={40}
+                  height={40}
+                /></Button>
+                  <Button
+                    text
+                    rounded
+                    severity="danger"
+                    className="item-action"
+                    aria-label={t('button:delete')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShopFloorId(floor.id);
+                      setShowConfirmDialog(true);
+                    }}
+                  >  <img
+                  src="/factory-flow-buttons/delete-icon.svg"
+                  alt=""
+                  width={40}
+                  height={40}
+                /></Button>
                 </span>
                 <span 
                   className="floor-type-badge text-xs px-2 py-1 rounded-full"
