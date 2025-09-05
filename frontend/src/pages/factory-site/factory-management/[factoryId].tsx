@@ -38,6 +38,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Sidebar from "@/components/navBar/sidebar";
 import "@/styles/react-flow-page.css"
 import { TabPanel, TabView } from "primereact/tabview";
+import { OverlayPanel } from "primereact/overlaypanel";
 
 const ShopFloorManager: React.FC = () => {
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -54,6 +55,7 @@ const ShopFloorManager: React.FC = () => {
       ? router.query.factoryId[0]
       : "";
 
+  const opRef = useRef<OverlayPanel | null>(null);  
   useEffect(() => {
     const fetchShopFloorById = async (factoryId: string) => {
       try {
@@ -75,6 +77,45 @@ const ShopFloorManager: React.FC = () => {
   const handleShopFloorDeleted = useCallback((deletedShopFloorId: string) => {
     setDeletedShopFloors((prev) => [...prev, deletedShopFloorId]);
   }, []);
+  const renderAssetsTabView = () => (
+    <div className="assets-tabview">
+      <div className="overlay-header">
+        <p className="add-shopFloor-header">Add Floor Component</p>
+
+        <button
+          type="button"
+          className="overlay-close-btn"
+          aria-label="Close overlay"
+          onClick={() => opRef.current?.hide()}
+        >
+          <img
+            src="/factory-flow-buttons/close-icon.svg"
+            alt=""
+            width={15}
+            height={15}
+          />
+        </button>
+      </div>
+
+      <TabView
+        className="left-rail-tabs"
+        activeIndex={leftTabIndex}
+        onTabChange={(e) => setLeftTabIndex(e.index)}
+        renderActiveOnly={false}
+      >
+        <TabPanel header="Areas">
+          <ShopFloorList
+            factoryId={factoryId}
+            onShopFloorDeleted={handleShopFloorDeleted}
+            setShopfloorProp={setShopfloor}
+          />
+        </TabPanel>
+        <TabPanel header="Assets">
+          <UnallocatedAssets factoryId={factoryId} product_name="" />
+        </TabPanel>
+      </TabView>
+    </div>
+  );
 
   return (
    <div className="flex">
@@ -86,26 +127,17 @@ const ShopFloorManager: React.FC = () => {
           </div>
           <div className="main-content bg-gray-100">
             <ShopFloorProvider>
-              <div className="assets-tabview">
-                <TabView
-                  className="left-rail-tabs"
-                  activeIndex={leftTabIndex}
-                  onTabChange={(e) => setLeftTabIndex(e.index)}
-                  renderActiveOnly={false} 
+                <OverlayPanel
+                  ref={opRef}
+                  showCloseIcon={false}      
+                  
+                  dismissable
+                  className="overlay-panel"
+                  appendTo={elementRef.current}
+                  id="create-flow-overlay"
                 >
-                  <TabPanel header="Shop Floors">
-                    <ShopFloorList
-                      factoryId={factoryId}
-                      onShopFloorDeleted={handleShopFloorDeleted}
-                      setShopfloorProp={setShopfloor}
-                    />
-                  </TabPanel>
-
-                  <TabPanel header="Unallocated Assets">
-                    <UnallocatedAssets factoryId={factoryId} product_name="" />
-                  </TabPanel>
-                </TabView>
-              </div>
+                  {renderAssetsTabView()}
+                </OverlayPanel>
 
               <div ref={elementRef} className="flow-editor-container">
                 {factoryDetails ? (
@@ -113,6 +145,7 @@ const ShopFloorManager: React.FC = () => {
                     factoryId={factoryId}
                     factory={factoryDetails}
                     deletedShopFloors={deletedShopFloors}
+                    onOpenAssetsDialog={(e) => opRef.current?.toggle(e)}
                   />
                 ) : (
                   <div className="loading-state">Loading factory details...</div>
