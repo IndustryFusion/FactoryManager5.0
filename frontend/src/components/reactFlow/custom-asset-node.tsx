@@ -84,7 +84,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       const assetDetails = (await getAssetRelationById(
         data.id
       )) as any ;
-      console.log("assetDetails",assetDetails)
+
       const options: RelationOption[] = Object.entries(assetDetails)
         .filter(([, value]) => value?.type === "Relationship")
         .map(([key, value]) => ({
@@ -180,6 +180,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   <div className="customNode">
     {!isConnecting && isConnectable && (
       <Handle 
+        id="out"                       
         className="customHandle"
         position={Position.Bottom}
         type="source"
@@ -188,6 +189,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       />
     )}
     <Handle 
+      id="in"                         
       className="customHandle assetNode"
       position={Position.Top}
       type="target"

@@ -369,3 +369,41 @@
 .customHandle {
   width: 8px; height: 8px; background: #6b7280; border: 1px solid #fff;
 }
+
+.relationNode .rn-card {
+  display: inline-flex;        
+  align-items: center;           
+  gap: 12px;                    
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--Grey-Box, #F3F3F5);
+  background: var(--White, #FFF);
+  min-height: 36px;           
+  max-width: 220px;             
+}
+
+
+.relationNode .rn-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+
+.relationNode .rn-title {
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;              
+}
+
+
+.react-flow__node.selected .relationNode .rn-card,
+.relationNode .rn-card:hover {
+  border-color: #000;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+}

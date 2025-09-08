@@ -514,7 +514,8 @@ function humanizeIRI(value?: string): string | undefined {
 const segVal = (x: any) => (x && typeof x === "object" ? x.value : undefined);
 const SEGMENT_IRI = "https://industry-fusion.org/base/v0.1/segment";
 const PRODUCT_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship";
-const CLASS_TYPE_IRI ="https://industry-fusion.org/base/v0.1/class"
+const CLASS_TYPE_IRI ="https://industry-fusion.org/base/v0.1/class";
+const RELATIONSHIP_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship-type";
 export const relationToAssetCategory = (relationName: string) => {
   const token = relationName
     .replace(/^has[_-]?/i, "")           
@@ -560,6 +561,14 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       const rawPT = segVal(pt) || (typeof pt.value === "string" ? pt.value : undefined);
       product_type = humanizeIRI(rawPT);
     }
+    
+    let relationship_type: string | undefined;
+    const pt1 = (value as any)[RELATIONSHIP_TYPE_IRI];
+    if (pt1 && typeof pt1 === "object") {
+      const rawPT = segVal(pt) || (typeof pt1.value === "string" ? pt1.value : undefined);
+      relationship_type = rawPT;
+    }
+
     let relation_class: string | undefined;
     const cls = (value as any)[CLASS_TYPE_IRI];
     if (cls && typeof cls === "object" && typeof cls.value === "string") {
@@ -571,8 +580,10 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       ...(product_type ? { product_type } : {}),
       ...(relation_class ? { class: relation_class } : {}),
       ...(objects && objects.length ? { objects } : {}),
+      ...(relationship_type ? { relationship_type } : {}),
     };
   }
+  console.log("out",out)
   return out;
 }
 export const saveFlowchartData = async (
@@ -844,14 +855,16 @@ export const fetchAllShopFloors = async (factoryId: string): Promise<Transformed
     }
 
     // Fetch all shop floor details in parallel
-    const shopFloorPromises = validShopFloorRelationships
-      .map(relationship => fetchSingleShopFloor(relationship.object));
+    const settled = await Promise.allSettled(
+      validShopFloorRelationships.map((r) => fetchSingleShopFloor(r.object))
+    );
 
-    const shopFloorResults = await Promise.all(shopFloorPromises);
+    const ok = settled
+      .filter((s): s is PromiseFulfilledResult<any> => s.status === "fulfilled")
+      .map((s) => s.value)
+      .filter(Boolean); 
 
-    // Transform the results
-    return shopFloorResults.map(transformShopFloorData);
-
+    return ok.map(transformShopFloorData);
   } catch (error) {
     console.error('Error fetching shop floors:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch shop floors');

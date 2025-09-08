@@ -129,7 +129,7 @@ export class ReactFlowService {
                 type: "shopFloor",
                 position: { x: xPosition, y: 160 },
                 data: { label: shopFloor["http://www.industry-fusion.org/schema#floor_name"]?.value, type: "shopFloor" },
-                style: { backgroundColor: "#faedc4", border: "none" },
+       
             };
             result.nodes.push(shopFloorNode);
             xOffset += 350; // Increment xOffset for next shop floor
@@ -138,6 +138,7 @@ export class ReactFlowService {
                 id: `reactflow__edge-factory-${factoryId}-${shopFloorNode.id}`,
                 source: `factory_${factoryId}`,
                 target: `${shopFloorNode.id}`,
+                type: 'smoothstep',    
             };
             result.edges.push(edge);
             const assets = await this.shopFloorAssetService.findAll(shopFloor.id, token);
@@ -194,7 +195,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
             type: "asset",
             id: asset.id,
         },
-        style: { backgroundColor: "#caf1d8", border: "none" },
+       
     };
     result.nodes.push(assetNode);
 
@@ -203,6 +204,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
             id: `reactflow__edge-${parentNodeId}-${assetNode.id}`,
             source: parentNodeId,
             target: assetNode.id,
+            type: 'smoothstep',       
         };
         result.edges.push(edgeToAsset);
     }
@@ -227,7 +229,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
                     type: "relation",
                     position: { x: xPos+ relationXPos , y: newYPos }, // Keep same y-axis for relations of the same asset
                     data: { label: relationType, type: "relation" },
-                    style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
+                   
                 };
                 result.nodes.push(relationNode);
 
@@ -235,6 +237,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
                     id: `reactflow__edge-${assetNode.id}-${relationId}`,
                     source: assetNode.id,
                     target: relationId,
+                    type: 'smoothstep',        
                 };
                 result.edges.push(edgeToRelation);
 
