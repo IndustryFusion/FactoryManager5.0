@@ -1,14 +1,136 @@
-import React from "react";
+import React, { useMemo, useState, useCallback, useContext } from "react";
 import { Handle, Position, NodeProps } from "reactflow";
-import "../../styles/factory-flow/shop-floor.css"
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import { useRouter } from "next/router";
+import { useDispatch, useSelector } from "react-redux";
+import "../../styles/factory-flow/shop-floor.css";
+import { RootState } from "@/redux/store";
+import { create as cacheUnallocated } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
+import { getNonShopFloorAsset } from "@/utility/factory-site-utility";
+import EdgeAddContext from "@/context/edge-add-context";
+
 type ShopFloorNodeData = {
   label: string;
   type: "shopFloor";
   kind?: string;           
 };
 
-const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({ data, selected }) => {
+type StoreAsset = {
+  id: string;
+  product_name?: any;
+  asset_category?: any;
+  asset_serial_number?: any;
+  [k: string]: any;
+};
+
+type Option = {
+  value: string;
+  label: string;
+  category?: string;
+  serial?: string;
+};
+
+const toText = (v: any): string =>
+  v && typeof v === "object" && "value" in v ? String(v.value ?? "") : String(v ?? "");
+
+const shortSerial = (s?: string) => (s && s.length > 7 ? `${s.slice(0, 3)}..${s.slice(-4)}` : s || "");
+
+const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
+  id: shopFloorNodeId,
+  data,
+  selected
+}) => {
   const pillText = data.kind || "Area";
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { addAssetsToShopFloor } = useContext(EdgeAddContext);
+
+  const factoryId = useMemo(() => {
+    const q = (router.query?.factoryId || router.query?.id) as string | undefined;
+    if (q) return decodeURIComponent(q);
+    const m = router.asPath?.match(/factory-management\/([^/?#]+)/);
+    return m ? decodeURIComponent(m[1]) : undefined;
+  }, [router.query, router.asPath]);
+
+  const unAllocatedAssetData = useSelector((s: RootState) => s.unAllocatedAsset);
+
+  const [assetsVisible, setAssetsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const optionsFromStore = useCallback((storeVal: any): Option[] => {
+    const list: StoreAsset[] = Array.isArray(storeVal)
+      ? storeVal
+      : storeVal
+      ? Object.values(storeVal as Record<string, StoreAsset>)
+      : [];
+    return list.map((a) => {
+      const label = toText(a.product_name) || shortSerial(toText(a.asset_serial_number)) || a.id;
+      return {
+        value: a.id,
+        label,
+        category: toText(a.asset_category) || undefined,
+        serial: toText(a.asset_serial_number) || undefined,
+      };
+    });
+  }, []);
+
+  const openAssets = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setAssetsVisible(true);
+
+      const cached = optionsFromStore(unAllocatedAssetData);
+      if (cached.length) {
+        setOptions(cached);
+        return;
+      }
+
+      if (!factoryId) return;
+
+      try {
+        setIsLoading(true);
+        const fetched = await getNonShopFloorAsset(factoryId);
+        dispatch(cacheUnallocated(fetched));
+        setOptions(optionsFromStore(fetched));
+      } catch {
+        setOptions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [factoryId, unAllocatedAssetData, optionsFromStore, dispatch]
+  );
+
+
+  const toggle = (id: string) => {
+    const willCheck = !selectedIds.includes(id);
+    const next = willCheck ? [...selectedIds, id] : selectedIds.filter((x) => x !== id);
+    setSelectedIds(next);
+    if (willCheck) {
+      if (typeof addAssetsToShopFloor !== "function") {
+        console.error("EdgeAddContext missing addAssetsToShopFloor");
+        return;
+      }
+      const opt = options.find((o) => o.value === id);
+      const payload = [
+        {
+          id,
+          label: opt?.label,
+          asset_category: opt?.category,
+          asset_serial_number: opt?.serial,
+        },
+      ];
+      addAssetsToShopFloor(shopFloorNodeId, payload);
+    }
+
+  };
+
+  const handleAdd = () => {
+    setAssetsVisible(false);
+  };
 
   return (
     <div className={`shopfloor-node ${selected ? "is-selected" : ""}`}>
@@ -25,9 +147,90 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({ data, sel
 
       <div className="sf-pill">{pillText}</div>
 
-
       <Handle id="in" type="target" position={Position.Top} className="handle-in" />
       <Handle id="out" type="source" position={Position.Bottom} className="handle-out" />
+
+      <Button
+        aria-label="Add"
+        className="global-button is-grey nodrag nopan shopfloor-add-btn p-button-rounded p-button-icon-only"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={openAssets}
+      >
+        <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </Button>
+
+
+      <Dialog
+        visible={assetsVisible}
+        onHide={() => setAssetsVisible(false)}
+        style={{ width: "32rem" }}
+        modal
+        dismissableMask
+        className="dialog-class"
+        header={
+          <div className="areas-header">
+            <span>Assets</span>
+            <Button
+              aria-label="Create Retrofit Assets"
+              className="global-button nodrag nopan add-areas-hdr-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              disabled={!factoryId}
+            >
+              <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <span>Create Retrofit Assets</span>
+            </Button>
+          </div>
+        }
+      >
+        <div className="p-field" style={{ marginTop: 8 }}>
+          {!factoryId ? (
+            <div className="text-center text-gray-500 p-2">Missing factory id</div>
+          ) : isLoading ? (
+            <div className="text-center text-gray-500 p-2">Loading…</div>
+          ) : options.length ? (
+            <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
+              {options.map((opt) => {
+                const checked = selectedIds.includes(opt.value);
+                return (
+                  <div key={opt.value} className="flex align-items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={checked}
+                      onChange={() => toggle(opt.value)}  // << create on click
+                    />
+                    <span>
+                      {opt.label}
+                      {opt.serial ? <span style={{ color: "#6b7280" }}> · {shortSerial(opt.serial)}</span> : null}
+                      {opt.category ? (
+                        <span
+                          className="ml-2 px-2 py-1 text-xs rounded-full"
+                          style={{ background: "#eef2ff", color: "#4f46e5" }}
+                        >
+                          {opt.category}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 p-2">No assets available</div>
+          )}
+        </div>
+
+        <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
+          <Button label="Close" onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
+          <Button label="Done" onClick={handleAdd} className="global-button" />
+        </div>
+      </Dialog>
     </div>
   );
 };

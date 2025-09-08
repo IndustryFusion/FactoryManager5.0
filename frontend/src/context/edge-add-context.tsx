@@ -33,13 +33,21 @@ export type CreateAssetNodeAndEdgeFromRelationFn = (
 export interface EdgeAddContextType {
   createRelationNodeAndEdge: CreateRelationNodeAndEdgeFn;
   createAssetNodeAndEdgeFromRelation: CreateAssetNodeAndEdgeFromRelationFn;
+  addAssetsToShopFloor: AddAssetsToShopFloorFn;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
 }
 
+export type AddAssetsToShopFloorFn = (
+  shopFloorNodeId: string,
+  assets: { id: string; label?: string; asset_category?: string; asset_serial_number?: string }[]
+) => string[];
+
+
 const EdgeAddContext = React.createContext<EdgeAddContextType>({
   createRelationNodeAndEdge: () => {},
   createAssetNodeAndEdgeFromRelation: () => {},
+  addAssetsToShopFloor: () => [],
   setNodes: () => {},
   setEdges: () => {},
 });

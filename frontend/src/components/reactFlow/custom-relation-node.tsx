@@ -19,20 +19,18 @@ import React, { useContext, useMemo, useRef, useState } from "react";
 import { Handle, Position, useStore } from "reactflow";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
-import { MultiSelect } from "primereact/multiselect";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css";
 import { Toast } from "primereact/toast";
 
-
 type Option = {
-  asset_serial_number: string; label: string; value: string; asset_category: string 
+  asset_serial_number: string; label: string; value: string; asset_category: string
 };
 
 interface CustomRelationNodeProps {
-  data: { label: string; type: "relation"; parentId?: string; class?: string; asset_category?: string ,asset_serial_number?:string};
+  data: { label: string; type: "relation"; parentId?: string; class?: string; asset_category?: string; asset_serial_number?: string };
   id: string;
 }
 
@@ -43,9 +41,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
   const toast = useRef<Toast>(null);
   const nodes = useStore((s: any) => s.nodes ?? []);
   const edges = useStore((s: any) => s.edges ?? []);
-
   const unAllocated = useSelector((state: RootState) => state.unAllocatedAsset);
-
 
   const connectedBackendIds = useMemo(() => {
     const ids = new Set<string>();
@@ -58,10 +54,6 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
       });
     return ids;
   }, [edges, nodes, id]);
-
-
-
-
 
   const desiredCategory = (data?.asset_category ?? "")
     .toLowerCase()
@@ -119,11 +111,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
       const existingEdge = edges.find((e: any) => e.source === id);
       if (existingEdge) {
         const oldTargetId = existingEdge.target;
-
-
         setNodes((prev: any[]) => prev.filter((n) => n.id !== oldTargetId));
         setEdges((prev: any[]) => prev.filter((e) => e.id !== existingEdge.id));
-
         toast.current?.show({
           severity: "info",
           summary: "Old node removed",
@@ -148,14 +137,25 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
     setSelected([]);
   };
 
-
-
   return (
-    <div className="customNode relationNode" style={{ backgroundColor: "#ead6fd", borderRadius: 16 }}>
-      <Handle type="target" position={Position.Top} className="customHandle" />
-      <Handle type="source" position={Position.Bottom} className="customHandle" />
+    <div className="customNode relationNode">
+   
+      <Handle id="in" type="target" position={Position.Top} className="customHandle" data-handlepos="top" />
+      <Handle id="out" type="source" position={Position.Bottom} className="customHandle" data-handlepos="bottom" />
 
-      <small className="node-label">{data.label}</small>
+
+
+      <div className="rn-card">
+        <img
+          className="rn-icon"
+          src="/factory-flow-buttons/is-peer-icon.svg"
+          alt="Relation"
+          draggable={false}
+        />
+        <small className="node-label rn-title" title={data.label}>
+          {data.label}
+        </small>
+      </div>
 
       <Button
         icon="pi pi-plus"
@@ -173,8 +173,14 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
         }}
       />
 
-
-      <Dialog header="Pick target assets" visible={dialogVisible} onHide={() => setDialogVisible(false)} style={{ width: "26rem" }}  modal dismissableMask>
+      <Dialog
+        header="Pick target assets"
+        visible={dialogVisible}
+        onHide={() => setDialogVisible(false)}
+        style={{ width: "26rem" }}
+        modal
+        dismissableMask
+      >
         <div className="p-field" style={{ marginTop: 8 }}>
          {data.class === "machine" ? (
             options.length > 0 ? (
@@ -184,7 +190,6 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
                   const iconSrc = active
                     ? "/button_icons/radio-active-blue.svg"
                     : "/button_icons/radio-active-grey.svg";
-
                   return (
                     <div
                       key={o.value}
@@ -202,7 +207,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
                 No products available
               </div>
             )
-          ) : (
+          ) : 
             options.length > 0 ? (
               <div className="flex flex-column gap-2">
                 {options.map((o) => (
@@ -211,15 +216,12 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
                         type="checkbox"
                         className="custom-checkbox"
                         checked={selected.includes(o.value)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelected((prev) => [...prev, o.value]);
-                          } else {
-                            setSelected((prev) => prev.filter((v) => v !== o.value));
-                          }
-                        }}
+                        onChange={(e) =>
+                          setSelected((prev) =>
+                            e.target.checked ? [...prev, o.value] : prev.filter((v) => v !== o.value)
+                          )
+                        }
                       />
-
                     <span>{o.label} ({o.asset_serial_number})</span>
                   </div>
                 ))}
@@ -228,9 +230,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
               <div className="text-center text-gray-500 mt-2">
                 No compatible unallocated assets
               </div>
-            )
           )}
-
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>

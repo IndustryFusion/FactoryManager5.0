@@ -262,7 +262,6 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
         id: relationNodeId,
         type: "relation",
         position: { x, y },                           // ✅ ensure position
-        style: { backgroundColor: "#ead6fd", border: "none", borderRadius: "45%" },
         data: {
           label: `${relationName}_${String(count).padStart(3, "0")}`,
           type: "relation",
@@ -394,7 +393,6 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
           type: "shopFloor",
           data: { label: `${latestShopFloor.name.value}`, type: "shopFloor" },
           position: { x: newXPosition, y: startY },
-          style: { backgroundColor: "#faedc4", border: "none" },
         };
 
         setNodes((nds) => [...nds, newNode]);
@@ -998,7 +996,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   //@desc :
   //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
   const refreshFromScorpio = async () => {
-    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+    const reactFlowUpdate = `${API_URL}/react-flow/${factoryId}`;
     try {
       setIsOperationInProgress(true); // Show a loading indicator or disable UI elements
       const response = await axios.get(reactFlowUpdate, {
@@ -1050,7 +1048,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
            // Prepare the relation payload
       const relationPayload = transformEdgesToRelationPayload(edges, nodes);
-      console.log("relationPayload",relationPayload)
+
     
       if (Object.keys(relationPayload).length > 0) {
         await handleUpdateRelations(relationPayload);
@@ -1261,6 +1259,95 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
       exportElementToJPEG(elementRef.current, "myElement.jpeg");
     }
   };
+
+
+
+  const addAssetsToShopFloor = useCallback((
+    shopFloorNodeId: string,
+    assets: { id: string; label?: string; asset_category?: string; asset_serial_number?: string }[]
+  ): string[] => {
+    if (!assets?.length) return [];
+
+    const sf = nodes.find(n => n.id === shopFloorNodeId);
+    if (!sf) return [];
+
+    const stamp = Date.now();
+
+
+    const existingByAssetId = new Map<string, Node>(
+      nodes
+        .filter(n => (n as any)?.data?.type === "asset" && (n as any)?.data?.id)
+        .map(n => [(n as any).data.id as string, n])
+    );
+
+    const edgeExists = (src: string, tgt: string) =>
+      edges.some(e => e.source === src && e.target === tgt);
+
+    const createdNodes: Node[] = [];
+    const createdEdges: Edge[] = [];
+    const focusIds: string[] = [];
+
+    let childOffset = edges.filter(e => e.source === shopFloorNodeId).length;
+    const baseX = sf.position?.x ?? 0;
+    const baseY = sf.position?.y ?? 0;
+
+    assets.forEach((a, idx) => {
+      const existing = existingByAssetId.get(a.id);
+      const nodeId = existing?.id ?? `asset_${a.id}_${stamp}_${idx}`;
+
+      if (!existing) {
+        createdNodes.push({
+          id: nodeId,
+          type: "asset",
+          position: { x: baseX + 140 * childOffset, y: baseY + 150 },
+          asset_category: a.asset_category,
+          data: {
+            type: "asset",
+            id: a.id,
+            label: a.label || "Asset",
+            asset_category: a.asset_category,
+            asset_serial_number: a.asset_serial_number,
+          },
+          style: { backgroundColor: "", border: "none", borderRadius: 10 },
+        });
+        childOffset++;
+      }
+
+      if (!edgeExists(shopFloorNodeId, nodeId)) {
+        createdEdges.push({
+          id: `reactflow__edge-${shopFloorNodeId}-${nodeId}_${stamp}_${idx}`,
+          source: shopFloorNodeId,
+          sourceHandle: "out",
+          target: nodeId,
+          targetHandle: "in",
+          type: "smoothstep",
+        });
+      }
+
+      focusIds.push(nodeId);
+    });
+
+    setNodes(prev =>
+      applyDagreLayout([...prev, ...createdNodes], [...edges, ...createdEdges], false)
+    );
+    setEdges(prev => createdEdges.reduce((acc, e) => addEdge(e, acc), prev));
+    addToHistory([...nodes, ...createdNodes], [...edges, ...createdEdges]);
+
+
+    setTimeout(() => {
+      reactFlowInstance?.fitView({
+        nodes: focusIds.map(id => ({ id })),
+        padding: 0.2,
+        includeHiddenNodes: true,
+      });
+    }, 0);
+
+    return focusIds;
+  }, [nodes, edges, setNodes, setEdges, addToHistory, reactFlowInstance]);
+
+
+
+
 
 const onElementClick: NodeMouseHandler = useCallback(
   (event, element) => {
@@ -1578,10 +1665,6 @@ const handleBackspacePress = useCallback(() => {
               id: idPrefix,
               type: "shopFloor",
               position,
-              style: {
-                backgroundColor: "#faedc4",
-                border: "none",
-              },
               data: {
                 type: type,
                 label,
@@ -1715,7 +1798,7 @@ const handleBackspacePress = useCallback(() => {
           </p>
         </Dialog>
 
-        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,setNodes, setEdges}}>
+        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,addAssetsToShopFloor,setNodes, setEdges}}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
 
      
