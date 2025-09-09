@@ -197,7 +197,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         setShopFloors((prevShopFloors) =>
           prevShopFloors.filter((floor) => floor.id !== selectedShopFloorId)
         );
-
+        setShowConfirmDialog(false);
         toast.current?.show({
           severity: "success",
           summary: "Success",

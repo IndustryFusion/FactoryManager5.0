@@ -72,7 +72,7 @@ interface RelationshipDetail {
 
 type ExtractedRelations = Record<
   string,
-  { type: "Relationship"; segment: "component"; objects?: string[], product_type?: string; }
+  { type: "Relationship"; segment: "component"; objects?: string[], product_type?: string; relationship_type?:string }
 >;
 
 export const handleUpload = async (file: File): Promise<string> => {
@@ -515,7 +515,7 @@ const segVal = (x: any) => (x && typeof x === "object" ? x.value : undefined);
 const SEGMENT_IRI = "https://industry-fusion.org/base/v0.1/segment";
 const PRODUCT_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship";
 const CLASS_TYPE_IRI ="https://industry-fusion.org/base/v0.1/class";
-const RELATIONSHIP_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship-type";
+const RELATIONSHIP_TYPE_IRI = "https://industry-fusion.org/base/v0.1/relationship_type";
 export const relationToAssetCategory = (relationName: string) => {
   const token = relationName
     .replace(/^has[_-]?/i, "")           
@@ -565,7 +565,7 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
     let relationship_type: string | undefined;
     const pt1 = (value as any)[RELATIONSHIP_TYPE_IRI];
     if (pt1 && typeof pt1 === "object") {
-      const rawPT = segVal(pt) || (typeof pt1.value === "string" ? pt1.value : undefined);
+      const rawPT = segVal(pt1) || (typeof pt1.value === "string" ? pt1.value : undefined);
       relationship_type = rawPT;
     }
 
@@ -583,7 +583,7 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       ...(relationship_type ? { relationship_type } : {}),
     };
   }
-  console.log("out",out)
+
   return out;
 }
 export const saveFlowchartData = async (
@@ -617,7 +617,7 @@ export const getAssetRelationById = async (assetId: string) => {
       withCredentials: true,
     });
     const responseData = response.data;
-    console.log("responseData",responseData)
+
     const mappedData = extractHasRelations(responseData);
     return mappedData;
   } catch (error) {

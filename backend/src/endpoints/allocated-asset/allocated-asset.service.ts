@@ -150,7 +150,10 @@ async createGlobal(token: string) {
       let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
   
       let finalArray = [];
-      if (Array.isArray(assetIds) && assetIds.length > 0) {
+      if (!Array.isArray(assetIds) && assetIds?.id) {
+        assetIds = [assetIds];
+      }
+      if (Array.isArray(assetIds) && assetIds.length > 0 ) {
         for (let i = 0; i < assetIds.length; i++) {
           let id = assetIds[i].id;
           try {
@@ -257,7 +260,9 @@ async createGlobal(token: string) {
       const lastData = response.data["http://www.industry-fusion.org/schema#last-data"];
       if (lastData?.value?.["https://industry-fusion.org/base/v0.1/items"]) {
         const items = lastData.value["https://industry-fusion.org/base/v0.1/items"];
-        
+        if (items?.id) {
+          return [items.id];
+        }
         // Return array of asset IDs
         if (Array.isArray(items)) {
           return items.map(item => item.id).filter(Boolean);

@@ -22,7 +22,8 @@ export type CreateRelationNodeAndEdgeFn = (
   relationName: string,
   relationClass?: string,
   asset_category?:string,
-  asset_serial_number?:string
+  asset_serial_number?:string,
+  relationship_type?:string
 ) => void;
 
 export type CreateAssetNodeAndEdgeFromRelationFn = (
