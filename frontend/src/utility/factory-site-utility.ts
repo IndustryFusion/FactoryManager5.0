@@ -583,7 +583,7 @@ export function extractHasRelations(assetData: { [key: string]: any }): Extracte
       ...(relationship_type ? { relationship_type } : {}),
     };
   }
-  console.log("out",out)
+
   return out;
 }
 export const saveFlowchartData = async (
@@ -617,7 +617,7 @@ export const getAssetRelationById = async (assetId: string) => {
       withCredentials: true,
     });
     const responseData = response.data;
-    console.log("responseData",responseData)
+
     const mappedData = extractHasRelations(responseData);
     return mappedData;
   } catch (error) {

@@ -415,32 +415,38 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
     if (deletedShopFloors && deletedShopFloors.length > 0) {
       let nodesUpdated = false;
+      let edgesUpdated = false;
 
       deletedShopFloors.forEach((deletedShopFloorId) => {
         const shopFloorNodeId = `shopFloor_${deletedShopFloorId}`;
 
-        setNodes((nodes) => {
-          const updatedNodes = nodes.filter(
-            (node) => node.id !== shopFloorNodeId
-          );
-          if (updatedNodes.length !== nodes.length) {
+        setNodes((prev) => {
+          const next = prev.filter((node) => node.id !== shopFloorNodeId);
+          if (next.length !== prev.length) {
             nodesUpdated = true;
+            return next;
           }
-          return updatedNodes;
+          return prev; 
         });
 
-        setEdges((edges) =>
-          edges.filter(
+        setEdges((prev) => {
+          const next = prev.filter(
             (edge) =>
               edge.source !== shopFloorNodeId && edge.target !== shopFloorNodeId
-          )
-        );
+          );
+          if (next.length !== prev.length) {
+            edgesUpdated = true;
+            return next;
+          }
+          return prev; 
+        });
       });
 
-      if (nodesUpdated) {
+      if (nodesUpdated || edgesUpdated) {
         saveOrUpdate();
       }
-    }
+    } 
+
     if (factory && reactFlowInstance && !loadedFlowEditor) {
       const factoryNodeId = `factory_${factory.id}`;
       const factoryNode: Node<FactoryNodeData> = {
@@ -1029,8 +1035,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   //@desc: helps to decide when to save or update data according to different reactflow scenarios
   //@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio
   const saveOrUpdate = useCallback(async () => {
-    console.log("nodes", nodes)
-    console.log("edges",edges)
+
     try {
       setIsOperationInProgress(true);
 
@@ -1356,7 +1361,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
 const onElementClick: NodeMouseHandler = useCallback(
   (event, element) => {
-    console.log("element",element)
+   
     if (element.type === "asset" || element.type === "shopFloor") {
       const isAsset = element.type === "asset";
       const newExpandedState = isAsset
@@ -1383,40 +1388,40 @@ const onElementClick: NodeMouseHandler = useCallback(
         edges as []
       );
 
-      const newNodes = nodes.map((node) => {
-        if (connectedNodeIds.has(node.id)) {
-          return { ...node, hidden: !newExpandedState.has(element.id) };
-        }
-        return node;
-      });
+      // const newNodes = nodes.map((node) => {
+      //   if (connectedNodeIds.has(node.id)) {
+      //     return { ...node, hidden: !newExpandedState.has(element.id) };
+      //   }
+      //   return node;
+      // });
 
-      const newEdges = edges.map((edge) => {
-        if (
-          connectedNodeIds.has(edge.source) ||
-          connectedNodeIds.has(edge.target)
-        ) {
-          return { ...edge, hidden: !newExpandedState.has(element.id) };
-        }
-        return edge;
-      });
+      // const newEdges = edges.map((edge) => {
+      //   if (
+      //     connectedNodeIds.has(edge.source) ||
+      //     connectedNodeIds.has(edge.target)
+      //   ) {
+      //     return { ...edge, hidden: !newExpandedState.has(element.id) };
+      //   }
+      //   return edge;
+      // });
 
       // Ensure unique edges to avoid duplicates
-      const uniqueEdges = newEdges.filter(
-        (edge, index, self) =>
-          index ===
-          self.findIndex(
-            (e) => e.source === edge.source && e.target === edge.target
-          )
-      );
+      // const uniqueEdges = newEdges.filter(
+      //   (edge, index, self) =>
+      //     index ===
+      //     self.findIndex(
+      //       (e) => e.source === edge.source && e.target === edge.target
+      //     )
+      // );
 
-      const layoutedNodes = applyDagreLayout(
-        newNodes as [],
-        uniqueEdges as [],
-        false
-      );
+      // const layoutedNodes = applyDagreLayout(
+      //   newNodes as [],
+      //   uniqueEdges as [],
+      //   false
+      // );
 
-      setNodes(layoutedNodes);
-      setEdges(uniqueEdges);
+      // setNodes(layoutedNodes);
+      // setEdges(uniqueEdges);
     }
   },
   [edges, nodes, expandedNodes, expandedAssets, setNodes, setEdges]
