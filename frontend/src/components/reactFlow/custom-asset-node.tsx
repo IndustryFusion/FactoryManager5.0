@@ -91,7 +91,8 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           label: key,
           value: key,
           class: value.class,
-          asset_category:value?.product_type
+          asset_category:value?.product_type,
+          relationship_type:value?.relationship_type
         }));
       console.log("options",options)
       setRelationOptions(options);
@@ -157,7 +158,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
       const relationClass = relationOption?.class ?? "";  
       const relationAssetCategory = relationOption?.asset_category ?? "";
      const labelToUse = relationOption?.label ?? relationLabel;
-     createRelationNodeAndEdge(data.id, labelToUse ,relationClass,relationAssetCategory);
+     createRelationNodeAndEdge(data.id, labelToUse ,relationClass,relationAssetCategory,relationOption?.relationship_type);
       setProcessedRelations((prev) => [...prev, relationLabel]);
       setDeletedRelations((prev) =>
         prev.filter((rel) => rel !== relationLabel)

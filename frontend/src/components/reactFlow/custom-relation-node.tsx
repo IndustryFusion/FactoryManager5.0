@@ -152,8 +152,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
           alt="Relation"
           draggable={false}
         />
-        <small className="node-label rn-title" title={data.label}>
-          {data.label}
+        <small className="node-label rn-title" title={data?.relationship_type}>
+          {data?.relationship_type}
         </small>
       </div>
 
