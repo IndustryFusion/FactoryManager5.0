@@ -58,4 +58,9 @@ export class AuthController {
       throw err;
     }
   }
+
+  @Post('generate-token')
+  generateToken(@Body() data: Record<string, any>) {
+    return this.authService.generateToken(data);
+  }
 }

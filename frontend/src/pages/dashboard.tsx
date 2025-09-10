@@ -4,7 +4,7 @@ import Navbar from "@/components/navBar/navbar";
 import "../styles/dashboard-page.css";
 import StackedPercentageBarChart from "@/components/dashboard/dashboard-charts";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getCompanyDetailsById } from "@/utility/auth";
+import { generateToken, getCompanyDetailsById } from "@/utility/auth";
 import axios from "axios";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
@@ -28,6 +28,8 @@ interface AccessGroupData {
     user_name?: string;
     company_ifric_id?: string;
 }
+
+const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
 const DashboardPage: React.FC = () => {
     const [userName, setUserName] = useState<string>("User");
@@ -71,6 +73,15 @@ const DashboardPage: React.FC = () => {
         const suffix = id.slice(-8);      // last 8 characters
         return `${prefix}...............${suffix}`;
     };
+
+    async function handleXanaOpen() {
+        const token = await getAccessGroup();
+        const response = await generateToken({ token: token.jwt_token });
+        if (response && response.data) {
+            const token2 = response.data.token;
+            window.open(`${xana_url}?token=${token2}`, '_blank', 'noopener,noreferrer');
+        }
+    }
 
     return (
         <div className="flex">
@@ -265,12 +276,18 @@ const DashboardPage: React.FC = () => {
                                     <p className="xana-subheading">Your intelligent assistant for smarter decisions.</p>
                                     <p className="xana-subheading-section">
                                         Why is my cutting line underperforming?, How can I reduce idle time on Station 4?
-                                        <br /> Xana helps you get answers – and act on them.
+                                        <br /> Xana helps you get answers.
                                     </p>
                                 </div>
                             </div>
                             <div>
-                                <button className="xana-button"><span><img src="/ai-audio.svg" /></span>Ask Xana AI</button>
+                                <button
+                                    className="xana-button"
+                                    onClick={handleXanaOpen}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <span><img style={{ width: "32px", height: "32px" }} src="/ai-audio.svg" /></span>Ask Xana AI
+                                </button>
                             </div>
                         </div>
                     </main>

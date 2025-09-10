@@ -314,3 +314,16 @@ export const fetchCompanyProduct = async (dataCompanyIfricId: string) => {
         }
     }
 };
+
+export const generateToken = async (data: Record<string, string>) => {
+    try {
+        return await axios.post(`${BACKEND_URL}/auth/generate-token`, data);
+    } catch (error: any) {
+        console.log('err from generating token ',error);
+        if (error?.response && error?.response?.status === 401) {
+          updatePopupVisible(true);
+        } else {
+          throw error;
+        }
+    }
+};
