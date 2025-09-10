@@ -357,3 +357,48 @@ user-select: none;
 .p-skeleton{
 border-radius: 12px;
 }
+
+
+.xana-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  border: 1px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
+  background: var(--ifx-tint-blue-900-primary, #3CA0C9);
+  border-radius: 60px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.xana-fab img {
+  width: 32px;  /* bigger icon */
+  height: 32px;
+  flex-shrink: 0;
+  padding-left: 5px;
+}
+
+.xana-label {
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.xana-fab:hover {
+  padding: 16px 22px;
+}
+
+.xana-fab:hover .xana-label {
+  max-width: 200px;
+  opacity: 1;
+}

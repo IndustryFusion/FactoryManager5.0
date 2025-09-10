@@ -26,6 +26,7 @@ import withAuth from "@/app/withAuth";
 import Head from "next/head";
 import "@/app/globals.css";
 import { UnauthorizedPopup } from '../utility/jwt';
+import FloatingXanaButton from "@/components/floating-xana-button";
 
 
 function MyApp({ Component, pageProps, router }: AppProps) {
@@ -33,15 +34,16 @@ function MyApp({ Component, pageProps, router }: AppProps) {
 
   const AuthComponent =
     ["/auth/login", "/auth/register", "/recover-password", "/auth/reset/update-password", "/privacy", "/terms-and-conditions"].includes(router.pathname)
-        ? Component
-        : withAuth(Component);
+      ? Component
+      : withAuth(Component);
   return (
     <Provider store={store}>
       <Head>
         <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
       </Head>
       <AuthComponent {...pageProps} />
-        <UnauthorizedPopup />
+      <FloatingXanaButton />
+      <UnauthorizedPopup />
     </Provider>
   );
 }

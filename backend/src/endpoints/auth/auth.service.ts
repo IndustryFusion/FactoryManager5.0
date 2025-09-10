@@ -143,4 +143,13 @@ export class AuthService {
     .encrypt(encryptionKey);
     return encrypted;
   }
+
+  generateToken(data: any) {
+    const token = jwt.sign(
+      data, 
+      this.SECRET_KEY, 
+      { expiresIn: '1d' }
+    );
+    return {token}
+  }
 }

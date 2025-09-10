@@ -4,11 +4,13 @@ import "../../styles/sidebar.css";
 import Image from "next/image";
 import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getCompanyDetailsById, getUserDetails } from "@/utility/auth";
+import { generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
 import { Coming_Soon } from "next/font/google";
+
+const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
 function Sidebar() {
   const router = useRouter();
@@ -18,8 +20,8 @@ function Sidebar() {
   const [companyName, setCompanyName] = useState("Company");
   const [companyId, setCompanyId] = useState("ID");
   const toast = useRef<Toast>(null);
-  const [userImage, setUserImage] = useState("/avatar.svg");  
-  const [laoding, setLoading] =useState(false)
+  const [userImage, setUserImage] = useState("/avatar.svg");
+  const [laoding, setLoading] = useState(false)
 
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
@@ -38,15 +40,15 @@ function Sidebar() {
           user_email: data.user_email,
           company_ifric_id: data.company_ifric_id
         })
-         const name = companyDetails?.data?.[0]?.company_name;  
-         const userImage = userDetails?.data?.[0]?.user_image;
-         if (userImage) {
-           setUserImage(userImage);
-         } else {
-           setUserImage("/avatar.svg");
+        const name = companyDetails?.data?.[0]?.company_name;
+        const userImage = userDetails?.data?.[0]?.user_image;
+        if (userImage) {
+          setUserImage(userImage);
+        } else {
+          setUserImage("/avatar.svg");
         }
         if (name) setCompanyName(name);
-        } catch (error: unknown) {
+      } catch (error: unknown) {
         setLoading(false);
         if (axios.isAxiosError(error) && error.response?.data?.message) {
           showToast(toast, "error", "Error", error.response.data.message);
@@ -73,6 +75,15 @@ function Sidebar() {
       window.open(value, "_self");
     } else {
       router.push(`/${value}`);
+    }
+  }
+
+  async function handleXanaRoute() {
+    const token = await getAccessGroup();
+    const response = await generateToken({ token: token.jwt_token });
+    if (response && response.data) {
+      const token2 = response.data.token;
+      window.open(`${xana_url}?token=${token2}`, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -137,7 +148,7 @@ function Sidebar() {
             <div>
               <Button
                 className={`sidebar_navlink ${router.pathname === "/" ? "is_active" : ""}`}
-                onClick={() => {}}
+                onClick={() => { }}
                 tooltip={!sidebarOpen ? "Production Lines" : "Coming soon"}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
@@ -222,7 +233,7 @@ function Sidebar() {
               <div>
                 <Button
                   className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                  onClick={() => {}}
+                  onClick={() => { }}
                   tooltip={!sidebarOpen ? "Reports" : "Coming soon"}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
@@ -235,40 +246,40 @@ function Sidebar() {
 
               <div>
                 <Button
-                  className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
-                  onClick={() => {}}
-                  tooltip={!sidebarOpen ? "Xana AI" : "Coming Soon"}
+                  className={`sidebar_navlink is_active`}
+                  onClick={() => { handleXanaRoute() }}
+                  tooltip={!sidebarOpen ? "Xana AI" : "Test Version"}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
-                  <Image src="/xana-ai-grey.svg" width={18} height={18} alt="xana_icon" />
-                  <div className={`sidebar_navlink_text_cs ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
+                  <Image src="/xana.svg" width={18} height={18} alt="xana_icon" />
+                  <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
                     Xana AI
                   </div>
                 </Button>
               </div>
             </div>
-          
+
           </div>
-            <div className="sidebar_bottom_section">
-              <div className="sidebar_profile_section">
-                <img
-                  src={userImage} 
-                  alt="user_avatar"
-                  width={36}
-                  height={36}
-                  className="sidebar_profile_avatar"
-                />
-                <div className="sidebar_profile_info">
-                  <div className="sidebar_profile_name">{companyName}</div>
-                  <div className="sidebar_profile_company">{userName}</div>
-                </div>
-                <img
-                  src="/arrow-down.svg"
-                  alt="dropdown_arrow"
-                  className="sidebar_profile_dropdown_icon"
-                />
+          <div className="sidebar_bottom_section">
+            <div className="sidebar_profile_section">
+              <img
+                src={userImage}
+                alt="user_avatar"
+                width={36}
+                height={36}
+                className="sidebar_profile_avatar"
+              />
+              <div className="sidebar_profile_info">
+                <div className="sidebar_profile_name">{companyName}</div>
+                <div className="sidebar_profile_company">{userName}</div>
               </div>
+              <img
+                src="/arrow-down.svg"
+                alt="dropdown_arrow"
+                className="sidebar_profile_dropdown_icon"
+              />
             </div>
+          </div>
         </div>
       </div>
     </div>
