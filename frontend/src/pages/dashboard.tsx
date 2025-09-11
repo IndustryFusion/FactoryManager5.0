@@ -286,7 +286,7 @@ const DashboardPage: React.FC = () => {
                                     onClick={handleXanaOpen}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    <span><img style={{ width: "28px", height: "28px" }} src="/ai-audio.svg" /></span>Ask Xana AI
+                                    <span><img style={{ width: "24px", height: "24px", paddingTop: "3px" }} src="/ai-audio.svg" /></span>Ask Xana AI
                                 </button>
                             </div>
                         </div>
