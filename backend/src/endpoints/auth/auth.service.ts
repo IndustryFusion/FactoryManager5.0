@@ -145,11 +145,15 @@ export class AuthService {
   }
 
   generateToken(data: any) {
+    const otp = new Date().toISOString();  
+    const makedToken = this.mask(data.token, this.MASK_SECRET);
+
     const token = jwt.sign(
-      data, 
-      this.SECRET_KEY, 
-      { expiresIn: '1d' }
+      { m: makedToken, product: data.product_name, otp },
+      this.SECRET_KEY,
+      { expiresIn: '1d' },
     );
+    
     return {token}
   }
 }
