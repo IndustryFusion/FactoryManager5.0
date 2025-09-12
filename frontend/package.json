@@ -26,6 +26,7 @@
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
     "formik": "^2.4.5",
+    "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
     "i18next": "^23.15.1",
     "jose": "^5.9.4",
