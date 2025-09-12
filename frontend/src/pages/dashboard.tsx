@@ -58,7 +58,7 @@ const DashboardPage: React.FC = () => {
                 setCompanyId(data.company_ifric_id || "ID");
 
                 const companyDetails: CompanyDetails | undefined = await getCompanyDetailsById(data.company_ifric_id || "ID");
-                setUserImage(companyDetails?.data[0]?.user_image)
+                setUserImage(companyDetails?.data[0]?.company_image)
                 setAddress(companyDetails?.data[0]?.city);
                 setCountry(companyDetails?.data[0]?.country);
                 const name: string | undefined = companyDetails?.data?.[0]?.company_name;
