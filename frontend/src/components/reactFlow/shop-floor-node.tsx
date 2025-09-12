@@ -171,7 +171,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         className="dialog-class"
         header={
           <div className="areas-header">
-            <span>Assets</span>
+            <span>Select Assets</span>
             <Button
               aria-label="Create Retrofit Assets"
               className="global-button nodrag nopan add-areas-hdr-btn"

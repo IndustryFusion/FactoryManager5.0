@@ -184,7 +184,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
       <Dialog
         header={
           <div className="areas-header">
-            <span>Areas</span>
+            <span>Select Areas</span>
             <Button
               aria-label="Add Areas"
               className="global-button nodrag nopan add-areas-hdr-btn"

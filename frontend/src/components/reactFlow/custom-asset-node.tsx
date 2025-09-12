@@ -70,8 +70,20 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imgErr, setImgErr] = useState(false);
+  const [copied, setCopied] = useState(false);
 
+  const shortenId = (s = "") =>
+    s.length > 18 ? `${s.slice(0, 8)}…${s.slice(-12)}` : s;
 
+  const copyId = async () => {
+    try {
+      await navigator.clipboard.writeText(data.id || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch (err) {
+   
+    }
+  }
   const getInitial = (s?: string) =>
     (s?.trim()?.charAt(0) || "?").toUpperCase();
   const openDialogAndFetch = async () => {
@@ -201,32 +213,48 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     <small className="node-label-serial-number">{getShortSerial(data.asset_serial_number)}</small>
     <small className="node-label-type">{data.asset_category}</small> */}
 
-      <div className="an-card">
+  <div className="an-card">
 
-        <div className="an-thumb">
-          {data.image_url && !imgErr ? (
-            <img
-              className="an-img"
-              alt="asset"
-              src={data.image_url}
-              onError={() => setImgErr(true)}
-            />
-          ) : (
-            <span className="an-initial">{getInitial(data.label)}</span>
-          )}
-        </div>
+    <div className="an-badge-row">
+      <span className="an-pill">Asset</span>
+
+      {data.id ? (
+        <button
+          type="button"
+          className={`an-id-chip${copied ? " is-copied" : ""}`}
+          title={copied ? "Copied!" : data.id}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            copyId();
+          }}
+          aria-label="Copy asset ID"
+        >
+          <img src="/factory-flow-buttons/id.svg" alt="" className="an-id-icon-img" draggable={false} />
+          <span className="an-id-text">{shortenId(data.id)}</span>
+          <img src="/factory-flow-buttons/copy-01.svg" alt="Copy ID" className="an-id-copy-img" draggable={false} />
+        </button>
+      ) : null}
+    </div>
 
 
-        <div className="an-body">
-          <div className="an-title-row">
-            <span className="an-title" title={title}>{title}</span>
-          </div>
-          {sub ? <div className="an-sub">{sub}</div> : null}
-          {vendorOrSerial ? <div className="an-link" title={vendorOrSerial}>{vendorOrSerial}</div> : null}
-        </div>
-
-        <div className="an-pill">Asset</div>
+    <div className="an-main">
+      <div className="an-thumb">
+        {data.image_url && !imgErr ? (
+          <img className="an-img" alt="asset" src={data.image_url} onError={() => setImgErr(true)} />
+        ) : (
+          <span className="an-initial">{getInitial(data.label)}</span>
+        )}
       </div>
+
+      <div className="an-body">
+        <div className="an-title-row">
+          <span className="an-title" title={title}>{title}</span>
+        </div>
+        {sub ? <div className="an-sub">{sub}</div> : null}
+      </div>
+    </div>
+  </div>
 
   
       <Button

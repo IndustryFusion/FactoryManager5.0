@@ -4,7 +4,7 @@ import Navbar from "@/components/navBar/navbar";
 import "../styles/dashboard-page.css";
 import StackedPercentageBarChart from "@/components/dashboard/dashboard-charts";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { getCompanyDetailsById } from "@/utility/auth";
+import { getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import axios from "axios";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
@@ -21,6 +21,8 @@ const getGreetings = () => {
 interface CompanyDetails {
     data?: Array<{
         company_name?: string;
+        address_1?:string;
+        country?:string
     }>;
 }
 
@@ -35,7 +37,10 @@ const DashboardPage: React.FC = () => {
     const [companyId, setCompanyId] = useState<string>("ID");
     const toast = useRef<Toast>(null);
     const router = useRouter();
-
+    const [address, setAddress] = useState("")
+    const [country, setCountry] = useState("")
+    const [userImage, setUserImage] = useState("")
+    const avatarLetter =  (userName ?? "U").trim().charAt(0).toUpperCase() || "U";
     useEffect(() => {
         const fetchUserData = async (): Promise<void> => {
             try {
@@ -51,6 +56,14 @@ const DashboardPage: React.FC = () => {
                 setCompanyId(data.company_ifric_id || "ID");
 
                 const companyDetails: CompanyDetails | undefined = await getCompanyDetailsById(data.company_ifric_id || "ID");
+                const userDetails = await getUserDetails({
+                    user_email: data.user_email as string,
+                    company_ifric_id:data?.company_ifric_id as string
+                })
+                console.log("companyId",companyId)
+                setUserImage(userDetails?.data[0]?.user_image)
+                setAddress(companyDetails?.data[0]?.address_1);
+                setCountry(companyDetails?.data[0]?.country);
                 const name: string | undefined = companyDetails?.data?.[0]?.company_name;
                 if (name) setCompanyName(name);
             } catch (error: unknown) {
@@ -140,10 +153,23 @@ const DashboardPage: React.FC = () => {
                                     padding: "16px",
                                 }}
                             >
-                                <img src="/Ellipse 5947.svg" alt="User avatar" width={51} height={51} />
+                            {userImage  ? (
+                                <img
+                                    alt={userName}
+                                    src={userImage}
+                                    draggable="false"
+                                
+                                    style={{ width: "50px", height: "40px", objectFit: "cover" }}
+                                />
+                                ) : (
+                                    <div className="profile_avatar_circle-1" >
+                                        {avatarLetter}
+                                    </div>
+                                )}
+                                
                                 <div style={{ display: "flex", flexDirection: "column" }}>
                                     <div className="header-title">{companyName}</div>
-                                    <div className="header-subtitle">Wiesbaden, Germany</div>
+                                    <div className="header-subtitle">{address} , {country}</div>
                                 </div>
                             </div>
                         </div>
