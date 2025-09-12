@@ -42,7 +42,7 @@ const DashboardPage: React.FC = () => {
     const [address, setAddress] = useState("")
     const [country, setCountry] = useState("")
     const [userImage, setUserImage] = useState("")
-    const avatarLetter =  (userName ?? "U").trim().charAt(0).toUpperCase() || "U";
+    const avatarLetter =  (userName ?? "").trim().charAt(0).toUpperCase() || "";
     useEffect(() => {
         const fetchUserData = async (): Promise<void> => {
             try {
