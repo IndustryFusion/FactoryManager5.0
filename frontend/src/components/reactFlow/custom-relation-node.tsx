@@ -137,6 +137,9 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
     setSelected([]);
   };
 
+  const toTitle = (s?: string) => (s ?? "") .toString() .replace(/[_-]+/g, " ")     .toLowerCase() .replace(/\b\w/g, c => c.toUpperCase());
+
+  const dialogHeader = `Select ${toTitle(desiredCategory)}`;
   return (
     <div className="customNode relationNode">
    
@@ -174,7 +177,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
       />
 
       <Dialog
-        header="Pick target assets"
+        header={dialogHeader}
         visible={dialogVisible}
         onHide={() => setDialogVisible(false)}
         style={{ width: "26rem" }}
