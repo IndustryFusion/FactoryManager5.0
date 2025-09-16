@@ -1835,6 +1835,7 @@ const handleBackspacePress = useCallback(() => {
               onEdgeClick={onEdgeClick}
               nodeTypes={nodeTypes}
               deleteKeyCode={null}
+              defaultEdgeOptions={{ type: "smoothstep" }}
             >
               <MiniMap />
               <Controls />

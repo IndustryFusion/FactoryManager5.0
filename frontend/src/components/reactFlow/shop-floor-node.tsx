@@ -147,8 +147,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
 
       <div className="sf-pill">{pillText}</div>
 
-      <Handle id="in" type="target" position={Position.Top} className="handle-in" />
-      <Handle id="out" type="source" position={Position.Bottom} className="handle-out" />
+      <Handle id="in" type="target" position={Position.Top} className="handle-in customHandle" />
+      <Handle id="out" type="source" position={Position.Bottom} className="handle-out customHandle" />
 
       <Button
         aria-label="Add"

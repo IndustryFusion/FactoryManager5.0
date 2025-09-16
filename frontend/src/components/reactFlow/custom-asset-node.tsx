@@ -194,7 +194,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
     {!isConnecting && isConnectable && (
       <Handle 
         id="out"                       
-        className="customHandle"
+        className="customHandle assetNode"
         position={Position.Bottom}
         type="source"
         data-handlepos="bottom"

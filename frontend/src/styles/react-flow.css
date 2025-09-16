@@ -18,33 +18,12 @@
 }
 
 /* Connection Indicator */
-.connectionindicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #0b0b0b;
-  border: 2px solid white;
-  position: absolute;
-  transform: translate(-50%, -50%);
-  margin-left: -10px;
-  z-index: 400; 
-}
+
 
 .react-flow__edge path {
   pointer-events: visibleStroke !important;
 }
 
-.react-flow__handle,
-.react-flow__handle-top,
-.react-flow__handle-bottom {
-  width: 0 !important;
-  height: 0 !important;
-  opacity: 0 !important;          
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  pointer-events: auto !important; 
-}
 
 
 .flow-editor-container {
@@ -196,10 +175,19 @@
 .factory-node .handle-out.react-flow__handle {
   width: 8px;
   height: 8px;
-  bottom: -4px;
-  background: #6b7280;
+  bottom: -4px;            
+  left: 50% !important;    
+  transform: translateX(-50%) !important;
+  top: auto !important;   
+  right: auto !important;
+
+  background: #000000;
   border: 1px solid #fff;
+  border-radius: 50%;
+  pointer-events: all;
+  z-index: 520;           
 }
+
 
 .factory-node,
 .shopfloor-node {
@@ -230,7 +218,7 @@ box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.15);
 
 .factory-add-btn.p-button {
   position: absolute;
-  bottom: -26px;
+  bottom: -33px;
   left: 50%;
   transform: translateX(-50%);
   width: 24px;

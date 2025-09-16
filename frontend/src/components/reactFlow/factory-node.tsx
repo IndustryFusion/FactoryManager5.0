@@ -168,7 +168,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
 
       <div className="fn-pill">Factory Site</div>
 
-      <Handle id="bottom" type="source" position={Position.Bottom} className="handle-out" />
+      <Handle id="bottom" type="source" position={Position.Bottom} className="handle-out assetNode" />
 
       <Button
         aria-label="Add Areas"

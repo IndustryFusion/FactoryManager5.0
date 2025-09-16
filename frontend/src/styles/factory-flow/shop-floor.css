@@ -74,11 +74,23 @@
 .shopfloor-node .handle-out.react-flow__handle {
   width: 8px;
   height: 8px;
-  background: #6b7280;
+  background: #0a0a0a;
   border: 1px solid #fff;
 }
-.shopfloor-node .handle-in.react-flow__handle { top: -4px; }
-.shopfloor-node .handle-out.react-flow__handle { bottom: -4px; }
+.shopfloor-node .handle-in.react-flow__handle {   
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: -5px !important;
+  right: auto !important;
+
+}
+.shopfloor-node .handle-out.react-flow__handle {
+  bottom: -4px;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: auto !important;
+  right: auto !important;
+}
 
 .shopfloor-node.is-selected {
   border-radius: 8px;
@@ -94,7 +106,7 @@
 
 .shopfloor-add-btn.p-button {
   position: absolute;
-  bottom: -26px;          
+  bottom: -34px;          
   left: 50%;
   transform: translateX(-50%);
   width: 24px;
