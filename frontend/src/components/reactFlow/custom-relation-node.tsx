@@ -143,8 +143,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
   return (
     <div className="customNode relationNode">
    
-      <Handle id="in" type="target" position={Position.Top} className="customHandle" data-handlepos="top" />
-      <Handle id="out" type="source" position={Position.Bottom} className="customHandle" data-handlepos="bottom" />
+      <Handle id="in" type="target" position={Position.Top} className="customHandle assetNode" data-handlepos="top" />
+      <Handle id="out" type="source" position={Position.Bottom} className="customHandle assetNode" data-handlepos="bottom" />
 
 
 
