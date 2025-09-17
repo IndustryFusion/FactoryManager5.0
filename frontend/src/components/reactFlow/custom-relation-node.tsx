@@ -60,6 +60,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
     .replace(/\btemplate\b/gi, "")
     .trim();
 
+  const capFirst = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+
   const options: Option[] = useMemo(() => {
 
     if (!desiredCategory) return [];
@@ -155,9 +157,14 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
           alt="Relation"
           draggable={false}
         />
-        <small className="node-label rn-title" title={data?.relationship_type}>
-          {data?.relationship_type}
-        </small>
+        <div className="rn-text">
+          <small className="node-label rn-title" title={data?.relationship_type}>
+            {capFirst(data?.relationship_type)}
+          </small>
+          <small className="node-label rn-sub" title={data?.class}>
+              {capFirst(data?.class)}
+          </small>
+        </div>
       </div>
 
       <Button
