@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useCallback, useContext } from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import React, { useMemo, useState, useCallback, useContext, useEffect } from "react";
+import { Handle, Position, NodeProps, NodeToolbar } from "reactflow";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { useRouter } from "next/router";
@@ -44,7 +44,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   const pillText = data.kind || "Area";
   const router = useRouter();
   const dispatch = useDispatch();
-  const { addAssetsToShopFloor } = useContext(EdgeAddContext);
+  const { addAssetsToShopFloor ,createSubflowForShopFloor } = useContext(EdgeAddContext);
 
   const factoryId = useMemo(() => {
     const q = (router.query?.factoryId || router.query?.id) as string | undefined;
@@ -54,7 +54,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   }, [router.query, router.asPath]);
 
   const unAllocatedAssetData = useSelector((s: RootState) => s.unAllocatedAsset);
-
+  // const [showActions, setShowActions] = useState(false);
   const [assetsVisible, setAssetsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<Option[]>([]);
@@ -76,6 +76,10 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       };
     });
   }, []);
+  
+  // useEffect(() => {
+  //   if (!selected) setShowActions(false);
+  // }, [selected]);
 
   const openAssets = useCallback(
     async (e: React.MouseEvent) => {
@@ -104,7 +108,30 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
     [factoryId, unAllocatedAssetData, optionsFromStore, dispatch]
   );
 
+  // const handleAddAssets = useCallback(
+  //   (e: React.MouseEvent) => {
+  //     e.stopPropagation();
+  //     openAssets(e); 
+  //   },
+  //   [openAssets]
+  // );
 
+  // const handleCreateSubFlow = useCallback((e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   createSubflowForShopFloor?.(shopFloorNodeId);
+  // }, [createSubflowForShopFloor, shopFloorNodeId]);
+
+
+
+  //   const handleEdit = useCallback((e: React.MouseEvent) => {
+  //     e.stopPropagation();
+  //     console.log("Edit shop floor:", shopFloorNodeId);
+  //   }, [shopFloorNodeId]);
+
+  //   const handleDelete = useCallback((e: React.MouseEvent) => {
+  //     e.stopPropagation();
+  //     console.log("Delete shop floor (hook this to your delete flow):", shopFloorNodeId);
+  //   }, [shopFloorNodeId]);
   const toggle = (id: string) => {
     const willCheck = !selectedIds.includes(id);
     const next = willCheck ? [...selectedIds, id] : selectedIds.filter((x) => x !== id);
@@ -133,7 +160,59 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   };
 
   return (
-    <div className={`shopfloor-node ${selected ? "is-selected" : ""}`}>
+    <div className={`shopfloor-node ${selected ? "is-selected" : ""}`} 
+      // onClick={(e) => { e.stopPropagation(); setShowActions(true); }}
+    >
+      {/* <NodeToolbar
+        isVisible={showActions}
+        position="top"
+        offset={10}
+        className="sf-toolbar"
+      >
+        <Button
+          aria-label="Add assets"
+          className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={handleAddAssets}
+          tooltip="Add assets"
+          tooltipOptions={{ position: "top" }}
+        >
+          <img src="/factory-flow-buttons/asset-plus-icon.svg" alt="" />
+        </Button>
+
+        <Button
+          aria-label="Create Sub Flow"
+          className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={handleCreateSubFlow}
+          tooltip="Create Sub Flow"
+          tooltipOptions={{ position: "top" }}
+        >
+          <img src="/factory-flow-buttons/hut.svg" alt="" />
+        </Button>
+
+        <Button
+          aria-label="Edit"
+          className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={handleEdit}
+          tooltip="Edit"
+          tooltipOptions={{ position: "top" }}
+        >
+          <img src="/factory-flow-buttons/edit-icon.svg" alt="" width="42px" height="42px" />
+        </Button>
+
+        <Button
+          aria-label="Delete"
+          className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={handleDelete}
+          tooltip="Delete"
+          tooltipOptions={{ position: "top" }}
+        >
+          <img src="/factory-flow-buttons/delete-02 (1).svg" alt="" width="22px" height="22px"/>
+        </Button>
+      </NodeToolbar> */}
       <div className="sf-icon">
         <svg viewBox="0 0 24 24" className="sf-gear" aria-hidden>
           <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />

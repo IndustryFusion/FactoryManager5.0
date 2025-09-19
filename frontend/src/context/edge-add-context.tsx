@@ -25,7 +25,7 @@ export type CreateRelationNodeAndEdgeFn = (
   asset_serial_number?:string,
   relationship_type?:string
 ) => void;
-
+export type CreateSubflowForShopFloorFn = (shopFloorNodeId: string) => void;
 export type CreateAssetNodeAndEdgeFromRelationFn = (
   relationNodeId: string,
   asset: { id: string; label: string; asset_category: string ,asset_serial_number:string}
@@ -37,6 +37,8 @@ export interface EdgeAddContextType {
   addAssetsToShopFloor: AddAssetsToShopFloorFn;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  createGroupAtNode?: (nodeIdOrEntityId: string) => void;
+  createSubflowForShopFloor?: CreateSubflowForShopFloorFn;
 }
 
 export type AddAssetsToShopFloorFn = (
@@ -51,6 +53,8 @@ const EdgeAddContext = React.createContext<EdgeAddContextType>({
   addAssetsToShopFloor: () => [],
   setNodes: () => {},
   setEdges: () => {},
+  createGroupAtNode: () => {},
+  createSubflowForShopFloor: () => {},
 });
 
 export default EdgeAddContext;
