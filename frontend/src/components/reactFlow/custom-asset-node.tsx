@@ -14,10 +14,10 @@
 // limitations under the License. 
 // 
 
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { getAssetRelationById } from "@/utility/factory-site-utility";
 import { MultiSelect } from "primereact/multiselect";
-import { Handle, Position,useStore } from "reactflow";
+import { Handle, NodeToolbar, Position,useStore } from "reactflow";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -39,7 +39,9 @@ interface CustomAssetNodeProps {
     type:string,
     asset_category?:string,
     image_url?: string;             
-    manufacturer?: string;          
+    manufacturer?: string;
+    subFlowId?: string | null;
+    isSubflowContainer?: boolean;          
   }
   createRelationNodeAndEdge?: (assetId: string, relationName: string,relationClass: string, asset_category?:string) => void;
 }
@@ -55,14 +57,16 @@ interface FlowState {
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
-
+  const subFlowId = data.subFlowId ?? null;
+  const isSubflowContainer = data.isSubflowContainer ?? false;
   const connectionNodeId = useStore(connectionNodeIdSelector);
   const isConnecting = connectionNodeId != null;
   const isConnectable = connectionNodeId !== data.id;
   const [relationOptions, setRelationOptions] = useState<RelationOption[]>([]);
 
   const [selectedRelations, setSelectedRelations] = useState<string[]>([]);
-  
+  const [showGroupCTA, setShowGroupCTA] = useState(false);
+  const clickTimesRef = useRef<number[]>([]);
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
   const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
@@ -189,8 +193,42 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const title = data.label ?? "Asset";
   const sub = data.asset_category ?? "";
   const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
+
+  // const onTripleClick = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   const now = Date.now();
+  //   clickTimesRef.current = [...clickTimesRef.current.filter(t => now - t < 600), now];
+  //   if (clickTimesRef.current.length >= 3) {
+  //     setShowGroupCTA(true);
+  //     window.setTimeout(() => setShowGroupCTA(false), 4000);
+  //     clickTimesRef.current = [];
+  //   }
+  // };
+
+
+  // const { createGroupAtNode } = useContext(EdgeAddContext) as {
+  //   createGroupAtNode?: (nodeId: string) => void;
+  // };
+
   return (
-  <div className="customNode">
+  <div className="customNode" 
+  
+  // onClick={onTripleClick}
+  
+  >
+     {/* <NodeToolbar isVisible={showGroupCTA} position="top">
+        <Button
+          className="global-button is-grey"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowGroupCTA(false);
+            createGroupAtNode?.(data.id || "");
+          }}
+        >
+          Group Selected Node
+        </Button>
+      </NodeToolbar> */}
     {!isConnecting && isConnectable && (
       <Handle 
         id="out"                       
