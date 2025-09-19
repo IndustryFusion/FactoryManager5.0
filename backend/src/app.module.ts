@@ -72,6 +72,7 @@ import { BindingController } from './endpoints/binding/binding.controller';
 import { BindingService } from './endpoints/binding/binding.service';
 import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
 import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema';
+import { FactoryPdtCache, FactoryPdtCacheSchema } from './endpoints/schemas/factory-pdt-cache.schema';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -85,7 +86,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     }),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
-      { name: 'PersistantTask', schema: PersistantTaskSchema }
+      { name: 'PersistantTask', schema: PersistantTaskSchema },
+      { name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema }
     ]),
     MongooseModule.forFeature([
       { name: Onboarding.name, schema: OnboardingSchema },
