@@ -24,6 +24,8 @@
   pointer-events: visibleStroke !important;
 }
 
+.group-node { cursor: grab; }
+.group-node:active { cursor: grabbing; }
 
 
 .flow-editor-container {

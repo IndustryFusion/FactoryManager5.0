@@ -33,6 +33,7 @@ interface RelationOption {
 }
 
 interface CustomAssetNodeProps {
+  id?:string,
   data: {
     id:string,
     label:string,
@@ -44,6 +45,7 @@ interface CustomAssetNodeProps {
     isSubflowContainer?: boolean;          
   }
   createRelationNodeAndEdge?: (assetId: string, relationName: string,relationClass: string, asset_category?:string) => void;
+    selected?: boolean;
 }
 
 interface AssetDetail {
@@ -56,7 +58,7 @@ interface FlowState {
 }
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
-const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
+const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected }) => {
   const subFlowId = data.subFlowId ?? null;
   const isSubflowContainer = data.isSubflowContainer ?? false;
   const connectionNodeId = useStore(connectionNodeIdSelector);
@@ -70,12 +72,12 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   // State to track which relations have been processed
   const [processedRelations, setProcessedRelations] = useState<string[]>([]);
   const [deletedRelations, setDeletedRelations] = useState<string[]>([]);
-  const { createRelationNodeAndEdge } = useContext(EdgeAddContext);
+  const { createRelationNodeAndEdge , createSubflowFromAssetNode} = useContext(EdgeAddContext);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imgErr, setImgErr] = useState(false);
   const [copied, setCopied] = useState(false);
-
+ 
   const shortenId = (s = "") =>
     s.length > 18 ? `${s.slice(0, 8)}…${s.slice(-12)}` : s;
 
@@ -110,7 +112,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
           asset_category:value?.product_type,
           relationship_type:value?.relationship_type
         }));
-      console.log("options",options)
+
       setRelationOptions(options);
     } catch (err) {
       setRelationOptions([]);
@@ -194,41 +196,39 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({ data }) => {
   const sub = data.asset_category ?? "";
   const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
 
-  // const onTripleClick = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   const now = Date.now();
-  //   clickTimesRef.current = [...clickTimesRef.current.filter(t => now - t < 600), now];
-  //   if (clickTimesRef.current.length >= 3) {
-  //     setShowGroupCTA(true);
-  //     window.setTimeout(() => setShowGroupCTA(false), 4000);
-  //     clickTimesRef.current = [];
-  //   }
-  // };
+  const onSelect = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const now = Date.now();
+    clickTimesRef.current = [...clickTimesRef.current.filter(t => now - t < 600), now];
+    if (clickTimesRef.current.length >= 3) {
+      setShowGroupCTA(true);
+      window.setTimeout(() => setShowGroupCTA(false), 4000);
+      clickTimesRef.current = [];
+    }
+  };
 
-
-  // const { createGroupAtNode } = useContext(EdgeAddContext) as {
-  //   createGroupAtNode?: (nodeId: string) => void;
-  // };
 
   return (
   <div className="customNode" 
   
-  // onClick={onTripleClick}
-  
-  >
-     {/* <NodeToolbar isVisible={showGroupCTA} position="top">
-        <Button
-          className="global-button is-grey"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowGroupCTA(false);
-            createGroupAtNode?.(data.id || "");
-          }}
-        >
-          Group Selected Node
-        </Button>
-      </NodeToolbar> */}
+    onClick={onSelect}
+    
+    >
+    <NodeToolbar isVisible={!!selected} position="top" offset={10}>
+    <Button
+      aria-label="Create Sub Flow"
+      className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
+      onMouseDown={(e) => e.stopPropagation()}
+      tooltip="Create Sub Flow"
+      onClick={(e) => {
+        e.stopPropagation();
+      createSubflowFromAssetNode?.(id || data?.id);
+      }}
+    >
+      <img src="/factory-flow-buttons/hut.svg" alt="" />
+    </Button>
+  </NodeToolbar>
+
     {!isConnecting && isConnectable && (
       <Handle 
         id="out"                       

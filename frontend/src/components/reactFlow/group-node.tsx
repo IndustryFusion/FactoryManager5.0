@@ -31,6 +31,7 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         border: "1.5px dashed #5a6c7d",
         borderRadius: 12,
         position: "relative",
+        cursor: "grab",  
       }}
     >
       <div
@@ -57,6 +58,8 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         minHeight={140}
         handleStyle={{ width: 10, height: 10, borderRadius: 3 }}
         onResizeEnd={handleResizeEnd}
+         handleClassName="nodrag"   
+       lineClassName="nodrag"
       />
     </div>
   );
