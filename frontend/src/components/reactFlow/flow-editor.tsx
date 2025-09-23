@@ -1124,7 +1124,7 @@ const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
               })),
             },
           };
-          console.log("  if (onlyFactoryToShopFloor || !existingEdgesFactToShopFloor) {")
+
           const reactFlowUpdateMongo = await axios.patch(
             `${API_URL}/react-flow/${factoryId}`,
             payLoad,
@@ -1136,7 +1136,7 @@ const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
               withCredentials: true,
             }
           );
-          console.log("reactFlowUpdateMongo", payLoad)
+
           if (reactFlowUpdateMongo.status == 200) {
 
           } else {
@@ -1157,7 +1157,7 @@ const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
               withCredentials: true,
             }
           );
-          console.log("allocatedAssetAvailableOrNot",allocatedAssetAvailableOrNot)
+
           if (allocatedAssetAvailableOrNot.data.length == 0) {
             const reactAllocatedAssetScorpio = await axios.post(
               API_URL + "/allocated-asset",
@@ -1197,7 +1197,7 @@ const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
                 withCredentials: true,
               }
             );
-            console.log("reactAllocatedAssetScorpio",reactAllocatedAssetScorpio)
+
             if (reactAllocatedAssetScorpio.status == 200) {
     
             } else {
@@ -1294,8 +1294,7 @@ const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
     }
   };
 
-  console.log("nodes",nodes)
-  console.log("edges",edges)
+
 
   const addAssetsToShopFloor = useCallback((
     shopFloorNodeId: string,
