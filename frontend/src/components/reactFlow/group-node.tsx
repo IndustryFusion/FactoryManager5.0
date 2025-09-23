@@ -1,3 +1,4 @@
+
 import React, { useCallback, useContext } from "react";
 import { NodeResizer, NodeProps, useNodeId } from "reactflow";
 import EdgeAddContext from "@/context/edge-add-context";
@@ -7,7 +8,6 @@ type GroupData = { label?: string };
 const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
   const id = useNodeId()!;
   const { setNodes } = useContext(EdgeAddContext);
-
 
   const handleResizeEnd = useCallback(
     (_e: unknown, params: { width: number; height: number }) => {
@@ -31,10 +31,12 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         border: "1.5px dashed #5a6c7d",
         borderRadius: 12,
         position: "relative",
-        cursor: "grab",  
+        cursor: "grab",
+        zIndex: 0, 
       }}
     >
       <div
+        className="subflow-drag-handle" 
         style={{
           position: "absolute",
           top: 6,
@@ -45,7 +47,8 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
           fontSize: 12,
           fontWeight: 600,
           color: "#334155",
-          pointerEvents: "none",
+          pointerEvents: "auto", 
+          userSelect: "none",
         }}
       >
         <span>{data?.label ?? "Group"}</span>
@@ -58,8 +61,8 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         minHeight={140}
         handleStyle={{ width: 10, height: 10, borderRadius: 3 }}
         onResizeEnd={handleResizeEnd}
-         handleClassName="nodrag"   
-       lineClassName="nodrag"
+        handleClassName="nodrag"            
+        lineClassName="nodrag pe-none"       
       />
     </div>
   );
