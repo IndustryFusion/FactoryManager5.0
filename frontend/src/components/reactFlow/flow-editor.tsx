@@ -80,6 +80,7 @@ import { handleUpdateRelations } from '@/utility/react-flow';
 import CustomRelationNode from "./custom-relation-node";
 import CustomFactoryNode from "./factory-node";
 import CustomShopFloorNode from "./shop-floor-node";
+import GroupNode from "./group-node";
 interface RelationPayload {
   [key: string]: {
     [relationKey: string]: string[];
@@ -91,6 +92,7 @@ const nodeTypes = {
   shopFloor: CustomShopFloorNode, 
   asset: CustomAssetNode,
   relation: CustomRelationNode,
+  subflow: GroupNode,
 };
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -332,6 +334,8 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
         id: asset.id,
         asset_category: asset.asset_category,
         asset_serial_number: asset.asset_serial_number,
+        subFlowId: null,
+        isSubflowContainer: false,
       },
       style: { backgroundColor: "", border: "none", borderRadius: 10 },
     };
@@ -628,27 +632,31 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
 
         // Run the layout
         dagre.layout(dagreGraph);
-
+        
         // Get the positioned nodes
-        const layoutedNodes = uniqueNodes.map((node: Node) => {
-          const nodeWithPosition = dagreGraph.node(node.id);
-          return {
-            ...node,
-            position: {
-              x: nodeWithPosition.x,
-              y: nodeWithPosition.y,
-            },
-            type: node.type || node.data?.type, // Ensure type is set correctly
-            data: {
-              ...node.data,
-              type: node.type || node.data?.type, // Ensure type is in data as well
-            }
-          };
-        });
+      const layoutedNodes = uniqueNodes.map((node: Node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      const base = {
+        ...node,
+        position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
+        type: node.type || node.data?.type,
+        data: { ...node.data, type: node.type || node.data?.type },
+      };
 
+      if ((base.data as any)?.type === "asset") {
+        base.data = {
+          ...base.data,
+          subFlowId: (base.data as any).subFlowId ?? null,
+          isSubflowContainer: (base.data as any).isSubflowContainer ?? false,
+        };
+      }
+
+      return base;
+    });
+     const sanitizedNodes = sanitizeParenting(layoutedNodes as any);
         // Initialize history with backend data
         const initialState: HistoryState = {
-          nodes: layoutedNodes,
+          nodes: sanitizedNodes,
           edges: getReactFlowMongo.data.factoryData.edges,
           timestamp: Date.now(),
           source: 'backend'
@@ -658,9 +666,9 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
         setCurrentHistoryIndex(0);
 
         // Set the states
-        setNodes(layoutedNodes);
+        setNodes(sanitizedNodes);
         setEdges(getReactFlowMongo.data.factoryData.edges);
-        setOriginalNodes(layoutedNodes);
+        setOriginalNodes(sanitizedNodes);
         setOriginalEdges(getReactFlowMongo.data.factoryData.edges);
         setIsRestored(true);
 
@@ -694,6 +702,19 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
     }
   }
 }, [factoryId, setNodes, setEdges, setRelationCounts, toast]);
+
+const intersectSets = (sets: Array<Set<string>>): Set<string> => {
+  if (!sets.length) return new Set();
+  return sets.slice(1).reduce((acc, s) => {
+    const next = new Set<string>();
+    acc.forEach(v => { if (s.has(v)) next.add(v); });
+    return next;
+  }, new Set(sets[0]));
+};
+
+
+const mapById = (arr: Node[]) => new Map(arr.map(n => [n.id, n]));
+const assetEntityId = (n?: Node) => (n?.data as any)?.id as string | undefined;
 
   // @desc:
   //@PATCH : the React Flow data for the specified factory ID ( both mongo and scorpio)
@@ -915,6 +936,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   //@desc :
   //@DELETE : the React Flow data for the specified factory ID, both mongo and scorpio(except Factory Node and ShopFloor Node)
 
+
   const deleteMongoAndScorpio = async () => {
     const preservedNodeTypes = new Set(["factory", "shopFloor"]);
     const preservedNodes = nodes.filter((node) =>
@@ -1035,7 +1057,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
   //@desc: helps to decide when to save or update data according to different reactflow scenarios
   //@POST/PATCH : POST/ PATCH react-flow data in mongo and in scorpio
   const saveOrUpdate = useCallback(async () => {
-
+   
     try {
       setIsOperationInProgress(true);
 
@@ -1083,12 +1105,14 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
             factoryId: factoryId,
 
             factoryData: {
-              nodes: nodes.map(({ id, type, position, data, style }) => ({
+              nodes: nodes.map(({ id, type, position, data, style,parentNode, extent }) => ({
                 id,
                 type,
                 position,
                 data,
                 style,
+                parentNode,
+                extent
               })),
               edges: edges.map(({ id, source, target, type, data }) => ({
                 id,
@@ -1100,7 +1124,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
               })),
             },
           };
-          console.log("  if (onlyFactoryToShopFloor || !existingEdgesFactToShopFloor) {")
+
           const reactFlowUpdateMongo = await axios.patch(
             `${API_URL}/react-flow/${factoryId}`,
             payLoad,
@@ -1112,7 +1136,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
               withCredentials: true,
             }
           );
-          console.log("reactFlowUpdateMongo", payLoad)
+
           if (reactFlowUpdateMongo.status == 200) {
 
           } else {
@@ -1133,7 +1157,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
               withCredentials: true,
             }
           );
-          console.log("allocatedAssetAvailableOrNot",allocatedAssetAvailableOrNot)
+
           if (allocatedAssetAvailableOrNot.data.length == 0) {
             const reactAllocatedAssetScorpio = await axios.post(
               API_URL + "/allocated-asset",
@@ -1173,7 +1197,7 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
                 withCredentials: true,
               }
             );
-            console.log("reactAllocatedAssetScorpio",reactAllocatedAssetScorpio)
+
             if (reactAllocatedAssetScorpio.status == 200) {
     
             } else {
@@ -1317,6 +1341,8 @@ const transformEdgesToRelationPayload = (edges: Edge[], nodes: Node[]): Relation
             label: a.label || "Asset",
             asset_category: a.asset_category,
             asset_serial_number: a.asset_serial_number,
+            subFlowId: null,
+            isSubflowContainer: false,
           },
           style: { backgroundColor: "", border: "none", borderRadius: 10 },
         });
@@ -1574,41 +1600,44 @@ const onElementClick: NodeMouseHandler = useCallback(
   //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
 const handleBackspacePress = useCallback(() => {
   if (!selectedElements || (!selectedElements.nodes?.length && !selectedElements.edges?.length)) {
-    toast.current?.show({
-      severity: "warn",
-      summary: "No selection",
-      detail: "Please select an edge or node to delete.",
-      life: 3000,
-    });
+    toast.current?.show({ severity: "warn", summary: "No selection", detail: "Please select an edge or node to delete.", life: 3000 });
     return;
   }
 
-  const { nodeIdsToDelete, edgeIdsToDelete } = buildCascadeDeletion(
-    selectedElements,
-    nodes,
-    edges
+  const selectedSubflowIds = (selectedElements.nodes ?? [])
+    .filter(n => n.type === "subflow" || (n.data as any)?.type === "subflow")
+    .map(n => n.id);
+
+  let workingNodes = nodes;
+  let workingEdges = edges;
+
+  if (selectedSubflowIds.length) {
+    for (const id of selectedSubflowIds) {
+      const res = liftSubflowChildren(id, workingNodes, workingEdges); 
+      workingNodes = res.nodes;                                     
+      workingEdges = res.edges;
+    }
+  }
+
+  const prunedSelection: OnSelectionChangeParams = {
+    nodes: (selectedElements.nodes ?? []).filter(n => !selectedSubflowIds.includes(n.id)),
+    edges: selectedElements.edges ?? [],
+  };
+
+  const { nodeIdsToDelete, edgeIdsToDelete } = buildCascadeDeletion(prunedSelection, workingNodes, workingEdges);
+  selectedSubflowIds.forEach(id => nodeIdsToDelete.add(id));
+
+  const newNodes = workingNodes.filter(n => !nodeIdsToDelete.has(n.id));
+  const newEdges = workingEdges.filter(
+    e => !edgeIdsToDelete.has(e.id) && !nodeIdsToDelete.has(e.source) && !nodeIdsToDelete.has(e.target)
   );
-
-  if (!nodeIdsToDelete.size && !edgeIdsToDelete.size) {
-    toast.current?.show({
-      severity: "info",
-      summary: "Nothing to delete",
-      life: 2000,
-    });
-    return;
-  }
-
-  const newNodes = nodes.filter((n) => !nodeIdsToDelete.has(n.id));
-  const newEdges = edges.filter((e) => !edgeIdsToDelete.has(e.id));
 
   setNodes(newNodes);
   setEdges(newEdges);
   addToHistory(newNodes, newEdges);
-
   setSelectedElements(null);
 
-
-  toast.current?.show({
+    toast.current?.show({
     severity: "success",
     summary: "Deleted",
     detail: `Removed ${edgeIdsToDelete.size} edge(s) and ${nodeIdsToDelete.size} node(s).`,
@@ -1635,7 +1664,7 @@ const handleBackspacePress = useCallback(() => {
         setSelectedFactoryId(cleanedFactoryId);
         setDialogVisible(true);
       }
-      console.log("node data",node)
+
       // if (node.type === "shopFloor") {
       //     if (hasChanges) {
       //         // Save or update changes before navigating if there are any changes
@@ -1656,67 +1685,94 @@ const handleBackspacePress = useCallback(() => {
       if (!reactFlowInstance || !reactFlowWrapper.current) return;
 
       const data = event.dataTransfer.getData("application/json");
-
       try {
         const { item, type } = JSON.parse(data);
 
-        const position = reactFlowInstance.screenToFlowPosition({
+        // Flow coordinates of the drop point
+        const dropPos = reactFlowInstance.screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
         });
 
+
+
+        const groups = nodes.filter(n => n.type === "subflow");
+        let parentId: string | undefined;
+        let relPos = { ...dropPos };
+
+        const byId = new Map(nodes.map(n => [n.id, n]));
+        for (const g of groups) {
+          const { w: gW, h: gH } = getNodeSize(g);
+          const gAbs = getAbsPos(g, byId); 
+          const gLeft = gAbs.x, gTop = gAbs.y, gRight = gLeft + gW, gBottom = gTop + gH;
+
+          const inside =
+            dropPos.x >= gLeft &&
+            dropPos.x <= gRight &&
+            dropPos.y >= gTop &&
+            dropPos.y <= gBottom;
+
+          if (inside) {
+            parentId = g.id;
+            relPos = { x: dropPos.x - gAbs.x, y: dropPos.y - gAbs.y }; 
+            break;
+          }
+        }
+
+
         const idPrefix = `${type}_${item.id}`;
-
         let label = item.product_name || item.floorName || `Unnamed ${type}`;
-
+        const urn = item.id; 
+        const baseId = parentId ? `subflow_${urn}` : `${idPrefix}_${Date.now()}`;
+        const uniqueId = nodes.some(n => n.id === baseId)  ? `${baseId}__${parentId}`: baseId;
         switch (type) {
-          case "shopFloor":
+          case "shopFloor": {
             const shopFloorNode = {
               id: idPrefix,
               type: "shopFloor",
-              position,
-              data: {
-                type: type,
-                label,
-                id: item.id,
-                onNodeDoubleClick,
-              },
+              position: dropPos,
+              data: { type, label, id: item.id, onNodeDoubleClick },
             };
-
             setNodes((nds) => [...nds, shopFloorNode]);
             break;
+          }
 
-          case "asset":
-            const factoryNodeId = `${factory.id}`;
-            if (factoryNodeId) {
-              const assetNode = {
-                id: idPrefix + `_${new Date().getTime()}`,
-                type: "asset",
+          case "asset": {
+            const subflowProdLine = parentId ? productionLineFromContainer(parentId) : null;
+            const assetNode = {
+              id:uniqueId,
+              type: "asset",
+              asset_category: item.asset_category,
+              position: parentId ? relPos : dropPos,
+              data: {
+                type,
+                label,
+                id: item.id,
                 asset_category: item.asset_category,
-                position,
-                data: {
-                  type: type,
-                  label,
-                  id: item.id,
-                  asset_category:item.asset_category,
-                  asset_serial_number:item.asset_serial_number
-                },
-              };
+                asset_serial_number: item.asset_serial_number,
+                subFlowId: subflowProdLine,
+                isSubflowContainer: false,
+              },
+              ...(parentId
+                ? { parentNode: parentId, extent: "parent" as const }
+                : {}),
+              style: { backgroundColor: "", border: "none", borderRadius: 10 },
+            };
 
-              setNodes((nds) => [...nds, assetNode]);
-            }
+            setNodes((nds) => [...nds, assetNode]);
             break;
+          }
 
           default:
             console.error("Unknown type:", type);
-            break;
         }
       } catch (error) {
         console.error("Failed to parse dragged data", error);
       }
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, nodes, setNodes, onNodeDoubleClick]
   );
+
 
   //@desc : Drag Event for Asset/ shopFloor nodes
 
@@ -1770,7 +1826,7 @@ const handleBackspacePress = useCallback(() => {
       nodeIdsToDelete.add(n.id);
     });
 
-
+    console.log("selectedNodes",selectedNodes)
     edgesArr.forEach((e) => {
       if (nodeIdsToDelete.has(e.source) || nodeIdsToDelete.has(e.target)) {
         edgeIdsToDelete.add(e.id);
@@ -1781,13 +1837,651 @@ const handleBackspacePress = useCallback(() => {
     for (const id of Array.from(nodeIdsToDelete)) {
       const n = nodeById.get(id);
       const nType = n ? getNodeType(n) : undefined;
-      if (nType === "factory" || nType === "shopFloor") {
+      if (nType === "factory" || nType === "shopFloor" ) {
         nodeIdsToDelete.delete(id);
       }
     }
 
     return { nodeIdsToDelete, edgeIdsToDelete };
   };
+
+  const isSubflowId = (id: string) => id.startsWith("subflow_");
+
+  const makeUnique = (proposedId: string, scope: Node[]) => {
+    if (!scope.some(n => n.id === proposedId)) return proposedId;
+    return `${proposedId}__${Math.random().toString(36).slice(2,6)}`;
+  };
+
+
+
+  const onNodeDragStop: NodeMouseHandler = useCallback((_evt, dragged) => {
+ const groups = nodes.filter(n => n.type === "subflow" && n.id !== dragged.id);
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const { w: dW, h: dH } = getNodeSize(dragged);
+    const dAbs = getAbsPos(dragged, byId);
+    const dLeft = dAbs.x, dTop = dAbs.y, dRight = dLeft + dW, dBottom = dTop + dH;
+
+    let container: Node | null = null;
+    for (const g of groups) {
+      if (g.id === dragged.id) continue; 
+      const { w: gW, h: gH } = getNodeSize(g);
+      const gAbs = getAbsPos(g, byId);
+      const gLeft = gAbs.x, gTop = gAbs.y, gRight = gLeft + gW, gBottom = gTop + gH;
+      const fullyInside = dLeft >= gLeft && dRight <= gRight && dTop >= gTop && dBottom <= gBottom;
+      if (fullyInside) { container = g; break; }
+    }
+
+    // enter a subflow container
+    if (container) {
+      if (dragged.parentNode === container.id) return; // already inside
+
+      const prodLine = productionLineFromContainer(container.id);
+      const cAbs = getAbsPos(container, byId);
+      const relX = dAbs.x - cAbs.x;
+      const relY = dAbs.y - cAbs.y;
+
+      const isAsset = isAssetNode(dragged);
+      const urn = isAsset ? (dragged.data as any)?.id : undefined;
+
+      // if it’s an asset and not yet a subflow_* id -> rename and remember original
+      const willRename = isAsset && urn && !isSubflowId(dragged.id);
+      const newId = willRename
+        ? makeUnique(`subflow_${urn}`, nodes)
+        : dragged.id;
+
+      const nextNodes = nodes.map(n => {
+        if (n.id !== dragged.id) return n;
+        const base: any = {
+          ...n,
+          id: newId,
+          parentNode: container!.id,
+          extent: "parent",
+          position: { x: relX, y: relY },
+        };
+        if (isAsset) {
+          base.data = {
+            ...(n.data as any),
+            subFlowId: prodLine ?? null,
+            isSubflowContainer: false,
+            __preSubflowId: willRename ? dragged.id : (n.data as any).__preSubflowId,
+            __preSubflowParent: (n as any).parentNode ?? null,
+            __preSubflowExtent: (n as any).extent,
+          };
+        }
+        return base;
+      });
+
+      // rewrite edges for the rename
+      const nextEdges = willRename
+        ? edges.map(e => ({
+            ...e,
+            source: e.source === dragged.id ? newId : e.source,
+            target: e.target === dragged.id ? newId : e.target,
+          }))
+        : edges;
+
+      const safe = sanitizeParenting(nextNodes as any);
+      setNodes(safe);
+      setEdges(nextEdges);
+      addToHistory(safe, nextEdges);
+      return;
+    }
+
+    // leave a subflow container (dropped outside)
+    if (!container && dragged.parentNode) {
+      const isAsset = isAssetNode(dragged);
+      const preId = (dragged.data as any)?.__preSubflowId as string | undefined;
+
+      const nextId = isAsset && isSubflowId(dragged.id)
+        ? (preId && !nodes.some(n => n.id === preId) ? preId : makeUnique((preId ?? `asset_${(dragged.data as any)?.id}_${Date.now()}`), nodes))
+        : dragged.id;
+
+      const nextNodes = nodes.map(n => {
+        if (n.id !== dragged.id) return n;
+        const base: any = {
+          ...n,
+          id: nextId,
+          parentNode: undefined,
+          extent: undefined,
+          // keep absolute position where it was dropped (React Flow already applied)
+        };
+        if (isAsset) {
+          const { __preSubflowId, __preSubflowParent, __preSubflowExtent, ...rest } = (n.data as any) || {};
+          base.data = {
+            ...rest,
+            subFlowId: null,
+            isSubflowContainer: false,
+          };
+        }
+        return base;
+      });
+
+      // rewrite edges for the rename back
+      const nextEdges = (isAsset && isSubflowId(dragged.id))
+        ? edges.map(e => ({
+            ...e,
+            source: e.source === dragged.id ? nextId : e.source,
+            target: e.target === dragged.id ? nextId : e.target,
+          }))
+        : edges;
+
+      const safe = sanitizeParenting(nextNodes as any);
+      setNodes(safe);
+      setEdges(nextEdges);
+      addToHistory(safe, nextEdges);
+    }
+  }, [nodes, edges, setNodes, setEdges, addToHistory]);
+
+
+
+
+
+  const getNodeSize = (n?: Node) => {
+    if (!n) return { w: 150, h: 80 }; // sensible default
+    const w = (n.style as any)?.width ?? (n.type === "subflow" ? 420 : 150);
+    const h = (n.style as any)?.height ?? (n.type === "subflow" ? 260 : 80);
+    return { w: Number(w), h: Number(h) };
+  };
+
+
+  const dragStartRef = useRef<{ id: string; x: number; y: number } | null>(null);
+
+  const onNodeDragStart: NodeMouseHandler = useCallback((_e, node) => {
+    const map = new Map(nodes.map(n => [n.id, n]));
+    const abs = getAbsPos(node, map);
+    dragStartRef.current = { id: node.id, x: abs.x, y: abs.y };
+  }, [nodes]);
+
+
+  const getAbsPos = (n: Node, byId: Map<string, Node>): { x: number; y: number } => {
+    let x = n.position.x;
+    let y = n.position.y;
+    let pid = (n as any).parentNode as string | undefined;
+
+    while (pid) {
+      const p = byId.get(pid);
+      if (!p) break;
+      x += p.position.x;
+      y += p.position.y;
+      pid = (p as any).parentNode as string | undefined;
+    }
+    return { x, y };
+  };
+
+  // ------------ cycle safety helpers ------------
+  const createsParentCycle = (childId: string, parentId: string, byId: Map<string, Node>) => {
+    if (!parentId || childId === parentId) return childId === parentId;
+    let cur: string | undefined = parentId;
+    const seen = new Set<string>([childId]);
+    while (cur) {
+      if (seen.has(cur)) return true;
+      seen.add(cur);
+      const n = byId.get(cur);
+      if (!n) return false;
+      cur = (n as any).parentNode as string | undefined;
+    }
+    return false;
+  };
+
+  const liftSubflowChildren = (containerId: string, allNodes: Node[], allEdges: Edge[]) => {
+    const byId = new Map(allNodes.map(n => [n.id, n]));
+    const container = byId.get(containerId);
+    if (!container) return { nodes: allNodes, edges: allEdges };
+
+    const parentId = (container as any).parentNode as string | undefined;
+    const parentAbs = parentId ? getAbsPos(byId.get(parentId)!, byId) : { x: 0, y: 0 };
+
+    const isDesc = (nid: string) => isDescendant(nid, containerId, byId);
+    const descendants = allNodes.filter(n => n.id !== containerId && isDesc(n.id));
+
+    // Build old->new id map only for nodes whose ID will change (e.g., "subflow_<urn>...")
+    const usedIds = new Set(allNodes.map(n => n.id).filter(id => id !== containerId));
+    const idRemap = new Map<string, string>();
+
+    const makeFreshAssetId = (n: Node) => {
+      const urn = (n.data as any)?.id || "unknown";
+      const base = `asset_${urn}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+      return usedIds.has(base) ? `${base}_${Math.random().toString(36).slice(2,4)}` : base;
+    };
+
+    descendants.forEach(n => {
+      // Only assets that were renamed to "subflow_<urn>..." need restoring.
+      // If you also rename other types, include them here.
+      if (isAssetNode(n) && n.id.startsWith("subflow_")) {
+        const wanted = (n.data as any)?.__preSubflowId as string | undefined;
+        let nextId = wanted && !usedIds.has(wanted) ? wanted : makeFreshAssetId(n);
+        idRemap.set(n.id, nextId);
+        usedIds.add(nextId);
+      }
+    });
+
+    // Rebuild nodes: remove container, reparent descendants, reset flags, restore ids
+    let liftedNodes = allNodes
+      .filter(n => n.id !== containerId)
+      .map(orig => {
+        if (!descendants.includes(orig)) return orig;
+
+        const oldId = orig.id;
+        const newId = idRemap.get(oldId) ?? oldId; // unchanged for nodes we aren’t renaming (e.g., relations)
+
+        const abs = getAbsPos(orig, byId);
+        const rel = { x: abs.x - parentAbs.x, y: abs.y - parentAbs.y };
+
+        const d: any = orig.data || {};
+        const { __preSubflowId, __preSubflowParent, __preSubflowExtent, ...restData } = d;
+
+        return {
+          ...orig,
+          id: newId,
+          parentNode: parentId ?? undefined,
+          extent: parentId ? "parent" : undefined,
+          position: rel,
+          data: {
+            ...restData,
+            subFlowId: null,
+            isSubflowContainer: false,
+          },
+        };
+      });
+
+    // Reset the ANCHOR asset (the one that owned this subflow)
+    const anchorUrn = urnFromSubflowContainerId(containerId);
+    liftedNodes = liftedNodes.map(n => {
+      if (isAssetNode(n) && (n.data as any)?.id === anchorUrn && (n.data as any)?.isSubflowContainer === true) {
+        return { ...n, data: { ...(n.data as any), subFlowId: null, isSubflowContainer: false } };
+      }
+      return n;
+    });
+
+    // Remap edges to the new node IDs; drop any that referenced the removed container
+    const liftedEdges = allEdges
+      .filter(e => e.source !== containerId && e.target !== containerId)
+      .map(e => ({
+        ...e,
+        source: idRemap.get(e.source) ?? e.source,
+        target: idRemap.get(e.target) ?? e.target,
+      }));
+
+    const safeNodes = sanitizeParenting(liftedNodes as any);
+    return { nodes: safeNodes, edges: liftedEdges };
+  };
+
+
+
+  const sanitizeParenting = (list: Node[]) => {
+    const byId = new Map(list.map(n => [n.id, n]));
+    return list.map(n => {
+      const p = (n as any).parentNode as string | undefined;
+      if (!p) return n;
+      if (!byId.has(p) || p === n.id || createsParentCycle(n.id, p, byId)) {
+        // strip bad parent/extent to break cycles
+        const { parentNode, extent, ...rest } = n as any;
+        return { ...n, parentNode: undefined, extent: undefined };
+      }
+      return n;
+    });
+  };
+
+  const isDescendant = (maybeDescendantId: string, maybeAncestorId: string, byId: Map<string, Node>) => {
+    let cur: string | undefined = (byId.get(maybeDescendantId) as any)?.parentNode;
+    while (cur) {
+      if (cur === maybeAncestorId) return true;
+      cur = (byId.get(cur) as any)?.parentNode;
+    }
+    return false;
+  };
+  // ----------------------------------------------
+
+  const isAssetNode = (n?: Node) =>
+    !!n && (((n.data as any)?.type === "asset") || n.type === "asset");
+
+  const isShopFloorNode = (n?: Node) =>
+    !!n && (((n.data as any)?.type === "shopFloor") || n.type === "shopFloor");
+
+  const getIncomingEdges = (nodeId: string) => edges.filter(e => e.target === nodeId);
+  const getOutgoingEdges = (nodeId: string) => edges.filter(e => e.source === nodeId);
+
+  const getAssetNodeByIdOrEntity = (idOrEntity: string) => {
+    return nodes.find(n => n.id === idOrEntity)
+        || nodes.find(n => isAssetNode(n) && (n.data as any)?.id === idOrEntity);
+  };
+
+  const getShopFloorParentId = (assetNodeId: string) => {
+    const inc = getIncomingEdges(assetNodeId);
+    for (const e of inc) {
+      const maybeSF = nodes.find(n => n.id === e.source);
+      if (isShopFloorNode(maybeSF)) return maybeSF!.id;
+    }
+    return null;
+  };
+
+
+
+
+
+  console.log("nodes",nodes)
+
+  const isRelationNode = (n?: Node) =>!!n && (n.type === "relation" || (n.data as any)?.type === "relation");
+
+
+  const productionLineFromContainer = (containerId: string): string | null => {
+    const urn = urnFromSubflowContainerId(containerId);
+    const anchor = nodes.find(n =>
+      isAssetNode(n) &&
+      (n.data as any)?.id === urn &&
+      (n.data as any)?.isSubflowContainer === true
+    );
+    const pl = (anchor?.data as any)?.subFlowId;
+    if (typeof pl === "string" && pl.startsWith("production_line_")) return pl;
+    // if container or anchor are missing, don’t feed a bad id forward
+    return null;
+  };
+
+
+  
+
+  const createSubflowFromAssetNode = useCallback(
+    
+    (assetNodeIdOrEntityId: string) => {
+
+      
+      // --- locate the anchor asset node (by nodeId or by its entity/URN) ---
+      const anchor = getAssetNodeByIdOrEntity(assetNodeIdOrEntityId);
+      if (!anchor) {
+        toast.current?.show({ severity: "warn", summary: "Asset not found", life: 2500 });
+        return;
+      }
+
+      const aData: any = anchor.data ?? {};
+      const entityId: string =
+        aData.id || String(assetNodeIdOrEntityId).replace(/^asset_/, "");
+      const label: string = aData.label ?? "Subflow";
+      const assetCategory: string = aData.asset_category ?? (anchor as any).asset_category ?? "";
+      const serial: string = aData.asset_serial_number ?? "";
+
+      // --- choose peer assets (either current selection of ≥2 assets, or all under same shopfloor, else all assets) ---
+      const selectedAssets = (selectedElements?.nodes || []).filter(isAssetNode) as Node[];
+      let peers: Node[] =
+        selectedAssets.length >= 2
+          ? selectedAssets
+          : (() => {
+              const sfId = getShopFloorParentId(anchor.id);
+              if (!sfId) return nodes.filter(isAssetNode);
+              return getOutgoingEdges(sfId)
+                .map(e => nodes.find(n => n.id === e.target))
+                .filter(isAssetNode) as Node[];
+            })();
+
+      if (!peers.some(n => n.id === anchor.id)) peers = [anchor, ...peers];
+
+      // --- helpers ---
+      const hasShopFloorParent = (nodeId: string) =>
+        getIncomingEdges(nodeId).some(e => {
+          const src = nodes.find(n => n.id === e.source);
+          return isShopFloorNode(src);
+        });
+
+      const collectDownstreamAssetEntities = (assetNodeId: string): Set<string> => {
+        const relNodes = getOutgoingEdges(assetNodeId)
+          .map(e => nodes.find(n => n.id === e.target))
+          .filter(isRelationNode) as Node[];
+
+        const out = new Set<string>();
+        relNodes.forEach(rn => {
+          getOutgoingEdges(rn.id).forEach(e => {
+            const leaf = nodes.find(n => n.id === e.target);
+            if (isAssetNode(leaf)) {
+              const ent = (leaf!.data as any)?.id as string | undefined;
+              if (ent) out.add(ent);
+            }
+          });
+        });
+        return out;
+      };
+
+      // --- compute common downstream entities across all peers ---
+      const perPeerSets = peers.map(n => collectDownstreamAssetEntities(n.id));
+      if (!perPeerSets.length) {
+        toast.current?.show({ severity: "info", summary: "No common assets", life: 2000 });
+        return;
+      }
+      const commonIds = perPeerSets.slice(1).reduce((acc, s) => {
+        const nx = new Set<string>();
+        acc.forEach(v => s.has(v) && nx.add(v));
+        return nx;
+      }, new Set(perPeerSets[0]));
+      const commonEntityIds = Array.from(commonIds);
+
+      if (!commonEntityIds.length) {
+        toast.current?.show({ severity: "info", summary: "No common assets", life: 2000 });
+        return;
+      }
+
+      // --- subflow lives under shop floor (no nesting of subflows) ---
+      const shopFloorId = getShopFloorParentId(anchor.id);
+      const parentContainerId = shopFloorId ?? null;
+
+      // absolute positions to place the container nicely near the anchor
+
+      const getAbsPos = (n: Node, map: Map<string, Node>) => {
+        let x = n.position.x, y = n.position.y, pid = (n as any).parentNode as string | undefined;
+        while (pid) {
+          const p = map.get(pid);
+          if (!p) break;
+          x += p.position.x;
+          y += p.position.y;
+          pid = (p as any).parentNode as string | undefined;
+        }
+        return { x, y };
+      };
+// find all relations owned by the anchor
+const anchorRelNodes = getOutgoingEdges(anchor.id)
+  .map(e => nodes.find(n => n.id === e.target))
+  .filter(isRelationNode) as Node[];
+
+// get their bottoms (absolute)
+const byId = new Map(nodes.map(n => [n.id, n]));
+const bottoms = anchorRelNodes.map(r => {
+  const a = getAbsPos(r, byId);
+  const { h } = getNodeSize(r);
+  return a.y + h;
+});
+
+// compute a clean drop spot: under the lowest relation, horizontally aligned with anchor
+const anchorAbs = getAbsPos(anchor, byId);
+const lowest = bottoms.length ? Math.max(...bottoms) : (anchorAbs.y + getNodeSize(anchor).h);
+const MARGIN_Y = 48;
+const subflowPosAbs = { x: anchorAbs.x - 80, y: lowest + MARGIN_Y };
+
+// convert to parent-relative if the shopFloor is the parent
+const parentAbs = parentContainerId
+  ? getAbsPos(nodes.find(n => n.id === parentContainerId)!, byId)
+  : { x: 0, y: 0 };
+
+const subflowPos = { x: subflowPosAbs.x - parentAbs.x, y: subflowPosAbs.y - parentAbs.y };
+
+
+      // --- from duplicates of the same entity, pick one representative node ---
+      const entityToNodes = new Map<string, Node[]>();
+      nodes.forEach(n => {
+        if (isAssetNode(n)) {
+          const eid = (n.data as any)?.id as string | undefined;
+          if (!eid) return;
+          const arr = entityToNodes.get(eid) || [];
+          arr.push(n);
+          entityToNodes.set(eid, arr);
+        }
+      });
+      const peerIds = new Set(peers.map(n => n.id));
+      const pickRep = (cands: Node[]): Node => {
+        const incoming = (nid: string) =>
+          edges.filter(e => e.target === nid).map(e => nodes.find(n => n.id === e.source));
+        // score by how many incoming relation parents belong to one of the peer assets
+        return (
+          cands
+            .map(cn => {
+              const relParents = incoming(cn.id)
+                .filter(n => n && (n!.type === "relation" || (n as any)?.data?.type === "relation"))
+                .map(rn => (rn as any)?.data?.parentId as string | undefined)
+                .filter(Boolean) as string[];
+              const score = relParents.reduce((s, pid) => s + (peerIds.has(pid) ? 1 : 0), 0);
+              return { cn, score };
+            })
+            .sort((a, b) => b.score - a.score)[0]?.cn || cands[0]
+        );
+      };
+
+      // representatives = common entities, excluding anchor and any node with ShopFloor parent
+      const reps: Node[] = [];
+      commonEntityIds.forEach(eid => {
+        const cands = (entityToNodes.get(eid) || [])
+          .filter(n => n.id !== anchor.id)
+          .filter(n => !hasShopFloorParent(n.id));
+        if (cands.length) reps.push(pickRep(cands));
+      });
+
+      if (!reps.length) {
+        toast.current?.show({
+          severity: "info",
+          summary: "Nothing to group",
+          detail: "Common assets are directly attached to the ShopFloor, so they stay outside.",
+          life: 2500,
+        });
+        return;
+      }
+
+      // --- layout sizing for the container & children ---
+      const CHILD_W = 288, CHILD_H = 109, GAP = 16, PAD = 16, HEADER = 28;
+      const cols = Math.min(2, Math.max(1, reps.length));
+      const rows = Math.ceil(reps.length / cols);
+      const subW = cols * CHILD_W + (cols - 1) * GAP + PAD * 2;
+      const subH = HEADER + rows * CHILD_H + (rows - 1) * GAP + PAD * 2;
+
+      // --- build subflow container node ---
+      const subflowNodeId = `subflow_${entityId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+      const subflowNode: Node = {
+        id: subflowNodeId,
+        type: "subflow",
+        position: subflowPos,
+        asset_category: assetCategory,
+        data: {
+          type: "subflow",
+          label,
+          id: entityId,
+          asset_category: assetCategory,
+          asset_serial_number: serial,
+          subFlowId: parentContainerId,
+          isSubflowContainer: true,
+        },
+        style: { backgroundColor: "", border: "none", borderRadius: 10, width: subW, height: subH, zIndex: 0 }, // keep behind
+        width: subW,
+        height: subH,
+        ...(parentContainerId ? { parentNode: parentContainerId } : {}),
+        draggable: true,
+      };
+
+
+      const productionLineId = `production_line_${Date.now()}_${Math.floor(Math.random()*1000).toString().padStart(3,"0")}`;
+
+      // --- move representative children into the subflow & set their subFlowId to the anchor URN ---
+      const idRemap: Record<string, string> = {};
+      const laidOutChildren = reps.map((n, i) => {
+        const eid = (n.data as any)?.id as string;
+        const wantedId = `subflow_${eid}`;
+        const uniqueId = nodes.some(x => x.id === wantedId) ? `${wantedId}__${subflowNodeId}` : wantedId;
+
+        const col = i % cols, row = Math.floor(i / cols);
+        const rel = { x: PAD + col * (CHILD_W + GAP), y: HEADER + PAD + row * (CHILD_H + GAP) };
+
+        idRemap[n.id] = uniqueId;
+
+        return {
+          ...n,
+          id: uniqueId,
+          parentNode: subflowNodeId,
+          extent: "parent",
+          position: rel,
+          width: (n as any).width ?? CHILD_W,
+          height: (n as any).height ?? CHILD_H,
+          style: { backgroundColor: "", border: "none", borderRadius: 10, ...(n.style || {}) },
+          data: {
+            ...(n.data as any),
+            __preSubflowId: n.id,
+            __preSubflowParent: (n as any).parentNode ?? null,
+            __preSubflowExtent: (n as any).extent ?? undefined,
+            subFlowId: productionLineId,
+            isSubflowContainer: false,
+          },
+        } as Node;
+      });
+
+
+
+
+      // --- mark the anchor asset as the subflow container owner ---
+      const updatedAnchor: Node = {
+        ...anchor,
+        data: {
+          ...(anchor.data as any),
+          subFlowId: productionLineId,          // << anchor points to the subflow container node id
+          isSubflowContainer: true,
+        },
+      };
+
+      // --- rewrite edges for moved children only ---
+      const updatedEdges = edges.map(e => ({
+        ...e,
+        source: idRemap[e.source] ?? e.source,
+        target: idRemap[e.target] ?? e.target,
+      }));
+
+      // --- replace moved nodes, keep others, add updated anchor + container ---
+      const movedOldIds = new Set(reps.map(n => n.id));
+      const updatedNodes = nodes
+        .filter(n => !movedOldIds.has(n.id) && n.id !== anchor.id)
+        .concat(updatedAnchor, laidOutChildren, subflowNode);
+      const safeNodes = sanitizeParenting(updatedNodes as any);
+      setNodes(safeNodes);
+      setEdges(updatedEdges);
+      addToHistory(safeNodes, updatedEdges);
+
+      // focus on the container we just created
+      setTimeout(() => {
+        reactFlowInstance?.fitView({
+          nodes: [{ id: subflowNodeId }],
+          padding: 0.2,
+          includeHiddenNodes: true,
+        });
+      }, 0);
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Subflow created",
+        detail: `Grouped ${laidOutChildren.length} asset(s).`,
+        life: 2200,
+      });
+    },
+    [nodes, edges, selectedElements, setNodes, setEdges, addToHistory, reactFlowInstance]
+  );
+
+
+
+  // subflow container ids look like: "subflow_<URN>_<stamp>_<rand>"
+  const isSubflowContainerId = (id?: string) =>
+    typeof id === "string" && id.startsWith("subflow_");
+
+  /** Extract the anchor URN from a subflow container node id */
+  const urnFromSubflowContainerId = (subflowId: string): string => {
+    if (!isSubflowContainerId(subflowId)) return subflowId;
+    const core = subflowId.slice("subflow_".length); // remove prefix
+    const last = core.lastIndexOf("_");
+    if (last < 0) return core;
+    const secondLast = core.lastIndexOf("_", last - 1);
+    if (secondLast < 0) return core.slice(0, last);
+    return core.slice(0, secondLast);
+  };
+
 
 
   return (
@@ -1808,11 +2502,8 @@ const handleBackspacePress = useCallback(() => {
           </p>
         </Dialog>
 
-        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,addAssetsToShopFloor,setNodes, setEdges}}>
+        <EdgeAddContext.Provider value={{ createRelationNodeAndEdge,createAssetNodeAndEdgeFromRelation ,addAssetsToShopFloor,setNodes, setEdges,   createSubflowFromAssetNode, }}>
           <BlockUI blocked={isOperationInProgress} fullScreen />
-
-     
-
           <div
             ref={reactFlowWrapper}
             style={{ height: "100%", width: "100%" }}
@@ -1836,6 +2527,9 @@ const handleBackspacePress = useCallback(() => {
               nodeTypes={nodeTypes}
               deleteKeyCode={null}
               defaultEdgeOptions={{ type: "smoothstep" }}
+              onNodeDragStop={onNodeDragStop}
+              onNodeDragStart={onNodeDragStart}
+
             >
               <MiniMap />
               <Controls />
