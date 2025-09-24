@@ -25,6 +25,9 @@ export type FactoryPdtCacheDocument = HydratedDocument<FactoryPdtCache>;
 export class FactoryPdtCache extends Document {
 
     @Prop({ required: true })
+    id: string;
+    
+    @Prop({ required: true })
     company_ifric_id: string;
 
     @Prop({ required: true })
@@ -85,7 +88,7 @@ export class FactoryPdtCache extends Document {
     report: [];
 
     @Prop({ required: true, type: MongooseSchema.Types.Mixed })
-    metadata: Record<string,any>;
+    meta_data: Record<string,any>;
 }
 
 export const FactoryPdtCacheSchema = SchemaFactory.createForClass(FactoryPdtCache);
