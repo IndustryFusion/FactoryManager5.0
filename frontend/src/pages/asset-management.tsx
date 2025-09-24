@@ -18,6 +18,7 @@ const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
+  const { assets } = useSelector((state: RootState) => state.assetManagement);
   const { t } = useTranslation(['common', 'button', 'overview']);
   const [dataInitialized, setDataInitialized] = useState(false);
 
@@ -57,7 +58,7 @@ const AssetManagementPage = () => {
               <div className="asset-header flex justify-content-between align-items-center">
                 <div className="flex align-items-center gap-4">
                   <p className="total-assets-text m-1">
-                    <span className="highlighted-number">89</span> {t("overview:Assets")}
+                    <span className="highlighted-number">{assets.length}</span> {t("overview:Assets")}
                   </p>
                   <div>
                     <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
