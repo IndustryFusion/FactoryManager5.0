@@ -94,8 +94,8 @@ function Sidebar() {
           <Image
             src="/sidebar/logo_expanded.svg"
             alt="Factory logo"
-            width={188}
-            height={45}
+            width={206}
+            height={46}
             onClick={() => handleRoute("factory-site/factory-overview")}
             style={{ cursor: "pointer" }}
             className="sidebar_logo"

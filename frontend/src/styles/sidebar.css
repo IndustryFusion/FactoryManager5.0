@@ -61,7 +61,7 @@ body {
 }
 
 .sidebar_wrapper.collapse .sidebar_logo{
-  width: 156px;
+  width: 169px;
 }
 .sidebar_logo{
   transition: width 300ms ease-in-out;
