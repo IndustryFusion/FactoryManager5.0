@@ -2332,6 +2332,71 @@ const handleBackspacePress = useCallback(() => {
   };
 
 
+  const handleAutoLayout = useCallback(() => {
+    setNodes(prevNodes => {
+      const hasAnySubflow = prevNodes.some(
+        n => n.type === "subflow" || (n.data as any)?.type === "subflow"
+      );
+
+      if (hasAnySubflow) {
+     
+        const topLevel = prevNodes.filter(n => !(n as any).parentNode);
+        const isTop = (id: string) => topLevel.some(n => n.id === id);
+        const byId = new Map(prevNodes.map(n => [n.id, n]));
+        const topOf = (id: string): string => {
+          let cur = id;
+          while (true) {
+            const n = byId.get(cur);
+            const p = (n as any)?.parentNode as string | undefined;
+            if (!p) return cur;
+            cur = p;
+          }
+        };
+
+        const liftedEdges = [
+          ...new Map(
+            edges
+              .map(e => {
+                const sTop = topOf(e.source);
+                const tTop = topOf(e.target);
+                if (sTop === tTop) return null;        
+                if (!isTop(sTop) || !isTop(tTop)) return null;
+                return `${sTop}→${tTop}`;
+              })
+              .filter(Boolean)
+              .map(key => [key as string, key])
+          ).keys(),
+        ].map(k => {
+          const [source, target] = (k as string).split("→");
+          return { id: `lifted-${source}-${target}`, source, target } as Edge;
+        });
+
+        const layoutedTop = applyDagreLayout(topLevel as any, liftedEdges, false);
+        const next = prevNodes.map(n => {
+          const ln = layoutedTop.find(m => m.id === n.id);
+          return ln ? { ...n, position: ln.position } : n;
+        });
+
+        addToHistory(next, edges);
+        return next;
+      }
+
+      const next = applyDagreLayout(prevNodes as any, edges, false) as typeof prevNodes;
+      addToHistory(next, edges);
+      return next;
+    });
+
+    setTimeout(() => {
+      reactFlowInstance?.fitView({ padding: 0.2, includeHiddenNodes: true });
+    }, 0);
+
+    toast.current?.show({
+      severity: "success",
+      summary: "Auto layout applied",
+      life: 1600,
+    });
+  }, [edges, setNodes, addToHistory, reactFlowInstance]);
+
 
   const createSubflowFromAssetNode = useCallback((assetNodeIdOrEntityId: string) => {
     const anchor =
@@ -2500,6 +2565,11 @@ const handleBackspacePress = useCallback(() => {
               <span className="rf-tip" data-pr-tooltip="Export JPEG">
                 <Button aria-label="Export JPEG" className="rf-btn" onClick={handleExportClick}>
                   <img src="/factory-flow-buttons/image-icon.svg" alt=""/>
+                </Button>
+              </span>
+               <span className="rf-tip" data-pr-tooltip="Export JPEG">
+                <Button aria-label="Export JPEG" className="rf-btn"  onClick={handleAutoLayout}>
+                  <img src="/factory-flow-buttons/grid-view.svg" alt=""/>
                 </Button>
               </span>
             </div>
