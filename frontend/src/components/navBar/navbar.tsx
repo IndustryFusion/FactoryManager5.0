@@ -47,6 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
   const router = useRouter();
   const [userData, setUserData] = useState<UserData>(userInfo);
   const toastRef = useRef(null);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -254,6 +255,10 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     return items;
   }
 
+  const handleLocalization = async (lang: string) => {
+        await router.push(router.asPath, undefined, { locale: lang });
+        setDropdownVisible(false);
+    };
 
 
   return (
@@ -282,29 +287,63 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
             </div>
           </div>
         </div>
-        <div className="flex gap-3 nav-items">
+        <div className="flex gap-1 nav-items">
           {/* //just commneted out the language fetaures just for now since we will add more translation in future */}
           {/* <div className="language-dropdown">
             <Language />
           </div> */}
           <Button
-            icon="pi pi-box"
+            icon={<Image src="/navbar/dashboard_icon.svg" width={20} height={20} alt="Dashboard Icon"/>}
+            onClick={() => router.push("/factory-site/dashboard")}
+            className="nav_icon_button"
+            tooltip="Dashboard"
+            tooltipOptions={{ position: 'bottom' }}
+            style={{ color: '#6c757d' }}
+          />
+          <Button
+            icon={<Image src="/navbar/tour_icon.svg" width={20} height={20} alt="Dashboard Icon"/>}
+            className="nav_icon_button"
+            tooltip="Enable Guide Mode"
+            tooltipOptions={{ position: 'bottom' }}
+            style={{ color: '#6c757d' }}
+          />
+          <Button
+            icon={<Image src="/navbar/asset_icon.svg" width={20} height={20} alt="Asset Management Icon"/>}
             onClick={() => router.push("/asset-management")}
-            className="p-button-rounded p-button-text"
+            className="nav_icon_button"
             tooltip="Asset Management"
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
           <Alerts/>
-          <Button
-            icon="pi pi-th-large"
-            onClick={() => router.push("/factory-site/dashboard")}
-            className="p-button-rounded p-button-text"
-            tooltip="Dashboard"
-            tooltipOptions={{ position: 'bottom' }}
-            style={{ color: '#6c757d' }}
-          />
-          <ProfileMenu />
+
+          <div className="auth_localization_wrapper"
+                    onMouseLeave={() => setDropdownVisible(false)}>
+                    <div className="nav_localization_widget">
+                        <Button className="nav_icon_button" onClick={() => setDropdownVisible(!dropdownVisible)}
+                            tooltip={!dropdownVisible ? "Switch Language" : undefined}
+                            tooltipOptions={{ event: 'hover', position: 'bottom', className: 'navbar_tooltip' }}
+                            icon={<Image src="/navbar/globe_icon.svg" width={20} height={20} alt="Globe Icon"/>}
+                        >
+                        </Button>
+                        <nav style={{ marginLeft: '-12px' }} className={`nav_localization_panel ${dropdownVisible ? 'current' : ''}`}>
+                            <button
+                                className={`nav_localization_btn ${router.locale === 'en' ? 'current' : ''}`}
+                                onClick={() => handleLocalization('en')}>
+                                English
+                            </button>
+                            <button
+                                className={`nav_localization_btn ${router.locale === 'de' ? 'current' : ''}`}
+                                onClick={() => handleLocalization('de')}>
+                                Deutsch
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+          
+          <div className="ml-3">
+            <ProfileMenu />
+          </div>
         </div>
       </div>
     </>

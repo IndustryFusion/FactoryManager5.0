@@ -94,10 +94,11 @@ function Sidebar() {
           <Image
             src="/sidebar/logo_expanded.svg"
             alt="Factory logo"
-            width={205}
-            height={38}
+            width={188}
+            height={45}
             onClick={() => handleRoute("factory-site/factory-overview")}
             style={{ cursor: "pointer" }}
+            className="sidebar_logo"
           />
           <Image
             src="/sidebar/sidebar_collapse_icon.svg"
@@ -225,7 +226,7 @@ function Sidebar() {
               tooltip={!sidebarOpen ? "Data Viewer" : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
-              <Image src="/sidebar/home_icon.svg" width={18} height={18} alt="data_icon" />
+              <Image src="/sidebar/data_viewer_icon.svg" width={18} height={18} alt="data_icon" />
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Viewer</div>
             </Button>
 

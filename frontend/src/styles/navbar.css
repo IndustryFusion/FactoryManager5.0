@@ -1,3 +1,96 @@
+/* localization widget style starts */
+.auth_localization_wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .auth_localization_wrapper a {
+    color: var(--auth-blue);
+    font-weight: 500;
+    text-decoration: underline;
+  }
+  
+  .nav_localization_widget {
+    position: relative;
+  }
+  
+  .nav_localization_trigger {
+    gap: 8px;
+    background-color: white;
+    color: var(--auth-black);
+    border-radius: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 8px 9px;
+    display: flex;
+    border: 1px solid var(--auth-grey-box);
+    box-shadow: none;
+  }
+  
+  .nav_localization_panel {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 4px;
+    inset: auto auto -68px -5px;
+    box-shadow: 0 2px 4px #0000001a;
+    position: absolute;
+    flex-direction: column;
+    display: flex;
+    visibility: hidden;
+    transition: all 200ms ease-in-out;
+    transition-behavior: allow-discrete;
+    transform: translate3d(0px, -10px, 0px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg) rotateZ(0deg) skew(0deg, 0deg);
+    transform-style: preserve-3d;
+    opacity: 0;
+  }
+  
+  .nav_localization_panel.current {
+    visibility: visible;
+    transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg) rotateZ(0deg) skew(0deg, 0deg);
+    transform-style: preserve-3d;
+    opacity: 1;
+  }
+  
+  .nav_localization_arrow {
+    transition: transform 200ms ease-in-out;
+  }
+  
+  .nav_localization_arrow.current {
+    transform: rotateZ(180deg)
+  }
+  
+  .nav_localization_btn {
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    text-decoration: none;
+    transition: background-color .2s;
+    display: block;
+    background-color: white;
+    color: #1f1f1f;
+    border: none;
+    box-shadow: none;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .nav_localization_btn:hover,
+  .nav_localization_btn:focus-visible {
+    background-color: var(--grey-box);
+  }
+  
+  .nav_localization_btn.current {
+    background-color: var(--grey-box);
+    color: var(--fusion-blue);
+  }
+  .auth_localization_wrapper:has(.nav_localization_panel.current) .nav_icon_button{
+    background-color: var(--grey-box);
+  }
+
+/* localization widget style ends */
+
 .asset-overview-header {
   width: 100%;
   padding: 0 24px;
@@ -38,6 +131,9 @@
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.2s;
+  box-shadow: none !important;
+  border: none;
+  outline: none;
 }
 
 .nav_icon_button:hover {
