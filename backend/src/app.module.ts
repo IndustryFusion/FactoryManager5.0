@@ -73,6 +73,8 @@ import { BindingService } from './endpoints/binding/binding.service';
 import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
 import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema';
 import { FactoryPdtCache, FactoryPdtCacheSchema } from './endpoints/schemas/factory-pdt-cache.schema';
+import { FactoryPdtCacheController } from './endpoints/factory-pdt-cache/factory-pdt-cache.controller';
+import { FactoryPdtCacheService } from './endpoints/factory-pdt-cache/factory-pdt-cache.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -118,7 +120,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongodbTemplatesController,
     CertificateController,
     ContractController,
-    BindingController
+    BindingController,
+    FactoryPdtCacheController
   ],
   providers: [
     AppService,
@@ -147,7 +150,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongodbTemplatesService,
     CertificateService,
     ContractService,
-    BindingService
+    BindingService,
+    FactoryPdtCacheService
   ]
 })
 export class AppModule {

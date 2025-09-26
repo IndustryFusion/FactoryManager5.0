@@ -58,7 +58,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     try{
       const userData = await getAccessGroup();
       if (userData && userData.company_ifric_id) {
-        const response = await api.get(API_URL + `/asset/asset-management/${userData.company_ifric_id}`, {
+        const response = await api.get(API_URL + `/factory-pdt-cache/${userData.company_ifric_id}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -66,12 +66,10 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
           withCredentials: true,
         });
         const responseData = response.data; 
-        console.log("responseData ",responseData);
-        const mappedData = mapBackendDataToAsset(responseData);
-        return mappedData;
+        return responseData;
       }
     }catch(error){
-        console.error("Error:", error)
+      throw error;
     }
   }
 
