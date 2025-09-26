@@ -60,6 +60,13 @@ body {
   margin-left: 1px;
 }
 
+.sidebar_wrapper.collapse .sidebar_logo{
+  width: 169px;
+}
+.sidebar_logo{
+  transition: width 300ms ease-in-out;
+}
+
 .sidebar_logo_wrapper.collapse {
   overflow: hidden;
 }
@@ -253,6 +260,8 @@ line-height: normal;
   /* padding-top: 16px; */
   display: flex;
   align-items: center;
+  z-index: 99;
+  background-color: white;
 }
 
 .nav_avatar {

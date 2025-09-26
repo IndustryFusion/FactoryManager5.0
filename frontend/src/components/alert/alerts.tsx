@@ -21,6 +21,7 @@ import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
 import AlertDetails from "./alert-details";
 import { Asset } from "@/types/asset-types";
+import Image from "next/image";
 interface Alerts {
   text: string;
   resource: string;
@@ -118,9 +119,9 @@ const Alerts = () => {
         width: "40px",
       }}>
         <Button
-          icon="pi pi-bell"
+          icon={<Image src="/navbar/alert_icon.svg" width={18} height={18} alt="Alerts Icon"/>}
           link
-          className="mr-2 "
+          className="nav_icon_button"
           onClick={() => {
             setIsAlert(true);
             setVisible(true)
