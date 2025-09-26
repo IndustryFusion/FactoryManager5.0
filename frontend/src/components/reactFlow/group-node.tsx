@@ -5,38 +5,47 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import EdgeAddContext from "@/context/edge-add-context";
 
-type GroupData = { label?: string };
+type GroupData = {
+  subFlowId?: string;  
+  label?: string;       
+};
+
+const genDefaultId = () =>`production_line_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
 const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
   const id = useNodeId()!;
   const { setNodes } = useContext(EdgeAddContext);
-
   const [showEditButton, setShowEditButton] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data?.label ?? "Group");
+  const [tempSubFlowId, setTempSubFlowId] = useState<string>(data?.subFlowId ?? "");
+  const [tempLabel, setTempLabel] = useState<string>(data?.label ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => setTempLabel(data?.label ?? "Group"), [data?.label]);
+  useEffect(() => {
+    if (!data?.subFlowId) {
+      const seeded = genDefaultId();
+      setNodes(nds =>
+        nds.map(n => (n.id === id ? { ...n, data: { ...(n.data || {}), subFlowId: seeded } } : n))
+      );
+    }
+  }, [data?.subFlowId, id, setNodes]);
 
   useEffect(() => {
     setShowEditButton(!!selected);
   }, [selected]);
 
-  const commitLabel = useCallback(
-    (value: string) => {
-      const next = (value ?? "").trim() || "Group";
-      setNodes((nds) =>
-        nds.map((n) => (n.id === id ? { ...n, data: { ...(n.data || {}), label: next } } : n))
-      );
-    },
-    [id, setNodes]
-  );
+
+  useEffect(() => {
+    if (showDialog) {
+      setTempSubFlowId(data?.subFlowId ?? "");
+      setTempLabel(data?.label ?? "");
+    }
+  }, [showDialog, data?.subFlowId, data?.label]);
 
   const handleResizeEnd = useCallback(
     (_e: unknown, params: { width: number; height: number }) => {
       const { width, height } = params;
-      setNodes((nds) =>
-        nds.map((n) => (n.id === id ? { ...n, style: { ...n.style, width, height } } : n))
+      setNodes(nds =>
+        nds.map(n => (n.id === id ? { ...n, style: { ...n.style, width, height } } : n))
       );
     },
     [id, setNodes]
@@ -44,23 +53,49 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
 
   const onNodeDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowEditButton(true); 
+    setShowEditButton(true);
   };
 
   const openDialog = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setTempLabel(data?.label ?? "Group");
+    setTempSubFlowId(data?.subFlowId ?? "");
+    setTempLabel(data?.label ?? "");
     setShowDialog(true);
   };
 
-  const handleDialogHide = () => {
-    setShowDialog(false);
-  };
+  const handleDialogHide = () => setShowDialog(false);
+
+  const saveValues = useCallback(
+    (nextId: string, nextLabel: string) => {
+      const desiredId = (nextId ?? "").trim() || genDefaultId();
+
+      setNodes(nds => {
+        const clash = nds.some(n => n.id !== id && (n.data as any)?.subFlowId === desiredId);
+        const finalId = clash ? `${desiredId}_${Math.random().toString(36).slice(2, 4)}` : desiredId;
+
+        return nds.map(n =>
+          n.id === id
+            ? {
+                ...n,
+                data: {
+                  ...(n.data || {}),
+                  subFlowId: finalId,        
+                  ...(nextLabel.trim() ? { label: nextLabel.trim() } : { label: undefined }),
+                },
+              }
+            : n
+        );
+      });
+    },
+    [id, setNodes]
+  );
 
   const handleSave = () => {
-    commitLabel(tempLabel);
+    saveValues(tempSubFlowId, tempLabel);
     handleDialogHide();
   };
+
+  const headerId = data?.subFlowId ?? "production_line_…";
 
   return (
     <div
@@ -77,6 +112,7 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         zIndex: 0,
       }}
     >
+
       <div
         className="subflow-drag-handle nodrag"
         style={{
@@ -94,12 +130,10 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
           zIndex: 1,
           pointerEvents: "none",
         }}
+        title={data?.label ? `${headerId} • ${data.label}` : headerId}
       >
-        <span
-          title={data?.label ?? "Group"}
-          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "80%" }}
-        >
-          {data?.label ?? "Group"}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "80%" }}>
+          {headerId}
         </span>
         <span style={{ opacity: 0.6 }}>resize ↘</span>
       </div>
@@ -138,42 +172,33 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
       />
 
       <Dialog
-        header="Edit Subflow Name"
+        header="Edit Group"
         visible={showDialog}
         draggable={false}
         modal
         onHide={handleDialogHide}
-        style={{ width: "28rem" }}
+        style={{ width: "32rem" }}
       >
-        <div className="flex flex-column gap-3">
-          <InputText
-            id="groupName"
-            ref={inputRef}
-            value={tempLabel}
-            onChange={(e) => setTempLabel(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSave();
-              if (e.key === "Escape") handleDialogHide();
-            }}
-            className="w-full mt-1"
-            placeholder="Group"
-            autoFocus
-          />
-        <div
-          style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.75rem" }}
-        >
-          <Button
-            label="Cancel"
-            className="global-button is-grey"
-            onClick={handleDialogHide}
-          />
-          <Button
-            label="Save"
-            onClick={handleSave}
-            className="global-button"
-          />
-        </div>
-
+        <div className="flex flex-column gap-4">
+          <div className="flex flex-column gap-2">
+            <InputText
+              id="subFlowId"
+              ref={inputRef}
+              value={tempSubFlowId}
+              onChange={(e) => setTempSubFlowId(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+                if (e.key === "Escape") handleDialogHide();
+              }}
+              className="w-full"
+              placeholder="production_line_alpha | Line A | 42 ..."
+              autoFocus
+            />
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+            <Button label="Cancel" className="global-button is-grey" onClick={handleDialogHide} />
+            <Button label="Save" className="global-button" onClick={handleSave} />
+          </div>
         </div>
       </Dialog>
     </div>
