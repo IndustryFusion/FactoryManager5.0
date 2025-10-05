@@ -52,7 +52,7 @@ interface AlertaEntry {
 
 
 @Injectable()
-export class BindingService implements OnModuleInit {
+export class BindingService {
   private readonly ifxUrl = process.env.IFX_PLATFORM_BACKEND_URL;
   private readonly ifxConnectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL;
   private activeTasks = new Map<string, NodeJS.Timeout>();
@@ -64,9 +64,9 @@ export class BindingService implements OnModuleInit {
     private readonly pgrestService: PgRestService
   ) { }
 
-  async onModuleInit() {
-    await this.loadAndStartTasks(); // run once at startup
-  }
+  // async onModuleInit() {
+  //   await this.loadAndStartTasks(); // run once at startup
+  // }
 
   async create(data: CreateBindingDto) {
     try {
@@ -77,54 +77,54 @@ export class BindingService implements OnModuleInit {
     }
   }
 
-  async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
-    try {
-      const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
-      console.log("Contract data for : " + contractId, contract.data);
-      const payload: CreatePersistantTaskDto = {
-        producerId,
-        bindingId,
-        assetId,
-        contractId,
-        interval: contract.data[0].interval, // default interval
-        expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
-        dataType: contract.data[0].data_type, // default data type
-        assetProperties: contract.data[0].asset_properties
-      };
-      console.log("Payload for binding task:", payload);
-      const task = new this.persistantModel(payload as CreatePersistantTaskDto);
-      await task.save();
-      await this.loadAndStartTasks()
-      return { status: 'success', message: 'Binding task started successfully' };
-    } catch (err) {
-      throw new InternalServerErrorException(`Failed to handle binding: ${err.message}`);
-    }
-  }
+  // async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
+  //   try {
+  //     const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
+  //     console.log("Contract data for : " + contractId, contract.data);
+  //     const payload: CreatePersistantTaskDto = {
+  //       producerId,
+  //       bindingId,
+  //       assetId,
+  //       contractId,
+  //       interval: contract.data[0].interval, // default interval
+  //       expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
+  //       dataType: contract.data[0].data_type, // default data type
+  //       assetProperties: contract.data[0].asset_properties
+  //     };
+  //     console.log("Payload for binding task:", payload);
+  //     const task = new this.persistantModel(payload as CreatePersistantTaskDto);
+  //     await task.save();
+  //     await this.loadAndStartTasks()
+  //     return { status: 'success', message: 'Binding task started successfully' };
+  //   } catch (err) {
+  //     throw new InternalServerErrorException(`Failed to handle binding: ${err.message}`);
+  //   }
+  // }
 
-  @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
-  async loadAndStartTasks() {
-    const taskList = await this.persistantModel.find();
-    console.log("Task list:", taskList);
-    for (const task of taskList) {
-      const taskId = task._id;
-      if (this.activeTasks.has(taskId)) continue;
+  // @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
+  // async loadAndStartTasks() {
+  //   const taskList = await this.persistantModel.find();
+  //   console.log("Task list:", taskList);
+  //   for (const task of taskList) {
+  //     const taskId = task._id;
+  //     if (this.activeTasks.has(taskId)) continue;
 
-      const intervalS = task.interval;
-      const expiry = new Date(task.expiry);
+  //     const intervalS = task.interval;
+  //     const expiry = new Date(task.expiry);
 
-      const timer = setInterval(async () => {
-        if (Date.now() >= expiry.getTime()) {
-          clearInterval(timer);
-          this.activeTasks.delete(taskId);
-          return;
-        }
+  //     const timer = setInterval(async () => {
+  //       if (Date.now() >= expiry.getTime()) {
+  //         clearInterval(timer);
+  //         this.activeTasks.delete(taskId);
+  //         return;
+  //       }
 
-        await this.processTask(task);
-      }, intervalS * 1000);
+  //       await this.processTask(task);
+  //     }, intervalS * 1000);
 
-      this.activeTasks.set(taskId, timer);
-    }
-  }
+  //     this.activeTasks.set(taskId, timer);
+  //   }
+  // }
 
 
   // extractMetadataFromParam(obj: Record<string, any>, param: string): Record<string, any> {

@@ -1,0 +1,416 @@
+mainVersion: {{ .StateValues.mainVersion }}
+mainRepo: {{ .StateValues.mainRepo }}
+mainRegistry: {{ .StateValues.mainRegistry }}
+namespace: {{ .StateValues.namespace }}
+pullSecretCredentials: {{ .StateValues.pullSecretCredentials }}
+externalRegistry: {{ .StateValues.externalRegistry }}
+externalRegistry2: {{ .StateValues.externalRegistry2 }}
+externalRegistry3: {{ .StateValues.externalRegistry3 }}
+externalRegistry4: {{ .StateValues.externalRegistry4 }}
+
+ingressType: {{ .StateValues.ingressType }}
+dbpassword: {{ .StateValues.dbpassword }}
+dbReaderPassword: {{ .StateValues.dbReaderPassword }}
+clusterSvcName: {{ .StateValues.db.teamId -}}-{{- .StateValues.db.clusterSvcPostfix }}
+clusterExternalSvcName: {{ .StateValues.db.teamId -}}-{{- .StateValues.db.clusterSvcPostfix }}.{{ .StateValues.namespace }}.svc.cluster.local
+minioAdminSecretKey: {{ .StateValues.minioAdminSecretKey }}
+minioUserSecretKey: {{ .StateValues.minioUserSecretKey }}
+alertaClientSecret: {{ .StateValues.alertaClientSecret }}
+
+
+db:
+  teamId: {{ .StateValues.db.teamId }}
+  clusterSvcPostfix: {{ .StateValues.db.clusterSvcPostfix }}
+  svcPort: {{ .StateValues.db.svcPort }}
+  pvSize: {{ .StateValues.db.pvSize }}
+  podInstances: {{ .StateValues.db.podInstances }}
+  alertaDb: monitoring
+  dbUser: {{ .StateValues.db.dbUser }}
+  dbReaderUser: {{ .StateValues.db.dbReaderUser }}
+  scorpioDb: ngb
+  timescaleDb: tsdb
+  timescaleEntityTable: entities
+  timescaleAttributeTable: attributes
+  secretPostfix: credentials.postgresql.acid.zalan.do
+  backupBucket: {{ .StateValues.db.backupBucket }}
+  backupNum: {{ .StateValues.db.backupNum }}
+  backupSchedule: {{- if hasKey .Values.db "backupSchedule" }}{{ .Values.db.backupSchedule }}{{- else }} '00 00 * * *' {{- end }}
+  cloneEnabled: {{- if hasKey .Values.db "cloneEnabled" }} {{ .Values.db.cloneEnabled }} {{- else }} false {{- end }}
+  cloneTimeStamp: {{- if hasKey .Values.db "timeStamp" }}{{ .Values.db.timeStamp }}{{- else }} '{{ now | date "2006-01-02T15:04:05+00:00" }}' {{ end }}
+
+
+scorpio:
+  tag: 3.0.0-SNAPSHOT
+  externalHostname: {{ .StateValues.scorpio.externalHostname }}
+  externalProtocol: {{ .StateValues.scorpio.externalProtocol | quote }}
+  externalPath: {{ .StateValues.scorpio.externalPath }}
+  internalHostname: scorpio-all-in-one-runner
+  internalPort: 9090
+  internalProtocol: "http:"
+  heap_min:
+    Xms: "-Xms64M"
+    Xmx: "-Xmx64M"
+  heap_main:
+    Xms: "-Xms64M"
+    Xmx: "-Xmx64M"
+  hpa:
+    enabled: false
+  resources_min:
+    limits:
+      cpu: 100m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  resources_main:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+certmanager:
+  secret: {{ .StateValues.certmanager.secret }}
+  issuer: {{ .StateValues.certmanager.issuer }}
+
+flink:
+  imageTag: 1.16.1
+  clusterId: iff
+  taskmanagers: 1
+  jobmanager: 1
+  sqlClientPort: 9000
+  bucket: {{ .StateValues.flink.bucket }}
+  haDir: recovery
+  checkpointDir: checkpoints
+  checkpointInterval: 1 min
+  savepointDir: savepoints
+  defaultParalellism: 1
+  alertWindow: '0.5'
+  alertDelay: '0.001'
+  ngsildUpdateWindow: '0.001'
+  attributeInsertWindow: '0.001'
+  jobmanagerCacheSize: 2Gi
+  taskmanagerCacheSize: 10Gi
+  idleTimeout: 1 s
+  ttl: "86400 s" # Warning: if you change that value dynamically, the debezium service in kafka must be redeployed as well to fit to the Flink deployments ttl
+  coreTtl: "86400 s"
+  db:
+    name: {{ .StateValues.flink.db.name }}
+    schema: {{ .StateValues.flink.db.schema }}
+    replicationUser: {{ .StateValues.flink.db.replicationUser }}
+    replicationUserSecret: {{ .StateValues.flink.db.replicationUserSecret }}
+    rdfSlotName: {{ .StateValues.flink.db.rdfSlotName }}
+    constraintSlotName: {{ .StateValues.flink.db.constraintSlotName }}
+    constraintCombinationSlotName: {{ .StateValues.flink.db.constraintCombinationSlotName }}
+
+
+minio:
+  enabled: {{ .StateValues.minio.enabled }}
+  storageSize: {{ .StateValues.minio.storageSize }}
+  healthPath: /minio/health/live
+  adminAccessKey: console
+  mcImage: minio/mc:RELEASE.2023-06-28T21-54-17Z
+  minioImage: minio/minio:RELEASE.2023-01-12T02-06-16Z
+
+
+s3:
+  {{- $s3 := dict "" }}
+  {{- $protocol := "http" }}
+  {{- if (hasKey .StateValues "s3") }}{{- $s3 = .StateValues.s3 }}{{- end }}
+  protocol: {{ if (hasKey $s3 "protocol") }}{{ quote $s3.protocol }}{{- else }} http {{- end }}
+  endpoint: {{ if (hasKey $s3 "endpoint") }}{{ quote $s3.endpoint }}{{- else }} minio.{{ .StateValues.namespace}}.svc.cluster.local {{- end }}
+  userAccessKey: {{ if (hasKey $s3 "userAccessKey") }}{{ quote $s3.userAccessKey }}{{- else }} minio {{- end }}
+  userSecretKey: {{ if (hasKey $s3 "userSecretKey") }}{{ quote $s3.userSecretKey }}{{- else }} "{{ .StateValues.minioUserSecretKey }}" {{- end }}
+
+alerta:
+  externalHostname: {{ .StateValues.alerta.externalHostname }}
+  externalPath: {{ .StateValues.alerta.externalPath }}
+  adminUser: admin
+  internalService: alerta
+  internalPort: 8080
+  internalProtocol: "http:"
+  # apiKey: {{ .StateValues.alertaApiKey }}
+  adminPassword: {{ .StateValues.alertaAdminPassword }}
+  adminKey: {{ .StateValues.alertaAdminKey }}
+  kafkaResumeTimeout: 2000
+  heartbeatInterval: 1000
+  heartbeatDelay: 2000
+  requestTimeout: 2000
+  kafkaCommitThreshold: 200
+
+kafka:
+  name: my-cluster
+  resources:
+{{ .StateValues.kafka.resources | toYaml | indent 4 }}
+  jvmOptions:
+{{ .StateValues.kafka.jvmOptions | toYaml | indent 4 }}
+  bootstrapServer: my-cluster-kafka-bootstrap:9092
+  storage:
+    type: persistent-claim
+    size: {{ .StateValues.kafka.storage.size }}
+  zookeeper:
+    replicas: 1
+    storage:
+      type: persistent-claim
+      size: {{ .StateValues.kafka.zookeeper.storage.size }}
+  connect:
+    debeziumTopicPrefix: iff.ngsild
+    tableIncludeList: public.entity$
+    image: debezium-postgresql-connector
+    snapshotMode: always
+    restartAfter: 43200
+    rdfSlotName: rdf_slot
+    rdfTable: public.rdf
+    rdfTopicPrefix: iff
+    rdfTopicName: iff.rdf
+    rdfTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.listenTopicRetention | quote}}
+      {{- else }} "3600000"
+      {{- end }}
+  config:
+    logRetentionHours: {{ .StateValues.kafka.config.logRetentionHours }}
+
+kafkaBridge:
+  hashlength: {{ .StateValues.kafkaBridge.hashlength }}
+  flink:
+    constraintTopic:
+      replicaCount: 1
+      topicName: "iff.ngsild.flink.constraint_table"
+      objectName: "iff.ngsild.flink.constraint-table"
+      listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+      listenTopicCompression: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicCompression" }} {{ .StateValues.kafkaBridge.debezium.listenTopicCompression}}
+                            {{- else }} uncompressed
+                            {{- end }}
+    constraintTriggerTopic:
+      replicaCount: 1
+      objectName: "iff.ngsild.flink.constraint-trigger-table"
+      topicName: "iff.ngsild.flink.constraint_trigger_table"
+      listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+      listenTopicCompression: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicCompression" }} {{ .StateValues.kafkaBridge.debezium.listenTopicCompression}}
+                            {{- else }} uncompressed
+                            {{- end }}
+    constraintCombinationTopic:
+      replicaCount: 1
+      topicName: "iff.ngsild.flink.constraint_combination_table"
+      objectName: "iff.ngsild.flink.constraint-combination-table"
+      listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+      listenTopicCompression: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicCompression" }} {{ .StateValues.kafkaBridge.debezium.listenTopicCompression}}
+                            {{- else }} uncompressed
+                            {{- end }}
+  debezium:
+    replicaCount: 1
+    listenTopic: "iff.ngsild.public.entity"
+    listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+    listenTopicCompression: {{- if hasKey .StateValues.kafkaBridge.debezium "listenTopicCompression" }} {{ .StateValues.kafkaBridge.debezium.listenTopicCompression}}
+                            {{- else }} uncompressed
+                            {{- end }}
+    entityTopicPrefix: "iff.ngsild.entities"
+    entityTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "entityTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.entityTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+    attributesTopic: "iff.ngsild.attributes"
+    entitiesTopic: "iff.ngsild.entities"
+    attributesTopicRetention: {{- if hasKey .StateValues.kafkaBridge.debezium "attributesTopicRetention" }} {{ .StateValues.kafkaBridge.debezium.attributesTopicRetention | quote}}
+                              {{- else }} "3600000"
+                              {{- end }}
+    attributesTopicCompression: {{- if hasKey .StateValues.kafkaBridge.debezium "attributesTopicCompression" }} {{ .StateValues.kafkaBridge.debezium.attributesTopicCompression}}
+                                {{- else }} uncompressed
+                                {{- end }}
+    rdf:
+      topic: iff.rdf
+  alerta:
+    replicaCount: 1
+    listenTopic: "iff.alerts"
+    bulkTopic: "iff.alerts.bulk"
+    bulkTopicRetention: "10000"
+    listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.alerta "listenTopicRetention" }} {{ .StateValues.kafkaBridge.alerta.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+  ngsildUpdates:
+    replicaCount: 1
+    tokenRefreshInterval: 200
+    listenTopic: "iff.ngsild-updates"
+    listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.ngsildUpdates "listenTopicRetention" }} {{ .StateValues.kafkaBridge.ngsildUpdates.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+  mqtt:
+    replicaCount: 1
+    attributesTopic: "iff.ngsild.attributes"
+    
+  timescaledb:
+    postgresPort: {{ .StateValues.kafkaBridge.timescaledb.postgresPort }}
+    replicaCount: 1
+    tokenRefreshInterval: 200
+    listenTopic: "iff.ngsild.attributes"
+    listenTopicRetention: {{- if hasKey .StateValues.kafkaBridge.timescaledb "listenTopicRetention" }} {{ .StateValues.kafkaBridge.ngsildUpdates.listenTopicRetention | quote}}
+                          {{- else }} "3600000"
+                          {{- end }}
+
+keycloak:
+  adminName: admin
+  adminPassword: {{ .StateValues.keycloakpassword }}
+  externalAuthService: # put here the *external* keycloak name, i.e. through ingress
+    protocol: {{ .StateValues.keycloak.externalAuthService.protocol | quote }}
+    domainname: {{ .StateValues.keycloak.externalAuthService.domainname | quote }}
+    path: {{ .StateValues.keycloak.externalAuthService.path | quote }}
+  internalAuthService: 
+    name: keycloak-service
+    port: 8080
+    path: /auth
+  oisp:
+    frontendUrl: http://frontend.oisp.svc.cluster.local:4004
+    frontend:
+      client: oisp-frontend
+      clientSecret: {{ .StateValues.oispFrontendClientSecret }}
+    mqttBroker:
+      client: mqtt-broker
+      clientSecret: {{ .StateValues.mqttBrokerClientSecret }}
+    fusionBackend:
+      client: fusion-backend
+      clientSecret: {{ .StateValues.fusionBackendClientSecret }}
+    fusionFrontend:
+      client: fusion-frontend
+  alerta:
+    clientSecret: {{ .StateValues.alertaClientSecret }}
+    realm: iff
+    client: alerta-ui
+    redirectUris:
+    - http://{{ .StateValues.alerta.externalHostname }}{{ .StateValues.alerta.externalPath }}*
+    - https://{{ .StateValues.alerta.externalHostname }}{{ .StateValues.alerta.externalPath }}*
+    defaultClientScopes:
+    - oisp-frontend
+    - accounts
+    - offline_access
+    - openid
+    - profile
+    - email
+    - type
+    - roles
+    - pgrest_role
+  scorpio:
+    realm: iff
+    client: scorpio
+  ngsildUpdates:
+    clientSecret: {{ .StateValues.ngsildUpdatesClientSecret }}
+    realm: iff
+    client: ngsild-updates
+    serviceRole: scorpio.Factory-Admin
+  realmTestUser:
+    username: "realm_user"
+    password: {{ .StateValues.keycloakRealmTestUser }}
+keycloak_db:
+  stringData:
+    POSTGRES_DATABASE: keycloakdb
+    POSTGRES_EXTERNAL_ADDRESS: {{ .StateValues.db.teamId -}}-{{- .StateValues.db.clusterSvcPostfix }}
+    POSTGRES_ADDR: {{ .StateValues.db.teamId -}}-{{- .StateValues.db.clusterSvcPostfix }}
+    POSTGRES_EXTERNAL_PORT: {{ .StateValues.db.svcPort | quote }}
+    POSTGRES_SUPERUSER: "true"
+    POSTGRES_USERNAME: {{ .StateValues.db.dbUser }}
+
+velero:
+  image:
+    repository: velero/velero
+    tag: v1.16.2
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+  initContainers:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.12.2
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /target
+          name: plugins
+  configuration:
+    backupStorageLocation:
+    - name: minio
+      bucket: {{ .StateValues.velero.backupBucket }}
+      provider: aws
+      default: true
+      accessMode: ReadWrite
+      config:
+        region: {{ .StateValues.velero.region }}
+        s3Url: {{ if (hasKey $s3 "protocol") }} {{ $s3.protocol }} {{- else }} http{{- end }}://{{ if (hasKey $s3 "endpoint") }}{{ $s3.endpoint }}{{- else }}minio.{{ .StateValues.namespace }}.svc.cluster.local{{- end }}
+        s3ForcePathStyle: {{- if .StateValues.minio.enabled }} true {{- else }} false {{- end }}
+      defaultVolumesToRestic: true
+  credentials:
+    useSecret: true
+    existingSecret: "velero-s3-credentials"
+  # deployNodeAgent: true
+  snapshotsEnabled: false
+  nodeAgent:
+    #podVolumePath: /var/lib/kubelet/pods
+    #privileged: false
+    # Pod priority class name to use for the node-agent daemonset. Optional.
+    #priorityClassName: ""
+    # Resource requests/limits to specify for the node-agent daemonset deployment. Optional.
+    # https://velero.io/docs/v1.6/customize-installation/#customize-resource-requests-and-limits
+    #resources:
+    #  requests:
+    #    cpu: 500m
+    #    memory: 512Mi
+    #  limits:
+    #    cpu: 1000m
+    #    memory: 1024Mi
+
+redis:
+  storage:
+    size: {{ .StateValues.redis.storage.size }}
+  resources:
+    requests:
+      cpu: {{ .StateValues.redis.resources.requests.cpu }}
+      memory: {{ .StateValues.redis.resources.requests.memory }}
+    limits:
+      cpu: {{ .StateValues.redis.resources.limits.cpu }}
+      memory: {{ .StateValues.redis.resources.limits.memory }}
+
+emqx:
+  replicas: 1
+  externalHostname: {{ .StateValues.emqx.externalHostname }}
+  resources:
+  {{- if hasKey .StateValues.emqx "resources"}}
+    requests:
+        memory: {{ .StateValues.emqx.resources.requests.memory }}
+        cpu: {{ .StateValues.emqx.resources.requests.cpu }}
+    limits:
+        memory: {{ .StateValues.emqx.resources.limits.memory }}
+        cpu: {{ .StateValues.emqx.resources.limits.cpu }}
+  {{- end }}
+
+mqtt:
+  broker:
+    adminUsername: admin
+    adminPassword: {{ .StateValues.mqttBrokerClientSecret }}
+    url: emqx-listeners
+    localport: 1883
+    secure: false
+    retries: 100
+  bridge:
+    port: 3025
+    url: mqtt-bridge
+  kafka:
+    linger: 50
+    partitioner: "defaultPartitioner"
+    retries: 10
+    maxRetryTime: 5000
+    "requestTimeout": 20000
+  cache:
+    host: redis
+    port: 6379
+
+pgrest:
+  externalHostname: {{ .StateValues.pgrest.externalHostname }}
+  externalPath: {{ .StateValues.pgrest.externalPath }}
+  dbPool: {{ .StateValues.pgrest.dbPool }}

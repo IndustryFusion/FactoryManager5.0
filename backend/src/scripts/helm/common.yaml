@@ -1,0 +1,34 @@
+mainVersion: v0.7.0-latest
+mainRepo: ibn40
+mainRegistry: docker.io
+namespace: iff
+pullSecretCredentials: regcred
+externalRegistry: docker.io
+externalRegistry2: quay.io
+externalRegistry3: registry.opensource.zalan.do
+externalRegistry4: ghcr.io
+
+db:
+  teamId: acid
+  clusterSvcPostfix: cluster
+  svcPort: "5432"
+  dbUser: "ngb"
+  dbReaderUser: "dbreader"
+
+ontology:
+  baseUri: https://industryfusion.github.io/contexts/staging/example/v0.1/
+
+kafkaBridge:
+  hashlength: 24
+
+flink:
+  db:
+    name: flink
+    schema: public
+    user: nbg
+    replicationUser: flink_repl_user
+    writeUser: flink_writer_user
+    replicationUserSecret: flink-repl-user.acid-cluster.credentials.postgresql.acid.zalan.do
+    rdfSlotName: rdf_slot
+    constraintSlotName: constraint_slot
+    constraintCombinationSlotName: constraint_combination_slot
