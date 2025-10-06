@@ -75,6 +75,8 @@ import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema
 import { FactoryPdtCache, FactoryPdtCacheSchema } from './endpoints/schemas/factory-pdt-cache.schema';
 import { FactoryPdtCacheController } from './endpoints/factory-pdt-cache/factory-pdt-cache.controller';
 import { FactoryPdtCacheService } from './endpoints/factory-pdt-cache/factory-pdt-cache.service';
+import { FlinkDeployController } from './endpoints/flink-deploy/flink-deploy.controller';
+import { FlinkDeployService } from './endpoints/flink-deploy/flink-deploy.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -121,7 +123,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CertificateController,
     ContractController,
     BindingController,
-    FactoryPdtCacheController
+    FactoryPdtCacheController,
+    FlinkDeployController
   ],
   providers: [
     AppService,
@@ -151,7 +154,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CertificateService,
     ContractService,
     BindingService,
-    FactoryPdtCacheService
+    FactoryPdtCacheService,
+    FlinkDeployService
   ]
 })
 export class AppModule {

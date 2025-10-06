@@ -1,73 +1,107 @@
 import {
-    Controller,
-    Post,
-    UseInterceptors,
-    UploadedFiles,
-    BadRequestException,
+  Controller,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+  Body,
+  Get,
+  Param,
+  Res,
+  NotFoundException
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as path from 'path';
-import * as fs from 'fs';
-import { randomUUID } from 'crypto';
+import { Response } from 'express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer'; // not used for memory; see storage below
 import { FlinkDeployService } from './flink-deploy.service';
-import type { Multer } from 'multer';
+import { FlinkJobDto } from './dto/flink-job.dto';
+import * as Multer from 'multer';
+import { InjectModel } from '@nestjs/mongoose';
+import { FlinkJob } from '../schemas/flink-job.schema';
+import { Model } from 'mongoose';
 
-const SCRIPTS_BASE =
-    process.env.SCRIPTS_BASE_DIR ?? path.join(process.cwd(), 'scripts');
+// Multer: keep files in memory and filter for .ttl
+const multerOptions = {
+  storage: undefined, // memory storage by default in Nest if undefined
+  fileFilter: (_req: any, file: Multer.File, cb: Function) => {
+    const ok =
+      file.mimetype === 'text/turtle' ||
+      file.originalname.toLowerCase().endsWith('.ttl');
+    if (!ok) return cb(new Error('Only .ttl (Turtle) files are allowed'), false);
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB each
+  },
+};
 
-function ensureDir(p: string) {
-    fs.mkdirSync(p, { recursive: true });
-}
-
-@Controller('flink-deploy')
+@Controller('jobs')
 export class FlinkDeployController {
-    constructor(private readonly flinkDeploySvc: FlinkDeployService) { }
+  constructor(private readonly flinkDeployService: FlinkDeployService, @InjectModel(FlinkJob.name) private readonly jobModel: Model<FlinkJob>) {}
 
-    @Post()
-    @UseInterceptors(
-        FilesInterceptor('files', 20, {
-            storage: diskStorage({
-                destination: (req, file, cb) => {
-                    const reqId =
-                        (req as any).reqId ??
-                        ((req as any).reqId = randomUUID().slice(0, 8));
-                    const dest = path.join(SCRIPTS_BASE, 'kms', reqId);
-                    try {
-                        ensureDir(dest);
-                        cb(null, dest);
-                    } catch (e) {
-                        cb(e as Error, dest);
-                    }
-                },
-                filename: (_req, file, cb) => {
-                    // Keep original name; overwrite if same filename is uploaded twice
-                    cb(null, file.originalname);
-                },
-            }),
-            fileFilter: (_req, file, cb) => {
-                // accept only .ttl files (you can relax this if needed)
-                if (file.originalname.toLowerCase().endsWith('.ttl')) return cb(null, true);
-                return cb(new BadRequestException('Only .ttl files are allowed'), false);
-            },
-            limits: { fileSize: 20 * 1024 * 1024 }, // 20MB per file
-        }),
-    )
-    async uploadMultiple(@UploadedFiles() files: Multer.File[]) {
-        if (!files?.length) {
-            throw new BadRequestException('No files uploaded (expecting field: files)');
-        }
+  @Post('create')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'knowledge', maxCount: 1 },
+        { name: 'shacl', maxCount: 1 },
+      ],
+      multerOptions as any,
+    ),
+  )
+  async createJob(
+    @UploadedFiles()
+    files: {
+      knowledge?: Multer.File[];
+      shacl?: Multer.File[];
+    },
+    @Body() dto: FlinkJobDto,
+  ) {
+    const knowledge = files?.knowledge?.[0];
+    const shacl = files?.shacl?.[0];
 
-        // All files share the same destination; pick from the first
-        const targetDir = path.dirname(files[0].path);
-
-        // Hand off to service (also returns make output)
-        const result = await this.flinkDeploySvc.processAndRun(files, targetDir);
-
-        return {
-            message: 'Files received and processed',
-            targetDir,
-            result,
-        };
+    if (!knowledge || !shacl) {
+      throw new Error('Both knowledge and shacl files are required');
     }
+
+    // 1) Upload & persist QUEUED job
+    const { job, jobId, knowledgeUrl, shaclUrl } =
+      await this.flinkDeployService.createJobAndUpload({ knowledge, shacl }, dto);
+
+    // 2) Trigger runner (dummy call) — non-blocking is also OK if you prefer
+    const returnedJobId = await this.flinkDeployService.triggerRunner(job, {
+      knowledgeGetUrl: knowledgeUrl,
+      shaclGetUrl: shaclUrl,
+    });
+
+    return {
+      jobId: returnedJobId,
+      status: 'QUEUED',
+      knowledgeUrl: job.knowledgeUrl,
+      shaclUrl: job.shaclUrl,
+    };
+  }
+
+
+  // 1) Stream logs (SSE proxy)
+  @Get(':id/stream')
+  async stream(@Param('id') jobId: string, @Res() res: Response) {
+    const job = await this.jobModel.findOne({ jobId });
+    if (!job) throw new NotFoundException('Job not found');
+    await this.flinkDeployService.pipeRunnerSseToResponse(jobId, res);
+  }
+
+  // 2) Read job status (simple status endpoint for UI)
+  @Get(':id')
+  async getJob(@Param('id') jobId: string) {
+    const job = await this.jobModel.findOne({ jobId }).lean();
+    if (!job) throw new NotFoundException('Job not found');
+    return {
+      jobId: job.jobId,
+      status: job.status,
+      knowledgeUrl: job.knowledgeUrl,
+      shaclUrl: job.shaclUrl,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+    };
+  }
 }
