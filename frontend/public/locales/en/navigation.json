@@ -1,0 +1,37 @@
+{
+    "navbar": {
+        "dashboard": "Dashboard",
+        "enable_guide": "Enable Guide Mode",
+        "asset_management": "Asset Management",
+        "switch_language": "Switch Language",
+        "alerts": "Alerts",
+        "notifications": "Notifications",
+        "all_notifications": "View all Notifications",
+        "no_notifications": "No notifications",
+        "logout": "Logout",
+        "products": "Products",
+        "breadcrumb": {
+            "factory_flow": "Factory Flow",
+            "binding_request": "Binding Request",
+            "binding_manager": "Binding Manager",
+            "contract_manager": "Contract Manager",
+            "factory_site": "Factory site",
+            "data_viewer": "Data Viewer",
+            "asset_management": "Asset Management",
+            "certificate": "Certificate"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "my_factory": "My Factory",
+        "assets": "Assets",
+        "factory_assets": "Factory Assets",
+        "production_lines": "Production Lines",
+        "factory_sites": "Factory Sites",
+        "analytics": "Analytics",
+        "data_viewer": "Data Viewer",
+        "reports": "Reports",
+        "coming_soon": "Coming Soon",
+        "test_version": "Test Version"
+    }
+}

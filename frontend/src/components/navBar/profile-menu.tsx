@@ -26,6 +26,7 @@ import { showToast } from '@/utility/toast';
 import { Toast } from 'primereact/toast';
 import { resetReduxState } from '../../redux/store';
 import router from "next/router";
+import { useTranslation } from 'next-i18next';
 
 interface Product {
     _id: string;
@@ -50,6 +51,7 @@ export default function ProfileMenu() {
     const menuTrigger = useRef<any>(null);
     const toast = useRef<Toast>(null);
     const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
+    const {t} = useTranslation("navigation")
     useEffect(() => {
         fetchUserData();
     }, []);
@@ -149,7 +151,7 @@ export default function ProfileMenu() {
                         <div className="profile_menu_link_wrapper">
                             <Button onClick={handleLogout} className='profile_menu_link logout'>
                                 <Image src="/logout_icon.svg" width={22} height={22} alt=''></Image>
-                                <div>Logout</div>
+                                <div>{t("navbar.logout")}</div>
                             </Button>
                         </div>
                     </div>

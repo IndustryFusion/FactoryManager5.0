@@ -327,7 +327,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
                 'overview',
                 'placeholder',
                 'dashboard',
-                'button'
+                'button',
+                'navigation'
             ])),
         },
     }

@@ -1,0 +1,14 @@
+{
+    "create_factory_site": "Fabrikstandort erstellen",
+    "create_factory": "Fabrik erstellen",
+    "import_assets": "Anlagen importieren",
+    "active": "Aktiv",
+    "factory_site": "Fabrikstandort",
+    "assets": "Anlagen",
+    "areas": "Bereiche",
+    "production_lines": "Produktionslinien",
+    "view": "Anzeigen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "factory_name_required": "Fabrikname ist erforderlich"
+}

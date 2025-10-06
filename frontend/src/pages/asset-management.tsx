@@ -62,8 +62,8 @@ const AssetManagementPage = () => {
                   </p>
                   <div>
                     <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
-                      <TabPanel header={t("Asset Table")}></TabPanel>
-                      <TabPanel header={t("Allocated Assets")}></TabPanel>
+                      <TabPanel header={t("overview:asset_table")}></TabPanel>
+                      <TabPanel header={t("overview:allocated_assets")}></TabPanel>
                     </TabView>
                   </div>
                 </div>
@@ -86,26 +86,26 @@ const AssetManagementPage = () => {
               }}
             >
               <img src="/search_icon.svg" alt="Search" className="search-icon" />
-              <input type="text" placeholder="Search" className="search-input" />
+              <input type="text" placeholder={t("overview:search")} className="search-input" />
             </div>
           </div>
 
           <div className="toolbar-right">
             <div className="toolbar-item">
               <img src="/Sort.svg" alt="Filter" className="search-img-container" />
-              <span>Filter</span>
+              <span>{t("overview:filter")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/filter.svg" alt="Sort" />
-              <span>Sort</span>
+              <span>{t("overview:sort")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/Group.svg" alt="Group" />
-              <span>Group</span>
+              <span>{t("overview:group")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/manage-column.svg" alt="Manage Columns" />
-              <span>Manage Columns</span>
+              <span>{t("overview:manage_columns")}</span>
             </div>
           </div>
         </div>
@@ -128,7 +128,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'overview',
         'placeholder',
         'dashboard',
-        'button'
+        'button',
+        'navigation'
       ])),
     },
   }

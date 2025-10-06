@@ -6,6 +6,7 @@ import { Asset } from '@/types/asset-types';
 import "../../styles/asset-selector.css"
 import Image from 'next/image';
 import { Dropdown } from 'primereact/dropdown';
+import { useTranslation } from 'next-i18next';
 
 interface AssetSelectorProps {
   assets: Asset[];
@@ -20,6 +21,7 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
   const [inputVisible, setInputVisible] = useState(false);
   const [inputValue, setInputValue] = useState<string>('');
   const inputRef = useRef<AutoComplete | null>(null);
+  const {t} = useTranslation("dashboard")
 
   const search = (event: { query: string }) => {
     const query = event.query.toLowerCase();
@@ -100,11 +102,12 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
           options={assets}
           optionLabel="product_name"
           filter
-          filterPlaceholder="Search for asset"
-          placeholder={loading ? "Please wait.." : "Type to search and select"}
+          filterPlaceholder={t("search_for_asset")}
+          placeholder={loading ? t("loading_text") : t("type_to_search")}
           className="asset_selector_input w-full"
           itemTemplate={assetItemTemplate}
           panelClassName='asset_selector_input_panel'
+          emptyMessage={t("no_options")}
         />
       )}
     </div>

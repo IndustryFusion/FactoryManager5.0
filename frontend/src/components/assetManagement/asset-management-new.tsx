@@ -12,6 +12,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { fetchAssets, setSelectedAssets, Asset } from '@/redux/assetManagement/assetManagementSlice';
 import '../../styles/asset-management.css'
 import { Dropdown } from 'primereact/dropdown';
+import { useTranslation } from 'next-i18next';
 
 const AssetManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,6 +23,7 @@ const AssetManagement: React.FC = () => {
   const cm = useRef<ContextMenu>(null);
   const toast = useRef<Toast>(null);
   const router = useRouter();
+  const {t} = useTranslation("overview")
 
   const [filters, setFilters] = useState<DataTableFilterMeta>({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -170,7 +172,7 @@ const AssetManagement: React.FC = () => {
           loading={loading}
           responsiveLayout="scroll"
           globalFilterFields={['id', 'asset_serial_number', 'type', 'product_name', 'asset_manufacturer_name']}
-          emptyMessage="No assets found."
+          emptyMessage={t("no_assets")}
           className="asset-table custom-paginator-table"
           selectionMode="multiple"
           selection={selectedAssets}
@@ -185,7 +187,7 @@ const AssetManagement: React.FC = () => {
             layout: 'CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown',
             RowsPerPageDropdown: (options) => (
               <div className="custom-rows-dropdown">
-                <span className="display-label">Display</span>
+                <span className="display-label">{t("display")}</span>
                 <Dropdown
                   value={options.value}
                   options={[
@@ -203,7 +205,7 @@ const AssetManagement: React.FC = () => {
               </div>
             )
           }}
-          currentPageReportTemplate="{first} - {last} Assets"
+          currentPageReportTemplate={`{first} - {last} ${t("Assets")}`}
         >
           <Column
             field="icon"
@@ -215,7 +217,7 @@ const AssetManagement: React.FC = () => {
           />
           <Column
             field="product_name"
-            header="Asset Name"
+            header={t("asset_name")}
             body={(rowData: Asset) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10182B', fontFamily: '"League Spartan"', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.07px' }}>
                 <img src="/asset-img.svg" alt="asset" width={28} height={28} />
@@ -225,7 +227,7 @@ const AssetManagement: React.FC = () => {
           />
           <Column
             field="asset_manufacturer_name"
-            header="Manufacturer"
+            header={t("manufacturer")}
             body={(rowData: Asset) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10182B', fontFamily: '"League Spartan"', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.07px' }}>
                 <img src="/manufacturer-img.svg" alt="manufacturer" width={28} height={28} />
@@ -233,10 +235,10 @@ const AssetManagement: React.FC = () => {
               </div>
             )}
           />
-          <Column field="type" header="Product Type" body={(rowData: Asset) => rowData.type.split('/').pop()} />
+          <Column field="type" header={t("product_type")} body={(rowData: Asset) => rowData.type.split('/').pop()} />
           <Column field="id" header="ID" body={(rowData) => renderExpandableCell(rowData, 'id')} style={{ textAlign: 'left' }} />
-          <Column field="area" header="Area" body="--" />
-          <Column field="factory_site" header="Factory Site" body="--" />
+          <Column field="area" header={t("area")} body="--" />
+          <Column field="factory_site" header={t("factory_site")} body="--" />
 
           <Column body={actionItemsTemplate} headerStyle={{ width: '5rem' }} />
         </DataTable>

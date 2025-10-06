@@ -5,5 +5,21 @@
     "confirmation": "Löschen bestätigen",
     "deleteWarning": "Sind Sie sicher, dass Sie löschen möchten",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "Assets": "Anlagen",
+    "asset_table": "Anlagentabelle",
+    "allocated_assets": "Zugewiesene Anlagen",
+    "search": "Suche",
+    "filter": "Filter",
+    "group": "Gruppieren",
+    "sort": "Sortieren",
+    "manage_columns": "Spalten verwalten",
+    "asset_name": "Anlagenname",
+    "manufacturer": "Hersteller",
+    "product_type": "Produkttyp",
+    "area": "Bereich",
+    "factory_site": "Fabrikstandort",
+    "no_assets": "Keine Anlagen gefunden",
+    "display": "Anzeige",
+    "factory": "Fabrik"
 }

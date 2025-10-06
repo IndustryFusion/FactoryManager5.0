@@ -20,6 +20,7 @@ import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "../../styles/relation-container.css"
 import { getAssetById } from "@/utility/factory-site-utility";
+import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -41,6 +42,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     const [parentRelations, setParentRelations] = useState<ParentRelationData[]>([]);
     const { selectedAssetData, entityIdValue } = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState<{[key:string]:string[]}[]>([]);
+    const {t} = useTranslation("dashboard")
 
 
     const getAssetData = async (relationData:ParentRelationData  ) => {
@@ -100,7 +102,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     }
 
     const Header = (
-        <h3 className="pl-3 m-0 dialog-heading-text">Relations</h3>
+        <h3 className="pl-3 m-0 dialog-heading-text">{t("relations")}</h3>
     )
 
     useEffect(() => {
@@ -117,7 +119,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                 visible={relationsProp} style={{ width: '45vw' }} onHide={() => setRelationsProp(false)}>
                 <div className="flex gap-3 relation-dialog">
                     <div style={{ flex: "40%" }}>
-                        <h4 className=" mb-3 child-heading">Child</h4>
+                        <h4 className=" mb-3 child-heading">{t("child")}</h4>
                         {hasPropertiesArray.map((property, index) => {
                             const key = Object.keys(property)[0];
                             const value = property[key];
@@ -157,7 +159,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
                         <img src="/parent_child2.png" alt="" width="50px" height="auto" />
                     </div>
                     <div style={{ flex: "40%" }}>
-                        <h4 className=" mb-3 parent-heading">Parent</h4>
+                        <h4 className=" mb-3 parent-heading">{t("parent")}</h4>
                         {parentRelations.map((item, index) => {
                             const { product_name, id, asset_category } = item;
                             return (

@@ -95,7 +95,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
     <>
       <Dialog
 
-        header={notificationData.length > 0 ? <h3 className="m-0">Notifications</h3> : <h3 className="m-0">No Notifications</h3>}
+        header={notificationData.length > 0 ? <h3 className="m-0">{t("notifications")}</h3> : <h3 className="m-0">{t("no_notifications")}</h3>}
         visible={notificationProp} style={{ width: '50vw' }} onHide={() => setNotificationProp(false)}>
         <div className="alerts-container">
           {notificationData.length > 0 ?
@@ -144,33 +144,33 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
                         <div className="flex align-center  mb-2" style={{ gap: "9rem" }}>
                           <div>
                             <p className="ml-2 alert-time mt-2"> {notification?.updateTime}</p>
-                            <p className="label-text ml-2">Update Time</p>
+                            <p className="label-text ml-2">{t("updated_time")}</p>
                           </div>
                           <div>
                             <p className="ml-2 mt-2 "
                               style={{ color: "#212529", textTransform: "capitalize" }}
                             >{notification?.type}</p>
-                            <p className="label-text ml-2">Type</p>
+                            <p className="label-text ml-2">{t("type")}</p>
                           </div>
                         </div>
                         <div className="flex align-center  mb-2" style={{ gap: "14.4rem" }}>
                           <div>
                             <p className="ml-2 "> {selectedAssetData?.asset_category}</p>
-                            <p className="label-text ml-2">Product category</p>
+                            <p className="label-text ml-2">{t("product_category")}</p>
                           </div>
                           <div>
                             <p>{notification?.origin}</p>
-                            <p className="label-text">Origin</p>
+                            <p className="label-text">{t("origin")}</p>
                           </div>
                         </div>
                         <div className="flex align-center  mb-2" style={{ gap: "16.8rem" }}>
                           <div> <p className="ml-2 "> {notification?.severity}</p>
-                            <p className="label-text ml-2">Severity</p>
+                            <p className="label-text ml-2">{t("severity")}</p>
                           </div>
                           <div>
                             <p className="ml-2 mt-2" style={{ color: "#212529" }}
                             >{notification?.previousSeverity}</p>
-                            <p className="label-text ml-2">Previous Severity</p>
+                            <p className="label-text ml-2">{t("previous_severity")}</p>
                           </div>
                         </div>
                       </div>
@@ -198,7 +198,7 @@ const NotificationDialog: React.FC<NotificationPopupProps> = ({ notificationProp
             :
             <>
               <div className="flex flex-column justify-content-center align-items-center">
-                <p>When you have notification , you'll see them here</p>
+                <p>{t("empty_text")}</p>
                 <img src="/no-notification2.png" alt="no notifications icon"
                   width="15%" height="15%"
                 />

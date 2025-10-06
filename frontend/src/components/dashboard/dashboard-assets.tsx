@@ -259,7 +259,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             <div className="data_viewer_card asset_details_main_header">
             <div style={{display: `${showSelector ? "block" : "none"}`}}>
               <div className=" flex justify-content-between">
-                <label className="select_asset_heading" htmlFor="asset_selector">Select Asset</label>
+                <label className="select_asset_heading" htmlFor="asset_selector">{t("dashboard:select_asset")}</label>
                 {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
               </div>
               <div className="product_selector_wrapper">
