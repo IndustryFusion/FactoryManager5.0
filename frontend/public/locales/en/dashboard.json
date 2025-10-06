@@ -24,5 +24,27 @@
     "months": "Months",
     "years": "Years",
     "manufacturer": "Manufacturer",
-    "unknownProduct": "Unknown Product"
+    "unknownProduct": "Unknown Product",
+    "good_morning": "Good morning",
+    "good_afternoon": "Good afternoon",
+    "good_evening": "Good evening",
+    "dashboard_subheader": "Factory Manager is your home-base for all your Machines and Asset",
+    "asset_activity": "Asset Activity",
+    "chart_btn_1": "10-Day",
+    "chart_btn_2": "Intra-Day",
+    "todays_notification": "Today's Notifications",
+    "all_notifications": "View all Notifications",
+    "card_title_1": "Assets",
+    "card_sub_1": "Monitor",
+    "card_title_2": "Production Lines",
+    "card_title_3": "Factory Sites",
+    "card_title_4": "Reports",
+    "card_sub_2": "View",
+    "xana_banner":{
+        "title": "What’s going on in your factory? Ask Xana.",
+        "sub": "Your intelligent assistant for smarter decisions.",
+        "description": "Why is my cutting line underperforming?, How can I reduce idle time on Station 4? Xana helps you get answers.",
+        "cta": "Ask Xana AI"
+    }
+
 }

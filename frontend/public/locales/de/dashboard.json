@@ -24,5 +24,26 @@
     "months": "Monate",
     "years": "Jahre",
     "manufacturer": "Hersteller",
-    "unknownProduct": "Unbekanntes Produkt"
+    "unknownProduct": "Unbekanntes Produkt",
+    "good_morning": "Guten Morgen",
+    "good_afternoon": "Guten Nachmittag",
+    "good_evening": "Guten Abend",
+    "dashboard_subheader": "Factory Manager ist Ihre Zentrale für alle Maschinen und Anlagen",
+    "asset_activity": "Anlagenaktivität",
+    "chart_btn_1": "10 Tage",
+    "chart_btn_2": "Intraday",
+    "todays_notification": "Heutige Benachrichtigungen",
+    "all_notifications": "Alle Benachrichtigungen anzeigen",
+    "card_title_1": "Anlagen",
+    "card_sub_1": "Überwachen",
+    "card_title_2": "Produktionslinien",
+    "card_title_3": "Fabrikstandorte",
+    "card_title_4": "Berichte",
+    "card_sub_2": "Anzeigen",
+    "xana_banner": {
+        "title": "Was passiert in Ihrer Fabrik? Fragen Sie Xana.",
+        "sub": "Ihr intelligenter Assistent für klügere Entscheidungen.",
+        "description": "Warum arbeitet meine Schneidlinie unterdurchschnittlich? Wie kann ich die Leerlaufzeit an Station 4 reduzieren? Xana hilft Ihnen, Antworten zu finden.",
+        "cta": "Fragen Sie Xana AI"
+    }
 }
