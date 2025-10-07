@@ -320,7 +320,7 @@ const PowerCo2Chart = () => {
     <div className="data_viewer_card">
       <Toast ref={toast} />
       <h3 className='dashboard_card_title'>
-        Power Consumption and Co2 Emission
+        {t("dashboard:co2_chart_title")}
       </h3>
       <div className="interval-filter-container">
         <p style={{ fontSize: "19px" }}>{t("dashboard:filterInterval")}</p>
@@ -344,7 +344,7 @@ const PowerCo2Chart = () => {
                 value: interval,
               }))}
               onChange={(e) => setSelectedInterval(e.value)}
-              placeholder="Select an Interval"
+              placeholder={t("dashboard:select_interval")}
               appendTo="self"
               panelClassName='global_dropdown_panel'
             />
@@ -416,7 +416,7 @@ const PowerCo2Chart = () => {
                     })
                   )}
                   onChange={(e) => setSelectedWeekSubInterval(e.value)}
-                  placeholder="Select Sub Interval"
+                  placeholder={t("dashboard:select_sub_interval")}
                   appendTo="self"
                   panelClassName='global_dropdown_panel'
                 />
@@ -533,7 +533,7 @@ const PowerCo2Chart = () => {
                       })
                     )}
                     onChange={(e) => setSelectedMonthSubInterval(e.value)}
-                    placeholder="Select Sub Interval"
+                    placeholder={t("dashboard:select_sub_interval")}
                     appendTo="self"
                     panelClassName='global_dropdown_panel'
                   />

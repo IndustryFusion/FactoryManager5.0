@@ -685,7 +685,7 @@ const CombineSensorChart: React.FC = () => {
                     value: interval,
                   }))}
                   onChange={(e) => handleIntervalChange(e as CustomChangeEvent)}
-                  placeholder="Select an Interval"
+                  placeholder={t("dashboard:select_interval")}
                   appendTo="self"
                   panelClassName="global_dropdown_panel"
 
@@ -695,10 +695,10 @@ const CombineSensorChart: React.FC = () => {
             </div>
             {selectedInterval === 'custom' && (
               <div className="control_form_field">
-                <label htmlFor="" className="dashboard_control_label">Pick Timeframe</label>
+                <label htmlFor="" className="dashboard_control_label">{t("dashboard:pick_timeframe")}</label>
                 <Button className="timeframe_op_trigger" onClick={(e) => op.current?.toggle(e)}>
                   <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt=""></Image>
-                  <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : 'Pick a date'}</div>
+                  <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : t("dashboard:pick_date")}</div>
                   <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
                 </Button>
               </div>)
@@ -730,7 +730,7 @@ const CombineSensorChart: React.FC = () => {
                     type="time"
                     value={startTime ? format(startTime, "HH:mm") : ""}
                     onChange={(e) => handleTimeInputChange(e, "start")}
-                    placeholder="Start Time"
+                    placeholder={t("dashboard:start_time")}
                     className="w-full"
                     disabled={selectedInterval !== "custom"}
                   />
@@ -742,7 +742,7 @@ const CombineSensorChart: React.FC = () => {
                     type="time"
                     value={endTime ? format(endTime, "HH:mm") : ""}
                     onChange={(e) => handleTimeInputChange(e, "end")}
-                    placeholder="End Time"
+                    placeholder={t("dashboard:end_time")}
                     className="w-full "
                     disabled={selectedInterval !== "custom"}
                   />
@@ -770,7 +770,7 @@ const CombineSensorChart: React.FC = () => {
                 }}
               >
                 <p>
-                  <b>No Asset Selected !! Please Select an asset ...</b>
+                  <b>{t("dashboard:no_asset_selected")}</b>
                 </p>
                 <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
               </div>
@@ -808,7 +808,7 @@ const CombineSensorChart: React.FC = () => {
                   height: "60vh",
                 }}
               >
-                <p>No chart data available</p>
+                <p>{t("no_chart_data")}</p>
                 <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
               </div>
             )}

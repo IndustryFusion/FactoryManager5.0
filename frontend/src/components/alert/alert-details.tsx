@@ -68,7 +68,7 @@ interface Alerts {
 }
 
 const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, setVisible, assetData, handleAcknowledge }) => {
-  const { t } = useTranslation('button');
+  const { t } = useTranslation(['button', 'navigation']);
   const [selected, setSelected] = useState<AlertaState | null>(null);
   const [expandedAlerts, setExpandedAlerts] = useState<Record<string, boolean>>({});
 
@@ -173,9 +173,9 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
       visible={visible}
       header={
         <div className="header-notification-container">
-          <h3 className="asset-header-title">Notifications</h3>
+          <h3 className="asset-header-title">{t("navigation:navbar.notifications")}</h3>
           <p className="asset-header-sub-title">
-            View all Notifications
+            {t("navigation:navbar.all_notifications")}
             <span className="arrow-icon">
               <img src="/arrow-right-02.svg" alt="View All" />
             </span>
@@ -418,7 +418,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, count, visible, set
           <Avatar icon="pi pi-inbox" shape="circle"></Avatar>
           <div className="flex flex-col text-sm">
             <span className="font-semibold" style={{ paddingTop: "5px" }}>
-              No notifications
+              {t("navigation:navbar.no_notifications")}
             </span>
           </div>
         </div>

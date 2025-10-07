@@ -1,0 +1,14 @@
+{
+    "create_factory_site": "Create Factory Site",
+    "create_factory": "Create Factory",
+    "import_assets": "Import Assets",
+    "active": "Active",
+    "factory_site": "Factory Site",
+    "assets": "Assets",
+    "areas": "Areas",
+    "production_lines": "Production Lines",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "factory_name_required": "Factory Name is required"
+}

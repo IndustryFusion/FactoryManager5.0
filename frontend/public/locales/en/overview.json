@@ -5,5 +5,21 @@
     "confirmation": "Confirm Delete",
     "deleteWarning": "Are you sure you want to delete",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "Assets": "Assets",
+    "asset_table": "Asset Table",
+    "allocated_assets": "Allocated Assets",
+    "search": "Search",
+    "filter": "Filter",
+    "group": "Group",
+    "sort": "Sort",
+    "manage_columns": "Manage Columns",
+    "asset_name": "Asset Name",
+    "manufacturer": "Manufacturer",
+    "product_type": "Product Type",
+    "area": "Area",
+    "factory_site": "Factory Site",
+    "no_assets": "No Assets Found",
+    "display": "Display",
+    "factory": "Factory"
 }
