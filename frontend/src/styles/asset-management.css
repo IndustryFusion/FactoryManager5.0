@@ -198,3 +198,15 @@ background: var(--White, #FFF);
   align-items: center;
   height: 300px;
 }
+
+.asset-btn-white{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--Common-Text-Grey-900, #10182B);
+  font-weight: 500;
+  height: 30px;
+  border: 1px solid var(--Common-Text-Grey-200-Stroke, #E4E7EC);
+  background-color: var(--Common-Text-Grey-100, #F2F4F7);
+  border-radius: 8px;
+}
