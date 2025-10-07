@@ -264,14 +264,20 @@ function Sidebar() {
 
           </div>
           <div className="sidebar_bottom_section">
-            <div className="sidebar_profile_section">
-              <img
-                src={userImage}
-                alt="user_avatar"
-                width={36}
-                height={36}
-                className="sidebar_profile_avatar"
-              />
+            <div className={`sidebar_profile_section ${sidebarOpen ? "" : "collapsed"}`}>
+              <div className="user_profile_avatar">
+                {userImage === "/avatar.svg" ? (
+                  <div style={{width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--black)", color: "white", fontWeight: "500", fontSize: "18px",paddingTop: "2px", display: "grid", placeItems: "center"}}>{userName.charAt(0).toUpperCase()}</div>
+                ) : (
+                  <img
+                    src={userImage}
+                    alt="user_avatar"
+                    width={36}
+                    height={36}
+                    className="sidebar_profile_avatar"
+                  />
+                )}
+              </div>
               <div className="sidebar_profile_info">
                 <div className="sidebar_profile_name">{companyName}</div>
                 <div className="sidebar_profile_company">{userName}</div>
