@@ -5,12 +5,15 @@ import { generateToken } from "@/utility/auth";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue } from "framer-motion";
+import { useTranslation } from "next-i18next";
 
 export default function FloatingXanaButton() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [dragging, setDragging] = useState(false);
   const boundsRef = useRef<HTMLDivElement | null>(null);
+
+  const {t} = useTranslation('navigation');
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -79,7 +82,7 @@ export default function FloatingXanaButton() {
         }}
       >
         <img src="/ai-audio.svg" alt="Xana" width={22} height={22} />
-        <span className="xana-label">Ask Xana AI</span>
+        <span className="xana-label">{t("xana_fab.ask_xana")}</span>
       </motion.button>
     </>
   );

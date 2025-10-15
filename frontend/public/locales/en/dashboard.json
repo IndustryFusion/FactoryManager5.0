@@ -72,5 +72,9 @@
     "no_chart_data": "No chart data available",
     "co2_chart_title": "Power Consumption and Co2 Emission",
     "select_sub_interval": "Select Sub Interval",
-    "machine_chart_title": "Machine State Overview"
+    "machine_chart_title": "Machine State Overview",
+    "live": "Live",
+    "custom": "Custom",
+    "min": "Min",
+    "hour": "Hour"
 }

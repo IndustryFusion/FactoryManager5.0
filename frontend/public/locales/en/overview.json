@@ -21,5 +21,22 @@
     "factory_site": "Factory Site",
     "no_assets": "No Assets Found",
     "display": "Display",
-    "factory": "Factory"
+    "factory": "Factory",
+    "records_per_page": "Records per Page",
+    "sync_dialog": {
+        "dialog_title": "Sync Product Data",
+        "message": "You’re about to sync <strong>{{modelCount}}</strong> product models and <strong>{{productCount}}</strong> products.",
+        "product_models": "Product Models",
+        "continue_text": "Once your Product Data are imported, you can start using them to create Process Data Twins. Do you want to continue?",
+        "importing": "Importing...",
+        "import_finished": "Import Finished",
+        "syncing_models": "Your Product Models are being synced.<br/>Please hang on.",
+        "product_model": "Product Model",
+        "products": "Products",
+        "errors": "Errors",
+        "model_errors": "Product Model Errors",
+        "product_errors": "Product Errors",
+        "hide": "Hide Details",
+        "show": "Show Details"
+    }
 }

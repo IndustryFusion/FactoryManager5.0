@@ -6,6 +6,7 @@ import { ProgressBar } from "primereact/progressbar";
 import Image from "next/image";
 import "@/styles/sync-dialog.css";
 import ExpandableSerialNumbers from "./expand-product";
+import { Trans, useTranslation } from "next-i18next";
 
 interface ImportResponseData {
   modelpassedCount: number;
@@ -27,6 +28,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   setVisible,
   onSync,
 }) => {
+  const {t} = useTranslation("overview")
   const [step, setStep] = useState<number>(1);
   const [startProgress, setStartProgress] = useState<boolean>(false);
   const [processedCount, setProcessedCount] = useState<number>(0);
@@ -158,7 +160,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
 
   return (
     <Dialog
-      header="Sync Product Data"
+      header={t("sync_dialog.dialog_title")}
       className="sync_dialog"
       visible={visible}
       onHide={handleClose}
@@ -176,6 +178,11 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             product models and{" "}
             <strong className="blue_text_highlight">{productCount}</strong>{" "}
             products.
+            <Trans
+              i18nKey="sync_dialog.message"
+              values={{ modelCount, productCount }}
+              components={{ strong: <strong className="blue_text_highlight" /> }}
+            />
           </div>
 
           <div className="flex align-items-stretch gap-4">
@@ -195,7 +202,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                   height={24}
                   alt="product model"
                 />
-                <div>{modelCount} Product Models</div>
+                <div>{modelCount} {t("sync_dialog.product_models")}</div>
               </div>
             </div>
 
@@ -222,14 +229,13 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             activeTab="Active"
           />
           <div>
-            Once your Product Data are imported, you can start using them to
-            create Process Data Twins. Do you want to continue?
+            {t("sync_dialog.continue_text")}
           </div>
         </div>
       ) : (
         <div className="flex flex-column gap-2 align-items-center">
           <div className="import_dialog_heading">
-            {!syncDone ? "Importing..." : "Import Finished"}
+            {!syncDone ? t("sync_dialog.importing") : t("sync_dialog.import_finished")}
           </div>
 
           {!syncDone ? (
@@ -249,27 +255,24 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                 </div>
               </div>
               <div className="blue_text_highlight text-center mt-2">
-                Your Product Models are being synced.
-                <br />
-                Please hang on.
+                {t("sync_dialog.syncing_models")}
               </div>
             </div>
           ) : (
             <div className="import_summary_block">
               <div className="flex align-items-center gap-4 import_summary_header">
                 <div>
-                  <strong>{localImportData.modelpassedCount}</strong> Product
-                  Model
+                  <strong>{localImportData.modelpassedCount}</strong> {t("sync_dialog.product_model")}
                 </div>
                 <div>
-                  <strong>{localImportData.productPassedCount}</strong> Products
+                  <strong>{localImportData.productPassedCount}</strong> {t("sync_dialog.products")}
                 </div>
                 <div>
                   <strong>
                     {(localImportData.modelFailedCount ?? 0) +
                       (localImportData.productFailedCount ?? 0)}
                   </strong>{" "}
-                  Errors
+                  {t("sync_dialog.errors")}
                 </div>
               </div>
 
@@ -278,7 +281,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
               >
                 <div className="flex flex-column gap-2">
                   <div className="log_details_title">
-                    <strong>{localImportData.modelFailedCount ?? 0}</strong> Product Model Errors
+                    <strong>{localImportData.modelFailedCount ?? 0}</strong> {t("sync_dialog.model_errors")}
                   </div>
                   {Object.keys(localImportData.modelFailedLogs).length > 0 &&
                     Object.entries(localImportData.modelFailedLogs).map(
@@ -318,7 +321,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                 {Object.keys(localImportData.productFailedLogs).length > 0 && (
                   <div className="flex flex-column gap-2 mt-3">
                     <div className="log_details_title">
-                      <strong>{localImportData.productFailedCount ?? 0}</strong> Product Errors
+                      <strong>{localImportData.productFailedCount ?? 0}</strong> {t("sync_dialog.product_errors")}
                     </div>
                     {Object.entries(localImportData.productFailedLogs).map(
                       ([modelName, productErrors]) => (
@@ -384,7 +387,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                       className={showLog ? "rotate-180" : ""}
                     />
                   }
-                  label={showLog ? "Hide details" : "Show Details"}
+                  label={showLog ? t("sync_dialog.hide") : t("sync_dialog.show")}
                 />
               </div>
             </div>
