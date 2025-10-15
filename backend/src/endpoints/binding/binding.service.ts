@@ -53,8 +53,9 @@ interface AlertaEntry {
 
 @Injectable()
 export class BindingService {
-  private readonly ifxUrl = process.env.IFX_PLATFORM_BACKEND_URL;
-  private readonly ifxConnectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL;
+  private readonly contractManagerUrl = process.env.CONTRACT_MANAGER_BACKEND_URL || "";
+  private readonly connectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL || "";
+  private readonly companyIfricId = process.env.COMPANY_IFRIC_ID || 'urn:ifric:ifx-eur-com-nap-cccae0b9-7af6-5629-a683-f423f8fb3664';
   private activeTasks = new Map<string, NodeJS.Timeout>();
   constructor(
     @InjectModel('PersistantTask') private readonly persistantModel: Model<any>,
@@ -65,16 +66,34 @@ export class BindingService {
   ) { }
 
   // async onModuleInit() {
-  //   await this.loadAndStartTasks(); // run once at startup
+  //   await this.handleBindingBasedTasks(); // run once at startup
   // }
 
   async create(data: CreateBindingDto) {
     try {
-      const response = await axios.post(`${this.ifxUrl}/binding`, data);
+      const response = await axios.post(`${this.contractManagerUrl}/binding`, data);
       return response.data;
     } catch (err) {
       throw new InternalServerErrorException(`Failed to create binding: ${err.message}`);
     }
+  }
+
+  async handleBindingBasedTasks() {
+    // const token = await this.tokenStore.get();
+    // if (!token) {
+    //   console.log('No token found for fetching bindings');
+    // }
+
+    // const headers = {
+    //   'Content-Type': 'application/json',
+    //   'Accept': 'application/json',
+    //   Authorization: `Bearer ${token}`,
+    // };
+    // const bindings = await axios.get(`${this.contractManagerUrl}/binding/get-company-binding/` + this.companyIfricId, { headers });
+    // fetch all bindings from IFX
+    // for each binding, check if the status is active, signed and doesnt have mongo details
+    // for those binding, create a mongo collection and update binding with mongo details
+    // Also create task related to those bindings which will be loaded and executed on each startup
   }
 
   // async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
@@ -307,7 +326,7 @@ export class BindingService {
 
     try {
       await axios.post(
-        this.ifxConnectorUrl + "/producer/publish-data-to-dataroom",
+        this.connectorUrl + "/producer/publish-data-to-dataroom",
         payload
       );
     } catch (error) {

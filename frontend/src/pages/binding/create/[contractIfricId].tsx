@@ -363,33 +363,33 @@ const CreateBinding: React.FC = () => {
             console.log("result ",result);
             const response = await createBinding(result);
             console.log("response ",response?.data);
-            const payload = {
-                producerId: formData.data_provider_company_ifric_id,
-                bindingId: response?.data.binding_ifric_id,
-                assetId: selectedAsset,
-                consumerId: formData.data_consumer_company_ifric_id,
-            };
+            // const payload = {
+            //     producerId: formData.data_provider_company_ifric_id,
+            //     bindingId: response?.data.binding_ifric_id,
+            //     assetId: selectedAsset,
+            //     consumerId: formData.data_consumer_company_ifric_id,
+            // };
 
-            console.log("payload ",payload);
+            // console.log("payload ",payload);
 
-            const monoRes = await mongoUserCollectionCreation(payload);
-            console.log("mongoRes ",monoRes?.data);
+            // const monoRes = await mongoUserCollectionCreation(payload);
+            // console.log("mongoRes ",monoRes?.data);
 
-            const resultUpdate = { 
-                contract_binding_ifric_id: response?.data.binding_ifric_id,
-                binding_mongo_url: monoRes?.data.mongoUrl,
-                binding_mongo_username: monoRes?.data.username,
-                binding_mongo_password: monoRes?.data.password,
-                binding_mongo_database: monoRes?.data.database,
-                meta_data: {
-                    create_at: new Date(),
-                    last_updated_at: new Date(),
-                    created_user: userName
-                }
-            }
-            const responseUpdate = await updateBinding(resultUpdate);
+            // const resultUpdate = { 
+            //     contract_binding_ifric_id: response?.data.binding_ifric_id,
+            //     binding_mongo_url: monoRes?.data.mongoUrl,
+            //     binding_mongo_username: monoRes?.data.username,
+            //     binding_mongo_password: monoRes?.data.password,
+            //     binding_mongo_database: monoRes?.data.database,
+            //     meta_data: {
+            //         create_at: new Date(),
+            //         last_updated_at: new Date(),
+            //         created_user: userName
+            //     }
+            // }
+            // const responseUpdate = await updateBinding(resultUpdate);
             // const responseTask = await startTaskBinding(formData.data_provider_company_ifric_id, response?.data.binding_ifric_id, selectedAsset, formData.contract_ifric_id);
-            if(responseUpdate?.data.status === 201) {
+            if(response?.data.status === 201) {
                 toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Binding added successfully' });
                 setVisible(false)
             } else {
