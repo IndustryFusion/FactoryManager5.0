@@ -141,41 +141,41 @@ export const getSharedWithBindingCompanies =async(bindingIfricId: string)=>{
   }
 }
 
-export const startTaskBinding = async ( 
-  producerId: string,
-  bindingId: string,
-  assetId: string,
-  contractId: string
-) => {
-  try {
-    const dataToSend = {
-      producerId,
-      bindingId,
-      assetId,
-      contractId,
-    };
-    console.log("Data to send:", dataToSend);
-    const response = await api.post(
-      `${FACTORY_BACKEND}/binding/start-publish`,
-      dataToSend,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error("Error updating binding:", error);
-    if (error?.response && error?.response?.status === 401) {
-      updatePopupVisible(true);
-    } else {
-      throw new Error(
-        error.response?.data?.message || "Error updating binding"
-      );
-    }
-  }
-};
+// export const startTaskBinding = async ( 
+//   producerId: string,
+//   bindingId: string,
+//   assetId: string,
+//   contractId: string
+// ) => {
+//   try {
+//     const dataToSend = {
+//       producerId,
+//       bindingId,
+//       assetId,
+//       contractId,
+//     };
+//     console.log("Data to send:", dataToSend);
+//     const response = await api.post(
+//       `${FACTORY_BACKEND}/binding/start-publish`,
+//       dataToSend,
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//           Accept: "application/json",
+//         },
+//       }
+//     );
+//   } catch (error: any) {
+//     console.error("Error updating binding:", error);
+//     if (error?.response && error?.response?.status === 401) {
+//       updatePopupVisible(true);
+//     } else {
+//       throw new Error(
+//         error.response?.data?.message || "Error updating binding"
+//       );
+//     }
+//   }
+// };
 
 
 

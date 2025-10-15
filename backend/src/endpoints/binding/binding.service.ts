@@ -52,9 +52,10 @@ interface AlertaEntry {
 
 
 @Injectable()
-export class BindingService implements OnModuleInit {
-  private readonly ifxUrl = process.env.IFX_PLATFORM_BACKEND_URL;
-  private readonly ifxConnectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL;
+export class BindingService {
+  private readonly contractManagerUrl = process.env.CONTRACT_MANAGER_BACKEND_URL || "";
+  private readonly connectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL || "";
+  private readonly companyIfricId = process.env.COMPANY_IFRIC_ID || 'urn:ifric:ifx-eur-com-nap-cccae0b9-7af6-5629-a683-f423f8fb3664';
   private activeTasks = new Map<string, NodeJS.Timeout>();
   constructor(
     @InjectModel('PersistantTask') private readonly persistantModel: Model<any>,
@@ -64,67 +65,85 @@ export class BindingService implements OnModuleInit {
     private readonly pgrestService: PgRestService
   ) { }
 
-  async onModuleInit() {
-    await this.loadAndStartTasks(); // run once at startup
-  }
+  // async onModuleInit() {
+  //   await this.handleBindingBasedTasks(); // run once at startup
+  // }
 
   async create(data: CreateBindingDto) {
     try {
-      const response = await axios.post(`${this.ifxUrl}/binding`, data);
+      const response = await axios.post(`${this.contractManagerUrl}/binding`, data);
       return response.data;
     } catch (err) {
       throw new InternalServerErrorException(`Failed to create binding: ${err.message}`);
     }
   }
 
-  async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
-    try {
-      const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
-      console.log("Contract data for : " + contractId, contract.data);
-      const payload: CreatePersistantTaskDto = {
-        producerId,
-        bindingId,
-        assetId,
-        contractId,
-        interval: contract.data[0].interval, // default interval
-        expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
-        dataType: contract.data[0].data_type, // default data type
-        assetProperties: contract.data[0].asset_properties
-      };
-      console.log("Payload for binding task:", payload);
-      const task = new this.persistantModel(payload as CreatePersistantTaskDto);
-      await task.save();
-      await this.loadAndStartTasks()
-      return { status: 'success', message: 'Binding task started successfully' };
-    } catch (err) {
-      throw new InternalServerErrorException(`Failed to handle binding: ${err.message}`);
-    }
+  async handleBindingBasedTasks() {
+    // const token = await this.tokenStore.get();
+    // if (!token) {
+    //   console.log('No token found for fetching bindings');
+    // }
+
+    // const headers = {
+    //   'Content-Type': 'application/json',
+    //   'Accept': 'application/json',
+    //   Authorization: `Bearer ${token}`,
+    // };
+    // const bindings = await axios.get(`${this.contractManagerUrl}/binding/get-company-binding/` + this.companyIfricId, { headers });
+    // fetch all bindings from IFX
+    // for each binding, check if the status is active, signed and doesnt have mongo details
+    // for those binding, create a mongo collection and update binding with mongo details
+    // Also create task related to those bindings which will be loaded and executed on each startup
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
-  async loadAndStartTasks() {
-    const taskList = await this.persistantModel.find();
-    console.log("Task list:", taskList);
-    for (const task of taskList) {
-      const taskId = task._id;
-      if (this.activeTasks.has(taskId)) continue;
+  // async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
+  //   try {
+  //     const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
+  //     console.log("Contract data for : " + contractId, contract.data);
+  //     const payload: CreatePersistantTaskDto = {
+  //       producerId,
+  //       bindingId,
+  //       assetId,
+  //       contractId,
+  //       interval: contract.data[0].interval, // default interval
+  //       expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
+  //       dataType: contract.data[0].data_type, // default data type
+  //       assetProperties: contract.data[0].asset_properties
+  //     };
+  //     console.log("Payload for binding task:", payload);
+  //     const task = new this.persistantModel(payload as CreatePersistantTaskDto);
+  //     await task.save();
+  //     await this.loadAndStartTasks()
+  //     return { status: 'success', message: 'Binding task started successfully' };
+  //   } catch (err) {
+  //     throw new InternalServerErrorException(`Failed to handle binding: ${err.message}`);
+  //   }
+  // }
 
-      const intervalS = task.interval;
-      const expiry = new Date(task.expiry);
+  // @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
+  // async loadAndStartTasks() {
+  //   const taskList = await this.persistantModel.find();
+  //   console.log("Task list:", taskList);
+  //   for (const task of taskList) {
+  //     const taskId = task._id;
+  //     if (this.activeTasks.has(taskId)) continue;
 
-      const timer = setInterval(async () => {
-        if (Date.now() >= expiry.getTime()) {
-          clearInterval(timer);
-          this.activeTasks.delete(taskId);
-          return;
-        }
+  //     const intervalS = task.interval;
+  //     const expiry = new Date(task.expiry);
 
-        await this.processTask(task);
-      }, intervalS * 1000);
+  //     const timer = setInterval(async () => {
+  //       if (Date.now() >= expiry.getTime()) {
+  //         clearInterval(timer);
+  //         this.activeTasks.delete(taskId);
+  //         return;
+  //       }
 
-      this.activeTasks.set(taskId, timer);
-    }
-  }
+  //       await this.processTask(task);
+  //     }, intervalS * 1000);
+
+  //     this.activeTasks.set(taskId, timer);
+  //   }
+  // }
 
 
   // extractMetadataFromParam(obj: Record<string, any>, param: string): Record<string, any> {
@@ -307,7 +326,7 @@ export class BindingService implements OnModuleInit {
 
     try {
       await axios.post(
-        this.ifxConnectorUrl + "/producer/publish-data-to-dataroom",
+        this.connectorUrl + "/producer/publish-data-to-dataroom",
         payload
       );
     } catch (error) {

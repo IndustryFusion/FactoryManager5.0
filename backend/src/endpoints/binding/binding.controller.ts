@@ -12,10 +12,10 @@ export class BindingController {
     return this.bindingService.create(createBindingDto);
   }
 
-  @Post('start-publish')
-  async startBindingTask(
-    @Body() body: { producerId: string; bindingId: string; assetId: string, contractId: string },
-  ) {
-    return this.bindingService.handleBinding(body.producerId, body.bindingId, body.assetId, body.contractId);
-  }
+  // @Post('start-publish')
+  // async startBindingTask(
+  //   @Body() body: { producerId: string; bindingId: string; assetId: string, contractId: string },
+  // ) {
+  //   return this.bindingService.handleBinding(body.producerId, body.bindingId, body.assetId, body.contractId);
+  // }
 }

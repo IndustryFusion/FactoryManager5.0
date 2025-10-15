@@ -21,9 +21,11 @@ import { PgRestService } from './pgrest.service';
 import { RedisService } from '../redis/redis.service';
 import { AssetService } from '../asset/asset.service';
 import { Server } from 'socket.io'; // Import Server type
+import { AssetModule } from '../asset/asset.module';
 
 @Module({
-  providers: [PgRestGateway, PgRestService,RedisService, AssetService ],
+  imports: [AssetModule],
+  providers: [PgRestGateway, PgRestService,RedisService ],
   exports: [PgRestGateway], 
 })
 export class PgRestGatewayModule {}

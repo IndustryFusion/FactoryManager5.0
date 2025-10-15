@@ -75,6 +75,10 @@ import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema
 import { FactoryPdtCache, FactoryPdtCacheSchema } from './endpoints/schemas/factory-pdt-cache.schema';
 import { FactoryPdtCacheController } from './endpoints/factory-pdt-cache/factory-pdt-cache.controller';
 import { FactoryPdtCacheService } from './endpoints/factory-pdt-cache/factory-pdt-cache.service';
+import { FlinkDeployController } from './endpoints/flink-deploy/flink-deploy.controller';
+import { FlinkDeployService } from './endpoints/flink-deploy/flink-deploy.service';
+import { AssetModule } from './endpoints/asset/asset.module';
+import { FlinkJob, FlinkJobSchema } from './endpoints/schemas/flink-job.schema';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -89,14 +93,16 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
       { name: 'PersistantTask', schema: PersistantTaskSchema },
-      { name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema }
+      { name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema },
+      { name: FlinkJob.name, schema: FlinkJobSchema }
     ]),
     MongooseModule.forFeature([
       { name: Onboarding.name, schema: OnboardingSchema },
     ], 'factory'), // use the named connection (DB2)
     ScheduleModule.forRoot(),
     HttpModule,
-    PgRestGatewayModule
+    PgRestGatewayModule,
+    AssetModule
   ],
   controllers: [
     AppController,
@@ -121,7 +127,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CertificateController,
     ContractController,
     BindingController,
-    FactoryPdtCacheController
+    FactoryPdtCacheController,
+    FlinkDeployController
   ],
   providers: [
     AppService,
@@ -129,7 +136,6 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     AlertsService,
     PgRestService,
     TemplatesService,
-    AssetService,
     AuthService,
     FactorySiteService,
     ShopFloorAssetsService,
@@ -151,7 +157,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CertificateService,
     ContractService,
     BindingService,
-    FactoryPdtCacheService
+    FactoryPdtCacheService,
+    FlinkDeployService
   ]
 })
 export class AppModule {
