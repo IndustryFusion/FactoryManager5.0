@@ -9,6 +9,7 @@ import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
 import { Coming_Soon } from "next/font/google";
+import { useTranslation } from "next-i18next";
 
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
@@ -21,7 +22,8 @@ function Sidebar() {
   const [companyId, setCompanyId] = useState("ID");
   const toast = useRef<Toast>(null);
   const [userImage, setUserImage] = useState("/avatar.svg");
-  const [laoding, setLoading] = useState(false)
+  const [laoding, setLoading] = useState(false);
+  const {t} = useTranslation("navigation")
 
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
@@ -127,35 +129,35 @@ function Sidebar() {
             <Button
               className={`sidebar_navlink ${router.pathname === "/dashboard" ? "is_active" : ""}`}
               onClick={() => handleRoute("dashboard")}
-              tooltip={!sidebarOpen ? "Dashboard" : undefined}
+              tooltip={!sidebarOpen ? t("sidebar.dashboard") : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
               <Image src="/dashboard-circle.svg" width={18} height={18} alt="dashboard_icon" />
-              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Dashboard</div>
+              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.dashboard")}</div>
             </Button>
 
-            <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>My Factory</div>
+            <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.my_factory")}</div>
 
             <Button
               className={`sidebar_navlink ${router.pathname === "/asset-management" ? "is_active" : ""}`}
               onClick={() => handleRoute("asset-management")}
-              tooltip={!sidebarOpen ? "Factory Assets" : undefined}
+              tooltip={!sidebarOpen ? t("sidebar.factory_assets") : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
               <Image src="/3d-printer.svg" width={18} height={18} alt="asset_icon" />
-              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Assets</div>
+              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.assets")}</div>
             </Button>
 
             <div>
               <Button
                 className={`sidebar_navlink ${router.pathname === "/" ? "is_active" : ""}`}
                 onClick={() => { }}
-                tooltip={!sidebarOpen ? "Production Lines" : "Coming soon"}
+                tooltip={!sidebarOpen ? t("sidebar.production_lines") : t("sidebar.coming_soon")}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
                 <Image src="/Component 1.svg" width={18} height={18} alt="line_icon" />
                 <div className={`sidebar_navlink_text_cs ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
-                  Production Lines
+                  {t("sidebar.production_lines")}
                 </div>
               </Button>
             </div>
@@ -163,11 +165,11 @@ function Sidebar() {
             <Button
               className={`sidebar_navlink ${router.pathname === "/factory-site/factory-overview" ? "is_active" : ""}`}
               onClick={() => handleRoute("factory-site/factory-overview")}
-              tooltip={!sidebarOpen ? "Factory Sites" : undefined}
+              tooltip={!sidebarOpen ? t("sidebar.factory_sites") : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
               <Image src="/warehouse.svg" width={18} height={18} alt="factory_icon" />
-              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Factory Sites</div>
+              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.factory_sites")}</div>
             </Button>
 
             {/* <div className={`link_group_title ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Management</div>
@@ -223,11 +225,11 @@ function Sidebar() {
             <Button
               className={`sidebar_navlink ${router.pathname === "/factory-site/dashboard" ? "is_active" : ""}`}
               onClick={() => handleRoute("factory-site/dashboard")}
-              tooltip={!sidebarOpen ? "Data Viewer" : undefined}
+              tooltip={!sidebarOpen ? t("sidebar.data_viewer") : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
               <Image src="/sidebar/data_viewer_icon.svg" width={18} height={18} alt="data_icon" />
-              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>Data Viewer</div>
+              <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.data_viewer")}</div>
             </Button>
 
             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -235,12 +237,12 @@ function Sidebar() {
                 <Button
                   className={`sidebar_navlink ${router.pathname === "" ? "is_active" : ""}`}
                   onClick={() => { }}
-                  tooltip={!sidebarOpen ? "Reports" : "Coming soon"}
+                  tooltip={!sidebarOpen ? t("sidebar.reports") : t("sidebar.coming_soon")}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
                   <Image src="/reports-grey.svg" width={18} height={18} alt="report_icon" />
                   <div className={`sidebar_navlink_text_cs ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
-                    Reports
+                    {t("sidebar.reports")}
                   </div>
                 </Button>
               </div>
@@ -249,7 +251,7 @@ function Sidebar() {
                 <Button
                   className={`sidebar_navlink is_active`}
                   onClick={() => { handleXanaRoute() }}
-                  tooltip={!sidebarOpen ? "Xana AI" : "Test Version"}
+                  tooltip={!sidebarOpen ? "Xana AI" : t("sidebar.test_version")}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
                   <Image src="/xana.svg" width={18} height={18} alt="xana_icon" />
@@ -262,14 +264,20 @@ function Sidebar() {
 
           </div>
           <div className="sidebar_bottom_section">
-            <div className="sidebar_profile_section">
-              <img
-                src={userImage}
-                alt="user_avatar"
-                width={36}
-                height={36}
-                className="sidebar_profile_avatar"
-              />
+            <div className={`sidebar_profile_section ${sidebarOpen ? "" : "collapsed"}`}>
+              <div className="user_profile_avatar">
+                {userImage === "/avatar.svg" ? (
+                  <div style={{width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--black)", color: "white", fontWeight: "500", fontSize: "18px",paddingTop: "2px", display: "grid", placeItems: "center"}}>{userName.charAt(0).toUpperCase()}</div>
+                ) : (
+                  <img
+                    src={userImage}
+                    alt="user_avatar"
+                    width={36}
+                    height={36}
+                    className="sidebar_profile_avatar"
+                  />
+                )}
+              </div>
               <div className="sidebar_profile_info">
                 <div className="sidebar_profile_name">{companyName}</div>
                 <div className="sidebar_profile_company">{userName}</div>

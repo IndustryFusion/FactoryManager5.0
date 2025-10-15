@@ -73,8 +73,9 @@ body {
 
 .sidebar_content {
   padding: 20px 15px;
-  height: calc(100vh - 86px);
+  height: calc(100vh - 103px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar_link_wrapper {
@@ -481,6 +482,27 @@ line-height: normal;
   margin-top: 24px;
   cursor: pointer;
   gap: 10px;
+}
+
+.sidebar_profile_info, .sidebar_profile_dropdown_icon{
+  transition: opacity 200ms ease;
+  transition-behavior: accept-discrete;
+}
+
+.sidebar_profile_section.collapsed .sidebar_profile_info, .sidebar_profile_section.collapsed .sidebar_profile_dropdown_icon{
+  display: none;
+  opacity: 0%;
+}
+
+.sidebar_profile_section.collapsed{
+  padding: 2px;
+  border-radius: 100px;
+  width: fit-content;
+  align-items: center;
+}
+.sidebar_profile_section.collapsed .user_profile_avatar{
+  height: 36px;
+  width: 36px;
 }
 
 .sidebar_profile_avatar {

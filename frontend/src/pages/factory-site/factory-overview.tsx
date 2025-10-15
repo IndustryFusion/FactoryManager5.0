@@ -44,7 +44,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const FactoryOverview = () => {
   const router = useRouter();
-  const { t } = useTranslation(['overview', 'placeholder']);
+  const { t } = useTranslation(['overview', 'placeholder', 'factory-overview']);
   const [factorySite, setFactorySite] = useState<Factory[]>([]);
   const [sortKey, setSortKey] = useState(null);
   const [sortOrder, setSortOrder] = useState<0 | 1 | -1 | null>(null);
@@ -257,7 +257,7 @@ const FactoryOverview = () => {
           src="/add-square.svg"
           style={{ width: "29px", height: "29px" }}
         />
-        <p className="create-card-text">Create Factory Site</p>
+        <p className="create-card-text">{t("factory-overview:create_factory_site")}</p>
       </div>
     </div>
   );
@@ -266,12 +266,12 @@ const FactoryOverview = () => {
 
     const menuItems = [
       {
-        label: 'View',
+        label: t("factory-overview:view"),
         icon: 'pi pi-eye',
         command: () => router.push(`/factory-site/factory-management/${data.id}`)
       },
       {
-        label: 'Edit',
+        label: t("factory-overview:edit"),
         icon: 'pi pi-pencil',
         command: () => {
           setEditFactory(data.id);
@@ -279,7 +279,7 @@ const FactoryOverview = () => {
         }
       },
       {
-        label: 'Delete',
+        label: t("factory-overview:delete"),
         icon: 'pi pi-trash',
         command: () => confirmDeleteFactory(data)
       }
@@ -337,18 +337,18 @@ const FactoryOverview = () => {
           <div className="card-details">
             <div className="detail-item">
               <p className="detail-number">{data.assets || 0}</p>
-              <p className="detail-label">Assets</p>
+              <p className="detail-label">{t("factory-overview:assets")}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "5px", alignItems: "flex-start" }}>
               <div className="detail-item icon-detail">
                 <img src="/floor-plan.svg" className="detail-icon" alt="Floor Plan" />
                 <p className="detail-number small">{data.areas || 0}</p>
-                <p className="detail-label">Areas</p>
+                <p className="detail-label">{t("factory-overview:areas")}</p>
               </div>
               <div className="detail-item icon-detail">
                 <img src="/workflow-square-03.svg" className="detail-icon" />
                 <p className="detail-number small">{data.production_lines || 0}</p>
-                <p className="detail-label">Production Lines</p>
+                <p className="detail-label">{t("factory-overview:production_lines")}</p>
               </div>
             </div>
           </div>
@@ -363,7 +363,7 @@ const FactoryOverview = () => {
       <Sidebar />
       <div className='main_content_wrapper'>
         <div className='navbar_wrapper'>
-          <Navbar navHeader="Factory Site" />
+          <Navbar navHeader={t("factory-overview:factory_site")} />
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
@@ -374,23 +374,23 @@ const FactoryOverview = () => {
 
                 <div className="flex align-items-center gap-4">
                   <p className="total-assets-text m-1">
-                    <span className="highlighted-number-one">{factorySite.length}</span> {t("Factory Site")}
+                    <span className="highlighted-number-one">{factorySite.length}</span> {t("factory-overview:factory_site")}
                   </p>
                   <div>
                     <TabView className="asset-tabs">
-                      <TabPanel header={t("overview:Active")}></TabPanel>
+                      <TabPanel header={t("factory-overview:active")}></TabPanel>
                     </TabView>
                   </div>
                 </div>
                 <div className="flex justify-content-end" style={{ gap: "10px" }}>
                   <Button
-                    label={t("+ Create Factory")}
+                    label={`+ ${t("factory-overview:create_factory")}`}
                     className="factory-btn"
                     onClick={() => setVisible(true)}
                   />
                   <div>
                     <Button
-                      label={t("Import Assets")}
+                      label={t("factory-overview:import_assets")}
                       className="factory-btn-white"
                       onClick={handleImportClick}
                     />
@@ -462,7 +462,9 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'overview',
         'placeholder',
         'dashboard',
-        'button'
+        'button',
+        'navigation',
+        'factory-overview'
       ])),
     },
   }

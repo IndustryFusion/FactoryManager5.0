@@ -22,6 +22,7 @@ import { Button } from "primereact/button";
 import AlertDetails from "./alert-details";
 import { Asset } from "@/types/asset-types";
 import Image from "next/image";
+import { useTranslation } from "next-i18next";
 interface Alerts {
   text: string;
   resource: string;
@@ -35,7 +36,8 @@ const Alerts = () => {
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
-  const [assetData, setAssetData] = useState<any>([])
+  const [assetData, setAssetData] = useState<any>([]);
+  const { t } = useTranslation(["navigation"]);
 
   // Function to map backend data to asset state
   const mapBackendDataToAssetState = (backendData: Asset) => {
@@ -126,7 +128,7 @@ const Alerts = () => {
             setIsAlert(true);
             setVisible(true)
           }}
-          tooltip="Alerts"
+          tooltip={t("navbar.alerts")}
           tooltipOptions={{ position: 'bottom' }}
           // style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
         />

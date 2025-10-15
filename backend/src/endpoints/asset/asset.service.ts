@@ -23,9 +23,16 @@ import { Request } from 'express';
 import { CompactEncrypt } from 'jose';
 import { createHash } from 'crypto';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AssetService {
+  constructor(
+    @InjectModel(FactoryPdtCache.name)
+    private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
+  ){}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   private readonly context = process.env.CONTEXT;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
@@ -278,28 +285,58 @@ export class AssetService {
         'Accept': 'application/json',
         'Authorization': `Bearer ${this.mask(encryptedToken, process.env.MASK_SECRET)}`
       };
+      
+      const [scorpioDataResponse, cacheDataResponse] = await Promise.all([
+        axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: ifxHeaders}),
+        axios.get(`${this.ifxurl}/company/get-asset-and-purchaced-pdt-cache/${company_ifric_id}`,{headers: ifxHeaders})
+      ]);
 
-      const response = await axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`,{headers: ifxHeaders});
-      
-      for(let i = 0; i < response.data.length; i++) {
-        const assetId = response.data[i].id;
-        try {
-          await axios.get(`${this.scorpioUrl}/${assetId}`, {headers});
-        } catch(err) {
-          if(err.response.status === 404) {
-            await axios.post(this.scorpioUrl, response.data[i], {headers});
+      const batchSize = 50;
+      const scorpioUpdatedAssetIds = [], cacheUpdatedAssetIds = [];
+
+      for (let i = 0; i < scorpioDataResponse.data.length; i += batchSize) {
+        const batch = scorpioDataResponse.data.slice(i, i + batchSize);
+        const promises = batch.map(async (asset: any) => {
+          const assetId = asset.id;
+          try {
+            await axios.get(`${this.scorpioUrl}/${assetId}`, { headers });
+          } catch (err) {
+            if (err.response?.status === 404) {
+              await axios.post(this.scorpioUrl, asset, { headers });
+              scorpioUpdatedAssetIds.push(assetId);
+            }
+          } finally {
+            const exists = await this.factoryPdtCacheModel.exists({ id: assetId });
+            if (!exists && cacheDataResponse.data[assetId]) {
+              const { _id, ...newCacheData } = cacheDataResponse.data[assetId];
+              await this.factoryPdtCacheModel.create(newCacheData);
+              cacheUpdatedAssetIds.push(assetId);
+            }
           }
-          continue;
-        }
+        });
+
+        await Promise.allSettled(promises); 
       }
-      
+
+      // Patch updates isScorpioUpdated and isCacheUpdated in ifx together at end
+      await Promise.all([
+        axios.patch(`${this.ifxurl}/company/update-is-scorpio-updated/${company_ifric_id}`, scorpioUpdatedAssetIds, { headers: ifxHeaders }),
+        axios.patch(`${this.ifxurl}/company/update-is-cache-updated/${company_ifric_id}`, cacheUpdatedAssetIds, { headers: ifxHeaders }),
+      ]);
+
       return {
         success: true,
         status: 201,
-        message: 'Scorpio Updated',
+        message: 'Scorpio and cache updated successfully',
       };
     } catch(err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 

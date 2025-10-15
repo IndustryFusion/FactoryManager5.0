@@ -10,13 +10,7 @@ import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import { useRouter } from "next/router";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-
-const getGreetings = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-};
+import { useTranslation } from "next-i18next";
 
 interface CompanyDetails {
     data?: Array<{
@@ -74,6 +68,15 @@ const DashboardPage: React.FC = () => {
 
         fetchUserData();
     }, []);
+
+    const {t} = useTranslation("dashboard");
+
+    const getGreetings = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t("good_morning");
+    if (hour < 18) return t("good_afternoon");
+    return t("good_evening");
+};
 
     const truncateCompanyId = (id: string): string => {
         if (!id || id.length < 20) return id;
@@ -145,7 +148,7 @@ const DashboardPage: React.FC = () => {
                                     {getGreetings()}, {userName} 👋
                                 </div>
                                 <div className="header-subtitle-greet">
-                                    Factory Manager is your home-base for all your Machines and Assets
+                                {t("dashboard_subheader")}
                                 </div>
                             </div>
                             <div
@@ -184,10 +187,10 @@ const DashboardPage: React.FC = () => {
                         <div className="dashboard-content-grid">
                             <div className="bar-chart-card">
                                 <div className="card-header">
-                                    <span className="card-title">Asset Activity</span>
+                                    <span className="card-title">{t("asset_activity")}</span>
                                     <div className="tab-buttons">
-                                        <button className="tab-button active">10-Day</button>
-                                        <button className="tab-button">Intra-Day</button>
+                                        <button className="tab-button active">{t("chart_btn_1")}</button>
+                                        <button className="tab-button">{t("chart_btn_2")}</button>
                                     </div>
                                 </div>
                                 <StackedPercentageBarChart />
@@ -195,8 +198,8 @@ const DashboardPage: React.FC = () => {
 
                             <div className="notification-card">
                                 <div className="card-header">
-                                    <span className="card-title">Today's Notifications</span>
-                                    <a href="#" className="view-all">View all Notifications →</a>
+                                    <span className="card-title">{t("todays_notification")}</span>
+                                    <a href="#" className="view-all">{t("all_notifications")}{" "}→</a>
                                 </div>
                                 <ul className="notification-list">
                                     {/* Notification Items */}
@@ -248,8 +251,8 @@ const DashboardPage: React.FC = () => {
                             >
                                 <img src="/3d-printer-icon.svg" className="img-smallcard" alt="Monitor Assets" />
                                 <div className="small-card-section">
-                                    <div className="small-card-title">Monitor</div>
-                                    <div className="small-card-name">Assets</div>
+                                    <div className="small-card-title">{t("card_sub_1")}</div>
+                                    <div className="small-card-name">{t("card_title_1")}</div>
                                 </div>
                             </div>
 
@@ -260,8 +263,8 @@ const DashboardPage: React.FC = () => {
                             >
                                 <img src="/workspace.svg" className="img-smallcard" alt="Monitor Production Line" />
                                 <div className="small-card-section">
-                                    <div className="small-card-title">Monitor</div>
-                                    <div className="small-card-name">Production Lines</div>
+                                    <div className="small-card-title">{t("card_sub_1")}</div>
+                                    <div className="small-card-name">{t("card_title_2")}</div>
                                 </div>
                             </div>
 
@@ -271,7 +274,7 @@ const DashboardPage: React.FC = () => {
                                 style={{ padding: "0px", cursor: "pointer" }}
                             >
                                 <img src="/factory-site-map.svg" alt="Manage Factory Sites" style={{ maxWidth: "100%" }} />
-                                <div className="small-card-name" style={{ paddingLeft: "10px" }}>Factory Sites</div>
+                                <div className="small-card-name" style={{ paddingLeft: "10px" }}>{t("card_title_3")}</div>
                             </div>
 
                             <div
@@ -281,8 +284,8 @@ const DashboardPage: React.FC = () => {
                             >
                                 <img src="/analytics-icon.svg" className="img-smallcard" alt="Get Reports" />
                                 <div className="small-card-section">
-                                    <div className="small-card-title">View</div>
-                                    <div className="small-card-name">Reports</div>
+                                    <div className="small-card-title">{t("card_sub_2")}</div>
+                                    <div className="small-card-name">{t("card_title_4")}</div>
                                 </div>
                             </div>
                         </div>
@@ -293,11 +296,10 @@ const DashboardPage: React.FC = () => {
                             <div className="xana-content">
                                 <img src="/ai-magic.svg" width={60} height={60} alt="AI Magic Icon" />
                                 <div>
-                                    <h1 className="xana-heading">What’s going on in your factory? Ask Xana.</h1>
-                                    <p className="xana-subheading">Your intelligent assistant for smarter decisions.</p>
+                                    <h1 className="xana-heading">{t("xana_banner.title")}</h1>
+                                    <p className="xana-subheading">{t("xana_banner.sub")}</p>
                                     <p className="xana-subheading-section">
-                                        Why is my cutting line underperforming?, How can I reduce idle time on Station 4?
-                                        <br /> Xana helps you get answers.
+                                        {t("xana_banner.description")}
                                     </p>
                                 </div>
                             </div>
@@ -307,7 +309,7 @@ const DashboardPage: React.FC = () => {
                                     onClick={handleXanaOpen}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    <span><img style={{ width: "24px", height: "24px", paddingTop: "3px" }} src="/ai-audio.svg" /></span>Ask Xana AI
+                                    <span><img style={{ width: "24px", height: "24px", paddingTop: "3px" }} src="/ai-audio.svg" /></span>{t("xana_banner.cta")}
                                 </button>
                             </div>
                         </div>
@@ -325,7 +327,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
                 'overview',
                 'placeholder',
                 'dashboard',
-                'button'
+                'button',
+                'navigation'
             ])),
         },
     }

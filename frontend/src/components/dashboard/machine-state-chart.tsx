@@ -845,7 +845,7 @@ const MachineStateChart = () => {
     return (
         <div className="data_viewer_card">
             <Toast ref={toast} />
-            <h3 className="dashboard_card_title">Machine State Overview</h3>
+            <h3 className="dashboard_card_title">{t("machine_chart_title")}</h3>
             <div className="interval-filter-container">
                 <p className="mb-2">{t('filterInterval')}</p>
                 <div className="flex flex-column align-items-start w-full">
@@ -859,7 +859,7 @@ const MachineStateChart = () => {
                                 value: interval,
                             }))}
                             onChange={(e) => setSelectedInterval(e.value)}
-                            placeholder="Select an Interval"
+                            placeholder={t("select_interval")}
                             panelClassName="global_dropdown_panel"
                             appendTo="self"
                             style={{ textTransform: 'capitalize' }}

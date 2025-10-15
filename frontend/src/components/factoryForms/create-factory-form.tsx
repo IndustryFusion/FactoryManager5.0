@@ -68,7 +68,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
     const [validateFactory, setValidateFactory] = useState(false);
     const [validateThumbnail, setValidateThumbnail] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false)
-    const { t } = useTranslation('button');
+    const { t } = useTranslation(['button', 'factory-overview']);
 
     const options = useMemo(() => {
         return countryList().getData().map(country => ({
@@ -335,7 +335,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                             />
                         )}
                         {key === "factory_name" && validateFactory &&
-                            <p className="input-invalid-text" >Factory Name is required</p>}
+                            <p className="input-invalid-text" >{t("factory-overview:factory_name_required")}</p>}
                     </div>
                 )}
                 {property.type === "object" && (
@@ -400,7 +400,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     const header=()=>{
         return(
-            <h2 className="form-title">Create Factory</h2>
+            <h2 className="form-title">{t("factory-overview:create_factory")}</h2>
         )
     }
 

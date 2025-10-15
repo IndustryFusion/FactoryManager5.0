@@ -250,7 +250,7 @@ const DashboardCards: React.FC = () => {
                         </div>
                         <div className="flex flex-column gap-1">
                             <div className="dashboard-card-text">{t('machineState')}</div>
-                            <div className="dashboard-card-value">{machineStateValue == "2" ? "Online" : "Offline"}</div>
+                            <div className="dashboard-card-value">{machineStateValue == "2" ? t("online") : t("offline")}</div>
                         </div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@ const DashboardCards: React.FC = () => {
                         </div>
                         <div className="flex flex-column gap-1">
                             <div className="dashboard-card-text">{t('relations')}</div>
-                            <div className="dashboard-card-value">{childCount.toString().padStart(3, '0')} <span>Child</span></div>
+                            <div className="dashboard-card-value">{childCount.toString().padStart(3, '0')} <span>{t("child")}</span></div>
                         </div>
                     </div>
                     {relations &&
@@ -326,7 +326,7 @@ const DashboardCards: React.FC = () => {
                         </div>
                         <div className="flex flex-column gap-1">
                             <div className="dashboard-card-text">{t('notifications')}</div>
-                            <div className="dashboard-card-value">{notificationData?.length} <span>Unread</span></div>
+                            <div className="dashboard-card-value">{notificationData?.length} <span>{t("unread")}</span></div>
                         </div>
                     </div>
                     {notification &&

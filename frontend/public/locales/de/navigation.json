@@ -1,0 +1,37 @@
+{
+    "navbar": {
+        "dashboard": "Dashboard",
+        "enable_guide": "Hilfemodus aktivieren",
+        "asset_management": "Anlagenverwaltung",
+        "switch_language": "Sprache wechseln",
+        "alerts": "Warnmeldungen",
+        "notifications": "Benachrichtigungen",
+        "all_notifications": "Alle Benachrichtigungen anzeigen",
+        "no_notifications": "Keine Benachrichtigungen",
+        "logout": "Abmelden",
+        "products": "Produkte",
+        "breadcrumb": {
+            "factory_flow": "Fabrikablauf",
+            "binding_request": "Bindungsanfrage",
+            "binding_manager": "Bindungsmanager",
+            "contract_manager": "Vertragsmanager",
+            "factory_site": "Fabrikstandort",
+            "data_viewer": "Datenanzeige",
+            "asset_management": "Anlagenverwaltung",
+            "certificate": "Zertifikat"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "my_factory": "Meine Fabrik",
+        "assets": "Anlagen",
+        "factory_assets": "Fabrik­anlagen",
+        "production_lines": "Produktionslinien",
+        "factory_sites": "Fabrikstandorte",
+        "analytics": "Analysen",
+        "data_viewer": "Datenanzeige",
+        "reports": "Berichte",
+        "coming_soon": "Demnächst verfügbar",
+        "test_version": "Testversion"
+    }
+}

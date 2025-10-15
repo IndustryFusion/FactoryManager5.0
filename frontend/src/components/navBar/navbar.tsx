@@ -42,7 +42,7 @@ type BreadcrumbItem = {
 
 const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
   const userInfo = useSelector((state: RootState) => state.factoryUserSlice);
-  const { t } = useTranslation(["overview", "placeholder"]);
+  const { t } = useTranslation(["navigation"]);
   const [profileDetail, setProfileDetail] = useState(false);
   const router = useRouter();
   const [userData, setUserData] = useState<UserData>(userInfo);
@@ -161,7 +161,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     if (fullPath.startsWith('/factory-site/factory-shopfloor/urn:ngsi-ld:factories')) {
       return [
         { 
-          label: "Factory Flow", 
+          label: t("navbar.breadcrumb.factory_flow"), 
           url: `/factory-site/factory-management/${currentUrnId}`
         },
         createLastItem("Pick List")
@@ -171,7 +171,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     if(fullPath.startsWith('/binding/create')){
     return[
       { 
-        label: "Binding Request", 
+        label: t("navbar.breadcrumb.binding_request"), 
         url: "/binding-request"
       },
       createLastItem("Create Binding")
@@ -181,7 +181,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     if(fullPath.startsWith('/binding/')){
       return[
         { 
-          label: "Binding Manager", 
+          label: t("navbar.breadcrumb.binding_manager"), 
           url: "/binding-manager"
         },
         createLastItem("Binding")
@@ -190,7 +190,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       if(fullPath.startsWith('/contract/')){
         return[
           { 
-            label: "Contract Manager", 
+            label: t("navbar.breadcrumb.contract_manager"), 
             url: "/contract-manager"
           },
           createLastItem("Contract")
@@ -199,36 +199,36 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     // Route-specific breadcrumbs
     const routeBreadcrumbs: Record<string, BreadcrumbItem[]> = {
       "/factory-site/factory-overview": [
-        { label: "Factory site", url: "/factory-overview" }
+        { label: t("navbar.breadcrumb.factory_site"), url: "/factory-overview" }
       ], // No breadcrumb for this route
       "/factory-site/factory-management/urn:ngsi-ld:factories": [
-        { label: "Factory Flow", url: "#" }
+        { label: t("navbar.breadcrumb.factory_flow"), url: "#" }
       ],
       "/factory-site/dashboard": [
-        { label: "Data Viewer", }
+        { label: t("navbar.breadcrumb.data_viewer"), }
       ],
       "/asset-management": [
-        { label: "Asset Management", url: "#" }
+        { label: t("navbar.breadcrumb.asset_management"), url: "#" }
       ],
       "/certificates": [
-        { label: "Certificate", url: "#" }
+        { label: t("navbar.breadcrumb.certificate"), url: "#" }
       ],
       "/contract-manager": [
-        { label: "Contract Manager", url: "#" }
+        { label: t("navbar.breadcrumb.contract_manager"), url: "#" }
       ],
       "/add-contract": [
-        { label: "Contract Manager", url: "/contract-manager" },
+        { label: t("navbar.breadcrumb.contract_manager"), url: "/contract-manager" },
         createLastItem("Add Contract")
       ],
        "/binding-manager": [
-        { label: "Binding Manager", url: "#" }
+        { label: t("navbar.breadcrumb.binding_manager"), url: "#" }
       ],
       "/create-binding": [
-        { label: "Binding Manager", url: "/binding-manager" },
+        { label: t("navbar.breadcrumb.binding_manager"), url: "/binding-manager" },
         createLastItem("Create Binding")
       ],
       "/binding-request": [
-        { label: "Binding Request", url: "#" }
+        { label: t("navbar.breadcrumb.binding_request"), url: "#" }
       ]
 
     };
@@ -296,14 +296,14 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
             icon={<Image src="/navbar/dashboard_icon.svg" width={20} height={20} alt="Dashboard Icon"/>}
             onClick={() => router.push("/factory-site/dashboard")}
             className="nav_icon_button"
-            tooltip="Dashboard"
+            tooltip={t("navbar.dashboard")}
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
           <Button
             icon={<Image src="/navbar/tour_icon.svg" width={20} height={20} alt="Dashboard Icon"/>}
             className="nav_icon_button"
-            tooltip="Enable Guide Mode"
+            tooltip={t("navbar.enable_guide")}
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
@@ -311,7 +311,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
             icon={<Image src="/navbar/asset_icon.svg" width={20} height={20} alt="Asset Management Icon"/>}
             onClick={() => router.push("/asset-management")}
             className="nav_icon_button"
-            tooltip="Asset Management"
+            tooltip={t("navbar.asset_management")}
             tooltipOptions={{ position: 'bottom' }}
             style={{ color: '#6c757d' }}
           />
@@ -321,7 +321,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
                     onMouseLeave={() => setDropdownVisible(false)}>
                     <div className="nav_localization_widget">
                         <Button className="nav_icon_button" onClick={() => setDropdownVisible(!dropdownVisible)}
-                            tooltip={!dropdownVisible ? "Switch Language" : undefined}
+                            tooltip={!dropdownVisible ? t("navbar.switch_language") : undefined}
                             tooltipOptions={{ event: 'hover', position: 'bottom', className: 'navbar_tooltip' }}
                             icon={<Image src="/navbar/globe_icon.svg" width={20} height={20} alt="Globe Icon"/>}
                         >

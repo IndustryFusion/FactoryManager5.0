@@ -13,6 +13,16 @@ import '@/styles/asset-management/asset-management-page.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
 import { RootState } from '@/redux/store';
+import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
+
+interface ImportResponseData {
+  modelpassedCount: number;
+  productPassedCount: number;
+  modelFailedCount?: number;
+  productFailedCount?: number;
+  modelFailedLogs: Record<string, string>;
+  productFailedLogs: Record<string, Record<string, string>>;
+}
 
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
@@ -21,6 +31,9 @@ const AssetManagementPage = () => {
   const { assets } = useSelector((state: RootState) => state.assetManagement);
   const { t } = useTranslation(['common', 'button', 'overview']);
   const [dataInitialized, setDataInitialized] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [importResponseData, setImportResponseData] = useState<ImportResponseData | null>(null);
+
 
   useEffect(() => {
     const initializeData = async () => {
@@ -44,6 +57,28 @@ const AssetManagementPage = () => {
     dispatch(setActiveTabIndex(e.index));
   };
 
+  const handleDialogOpen = () => setDialogVisible(true);
+  // const handleDialogClose = () => setDialogVisible(false);
+
+  const handleSyncPdt = async (): Promise<ImportResponseData> => {
+    const response: ImportResponseData = {
+      modelpassedCount: 5,
+      productPassedCount: 50,
+      modelFailedCount: 1,
+      productFailedCount: 2,
+      modelFailedLogs: { "Model X": "Failed due to missing fields" },
+      productFailedLogs: {
+        "Product A": { "Product 123": "Error in configuration" },
+        "Product B": { "Product 456": "Invalid data format" },
+      },
+    };
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setImportResponseData(response);
+    return response;
+  };
+
+
+
   return (
     <div className="flex">
       <Sidebar selectedItem="Assets" />
@@ -62,11 +97,21 @@ const AssetManagementPage = () => {
                   </p>
                   <div>
                     <TabView activeIndex={activeIndex} onTabChange={handleTabChange} className="asset-tabs">
-                      <TabPanel header={t("Asset Table")}></TabPanel>
-                      <TabPanel header={t("Allocated Assets")}></TabPanel>
+                      <TabPanel header={t("overview:asset_table")}></TabPanel>
+                      <TabPanel header={t("overview:allocated_assets")}></TabPanel>
                     </TabView>
                   </div>
                 </div>
+                <div>
+                  <button
+                    className="asset-btn-white"
+                    onClick={() => { handleDialogOpen(); }}
+                  >
+                    {t('Sync PDT')}
+                    <img src="/download_icon.svg" alt="plus icon" width={20} height={20} />
+                  </button>
+                </div>
+
               </div>
             </div>
           </div>
@@ -82,30 +127,30 @@ const AssetManagementPage = () => {
                 borderRadius: 8,
                 border: "2px solid #F2F4F7",
                 background: "#FFF",
-                paddingLeft:"12px"
+                paddingLeft: "12px"
               }}
             >
               <img src="/search_icon.svg" alt="Search" className="search-icon" />
-              <input type="text" placeholder="Search" className="search-input" />
+              <input type="text" placeholder={t("overview:search")} className="search-input" />
             </div>
           </div>
 
           <div className="toolbar-right">
             <div className="toolbar-item">
               <img src="/Sort.svg" alt="Filter" className="search-img-container" />
-              <span>Filter</span>
+              <span>{t("overview:filter")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/filter.svg" alt="Sort" />
-              <span>Sort</span>
+              <span>{t("overview:sort")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/Group.svg" alt="Group" />
-              <span>Group</span>
+              <span>{t("overview:group")}</span>
             </div>
             <div className="toolbar-item">
               <img src="/manage-column.svg" alt="Manage Columns" />
-              <span>Manage Columns</span>
+              <span>{t("overview:manage_columns")}</span>
             </div>
           </div>
         </div>
@@ -115,6 +160,11 @@ const AssetManagementPage = () => {
         {activeIndex === 1 && <AllocatedAsset />}
 
         {/* <Footer /> */}
+        <SyncPdtDialog
+          visible={dialogVisible}
+          setVisible={setDialogVisible}
+          onSync={handleSyncPdt}
+        />
       </div>
     </div>
   );
@@ -128,7 +178,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'overview',
         'placeholder',
         'dashboard',
-        'button'
+        'button',
+        'navigation'
       ])),
     },
   }

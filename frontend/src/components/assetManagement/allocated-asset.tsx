@@ -23,7 +23,7 @@ const AllocatedAsset = () => {
   });
   
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const { t } = useTranslation(['placeholder', 'reactflow']);
+  const { t } = useTranslation(['placeholder', 'reactflow', 'overview']);
   const toast = useRef<Toast>(null);
 
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,10 +37,10 @@ const AllocatedAsset = () => {
   const headerGroup = (
     <ColumnGroup>
       <Row>
-        <Column header="Factory" />
-        <Column header="Assets" />
-        <Column header="Area" />
-        <Column header="Factory Site" />
+        <Column header={t("overview:factory")} />
+        <Column header={t("overview:Assets")} />
+        <Column header={t("overview:area")} />
+        <Column header={t("overview:factory_site")} />
       </Row>
     </ColumnGroup>
   );
