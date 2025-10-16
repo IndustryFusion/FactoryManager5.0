@@ -191,12 +191,12 @@ const AssetManagement: React.FC = () => {
                 <Dropdown
                   value={options.value}
                   options={[
-                    { label: '10 Records per Page', value: 10 },
-                    { label: '20 Records per Page', value: 20 },
-                    { label: '30 Records per Page', value: 30 },
-                    { label: '40 Records per Page', value: 40 },
-                    { label: '50 Records per Page', value: 50 },
-                    { label: '100 Records per Page', value: 100 },
+                    { label: `10 ${t("records_per_page")}`, value: 10 },
+                    { label: `20 ${t("records_per_page")}`, value: 20 },
+                    { label: `30 ${t("records_per_page")}`, value: 30 },
+                    { label: `40 ${t("records_per_page")}`, value: 40 },
+                    { label: `50 ${t("records_per_page")}`, value: 50 },
+                    { label: `100 ${t("records_per_page")}`, value: 100 },
                   ]}
                   onChange={options.onChange}
                   className="custom-dropdown"

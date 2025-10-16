@@ -33,5 +33,8 @@
         "reports": "Reports",
         "coming_soon": "Coming Soon",
         "test_version": "Test Version"
+    },
+    "xana_fab": {
+        "ask_xana": "Ask Xana AI"
     }
 }

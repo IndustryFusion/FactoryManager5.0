@@ -72,5 +72,9 @@
     "no_chart_data": "Keine Diagrammdaten verfügbar",
     "co2_chart_title": "Stromverbrauch und CO₂-Emissionen",
     "select_sub_interval": "Unterintervall auswählen",
-    "machine_chart_title": "Maschinenstatus Übersicht"
+    "machine_chart_title": "Maschinenstatus Übersicht",
+    "live": "Live",
+    "custom": "Benutzerdefiniert",
+    "min": "Min",
+    "hour": "Std"
 }

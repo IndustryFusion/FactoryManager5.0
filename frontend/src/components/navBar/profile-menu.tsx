@@ -141,7 +141,7 @@ export default function ProfileMenu() {
                         </div>
                         <div className='menu_modal_email'>{userData?.user_email}</div>
                         <div className="profile_menu_divider"></div>
-                        <div className='menu_title'>Products</div>
+                        <div className='menu_title'>{t("navbar.products")}</div>
                         <div className="profile_menu_products">
                             {userData?.products.map(product => (
                                 <div className='profile_menu_product_chip' key={product.product_id}>{product.product_name}</div>

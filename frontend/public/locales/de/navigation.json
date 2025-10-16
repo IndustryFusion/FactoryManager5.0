@@ -33,5 +33,8 @@
         "reports": "Berichte",
         "coming_soon": "Demnächst verfügbar",
         "test_version": "Testversion"
+    },
+    "xana_fab": {
+        "ask_xana": "Fragen Sie Xana KI"
     }
 }

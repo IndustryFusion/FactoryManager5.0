@@ -124,12 +124,12 @@ const CombineSensorChart: React.FC = () => {
   const { selectedAssetData } = useDashboard();
   const op = useRef<OverlayPanel>(null);
   const intervalButtons = [
-    { label: "Live", interval: "live" },
-    { label: "10 Min", interval: "10min" },
-    { label: "30 Min", interval: "30min" },
-    { label: "1 Hour", interval: "60min" },
-    { label: "3 Hour", interval: "3hour" },
-    { label: "Custom", interval: "custom" },
+    { label: t("dashboard:live"), interval: "live" },
+    { label: `10 ${t("dashboard:min")}`, interval: "10min" },
+    { label: `30 ${t("dashboard:min")}`, interval: "30min" },
+    { label: `1 ${t("dashboard:hour")}`, interval: "60min" },
+    { label: `3 ${t("dashboard:hour")}`, interval: "3hour" },
+    { label: t("dashboard:custom"), interval: "custom" },
   ];
   const colors = [
     {

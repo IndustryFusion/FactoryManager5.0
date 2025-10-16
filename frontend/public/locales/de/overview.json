@@ -21,5 +21,22 @@
     "factory_site": "Fabrikstandort",
     "no_assets": "Keine Anlagen gefunden",
     "display": "Anzeige",
-    "factory": "Fabrik"
+    "factory": "Fabrik",
+    "records_per_page": "Einträge pro Seite",
+    "sync_dialog": {
+        "dialog_title": "Produktdaten synchronisieren",
+        "message": "Sie sind dabei, <strong>{{modelCount}}</strong> Produktmodelle und <strong>{{productCount}}</strong> Produkte zu synchronisieren.",
+        "product_models": "Produktmodelle",
+        "continue_text": "Sobald Ihre Produktdaten importiert sind, können Sie sie verwenden, um Process Data Twins zu erstellen. Möchten Sie fortfahren?",
+        "importing": "Importiere...",
+        "import_finished": "Import abgeschlossen",
+        "syncing_models": "Ihre Produktmodelle werden synchronisiert.<br/>Bitte warten Sie einen Moment.",
+        "product_model": "Produktmodell",
+        "products": "Produkte",
+        "errors": "Fehler",
+        "model_errors": "Fehler bei Produktmodellen",
+        "product_errors": "Produktfehler",
+        "hide": "Details ausblenden",
+        "show": "Details anzeigen"
+    }
 }
