@@ -107,7 +107,7 @@ const AssetManagementPage = () => {
                     className="asset-btn-white"
                     onClick={() => { handleDialogOpen(); }}
                   >
-                    {t('Sync PDT')}
+                    {t('overview:sync_pdt')}
                     <img src="/download_icon.svg" alt="plus icon" width={20} height={20} />
                   </button>
                 </div>

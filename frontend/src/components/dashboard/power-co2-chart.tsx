@@ -77,12 +77,12 @@ const PowerCo2Chart = () => {
   let reduxId = useSelector((state: RootState) => state.powerConsumption.id);
 
   const intervalButtons = [
-    { label: "Days", interval: "days" },
-    { label: "Weeks", interval: "weeks" },
-    { label: "Months", interval: "months" }
+    { label: t("dashboard:days"), interval: "days" },
+    { label: t("dashboard:weeks"), interval: "weeks" },
+    { label: t("dashboard:months"), interval: "months" }
   ];
   const weekSubIntervalButtons = [
-    { label: 'Months', interval: 'months' },
+    { label: t("dashboard:months"), interval: 'months' },
     { label: 'All', interval: 'all' },
     { label: 'Time', interval: 'time' }
   ];

@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import "@/styles/sync-dialog.css";
+import { useTranslation } from "next-i18next";
 
 interface Product {
   product_name: string;
@@ -20,11 +21,12 @@ const ExpandableProduct: React.FC<ExpandableProductProps> = ({
   const displayedProducts = expanded ? products : products.slice(0, 5);
 
   const toggleExpand = () => setExpanded((prev) => !prev);
+  const {t} = useTranslation("overview")
 
   return (
     <div className="expandable-serials-block">
       <div className="serials-header">
-        <div>Selected Products</div>
+        <div>{t("selected_products")}</div>
       </div>
 
       <div className="serials-list">
@@ -37,7 +39,7 @@ const ExpandableProduct: React.FC<ExpandableProductProps> = ({
 
       {products.length > 5 && (
         <div className="expand-toggle" onClick={toggleExpand}>
-          {expanded ? "Hide" : `+5 more`}
+          {expanded ? t("hide") : `+5 ${t("more")}`}
         </div>
       )}
     </div>

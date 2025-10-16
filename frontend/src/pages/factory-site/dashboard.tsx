@@ -55,7 +55,7 @@ const Dashboard = () => {
   const [prefixedAssetProperty, setPrefixedAssetProperty]= useState<PrefixedAssetProperty[]>([]);
   const router = useRouter();
   const toast = useRef<Toast>(null);
-  const { t } = useTranslation('button');
+  const { t } = useTranslation(['button', 'dashboard']);
   const [showSelector, setShowSelector] = useState<boolean>(true);
   const [currentTab, setCurrentTab] = useState("data-viewer");
 
@@ -89,7 +89,7 @@ const Dashboard = () => {
           <Sidebar />
         <div className='main_content_wrapper'>
           <div className="navbar_wrapper">
-            <Navbar navHeader="Data Viewer" />
+            <Navbar navHeader={t("dashboard:data_viewer")} />
           </div>
           <div className="data_viewer_wrapper" style={{position: 'relative'}}>
           <DashboardAssets 

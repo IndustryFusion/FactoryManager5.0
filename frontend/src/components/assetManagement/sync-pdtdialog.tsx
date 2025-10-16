@@ -121,7 +121,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             icon={() => (
               <img src="/cancel-circle.svg" width={16} height={16} alt="Cancel" />
             )}
-            label="Cancel"
+            label={t("cancel")}
             onClick={handleClose}
           />
           <Button
@@ -129,7 +129,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             icon={() => (
               <img src="/save_icon.svg" width={16} height={16} alt="Save" />
             )}
-            label="Start Sync"
+            label={t("start_sync")}
             onClick={handleStartSync}
           />
         </>
@@ -140,7 +140,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             icon={() => (
               <img src="/cancel-circle.svg" width={16} height={16} alt="Cancel" />
             )}
-            label="View Sync Logs"
+            label={t("view_logs")}
             onClick={() => setShowLog(true)}
             disabled={processedCount < productCount}
           />
@@ -149,7 +149,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             icon={() => (
               <img src="/save_icon.svg" width={16} height={16} alt="Save" />
             )}
-            label="Done"
+            label={t("done")}
             onClick={handleClose}
             disabled={processedCount < productCount}
           />
@@ -173,13 +173,8 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
       {step === 1 ? (
         <div className="flex flex-column gap-3">
           <div>
-            You’re about to sync{" "}
-            <strong className="blue_text_highlight">{modelCount}</strong>{" "}
-            product models and{" "}
-            <strong className="blue_text_highlight">{productCount}</strong>{" "}
-            products.
             <Trans
-              i18nKey="sync_dialog.message"
+              i18nKey="overview:sync_dialog.message"
               values={{ modelCount, productCount }}
               components={{ strong: <strong className="blue_text_highlight" /> }}
             />

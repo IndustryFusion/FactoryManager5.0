@@ -96,9 +96,9 @@ const MachineStateChart = () => {
     const dispatch = useDispatch();
     const { t } = useTranslation('dashboard');
     const intervalButtons = [
-        { label: "days", interval: "days" },
-        { label: "weeks", interval: "weeks" },
-        { label: "months", interval: "months" }
+        { label: t("days"), interval: "days" },
+        { label: t("weeks"), interval: "weeks" },
+        { label: t("months"), interval: "months" }
     ];
 
     const fetchDataAndAssign = async () => {

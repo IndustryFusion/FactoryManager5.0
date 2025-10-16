@@ -76,5 +76,10 @@
     "live": "Live",
     "custom": "Custom",
     "min": "Min",
-    "hour": "Hour"
+    "hour": "Hour",
+    "days": "Days",
+    "weeks": "Weeks",
+    "data_viewer": "Data Viewer",
+    "running": "Running",
+    "connections": "Connections"
 }

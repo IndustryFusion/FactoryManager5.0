@@ -290,7 +290,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                       <div className="flex flex-column gap-1">
                         <div className="selected_product_title">{selectedRow.product_name}</div>
                         <div className="selected_product_room_name">{getProductType(selectedRow.type)}</div>
-                        <div className="selected_product_status_text">{machineStateValue === "2" ? "Running " : "Offline"}<span className="time_span">{runningSince}</span></div>
+                        <div className="selected_product_status_text">{machineStateValue === "2" ? t("dashboard:running") : t("dashboard:offline")}<span className="time_span">{runningSince}</span></div>
                       </div>
                     </div>
                     <div className="selected_product_actions">
@@ -300,11 +300,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                       <div className="flex gap-3" style={{paddingRight: "70px", minWidth: "110px"}}>
                         <div className="flex align-items-center gap-2">
                           <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
-                          <p>{`${notificationData.length} Notifications`}</p>
+                          <p>{`${notificationData.length} ${t("dashboard:notifications")}`}</p>
                         </div>
                         <div className="flex align-items-center gap-2">
                           <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
-                          <p>{`${relationsCount} Connections`}</p>
+                          <p>{`${relationsCount} ${t("dashboard:connections")}`}</p>
                         </div>
                       </div>
                     </div>
