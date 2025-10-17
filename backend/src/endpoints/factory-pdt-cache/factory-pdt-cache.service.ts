@@ -21,33 +21,7 @@ export class FactoryPdtCacheService {
 
   async findAll(company_ifric_id: string) {
     try {
-      const ifxHeaders = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-      const response = await axios.get(`${this.ifxPlatformUrl}/purchased-pdt-cache/${company_ifric_id}`, {headers: ifxHeaders});
-      const purchasedPdtData = response.data;
-      const bulkOps = purchasedPdtData.map((asset: CreateFactoryPdtCacheDto) => {
-        delete asset._id;
-        return {
-          updateOne: {
-            filter: { asset_serial_number: asset.asset_serial_number },
-            update: {
-              $setOnInsert: {
-                ...asset,
-                meta_data: {
-                  created_at: new Date(),
-                  created_by: "purchased",
-                },
-              },
-            },
-            upsert: true, 
-          },
-        }
-      });
-        
-      await this.factoryPdtCacheModel.bulkWrite(bulkOps);
-      return purchasedPdtData;
+      return await this.factoryPdtCacheModel.find({company_ifric_id}).sort({_id: -1, "meta_data.created_at": -1});
     } catch(err) {
       if (err instanceof HttpException) {
         throw err;
