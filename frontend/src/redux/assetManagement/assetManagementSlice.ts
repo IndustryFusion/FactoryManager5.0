@@ -38,7 +38,7 @@ export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string
       if (!accessGroup?.company_ifric_id) {
         throw new Error('Company IFRIC ID not found');
       }
-      // await setFactoryOwnerAssets(accessGroup.company_ifric_id);
+      await setFactoryOwnerAssets(accessGroup.company_ifric_id);
       const response = await fetchAssetManagement();
       if (!response || !Array.isArray(response)) {
         throw new Error('Invalid response from server');
