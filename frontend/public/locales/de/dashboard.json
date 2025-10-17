@@ -76,5 +76,10 @@
     "live": "Live",
     "custom": "Benutzerdefiniert",
     "min": "Min",
-    "hour": "Std"
+    "hour": "Std",
+    "days": "Tage",
+    "weeks": "Wochen",
+    "data_viewer": "Datenanzeige",
+    "running": "Läuft",
+    "connections": "Verbindungen"
 }
