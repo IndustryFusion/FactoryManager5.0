@@ -179,7 +179,7 @@ const AssetManagement: React.FC = () => {
           onSelectionChange={(e) => dispatch(setSelectedAssets(e.value as Asset[]))}
           scrollable
           onRowClick={(asset) => asset?  router.push(`/factory-site/dashboard?asset=${asset.data.product_name}`) : undefined}
-          scrollHeight="calc(100vh - 230px)"
+          scrollHeight="calc(100vh - 240px)"
           onContextMenu={(e) => cm.current?.show(e.originalEvent)}
           contextMenuSelection={selectedProduct as any}
           onContextMenuSelectionChange={(e) => setSelectedProduct(e.value as any)}
