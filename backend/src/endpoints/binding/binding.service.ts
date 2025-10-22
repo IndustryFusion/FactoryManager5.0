@@ -1,25 +1,17 @@
 import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { CreateBindingDto } from './dto/create-binding.dto';
-import { UpdateBindingDto } from './dto/update-binding.dto';
 import axios from 'axios';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreatePersistantTaskDto } from './dto/persistant-task.dto';
 import { AssetService } from '../asset/asset.service';
 import { TokenService } from '../session/token.service';
 import { AlertsService } from '../alerts/alerts.service';
-import { PgRestController } from '../pgrest/pgrest.controller';
 import { PgRestService } from '../pgrest/pgrest.service';
 
 export interface PostAssetDataInput {
   producerId: string;
   bindingId: string;
-  assetId: string;
-  assetType: string;
-  dataType: 'live' | 'alerts';
-  attribute: string;
-  values: ValueEntry[];
+  data: CombinedPayload[];
 }
 
 export interface ValueEntry {
@@ -50,12 +42,23 @@ interface AlertaEntry {
   lastReceiveTime: string;
 }
 
+interface CombinedPayload {
+  assetId: string;                          // ISO time aligned to interval
+  data: {
+    metadata?: Record<string, unknown>;
+    static?: Record<string, unknown>;      // per attribute -> list of values in window
+    live?: any;        // per attribute -> list of values in window
+    alerts?: any;
+  };
+}
+
 
 @Injectable()
 export class BindingService {
   private readonly contractManagerUrl = process.env.CONTRACT_MANAGER_BACKEND_URL || "";
   private readonly connectorUrl = process.env.IFX_CONNECTOR_BACKEND_URL || "";
-  private readonly companyIfricId = process.env.COMPANY_IFRIC_ID || 'urn:ifric:ifx-eur-com-nap-cccae0b9-7af6-5629-a683-f423f8fb3664';
+  private readonly companyIfricId = process.env.COMPANY_IFRIC_ID || 'urn:ifric:ifx-eur-com-nap-7f2f4f32-bbb4-5595-a73c-c3b1315744f2';
+  private readonly ifxurl = process.env.IFX_PLATFORM_BACKEND_URL;
   private activeTasks = new Map<string, NodeJS.Timeout>();
   constructor(
     @InjectModel('PersistantTask') private readonly persistantModel: Model<any>,
@@ -65,9 +68,15 @@ export class BindingService {
     private readonly pgrestService: PgRestService
   ) { }
 
-  // async onModuleInit() {
-  //   await this.handleBindingBasedTasks(); // run once at startup
-  // }
+  mask(input: string, key: string): string {
+    return input.split('').map((char, i) =>
+      (char.charCodeAt(0) ^ key.charCodeAt(i % key.length)).toString(16).padStart(2, '0')
+    ).join('');
+  }
+
+  async onModuleInit() {
+    await this.handleBindingBasedTasks(); // run once at startup
+  }
 
   async create(data: CreateBindingDto) {
     try {
@@ -78,226 +87,191 @@ export class BindingService {
     }
   }
 
+  // @Cron(CronExpression.EVERY_10_MINUTES)
   async handleBindingBasedTasks() {
-    // const token = await this.tokenStore.get();
-    // if (!token) {
-    //   console.log('No token found for fetching bindings');
-    // }
 
-    // const headers = {
-    //   'Content-Type': 'application/json',
-    //   'Accept': 'application/json',
-    //   Authorization: `Bearer ${token}`,
-    // };
-    // const bindings = await axios.get(`${this.contractManagerUrl}/binding/get-company-binding/` + this.companyIfricId, { headers });
-    // fetch all bindings from IFX
-    // for each binding, check if the status is active, signed and doesnt have mongo details
-    // for those binding, create a mongo collection and update binding with mongo details
-    // Also create task related to those bindings which will be loaded and executed on each startup
+    const bindingTasks = await axios.get(`${this.contractManagerUrl}/tasks/producer/` + this.companyIfricId);
+    for (const task of bindingTasks.data) {
+      // Process each binding task
+      if (!task.binding_mongo_url) {
+        for (const asset of task.assetId) {
+          const body = {
+            producerId: task.producerId,
+            bindingId: task.bindingId,
+            assetId: asset,
+            consumerId: task.consumerId,
+          };
+          const provisionResponse = await axios.post(`${this.connectorUrl}/producer/provision/`, body);
+          if (provisionResponse.data) {
+            // update binding with mongo details
+            const updateBody = {
+              binding_mongo_url: provisionResponse.data.mongoUrl,
+              binding_mongo_database: provisionResponse.data.database,
+              binding_mongo_collection: provisionResponse.data.collection,
+              binding_mongo_username: provisionResponse.data.username,
+              binding_mongo_password: provisionResponse.data.password,
+            };
+            const res = await axios.post(`${this.contractManagerUrl}/tasks/` + task._id, updateBody);
+            if (!res) {
+              console.error(`Failed to update binding task ${task._id} with provisioning details.`);
+            }
+          } else {
+            console.error(`Provisioning failed for binding ${task.bindingId} and asset ${asset}`);
+          }
+        }
+      }
+      await this.loadAndStartTasks(task);
+    }
   }
 
-  // async handleBinding(producerId: string, bindingId: string, assetId: string, contractId: string) {
-  //   try {
-  //     const contract = await axios.get(`${this.ifxUrl}/contract/` + contractId);
-  //     console.log("Contract data for : " + contractId, contract.data);
-  //     const payload: CreatePersistantTaskDto = {
-  //       producerId,
-  //       bindingId,
-  //       assetId,
-  //       contractId,
-  //       interval: contract.data[0].interval, // default interval
-  //       expiry: new Date(contract.data[0].contract_valid_till).toISOString(), // default expiry 1 hour from now
-  //       dataType: contract.data[0].data_type, // default data type
-  //       assetProperties: contract.data[0].asset_properties
-  //     };
-  //     console.log("Payload for binding task:", payload);
-  //     const task = new this.persistantModel(payload as CreatePersistantTaskDto);
-  //     await task.save();
-  //     await this.loadAndStartTasks()
-  //     return { status: 'success', message: 'Binding task started successfully' };
-  //   } catch (err) {
-  //     throw new InternalServerErrorException(`Failed to handle binding: ${err.message}`);
-  //   }
-  // }
+  async loadAndStartTasks(task: any) {
+    console.log("Task list:", task);
+    const taskId = task._id;
+    if (this.activeTasks.has(taskId)) return;
+    if (Date.now() >= new Date(task.expiry).getTime()) return;
 
-  // @Cron(CronExpression.EVERY_10_MINUTES) // optional: refresh tasks hourly
-  // async loadAndStartTasks() {
-  //   const taskList = await this.persistantModel.find();
-  //   console.log("Task list:", taskList);
-  //   for (const task of taskList) {
-  //     const taskId = task._id;
-  //     if (this.activeTasks.has(taskId)) continue;
+    const intervalS = task.interval;
+    const expiry = new Date(task.expiry);
 
-  //     const intervalS = task.interval;
-  //     const expiry = new Date(task.expiry);
+    // const timer = setInterval(async () => {
+    //   if (Date.now() >= expiry.getTime()) {
+    //     clearInterval(timer);
+    //     this.activeTasks.delete(taskId);
+    //     return;
+    //   }
 
-  //     const timer = setInterval(async () => {
-  //       if (Date.now() >= expiry.getTime()) {
-  //         clearInterval(timer);
-  //         this.activeTasks.delete(taskId);
-  //         return;
-  //       }
+    //   await this.processTask(task);
+    // }, 1000);
 
-  //       await this.processTask(task);
-  //     }, intervalS * 1000);
+    if (Date.now() >= expiry.getTime()) {
+      // clearInterval(timer);
+      this.activeTasks.delete(taskId);
+      return;
+    }
 
-  //     this.activeTasks.set(taskId, timer);
-  //   }
-  // }
+    await this.processTask(task);
+
+    // this.activeTasks.set(taskId, timer);
+  }
 
 
-  // extractMetadataFromParam(obj: Record<string, any>, param: string): Record<string, any> {
-  //   const result: Record<string, any> = {};
-  //   const paramObject = obj[param];
+  extractMetadataFromParam(obj: Record<string, any>, param: string): Record<string, any> {
+    const result: Record<string, any> = {};
+    const paramObject = obj[param];
 
-  //   if (!paramObject || typeof paramObject !== 'object') return result;
-  //   console.log("Extracting metadata from param:", paramObject);
-  //   for (const [key, value] of Object.entries(paramObject)) {
-  //     // Skip top-level "value" and "type"
-  //     if (key === 'value' || key === 'type') continue;
+    if (!paramObject || typeof paramObject !== 'object') return result;
+    console.log("Extracting metadata from param:", paramObject);
+    for (const [key, value] of Object.entries(paramObject)) {
+      // Skip top-level "value" and "type"
+      if (key === 'value' || key === 'type') continue;
 
-  //     // Check nested object validity
-  //     if (
-  //       typeof value === 'string'
-  //     ) {
-  //       result[key] = value;
-  //     }
-  //     else if (typeof value === 'object' && value !== null) {
-  //       // Check if the object has a "value" property
-  //       if ('value' in value) {
-  //         result[key] = value['value'];
-  //       }
-  //     }
-  //   }
-  //   console.log("Extracted metadata:", result);
-  //   return result;
-  // }
+      // Check nested object validity
+      if (
+        key == 'observedAt' &&
+        typeof value === 'string'
+      ) {
+        result[key] = value;
+      }
+    }
+    console.log("Extracted metadata:", result);
+    return result;
+  }
 
 
-  // extractSelectiveNonRealtimeValues(
-  //   obj: Record<string, any>,
-  //   allowedKeys: string[]
-  // ): Record<string, any> {
-  //   const result: Record<string, any> = {};
+  extractSelectiveNonRealtimeValues(
+    obj: Record<string, any>,
+    allowedKey: string
+  ): string | number | boolean | null {
 
-  //   for (const key of allowedKeys) {
-  //     const value = obj["https://industry-fusion.org/base/v0.1/" + key];
-  //     if (
-  //       value &&
-  //       typeof value === 'object' &&
-  //       value.type === 'Property' &&
-  //       'value' in value
-  //     ) {
-  //       const segment = value['https://industry-fusion.org/base/v0.1/segment']?.value;
-  //       if (segment !== 'realtime' && segment !== 'component') {
-  //         result["https://industry-fusion.org/base/v0.1/" + key] = value.value;
-  //       }
-  //     }
-  //   }
-  //   console.log("Extracted non-realtime values:", result);
-  //   return result;
-  // }
+    const value = obj["https://industry-fusion.org/base/v0.1/" + allowedKey];
+    if (
+      value &&
+      typeof value === 'object' &&
+      value.type === 'Property' &&
+      'value' in value
+    ) {
+      return value.value;
+    }
+    return null;
+  }
 
 
   async extractTimeSeriesValues(
     asset: any,
-    task: any,
     token: string,
-    allowedProperties: string[]
-  ): Promise<Record<string, ValueEntry[]>> {
+    key: string,
+    interval: number
+  ): Promise<ValueEntry[]> {
 
     const toStamp = new Date().toISOString();
-    const interval = task.interval || 60;
     const fromStamp = new Date(Date.now() - interval * 1000).toISOString();
-    const results: Record<string, ValueEntry[]> = {};
+    const results: ValueEntry[] = [];
 
-    for (const property of allowedProperties) {
-      const params = {
-        intervalType: "custom",
-        order: "observedAt.desc",
-        entityId: `eq.${task.assetId}`,
-        attributeId: `eq.https://industry-fusion.org/base/v0.1/${property}`,
-        observedAt: `gte.${fromStamp}&observedAt=lt.${toStamp}`,
-      };
+    const params = {
+      intervalType: "custom",
+      order: "observedAt.desc",
+      entityId: `eq.${asset['id']}`,
+      attributeId: `eq.https://industry-fusion.org/base/v0.1/${key}`,
+      observedAt: `gte.${fromStamp}&observedAt=lt.${toStamp}`,
+    };
 
-      const timeSeries = await this.pgrestService.findAll(token, params);
+    const timeSeries = await this.pgrestService.findAll(token, params, key);
 
-      const attributeId = `https://industry-fusion.org/base/v0.1/${property}`;
-      const assetProperty = asset[attributeId];
+    const attributeId = `https://industry-fusion.org/base/v0.1/${key}`;
+    const assetProperty = asset[attributeId];
 
-      if (!assetProperty || assetProperty.type !== 'Property') continue;
+    if (!assetProperty || assetProperty.type !== 'Property') return results;
 
-      // ✅ Metadata: Extract from asset JSON-LD (no need to parse @context)
-      const unit = assetProperty["https://industry-fusion.org/base/v0.1/unit"]?.value;
-      const segment = assetProperty["https://industry-fusion.org/base/v0.1/segment"]?.value;
+    // ✅ Metadata: Extract from asset JSON-LD (no need to parse @context)
+    const unit = assetProperty["https://industry-fusion.org/base/v0.1/unit"]?.value;
+    const segment = assetProperty["https://industry-fusion.org/base/v0.1/segment"]?.value;
 
-      // ✅ Filter PGRest timeseries entries for this attribute
-      const matchingEntries = timeSeries.filter(
-        (entry) => entry.attributeId === attributeId
-      );
+    // ✅ Filter PGRest timeseries entries for this attribute
+    const matchingEntries = timeSeries.filter(
+      (entry) => entry.attributeId === attributeId
+    );
 
-      // ✅ Transform into value objects
-      const values: ValueEntry[] = matchingEntries.map((entry) => ({
-        timestamp: entry.observedAt,
-        data: {
-          value: entry.value,
-          metadata: {
-            unit,
-            segment
-          }
-        }
-      }));
-
-      if (values.length > 0) {
-        results[attributeId] = values;
+    // ✅ Transform into value objects
+    const values: ValueEntry[] = matchingEntries.map((entry) => ({
+      timestamp: entry.observedAt,
+      data: {
+        value: entry
       }
+    }));
+
+    if (values.length > 0) {
+      return values;
     }
 
-    return results;
+    return values;
   }
 
   extractAlertValues(
-    asset: Record<string, any>,
     alertList: AlertaEntry[],
-    allowedProperties: string[]
+    key: string
   ): Record<string, ValueEntry[]> {
-    const result: Record<string, ValueEntry[]> = {};
+    const attributeId = `https://industry-fusion.org/base/v0.1/${key}`;
 
-    for (const property of allowedProperties) {
-      const attributeId = `https://industry-fusion.org/base/v0.1/${property}`;
-      const assetProperty = asset[attributeId];
+    // Match alerts where event contains the attribute URI
+    const matchingAlerts = Array.isArray(alertList) ? alertList.filter((alert) =>
+      alert.event?.includes(attributeId)
+    ) : [];
 
-      if (!assetProperty || assetProperty.type !== 'Property') continue;
-
-      const unit = assetProperty["https://industry-fusion.org/base/v0.1/unit"]?.value;
-      const segment = assetProperty["https://industry-fusion.org/base/v0.1/segment"]?.value;
-
-      // Match alerts where event contains the attribute URI
-    
-      const matchingAlerts = alertList.filter((alert) =>
-        alert.event?.includes(attributeId)
-      );
-
-      const values: ValueEntry[] = matchingAlerts.map((alert) => ({
-        timestamp: alert.lastReceiveTime,
-        data: {
-          severity: alert.severity,
-          message: alert.text,
-          status: alert.status,
-          alertType: alert.type,
-          metadata: {
-            unit,
-            segment
-          }
-        }
-      }));
-
-      if (values.length > 0) {
-        result[attributeId] = values;
+    const values: ValueEntry[] = matchingAlerts.map((alert) => ({
+      timestamp: alert.lastReceiveTime,
+      data: {
+        severity: alert.severity,
+        message: alert.text,
+        status: alert.status,
+        alertType: alert.type
       }
+    }));
+
+    if (values.length > 0) {
+      return { values };
     }
 
-    return result;
+    return {};
   }
 
 
@@ -305,34 +279,27 @@ export class BindingService {
     const {
       producerId,
       bindingId,
-      assetId,
-      dataType,
-      assetType,
-      attribute,
-      values
+      data
     } = input;
 
     const payload = {
       producerId,
       bindingId,
-      assetId,
-      dataType,
-      assetType,
-      attribute,
-      values
+      data
     };
 
     console.log("Payload for posting asset data:", payload);
 
     try {
-      await axios.post(
+      const response = await axios.post(
         this.connectorUrl + "/producer/publish-data-to-dataroom",
         payload
       );
+      return response.data;
     } catch (error) {
-      console.error(`Error posting data for ${attribute}:`, error);
+      console.error(`Error posting data for binding ${bindingId}:`, error);
       throw new InternalServerErrorException(
-        `Failed to post data for ${attribute}: ${error.message}`
+        `Failed to post data for binding ${bindingId}: ${error.message}`
       );
     }
   }
@@ -340,85 +307,102 @@ export class BindingService {
 
   private async processTask(task: any) {
     // Your actual data handling logic
-    console.log(`Running taask ${task.id}:`, task);
+    console.log(`Running task ${task.id}:`, task);
+    let taskSubmitData = [];
     const token = await this.tokenService.getToken();
-
-    // take interval form task and create two time stamps, to will be now, from will be interval before.
-    // call PGrest service with query params
-
-    for (const key of task.dataType) {
-      // if (key === 'metadata') {
-      //   for (const key1 of task.assetProperties) {
-      //     const metadata = this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
-      //     if (Object.keys(metadata).length === 0) continue;
-      //     this.postAssetData({
-      //       producerId: task.producerId,
-      //       bindingId: task.bindingId,
-      //       assetId: task.assetId,
-      //       assetType: asset["type"],
-      //       dataType: key,
-      //       attribute: "https://industry-fusion.org/base/v0.1/" + key1,
-      //       value: JSON.stringify(metadata)
-      //     });
-      //   }
-      // }
-
-      // if (key == 'static') {
-      //   const staticData = this.extractSelectiveNonRealtimeValues(asset, task.assetProperties);
-      //   if (Object.keys(staticData).length === 0) continue;
-      //   for (const key1 of task.assetProperties) {
-      //     if (staticData["https://industry-fusion.org/base/v0.1/" + key1] == undefined) continue;
-      //     this.postAssetData({
-      //       producerId: task.producerId,
-      //       bindingId: task.bindingId,
-      //       assetId: task.assetId,
-      //       assetType: asset["type"],
-      //       dataType: key,
-      //       attribute: "https://industry-fusion.org/base/v0.1/" + key1,
-      //       value: staticData["https://industry-fusion.org/base/v0.1/" + key1]
-      //     });
-      //   }
-      // }
-
-      if (key === 'live') {
-
-        const asset = await this.assetService.getAssetDataById(task.assetId, token);
-
-        const extractedValues = this.extractTimeSeriesValues(asset, task, token, task.assetProperties);
-
-        // if (Object.keys(live).length === 0) return;
-        for (const [key1, value] of Object.entries(extractedValues)) {
-          this.postAssetData({
-            producerId: task.producerId,
-            bindingId: task.bindingId,
-            assetId: task.assetId,
-            assetType: asset['type'],
-            dataType: 'live',
-            attribute: key1,
-            values: value
-          });
-        }
-      }
-
-      if (key == 'alerts') {
-        const alerts = await this.alertsService.findOne(task.assetId);
-        const asset = await this.assetService.getAssetDataById(task.assetId, token);
+    if (task.assetId.length !== 0) {
+      for (const id of task.assetId) {
+        let combinedPayload: CombinedPayload = {
+          assetId: id,
+          data: {}
+        };
+        const asset = await this.assetService.getAssetDataById(id, token);
         for (const key1 of task.assetProperties) {
-          const extractedValues = this.extractAlertValues(asset, alerts["alerts"], task.assetProperties);
-          // if (Object.keys(live).length === 0) return;
-
-          for (const [key1, value] of Object.entries(extractedValues)) {
-            this.postAssetData({
-              producerId: task.producerId,
-              bindingId: task.bindingId,
-              assetId: task.assetId,
-              assetType: asset['type'],
-              dataType: 'alerts',
-              attribute: key1,
-              values: value
-            });
+          for (const key of task.dataType) {
+            if (key === 'metadata') {
+              const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
+              if (Object.keys(metadata).length === 0) continue;
+              combinedPayload.data['metadata'] = { [key1]: metadata || {} };
+            }
+            if (key == 'static') {
+              const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
+              if (!staticData) continue;
+              combinedPayload.data['static'] = { [key1]: staticData || {} };
+            }
+            if (key == 'live') {
+              const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
+              if (Object.keys(liveData).length === 0) continue;
+              combinedPayload.data['live'] = liveData || {};
+            }
+            if (key == 'alerts') {
+              const alerts = await this.alertsService.findOne(id);
+              const alertData = this.extractAlertValues(alerts["alerts"], key1);
+              if (Object.keys(alertData).length === 0) continue;
+              combinedPayload.data['alerts'] = alertData.values || {};
+            }
           }
         }
+        taskSubmitData.push(combinedPayload);
+        const res = await this.postAssetData({
+          producerId: task.producerId,
+          bindingId: task.bindingId,
+          data: taskSubmitData
+        });
+        if (res) {
+          console.log("Data shared to producerId:", task.bindingId);
+        } else {
+          console.error(`Failed to post asset data for data sharing for asset`);
+        }
+      }
+    } else {
+      // call get company owner assets.
+      const token = await this.tokenService.getToken();
+      const companyAssets = await this.assetService.getAllAssets(token);
+      for (const item of companyAssets) {
+        let combinedPayload: CombinedPayload = {
+          assetId: item.id,
+          data: {}
+        };
+
+        const asset = await this.assetService.getAssetDataById(item.id, token);
+        for (const key1 of task.assetProperties) {
+          for (const key of task.dataType) {
+            if (key === 'metadata') {
+              const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
+              if (Object.keys(metadata).length === 0) continue;
+              combinedPayload.data['metadata'] = { [key1]: metadata || {} };
+            }
+            if (key == 'static') {
+              const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
+              if (!staticData) continue;
+              combinedPayload.data['static'] = { [key1]: staticData || {} };
+            }
+            if (key == 'live') {
+              const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
+              if (!liveData) continue;
+              combinedPayload.data['live'] = liveData || {};
+            }
+            if (key == 'alerts') {
+              const alerts = await this.alertsService.findOne(item.id);
+              const alertData = this.extractAlertValues(alerts["alerts"], key1);
+              if (Object.keys(alertData).length === 0) continue;
+              combinedPayload.data['alerts'] = alertData || {};
+            }
+          }
+        }
+        taskSubmitData.push(combinedPayload);
+      }
+
+      const res = this.postAssetData({
+        producerId: task.producerId,
+        bindingId: task.bindingId,
+        data: taskSubmitData
+      });
+
+      if (res) {
+        console.log("Data shared to producerId:", task.bindingId);
+      } else {
+        console.error(`Failed to post asset data for data sharing for asset`);
       }
     }
   }

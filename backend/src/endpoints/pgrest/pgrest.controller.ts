@@ -26,10 +26,10 @@ export class PgRestController {
   ) {}
 
   @Get()
-  async findAll(@Query() queryParams: any) {
+  async findAll(@Query() queryParams: any, key: string) {
     try{
       let token = await this.tokenService.getToken();
-      return this.pgRestService.findAll(token, queryParams);
+      return this.pgRestService.findAll(token, queryParams, key);
     } catch(err) {
       throw new NotFoundException("Error finding the details: " + err);
     }

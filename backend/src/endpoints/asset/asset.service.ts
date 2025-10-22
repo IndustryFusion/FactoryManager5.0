@@ -34,6 +34,7 @@ export class AssetService {
     private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
   ){}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
+  private readonly scorpioTypesUrl = process.env.SCORPIO_TYPES_URL;
   private readonly context = process.env.CONTEXT;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
   //private readonly pdtScorpioUrl = process.env.PDT_SCORPIO_URL;
@@ -167,6 +168,31 @@ export class AssetService {
       } else {
         throw new NotFoundException('asset not found');
       }
+    } catch (err) {
+      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+    }
+  }
+
+  async getAllAssets(token: string) {
+    try {
+      const headers = {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      };
+
+      let finalResult = [];
+      
+      const typesResponse = await axios.get(this.scorpioTypesUrl, {headers});
+      for (const type of typesResponse.data.typeList) {
+        const url = this.scorpioUrl + '/?type=' + type;
+        const response = await axios.get(url, {headers});
+        finalResult.push(...response.data);
+      }
+      if(finalResult.length < 0) {
+        throw new NotFoundException('No assets found');
+      }
+      return finalResult;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
     }
