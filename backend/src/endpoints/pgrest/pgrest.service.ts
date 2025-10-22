@@ -44,7 +44,7 @@ export class PgRestService {
     }
   }
 
-  async findAll(token, queryParams) {
+  async findAll(token, queryParams, key) {
 
     function parseObservedAt(observedAt) {
       const times = observedAt.split('&');
@@ -66,22 +66,22 @@ export class PgRestService {
 
     if (queryParams.intervalType) {
       switch (queryParams.intervalType) {
-        case "live":
-          // Set startTime to 7 minutes before the current time, rounded down to the nearest minute
-          startTime = endTime.clone().subtract(7, 'minutes');
-          break;
-        case "10min":
-          startTime = endTime.clone().subtract(70, 'minutes');
-          break;
-        case "30min":
-          startTime = endTime.clone().subtract(210, 'minutes');
-          break;
-        case "60min":
-          startTime = endTime.clone().subtract(420, 'minutes');
-          break;
-        case "3hour":
-          startTime = endTime.clone().subtract(1260, 'minutes');
-          break;
+        // case "live":
+        //   // Set startTime to 7 minutes before the current time, rounded down to the nearest minute
+        //   startTime = endTime.clone().subtract(7, 'minutes');
+        //   break;
+        // case "10min":
+        //   startTime = endTime.clone().subtract(70, 'minutes');
+        //   break;
+        // case "30min":
+        //   startTime = endTime.clone().subtract(210, 'minutes');
+        //   break;
+        // case "60min":
+        //   startTime = endTime.clone().subtract(420, 'minutes');
+        //   break;
+        // case "3hour":
+        //   startTime = endTime.clone().subtract(1260, 'minutes');
+        //   break;
 
         case "custom":
           const { startTime: customStart, endTime: customEnd } = parseObservedAt(queryParams.observedAt);
@@ -100,16 +100,10 @@ export class PgRestService {
     const endTimeFormatted = endTime.utc().format("YYYY-MM-DDTHH:mm:ss") + "-00:00";
     
     const assetId = queryParams.entityId.split("eq.").pop();
-    const assetData = await this.assetService.getAssetDataById(assetId, token);
-    
-    let actualKey = "";
-    let attributeKey = queryParams.attributeId.split("eq.").pop();
     
     // fetch actual key from asset data 
-    if(assetData) {
-      actualKey = Object.keys(assetData).find(key => key.endsWith('/' + attributeKey));
-      
-      const attributeId = `attributeId=eq.${actualKey}`;
+
+      const attributeId = `attributeId=eq.${"https://industry-fusion.org/base/v0.1/" + key}`;
       const entityId = `entityId=${queryParams.entityId}`;
       const observedAt = `observedAt=gte.${startTimeFormatted}&observedAt=lte.${endTimeFormatted}`;
       const order = `order=${queryParams.order}`;
@@ -120,18 +114,10 @@ export class PgRestService {
       
       try {
         const response = await axios.get(url, { headers });
-        await this.redisService.saveData("storedDataQueryParams", queryParams);
-        await this.redisService.saveData("storedData", null);
-
-        if (queryParams.intervalType == "live" ) {
-          // Store data in Redis only if the intervalType is 'live'
-          await this.redisService.saveData("storedData", response.data);
-          return response.data ;
-        }
-      return response.data ;
+        return response.data;
       } catch (err) {
         return [];
       }
-    }
+
   }
 }
