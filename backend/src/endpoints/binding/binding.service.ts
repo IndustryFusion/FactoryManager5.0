@@ -7,6 +7,7 @@ import { AssetService } from '../asset/asset.service';
 import { TokenService } from '../session/token.service';
 import { AlertsService } from '../alerts/alerts.service';
 import { PgRestService } from '../pgrest/pgrest.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 export interface PostAssetDataInput {
   producerId: string;
@@ -87,9 +88,8 @@ export class BindingService {
     }
   }
 
-  // @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleBindingBasedTasks() {
-
     const bindingTasks = await axios.get(`${this.contractManagerUrl}/tasks/producer/` + this.companyIfricId);
     for (const task of bindingTasks.data) {
       // Process each binding task
@@ -133,25 +133,16 @@ export class BindingService {
     const intervalS = task.interval;
     const expiry = new Date(task.expiry);
 
-    // const timer = setInterval(async () => {
-    //   if (Date.now() >= expiry.getTime()) {
-    //     clearInterval(timer);
-    //     this.activeTasks.delete(taskId);
-    //     return;
-    //   }
+    const timer = setInterval(async () => {
+      if (Date.now() >= expiry.getTime()) {
+        clearInterval(timer);
+        this.activeTasks.delete(taskId);
+        return;
+      }
+      await this.processTask(task);
+    }, intervalS * 1000);
 
-    //   await this.processTask(task);
-    // }, 1000);
-
-    if (Date.now() >= expiry.getTime()) {
-      // clearInterval(timer);
-      this.activeTasks.delete(taskId);
-      return;
-    }
-
-    await this.processTask(task);
-
-    // this.activeTasks.set(taskId, timer);
+    this.activeTasks.set(taskId, timer);
   }
 
 
