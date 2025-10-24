@@ -94,30 +94,27 @@ export class BindingService {
     for (const task of bindingTasks.data) {
       // Process each binding task
       if (!task.binding_mongo_url) {
-        for (const asset of task.assetId) {
-          const body = {
-            producerId: task.producerId,
-            bindingId: task.bindingId,
-            assetId: asset,
-            consumerId: task.consumerId,
+        const body = {
+          producerId: task.producerId,
+          bindingId: task.bindingId,
+          consumerId: task.consumerId,
+        };
+        const provisionResponse = await axios.post(`${this.connectorUrl}/producer/provision/`, body);
+        if (provisionResponse.data) {
+          // update binding with mongo details
+          const updateBody = {
+            binding_mongo_url: provisionResponse.data.mongoUrl,
+            binding_mongo_database: provisionResponse.data.database,
+            binding_mongo_collection: provisionResponse.data.collection,
+            binding_mongo_username: provisionResponse.data.username,
+            binding_mongo_password: provisionResponse.data.password,
           };
-          const provisionResponse = await axios.post(`${this.connectorUrl}/producer/provision/`, body);
-          if (provisionResponse.data) {
-            // update binding with mongo details
-            const updateBody = {
-              binding_mongo_url: provisionResponse.data.mongoUrl,
-              binding_mongo_database: provisionResponse.data.database,
-              binding_mongo_collection: provisionResponse.data.collection,
-              binding_mongo_username: provisionResponse.data.username,
-              binding_mongo_password: provisionResponse.data.password,
-            };
-            const res = await axios.post(`${this.contractManagerUrl}/tasks/` + task._id, updateBody);
-            if (!res) {
-              console.error(`Failed to update binding task ${task._id} with provisioning details.`);
-            }
-          } else {
-            console.error(`Provisioning failed for binding ${task.bindingId} and asset ${asset}`);
+          const res = await axios.post(`${this.contractManagerUrl}/tasks/` + task._id, updateBody);
+          if (!res) {
+            console.error(`Failed to update binding task ${task._id} with provisioning details.`);
           }
+        } else {
+          console.error(`Provisioning failed for binding ${task.bindingId}`);
         }
       }
       await this.loadAndStartTasks(task);
