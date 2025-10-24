@@ -36,7 +36,7 @@ export class PgRestService {
             .map(key => key + '=' + queryParams[key])
             .join('&');
 
-      const url = this.timescaleUrl + '/attributes?' + queryString;
+      const url = this.timescaleUrl + '?' + queryString;
       const response = await axios.get(url, {headers});
       return response.data;
     } catch(err) {
@@ -110,7 +110,7 @@ export class PgRestService {
       // const value = `value=neq.0`;
 
       const queryString = [entityId, attributeId, observedAt, order].join('&');
-      const url = `${this.timescaleUrl}/entityhistory?${queryString}`;
+      const url = `${this.timescaleUrl}?${queryString}`;
       
       try {
         const response = await axios.get(url, { headers });
