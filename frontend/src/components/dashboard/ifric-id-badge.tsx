@@ -8,6 +8,7 @@ import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
 import { OverlayPanel } from "primereact/overlaypanel";
 import { ContextMenu } from 'primereact/contextmenu';
 import { useRef, useState } from "react";
+import { useTranslation } from "next-i18next";
 
 interface IfricIdBadgeProps{
     ifricId: string;
@@ -19,6 +20,7 @@ export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboa
 
     const [showDropdown, setShowDropdown] = useState(false);
     const op = useRef<OverlayPanel>(null);
+    const {t} = useTranslation("dashboard")
 
     const trimIfricId = (id: string) => {
         if (!id) return null;
@@ -32,13 +34,13 @@ export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboa
 
     const menuModel = [
     {
-      label: "Oboard",
+      label: t("onboard"),
       command: () => {
         setShowBlocker(true);
       },
     },
     {
-      label: "Edit Onboard",
+      label: t("edit_onboard"),
       command: () => {
         editOnboardBodyTemplate();
        },

@@ -81,5 +81,7 @@
     "weeks": "Wochen",
     "data_viewer": "Datenanzeige",
     "running": "Läuft",
-    "connections": "Verbindungen"
+    "connections": "Verbindungen",
+    "no_results": "Keine Ergebnisse gefunden",
+    "edit_onboard": "Onboard bearbeiten"
 }
