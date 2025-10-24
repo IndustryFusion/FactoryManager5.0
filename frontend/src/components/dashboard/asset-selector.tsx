@@ -95,6 +95,7 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
       ) : (
         <Dropdown
           value={null}
+          emptyFilterMessage={t("no_results")}
           onChange={(e) => {
             handleSelect(e);
             setInputValue(''); 
