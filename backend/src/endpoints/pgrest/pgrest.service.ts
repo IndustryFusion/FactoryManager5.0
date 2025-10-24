@@ -36,7 +36,7 @@ export class PgRestService {
             .map(key => key + '=' + queryParams[key])
             .join('&');
 
-      const url = this.timescaleUrl + '/entityhistory?' + queryString;
+      const url = this.timescaleUrl + '/attributes?' + queryString;
       const response = await axios.get(url, {headers});
       return response.data;
     } catch(err) {
