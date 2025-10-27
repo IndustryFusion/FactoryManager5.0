@@ -49,7 +49,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
     const toast = useRef<Toast>(null);
-    const { t } = useTranslation('button');
+    const { t } = useTranslation(['button', 'dashboard']);
     const [validateInput, setValidateInput] = useState({
         ip_address: false,
         main_topic: false,
@@ -205,13 +205,13 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             <div className="finish-btn">
                 <Button
                     onClick={(e) => handleSubmit(e)}
-                    label={t('submit')} autoFocus />
+                    label={t('button:submit')} autoFocus />
             </div>
         </div>
     )
 
     const headerElement = (
-        <p className="m-0 ml-5"> Update Onboard Form</p>
+        <p className="m-0 ml-5">{t("dashboard:update_onboard_form")}</p>
     )
 
     return (
@@ -233,7 +233,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     <form >
                         <div className="p-fluid p-formgrid p-grid px-3">
                             <div className="field">
-                                <label htmlFor="ip_address" >IP Address</label>
+                                <label htmlFor="ip_address" >{t("dashboard:ip_address")}</label>
                                 <InputText
                                     id="ip_address"
                                     value={onboard.ip_address}
@@ -244,7 +244,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="main_topic" >Main Topic</label>
+                                <label htmlFor="main_topic" >{t("dashboard:main_topic")}</label>
                                 {onboard.protocol === "mqtt" ?
                                     <InputText
                                         id="main_topic"
@@ -265,7 +265,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 }
                             </div>
                             <div className="field">
-                                <label htmlFor="protocol" >Protocol</label>
+                                <label htmlFor="protocol" >{t("dashboard:protocol")}</label>
                                 <InputText
                                     id="protocol"
                                     value={onboard.protocol}
@@ -274,7 +274,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="app_config" >App Config</label>
+                                <label htmlFor="app_config" >{t("dashboard:app_config")}</label>
                                 <InputTextarea
                                     id="app_config"
                                     value={onboard.app_config}
@@ -285,7 +285,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="pod_name">Pod Name</label>
+                                <label htmlFor="pod_name">{t("dashboard:pod_name")}</label>
                                 <InputText
                                     id="pod_name"
                                     value={onboard.pod_name}
@@ -294,7 +294,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="pdt_mqtt_hostname">Pdt Mqtt Hostname</label>
+                                <label htmlFor="pdt_mqtt_hostname">Pdt Mqtt {t("dashboard:hostname")}</label>
                                 <InputText
                                     id="pdt_mqtt_hostname"
                                     value={onboard.pdt_mqtt_hostname}
@@ -305,7 +305,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="pdt_mqtt_port">Pdt Mqtt Port</label>
+                                <label htmlFor="pdt_mqtt_port">Pdt Mqtt {t("dashboard:port")}</label>
                                 <InputNumber
                                     id="pdt_mqtt_port"
                                     value={onboard.pdt_mqtt_port}
@@ -317,7 +317,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                             </div>
                             <div className="field my-4">
                                 <div className="flex gap-2">
-                                    <label htmlFor="secure_config">Secure Config</label>
+                                    <label htmlFor="secure_config">{t("dashboard:secure_config")}</label>
                                     <Checkbox
                                         checked={onboard.secure_config}
                                         onChange={(e) => handleInputChange(e.target.checked, "secure_config")}
@@ -326,7 +326,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 </div>
                             </div>
                             <div className="field">
-                                <label htmlFor="device_id">Device Id</label>
+                                <label htmlFor="device_id">{t("dashboard:device_id")}</label>
                                 <InputText
                                     id="device_id"
                                     value={onboard.device_id}
@@ -334,7 +334,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="gateway_id">Gateway Id</label>
+                                <label htmlFor="gateway_id">{t("dashboard:gateway_id")}</label>
                                 <InputText
                                     id="gateway_id"
                                     value={onboard.gateway_id}
@@ -342,7 +342,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="keycloak_url">KeyCloak Url</label>
+                                <label htmlFor="keycloak_url">{t("dashboard:keycloak_url")}</label>
                                 <InputText
                                     id="keycloak_url"
                                     value={onboard.keycloak_url}
@@ -352,7 +352,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="realm_password">Realm Password</label>
+                                <label htmlFor="realm_password">{t("dashboard:realm_password")}</label>
                                 <Password
                                     value={onboard.realm_password}
                                     toggleMask
@@ -361,7 +361,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="username_config">Username Config</label>
+                                <label htmlFor="username_config">{t("dashboard:username_config")}</label>
                                 <InputText
                                     id="username_config"
                                     value={onboard.username_config}
@@ -369,7 +369,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="password_config">Password Config</label>
+                                <label htmlFor="password_config">{t("dashboard:password_config")}</label>
                                 <InputText
                                     id="password_config"
                                     value={onboard.password_config}
@@ -377,7 +377,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="dataservice_image_config">Dataservice Image Config</label>
+                                <label htmlFor="dataservice_image_config">{t("dashboard:dataservice_image_config")}</label>
                                 <InputText
                                     id="dataservice_image_config"
                                     value={onboard.dataservice_image_config}
@@ -387,7 +387,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                             <div className="field">
-                                <label htmlFor="agentservice_image_config">Agentservice Image Config</label>
+                                <label htmlFor="agentservice_image_config">{t("dashboard:agentservice_image_config")}</label>
                                 <InputText
                                     id="agentservice_image_config"
                                     value={onboard.agentservice_image_config}
