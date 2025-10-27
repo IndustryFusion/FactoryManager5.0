@@ -17,6 +17,7 @@
 import { Body, Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import { AlertStatusDto } from './dto/alerta-status.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class AlertsService {
@@ -50,7 +51,13 @@ export class AlertsService {
       }
       
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if(err.response) {
+        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -65,7 +72,13 @@ export class AlertsService {
       const response = await axios.get(url, {headers});
       return response.data;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if(err.response) {
+        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -80,7 +93,13 @@ export class AlertsService {
       const response = await axios.put(url, data, {headers});
       return response.data;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if(err.response) {
+        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

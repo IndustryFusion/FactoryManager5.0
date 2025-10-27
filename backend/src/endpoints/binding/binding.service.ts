@@ -294,104 +294,125 @@ export class BindingService {
 
 
   private async processTask(task: any) {
-    // Your actual data handling logic
-    console.log(`Running task ${task.id}:`, task);
-    let taskSubmitData = [];
-    const token = await this.tokenService.getToken();
-    if (task.assetId.length !== 0) {
-      for (const id of task.assetId) {
-        let combinedPayload: CombinedPayload = {
-          assetId: id,
-          data: {}
-        };
-        const asset = await this.assetService.getAssetDataById(id, token);
-        for (const key1 of task.assetProperties) {
-          for (const key of task.dataType) {
-            if (key === 'metadata') {
-              const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
-              if (Object.keys(metadata).length === 0) continue;
-              combinedPayload.data['metadata'] = { [key1]: metadata || {} };
+    try {
+      // Your actual data handling logic
+      console.log(`Running task ${task.id}:`, task);
+      let taskSubmitData = [];
+      const token = await this.tokenService.getToken();
+      if (task.assetId.length !== 0) {
+        for (const id of task.assetId) {
+          try {
+            let combinedPayload: CombinedPayload = {
+              assetId: id,
+              data: {}
+            };
+            const asset = await this.assetService.getAssetDataById(id, token);
+            for (const key1 of task.assetProperties) {
+              for (const key of task.dataType) {
+                if (key === 'metadata') {
+                  const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
+                  if (Object.keys(metadata).length === 0) continue;
+                  combinedPayload.data['metadata'] = { [key1]: metadata || {} };
+                }
+                if (key == 'static') {
+                  const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
+                  if (!staticData) continue;
+                  combinedPayload.data['static'] = { [key1]: staticData || {} };
+                }
+                if (key == 'live') {
+                  const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
+                  if (Object.keys(liveData).length === 0) continue;
+                  combinedPayload.data['live'] = liveData || {};
+                }
+                if (key == 'alerts') {
+                  try {
+                    const alerts = await this.alertsService.findOne(id);
+                    const alertData = this.extractAlertValues(alerts["alerts"], key1);
+                    if (Object.keys(alertData).length === 0) continue;
+                    combinedPayload.data['alerts'] = alertData.values || {};
+                  } catch(err) {
+                    console.error(`Failed to fetch alerts for asset ${id}:`, err.message);
+                  }
+                }
+              }
             }
-            if (key == 'static') {
-              const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
-              if (!staticData) continue;
-              combinedPayload.data['static'] = { [key1]: staticData || {} };
+            taskSubmitData.push(combinedPayload);
+            const res = await this.postAssetData({
+              producerId: task.producerId,
+              bindingId: task.bindingId,
+              data: taskSubmitData
+            });
+            if (res) {
+              console.log("Data shared to producerId:", task.bindingId);
+            } else {
+              console.error(`Failed to post asset data for data sharing for asset`);
             }
-            if (key == 'live') {
-              const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
-              if (Object.keys(liveData).length === 0) continue;
-              combinedPayload.data['live'] = liveData || {};
-            }
-            if (key == 'alerts') {
-              const alerts = await this.alertsService.findOne(id);
-              const alertData = this.extractAlertValues(alerts["alerts"], key1);
-              if (Object.keys(alertData).length === 0) continue;
-              combinedPayload.data['alerts'] = alertData.values || {};
-            }
+          } catch(err) {
+            console.error(`Error fetching or processing asset ${id}:`, err.message);
           }
         }
-        taskSubmitData.push(combinedPayload);
-        const res = await this.postAssetData({
+      } else {
+        // call get company owner assets.
+        const token = await this.tokenService.getToken();
+        const companyAssets = await this.assetService.getAllAssets(token);
+        for (const item of companyAssets) {
+          try {
+            let combinedPayload: CombinedPayload = {
+              assetId: item.id,
+              data: {}
+            };
+
+            const asset = await this.assetService.getAssetDataById(item.id, token);
+            for (const key1 of task.assetProperties) {
+              for (const key of task.dataType) {
+                if (key === 'metadata') {
+                  const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
+                  if (Object.keys(metadata).length === 0) continue;
+                  combinedPayload.data['metadata'] = { [key1]: metadata || {} };
+                }
+                if (key == 'static') {
+                  const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
+                  if (!staticData) continue;
+                  combinedPayload.data['static'] = { [key1]: staticData || {} };
+                }
+                if (key == 'live') {
+                  const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
+                  if (!liveData) continue;
+                  combinedPayload.data['live'] = liveData || {};
+                }
+                if (key == 'alerts') {
+                  try {
+                    const alerts = await this.alertsService.findOne(item.id);
+                    const alertData = this.extractAlertValues(alerts["alerts"], key1);
+                    if (Object.keys(alertData).length === 0) continue;
+                    combinedPayload.data['alerts'] = alertData || {};
+                  } catch (err) {
+                    console.error(`Failed to fetch alerts for asset ${item.id}:`, err.message);
+                  }
+                }
+              }
+            }
+            taskSubmitData.push(combinedPayload);
+          } catch(err) {
+            console.error(`Error fetching or processing asset ${item.id}:`, err.message);
+          }
+        }
+
+        const res = this.postAssetData({
           producerId: task.producerId,
           bindingId: task.bindingId,
           data: taskSubmitData
         });
+
         if (res) {
           console.log("Data shared to producerId:", task.bindingId);
         } else {
           console.error(`Failed to post asset data for data sharing for asset`);
         }
       }
-    } else {
-      // call get company owner assets.
-      const token = await this.tokenService.getToken();
-      const companyAssets = await this.assetService.getAllAssets(token);
-      for (const item of companyAssets) {
-        let combinedPayload: CombinedPayload = {
-          assetId: item.id,
-          data: {}
-        };
-
-        const asset = await this.assetService.getAssetDataById(item.id, token);
-        for (const key1 of task.assetProperties) {
-          for (const key of task.dataType) {
-            if (key === 'metadata') {
-              const metadata = await this.extractMetadataFromParam(asset, "https://industry-fusion.org/base/v0.1/" + key1);
-              if (Object.keys(metadata).length === 0) continue;
-              combinedPayload.data['metadata'] = { [key1]: metadata || {} };
-            }
-            if (key == 'static') {
-              const staticData = await this.extractSelectiveNonRealtimeValues(asset, key1);
-              if (!staticData) continue;
-              combinedPayload.data['static'] = { [key1]: staticData || {} };
-            }
-            if (key == 'live') {
-              const liveData = await this.extractTimeSeriesValues(asset, token, key1, task.interval);
-              if (!liveData) continue;
-              combinedPayload.data['live'] = liveData || {};
-            }
-            if (key == 'alerts') {
-              const alerts = await this.alertsService.findOne(item.id);
-              const alertData = this.extractAlertValues(alerts["alerts"], key1);
-              if (Object.keys(alertData).length === 0) continue;
-              combinedPayload.data['alerts'] = alertData || {};
-            }
-          }
-        }
-        taskSubmitData.push(combinedPayload);
-      }
-
-      const res = this.postAssetData({
-        producerId: task.producerId,
-        bindingId: task.bindingId,
-        data: taskSubmitData
-      });
-
-      if (res) {
-        console.log("Data shared to producerId:", task.bindingId);
-      } else {
-        console.error(`Failed to post asset data for data sharing for asset`);
-      }
+    } catch (err) {
+      console.error(`Error running task ${task.id}:`, err.message);
     }
+    
   }
 }
