@@ -38,7 +38,7 @@ import { InputText } from "primereact/inputtext";
 import { useTranslation } from "next-i18next";
 import { OverlayPanel } from "primereact/overlaypanel";
 import Image from "next/image";
-
+import { getAssetById } from "@/utility/factory-site-utility";
 
 // Register the zoom plugin
 ChartJS.register(zoomPlugin);
@@ -274,6 +274,7 @@ const CombineSensorChart: React.FC = () => {
 
   const fetchAsset = async () => {
     try {
+      const scorpioData = await getAssetById(selectedAssetData.id);
       const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name"));
       const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date"));
       const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;
@@ -302,22 +303,31 @@ const CombineSensorChart: React.FC = () => {
       const normalize = (k: string) => (k.includes('eclass:') ? k.split('eclass:').pop() || k : k);
 
       // 2) Collect allowed labels from selectedAssetData (unique, filtered)
-      const seen = new Set<string>();
-      const attributeLabels: AttributeOption[] = [];
-
-      for (const key of Object.keys(selectedAssetData)) {
-        const label = normalize(key);
-        if (label === 'machine_state') continue;
-        if (label === '@context') continue;
-        if (label === 'type') continue;
-        if (label === 'id') continue;
-        if (label === "kafkaSyncOn") continue;
-        if (excluded.has(label)) continue; // remove prefixed keys
-        if (seen.has(label)) continue; // avoid duplicates if normalization collides
-        seen.add(label);
-        attributeLabels.push({ label, value: label, selectedDatasetIndex: 1 });
-      }
-
+      const attributeLabels: AttributeOption[] = Object.entries(scorpioData)
+        .filter(([_, val]) => {
+          if(typeof val === "object") {
+           // Find a key inside the object that ends with 'segment'
+            const segmentEntry = Object.entries(val).find(
+              ([innerKey]) => innerKey.endsWith("segment")
+            );
+            if (!segmentEntry) return false;
+            
+            const [, segmentValueObj] = segmentEntry;
+            const segmentValue = segmentValueObj?.value?.toLowerCase?.();
+            return segmentValue === "realtime";
+          } else {
+            return false;
+          }
+        })
+        .map(([key]) => {
+          const lastPart = key.split("/").pop();
+          const formatted = lastPart
+            .split("_")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+          return { label: formatted, value: lastPart, selectedDatasetIndex: 1 };
+        });
+      
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 

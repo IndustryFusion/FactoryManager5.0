@@ -23,30 +23,18 @@ export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
 
   @Get()
-  findAll() {
-    try {
-      return this.alertsService.findAll();
-    } catch (err) {
-      throw new Error("Alerta error " + err);
-    }
+  async findAll() {
+    return await this.alertsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    try {
-      return this.alertsService.findOne(id);
-    } catch (err) {
-      throw new NotFoundException();
-    }
+  async findOne(@Param('id') id: string) {
+    return await this.alertsService.findOne(id);
   }
 
 
   @Post('/:id/status')
-  updateStatus(@Param('id') id: string, @Body() data: AlertStatusDto) {
-    try {
-      return this.alertsService.updateStatus(id, data);
-    } catch (err) {
-      throw new NotFoundException();
-    }
+  async updateStatus(@Param('id') id: string, @Body() data: AlertStatusDto) {
+    return await this.alertsService.updateStatus(id, data);
   }
 }
