@@ -24,7 +24,7 @@ export class ValueChangeStateService {
   constructor(
     private readonly redisService : RedisService,
   ){}
-  private readonly timescaleUrl = process.env.TIMESCALE_URL;
+  private readonly timescaleUrl = process.env.TIMESCALE_URL.split('/').slice(0, -1).join('/');
   async findOne(queryParams: any, token: string) {
     try {
       const headers = {
