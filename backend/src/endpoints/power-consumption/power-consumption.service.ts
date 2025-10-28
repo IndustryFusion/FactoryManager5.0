@@ -19,7 +19,7 @@ import axios from 'axios';
 import * as moment from 'moment';
 @Injectable()
 export class PowerConsumptionService {
-  private readonly timescaleUrl = process.env.TIMESCALE_URL;
+  private readonly timescaleUrl = process.env.TIMESCALE_URL.split('/').slice(0, -1).join('/');
   private readonly logger = new Logger(PowerConsumptionService.name);
 
   async findOne(queryParams: any, token: string) {
