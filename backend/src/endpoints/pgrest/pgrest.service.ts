@@ -66,22 +66,22 @@ export class PgRestService {
 
     if (queryParams.intervalType) {
       switch (queryParams.intervalType) {
-        // case "live":
-        //   // Set startTime to 7 minutes before the current time, rounded down to the nearest minute
-        //   startTime = endTime.clone().subtract(7, 'minutes');
-        //   break;
-        // case "10min":
-        //   startTime = endTime.clone().subtract(70, 'minutes');
-        //   break;
-        // case "30min":
-        //   startTime = endTime.clone().subtract(210, 'minutes');
-        //   break;
-        // case "60min":
-        //   startTime = endTime.clone().subtract(420, 'minutes');
-        //   break;
-        // case "3hour":
-        //   startTime = endTime.clone().subtract(1260, 'minutes');
-        //   break;
+         case "live":
+           // Set startTime to 7 minutes before the current time, rounded down to the nearest minute
+           startTime = endTime.clone().subtract(7, 'minutes');
+           break;
+         case "10min":
+           startTime = endTime.clone().subtract(70, 'minutes');
+           break;
+         case "30min":
+           startTime = endTime.clone().subtract(210, 'minutes');
+           break;
+         case "60min":
+           startTime = endTime.clone().subtract(420, 'minutes');
+           break;
+         case "3hour":
+           startTime = endTime.clone().subtract(1260, 'minutes');
+           break;
 
         case "custom":
           const { startTime: customStart, endTime: customEnd } = parseObservedAt(queryParams.observedAt);
