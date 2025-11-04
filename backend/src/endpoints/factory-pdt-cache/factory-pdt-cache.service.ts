@@ -32,4 +32,18 @@ export class FactoryPdtCacheService {
       }
     }
   }
+  async updateFactoryAndShopFloor(data: Record<string, any>) {
+    try {
+      return await this.factoryPdtCacheModel.updateMany({id: { $in: data.assetIds }}, { factory_site: data.factory_site, shop_floor: data.shop_floor }, {new: true})
+    } catch(err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if(err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
 }
+
