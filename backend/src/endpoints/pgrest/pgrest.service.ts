@@ -46,6 +46,8 @@ export class PgRestService {
 
   async findAll(token, queryParams, key) {
 
+    key = queryParams.attributeId.split("eq.").pop();
+
     function parseObservedAt(observedAt) {
       const times = observedAt.split('&');
       const startTime = times[0].split('gte.')[1];
