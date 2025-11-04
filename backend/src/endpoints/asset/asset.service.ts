@@ -344,7 +344,7 @@ export class AssetService {
               scorpioUpdatedAssetIds.push(assetId);
             }
           } finally {
-            const exists = await this.factoryPdtCacheModel.exists({ id: assetId });
+            const exists = await this.factoryPdtCacheModel.exists({ id: assetId, company_ifric_id });
             if (!exists && cacheDataResponse.data[assetId]) {
               const { _id, ...newCacheData } = cacheDataResponse.data[assetId];
               await this.factoryPdtCacheModel.create(newCacheData);

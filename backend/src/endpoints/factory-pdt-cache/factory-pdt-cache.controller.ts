@@ -15,4 +15,9 @@ export class FactoryPdtCacheController {
   findAll(@Param('company_ifric_id') company_ifric_id: string) {
     return this.factoryPdtCacheService.findAll(company_ifric_id);
   }
+
+  @Patch("update-factoy-and-shopfloor")
+  updateFactoryAndShopFloor(@Body() data) {
+    return this.factoryPdtCacheService.updateFactoryAndShopFloor(data);
+  }
 }

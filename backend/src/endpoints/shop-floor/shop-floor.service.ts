@@ -19,13 +19,15 @@ import { shopFloorDescriptionDto } from './dto/shopFloorDescription.dto';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AssetService } from '../asset/asset.service';
 import axios from 'axios';
+import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   constructor(
     private readonly factorySiteService: FactorySiteService,
-    private readonly assetService: AssetService
+    private readonly assetService: AssetService,
+    private readonly factoryPdtCacheService: FactoryPdtCacheService
     ) {}
 
   async create(data: shopFloorDescriptionDto, token: string) {
@@ -322,11 +324,12 @@ export class ShopFloorService {
 
   async updateReact(node: any, token: string) {
     try {
-      let shopFloorobj = {}, assetObj = {};
+      let shopFloorobj = {}, assetObj = {}, factoryId = "";
       for(let i = 0; i < node.length; i++){
         let id = node[i].source;
         if(node[i].source.includes('factories')){
           let check = false;
+          factoryId = node[i].source.split("_")[1];
           for(let j = i+1; j < node.length; j++) {
             if(node[j].source.includes(node[i].target)){
               check = true;
@@ -364,23 +367,27 @@ export class ShopFloorService {
             }
           }
           if(!check){
-            let assetData = await this.assetService.getAssetDataById(node[i].target.split('_')[1], token);
-            for (const key in assetData){
-              if (key.includes('has')){
-                assetData[key] = {
-                  type: 'Relationship',
-                  object: '',
+            try {
+              let assetData = await this.assetService.getAssetDataById(node[i].target.split('_')[1], token);
+              for (const key in assetData){
+                if (key.includes('has')){
+                  assetData[key] = {
+                    type: 'Relationship',
+                    object: '',
+                  }
                 }
               }
-            }
-            let deleteResponse = await this.assetService.deleteAssetById(node[i].target.split('_')[1], token);
-            if(deleteResponse.status == 200 || deleteResponse.status == 204){
-              let response = await this.assetService.setAssetData(assetData, token);
-              if(response['status'] == 200 || response['status'] == 201){
-                continue;
-              } else {
-                return response;
+              let deleteResponse = await this.assetService.deleteAssetById(node[i].target.split('_')[1], token);
+              if(deleteResponse.status == 200 || deleteResponse.status == 204){
+                let response = await this.assetService.setAssetData(assetData, token);
+                if(response['status'] == 200 || response['status'] == 201){
+                  continue;
+                } else {
+                  return response;
+                }
               }
+            } catch(err) {
+              continue;
             }
           }
         }
@@ -397,6 +404,12 @@ export class ShopFloorService {
       }
       if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
         let response = await this.updateAssets(shopFloorobj, token);
+        // add shopfloor and factory in cache to assets attached to shopfloor
+        await Promise.all(
+          Object.keys(shopFloorobj).map(async(key) => {
+            await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
+          })
+        )
         if(response.success){
           let assetResponse = await this.assetService.updateRelations(assetObj, token);
           return assetResponse;
@@ -404,7 +417,13 @@ export class ShopFloorService {
       } else if(Object.keys(shopFloorobj).length || Object.keys(assetObj).length){
         if(Object.keys(shopFloorobj).length){
           let response = await this.updateAssets(shopFloorobj, token);
-          return response;
+          // add shopfloor and factory in cache to assets attached to shopfloor
+          await Promise.all(
+            Object.keys(shopFloorobj).map(async(key) => {
+              await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
+            })
+          )
+         return response;
         } else {
           let response = await this.assetService.updateRelations(assetObj, token);
           return response;
