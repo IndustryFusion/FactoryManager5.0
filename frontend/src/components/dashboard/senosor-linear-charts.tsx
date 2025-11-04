@@ -376,7 +376,7 @@ const CombineSensorChart: React.FC = () => {
       return;
     }
 
-    let attributeKey = "https://industry-fusion.org/base/v0.1/" + attributeId;
+    let attributeKey = attributeId;
 
     const params: FetchDataParams = {
       intervalType: selectedInterval,
