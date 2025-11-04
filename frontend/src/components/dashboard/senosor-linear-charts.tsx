@@ -305,19 +305,27 @@ const CombineSensorChart: React.FC = () => {
       // 2) Collect allowed labels from selectedAssetData (unique, filtered)
       const attributeLabels: AttributeOption[] = Object.entries(scorpioData)
         .filter(([_, val]) => {
-          if(typeof val === "object") {
-           // Find a key inside the object that ends with 'segment'
+          if (typeof val === "object") {
+            // ✅ Find a key ending with 'segment'
             const segmentEntry = Object.entries(val).find(
               ([innerKey]) => innerKey.endsWith("segment")
             );
-            if (!segmentEntry) return false;
-            
-            const [, segmentValueObj] = segmentEntry;
-            const segmentValue = segmentValueObj?.value?.toLowerCase?.();
-            return segmentValue === "realtime";
-          } else {
-            return false;
+
+            // ✅ Find if 'observedAt' exists
+            const hasObservedAt = Object.prototype.hasOwnProperty.call(val, "observedAt");
+
+            // Check for realtime segment
+            const isRealtimeSegment = (() => {
+              if (!segmentEntry) return false;
+              const [, segmentValueObj] = segmentEntry;
+              const segmentValue = segmentValueObj?.value?.toLowerCase?.();
+              return segmentValue === "realtime";
+            })();
+
+            // ✅ Keep if either condition is true
+            return isRealtimeSegment || hasObservedAt;
           }
+          return false;
         })
         .map(([key]) => {
           const lastPart = key.split("/").pop();
@@ -327,7 +335,9 @@ const CombineSensorChart: React.FC = () => {
             .join(" ");
           return { label: formatted, value: lastPart, selectedDatasetIndex: 1 };
         });
-      
+
+
+
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 
@@ -366,9 +376,7 @@ const CombineSensorChart: React.FC = () => {
       return;
     }
 
-    let attributeKey = selectedAssetData
-      ? Object.keys(selectedAssetData).find(key => String(key) === String(attributeId))
-      : undefined;
+    let attributeKey = "https://industry-fusion.org/base/v0.1/" + attributeId;
 
     const params: FetchDataParams = {
       intervalType: selectedInterval,
