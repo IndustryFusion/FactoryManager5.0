@@ -53,8 +53,7 @@ export class FlinkDeployController {
     files: {
       knowledge?: Multer.File[];
       shacl?: Multer.File[];
-    },
-    @Body() dto: FlinkJobDto,
+    }
   ) {
     const knowledge = files?.knowledge?.[0];
     const shacl = files?.shacl?.[0];
@@ -65,7 +64,7 @@ export class FlinkDeployController {
 
     // 1) Upload & persist QUEUED job
     const { job, jobId, knowledgeUrl, shaclUrl } =
-      await this.flinkDeployService.createJobAndUpload({ knowledge, shacl }, dto);
+      await this.flinkDeployService.createJobAndUpload({ knowledge, shacl });
 
     // 2) Trigger runner (dummy call) — non-blocking is also OK if you prefer
     const returnedJobId = await this.flinkDeployService.triggerRunner(job, {
