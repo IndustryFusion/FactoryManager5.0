@@ -21,8 +21,7 @@ export class FlinkDeployService {
   ) { }
 
   async createJobAndUpload(
-    files: { knowledge: Multer.File; shacl: Multer.File },
-    dto: FlinkJobDto,
+    files: { knowledge: Multer.File; shacl: Multer.File }
   ) {
     const jobId = randomUUID();
 
@@ -34,8 +33,8 @@ export class FlinkDeployService {
       status: JobStatus.QUEUED,
       knowledgeUrl: knowledgeUrl,
       shaclUrl: shaclUrl,
-      target: dto?.target ?? 'deploy',
-      runnerPayload: dto?.runnerContext ?? {},
+      target: 'setup-and-deploy',
+      runnerPayload: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -48,11 +47,11 @@ export class FlinkDeployService {
    * Returns the runner's jobId (or echoes ours).
    */
   async triggerRunner(job: FlinkJob, urls: { knowledgeGetUrl: string; shaclGetUrl: string }) {
-    const RUNNER_URL = process.env.RUNNER_URL || 'http://runner:8080';
+    const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
     try {
       const payload = {
         jobId: job.jobId,
-        target: job.target ?? 'deploy',
+        target: job.target ?? 'setup-and-deploy',
         urls: {
           knowledge: urls.knowledgeGetUrl,
           shacl: urls.shaclGetUrl,
@@ -87,7 +86,7 @@ export class FlinkDeployService {
 
   // === Streaming logs (proxy Runner SSE to client) ===
   async pipeRunnerSseToResponse(jobId: string, res: import('express').Response) {
-    const RUNNER_URL = process.env.RUNNER_URL || 'http://runner:8080';
+    const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
     const url = `${RUNNER_URL}/jobs/${jobId}/logs`; // Runner should expose SSE here
 
     // SSE response headers for the client
@@ -139,7 +138,7 @@ export class FlinkDeployService {
   startStatusPoller(jobId: string, intervalMs = 5000) {
     if (this.pollers.has(jobId)) return; // already polling
 
-    const RUNNER_URL = process.env.RUNNER_URL || 'http://runner:8080';
+    const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
     const tick = async () => {
       try {
         const job = await this.jobModel.findOne({ jobId });
