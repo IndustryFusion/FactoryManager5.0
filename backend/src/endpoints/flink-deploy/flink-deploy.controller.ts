@@ -81,12 +81,50 @@ export class FlinkDeployController {
   }
 
 
+  // Get all jobs
+  @Get()
+  async getAllJobs() {
+    const jobs = await this.jobModel.find().sort({ createdAt: -1 }).lean();
+    return jobs.map(job => ({
+      jobId: job.jobId,
+      status: job.status,
+      knowledgeUrl: job.knowledgeUrl,
+      shaclUrl: job.shaclUrl,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+    }));
+  }
+
   // 1) Stream logs (SSE proxy)
   @Get(':id/stream')
   async stream(@Param('id') jobId: string, @Res() res: Response) {
     const job = await this.jobModel.findOne({ jobId });
     if (!job) throw new NotFoundException('Job not found');
     await this.flinkDeployService.pipeRunnerSseToResponse(jobId, res);
+  }
+
+  // Simple HTTP endpoint for completed jobs (no SSE)
+  @Get(':id/logs-text')
+  async getLogsText(@Param('id') jobId: string) {
+    const job = await this.jobModel.findOne({ jobId });
+    if (!job) throw new NotFoundException('Job not found');
+    
+    const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
+    const url = `${RUNNER_URL}/jobs/${jobId}/logs`;
+    
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${process.env.RUNNER_TOKEN ?? ''}` }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Runner logs error: ${response.status}`);
+      }
+      
+      return await response.text();
+    } catch (error) {
+      throw new NotFoundException(`Failed to fetch logs: ${error.message}`);
+    }
   }
 
   // 2) Read job status (simple status endpoint for UI)
@@ -103,4 +141,5 @@ export class FlinkDeployController {
       updatedAt: job.updatedAt,
     };
   }
+
 }

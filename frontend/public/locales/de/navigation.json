@@ -8,6 +8,7 @@
         "notifications": "Benachrichtigungen",
         "all_notifications": "Alle Benachrichtigungen anzeigen",
         "no_notifications": "Keine Benachrichtigungen",
+        "no_jobs": "Keine Jobs verfügbar",
         "logout": "Abmelden",
         "products": "Produkte",
         "breadcrumb": {
