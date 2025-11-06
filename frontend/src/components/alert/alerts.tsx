@@ -90,15 +90,14 @@ const Alerts = () => {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        // Fetch alerts
-        const alertResponse = await getAlerts();
-        setAlerts(alertResponse.alerts || []);
-        setAlertsCount(alertResponse.alerts.length || 0);
-        
         // Fetch jobs
         const jobResponse = await getJobs();
         setJobs(jobResponse.jobs || []);
-        setJobsCount(jobResponse.jobs.length || 0);
+        setJobsCount(jobResponse.jobs?.length || 0);
+
+        const alertResponse = await getAlerts();
+        setAlerts(alertResponse.alerts || []);
+        setAlertsCount(alertResponse.alerts?.length || 0);
         
         // Fetch asset data for alerts
         const assetsData = [];
