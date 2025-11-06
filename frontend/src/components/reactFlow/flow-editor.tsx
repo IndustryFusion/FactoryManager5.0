@@ -2316,8 +2316,8 @@ const FlowEditor: React.FC<
     // call the backend upload function
     const deployRes = uploadValidationFiles(files);
     deployRes.then(res => {
-      if (res.success) {
-        toast.current?.show({ severity: "success", summary: "Upload successful", detail: res.message, life: 3000 });
+      if (res.status) {
+        toast.current?.show({ severity: "success", summary: "Job running successfully", detail: res.jobId, life: 5000 });
       } else {
         toast.current?.show({ severity: "error", summary: "Upload failed", detail: res.message, life: 4000 });
       }

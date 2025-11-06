@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { getAlerts, postStatusForAlert } from "./alert-service";
+import { getJobs, Job } from "./job-service";
 import axios from "axios";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
@@ -37,6 +38,8 @@ const Alerts = () => {
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
   const [assetData, setAssetData] = useState<any>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsCount, setJobsCount] = useState<number>(0);
   const { t } = useTranslation(["navigation"]);
 
   // Function to map backend data to asset state
@@ -83,26 +86,32 @@ const Alerts = () => {
     }
   };
 
- // useEffect hook to fetch all alerts and their associated asset data
+ // useEffect hook to fetch all alerts, jobs and their associated asset data
   useEffect(() => {
-    const fetchAllAlerts = async () => {
+    const fetchAllData = async () => {
       try {
-        const response = await getAlerts();
-        setAlerts(response.alerts)
-        setAlertsCount(response.alerts.length);
+        // Fetch alerts
+        const alertResponse = await getAlerts();
+        setAlerts(alertResponse.alerts)
+        setAlertsCount(alertResponse.alerts.length);
+        
+        // Fetch jobs
+        const jobResponse = await getJobs();
+        setJobs(jobResponse.jobs);
+        setJobsCount(jobResponse.jobs.length);
+        
+        // Fetch asset data for alerts
         const assetsData = [];
-        for (const alert of response.alerts) {
-    
+        for (const alert of alertResponse.alerts) {
           const response = await fetchAssetData(alert.resource);
           assetsData.push(response)
-
         }
         setAssetData(assetsData);
       } catch (error) {
         console.log("Error from @components/alert/alert.tsx",error)
       }
     }
-    fetchAllAlerts();
+    fetchAllData();
   }, [])
 
 // CSS style for badge position and appearance
@@ -112,6 +121,9 @@ const Alerts = () => {
     right: '1px',
     fontSize: '0.2rem',
   };
+
+  // Calculate total count for badge (alerts + jobs)
+  const totalCount = alertsCount + jobsCount;
 
   return (
     <>
@@ -133,13 +145,15 @@ const Alerts = () => {
           // style={{ fontFamily: "Segoe UI", fontSize: "14px", fontWeight: "bold", color: "#615e5e" }}
         />
         <div style={badgeStyle}>
-          <Badge className={`p-badge ${alertsCount > 5 ? "active" : ""}`} value={alertsCount} />
+          <Badge className={`p-badge ${totalCount > 5 ? "active" : ""}`} value={totalCount} />
         </div>
       </div>
       {isAlert &&
         <AlertDetails
-          count={alertsCount}
+          alertsCount={alertsCount}
+          jobsCount={jobsCount}
           alerts={alerts}
+          jobs={jobs}
           visible={visible}
           setVisible={setVisible}
           assetData={assetData}
