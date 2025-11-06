@@ -92,13 +92,13 @@ const Alerts = () => {
       try {
         // Fetch alerts
         const alertResponse = await getAlerts();
-        setAlerts(alertResponse.alerts)
-        setAlertsCount(alertResponse.alerts.length);
+        setAlerts(alertResponse.alerts || []);
+        setAlertsCount(alertResponse.alerts.length || 0);
         
         // Fetch jobs
         const jobResponse = await getJobs();
-        setJobs(jobResponse.jobs);
-        setJobsCount(jobResponse.jobs.length);
+        setJobs(jobResponse.jobs || []);
+        setJobsCount(jobResponse.jobs.length || 0);
         
         // Fetch asset data for alerts
         const assetsData = [];
