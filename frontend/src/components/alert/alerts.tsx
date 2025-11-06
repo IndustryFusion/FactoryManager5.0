@@ -96,12 +96,13 @@ const Alerts = () => {
         setJobsCount(jobResponse.jobs?.length || 0);
 
         const alertResponse = await getAlerts();
-        setAlerts(alertResponse.alerts || []);
-        setAlertsCount(alertResponse.alerts?.length || 0);
+        const alertsArray = Array.isArray(alertResponse.alerts) ? alertResponse.alerts : [];
+        setAlerts(alertsArray);
+        setAlertsCount(alertsArray.length);
         
         // Fetch asset data for alerts
         const assetsData = [];
-        for (const alert of alertResponse.alerts) {
+        for (const alert of alertsArray) {
           const response = await fetchAssetData(alert.resource);
           assetsData.push(response)
         }
