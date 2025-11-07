@@ -10,5 +10,17 @@
     "view": "Anzeigen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
-    "factory_name_required": "Fabrikname ist erforderlich"
+    "factory_name_required": "Fabrikname ist erforderlich",
+    "editFactory": "Fabrik bearbeiten",
+    "fetchingFactoryTemplate": "Fabrikvorlage wird abgerufen",
+    "fetchingFactoryDetails": "Fabrikdetails werden abgerufen",
+    "factoryEditedSuccessfully": "Fabrik erfolgreich bearbeitet",
+    "browseAndUploadImage": "Bild durchsuchen und hochladen",
+    "updatingFactory": "Fabrik wird aktualisiert",
+    "noShopFloors": "Keine Bereiche",
+    "success": "Erfolg",
+    "error": "Fehler",
+    "warning": "Warnung",
+    "pleaseFillAllRequiredFields": "Bitte füllen Sie alle erforderlichen Felder aus",
+    "resetSuccessfully": "Erfolgreich zurückgesetzt"
 }

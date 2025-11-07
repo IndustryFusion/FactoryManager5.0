@@ -464,7 +464,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'dashboard',
         'button',
         'navigation',
-        'factory-overview'
+        'factory-overview',
+        "reactflow"
       ])),
     },
   }
