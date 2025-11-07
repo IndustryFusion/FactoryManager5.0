@@ -13,6 +13,8 @@ import { Toast } from "primereact/toast";
 import CreateShopFloor from "../shopFloorForms/create-shop-floor-form";
 import EditShopFloor from "../shopFloorForms/edit-shop-floor-form";
 import DeleteDialog from "../delete-dialog";
+import { getAccessGroup } from '@/utility/indexed-db';
+import { useTranslation } from "next-i18next";
 
 type ShopFloorNodeData = {
   label: string;
@@ -79,6 +81,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<Option[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { t } = useTranslation(["overview"]);
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
 
   const optionsFromStore = useCallback((storeVal: any): Option[] => {
     const list: StoreAsset[] = Array.isArray(storeVal)
@@ -241,6 +245,19 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
     setAssetsVisible(false);
   };
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
   return (
     <div className={`shopfloor-node ${selected ? "is-selected" : ""}`} 
       onClick={(e) => { e.stopPropagation(); setShowActions(true); }}
@@ -249,15 +266,16 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         isVisible={showActions}
         position="top"
         offset={10}
-        className="sf-toolbar"
+        className="sf-toolbar flex"
       >
         <Button
           aria-label="Add assets"
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleAddAssets}
-          tooltip="Add assets"
-          tooltipOptions={{ position: "top" }}
+          disabled={!accessgroupIndexDb?.access_group?.create} 
+          tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : "Add assets"}
+          tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
         >
           <img src="/factory-flow-buttons/asset-plus-icon.svg" alt="" />
         </Button>
@@ -267,8 +285,9 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleOpenCreate}
-          tooltip="Add shop Floor"
-          tooltipOptions={{ position: "top" }}
+          disabled={!accessgroupIndexDb?.access_group?.create} 
+          tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : "Add shop Floor"}
+          tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
         >
           <img src="/factory-flow-buttons/hut.svg" alt="" />
         </Button>
@@ -278,8 +297,9 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleEdit}
-          tooltip="Edit"
-          tooltipOptions={{ position: "top" }}
+          disabled={!accessgroupIndexDb?.access_group?.create} 
+          tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : "Edit"}
+          tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
         >
           <img src="/factory-flow-buttons/edit-icon.svg" alt="" width="42px" height="42px" />
         </Button>
@@ -289,8 +309,9 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleAskDelete}
-          tooltip="Delete"
-          tooltipOptions={{ position: "top" }}
+          disabled={!accessgroupIndexDb?.access_group?.create} 
+          tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : "Delete"}
+          tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
         >
           <img src="/factory-flow-buttons/delete-02 (1).svg" alt="" width="22px" height="22px"/>
         </Button>
@@ -339,7 +360,9 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
               onClick={(e) => {
                 e.stopPropagation();
               }}
-              disabled={!factoryId}
+              disabled={!factoryId || !accessgroupIndexDb?.access_group?.create} 
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
             >
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -365,6 +388,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
                       className="custom-checkbox"
                       checked={checked}
                       onChange={() => toggle(opt.value)}  // << create on click
+                      disabled={!accessgroupIndexDb?.access_group?.create}
                     />
                     <span>
                       {opt.label}
@@ -389,7 +413,14 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
           <Button label="Close" onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
-          <Button label="Done" onClick={handleAdd} className="global-button" />
+          <Button 
+            label="Done" 
+            onClick={handleAdd} 
+            className="global-button" 
+            disabled={!accessgroupIndexDb?.access_group?.create} 
+            tooltip={t("overview:access_permission")}
+            tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+          />
         </div>
       </Dialog>
 

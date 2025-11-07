@@ -25,6 +25,9 @@ import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css"
 import { Button } from "primereact/button";      
 import { Dialog } from "primereact/dialog"; 
+import { getAccessGroup } from '@/utility/indexed-db';
+import { useTranslation } from "next-i18next";
+
 interface RelationOption {
   label: string;
   value: string;
@@ -77,7 +80,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   const [isLoading, setIsLoading] = useState(false);
   const [imgErr, setImgErr] = useState(false);
   const [copied, setCopied] = useState(false);
- 
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
+  const { t } = useTranslation(["overview"]);
+
   const shortenId = (s = "") =>
     s.length > 18 ? `${s.slice(0, 8)}…${s.slice(-12)}` : s;
 
@@ -207,6 +212,19 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     }
   };
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
 
   return (
   <div className="customNode" 
@@ -219,11 +237,13 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       aria-label="Create Sub Flow"
       className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
       onMouseDown={(e) => e.stopPropagation()}
-      tooltip="Create Sub Flow"
       onClick={(e) => {
         e.stopPropagation();
       createSubflowFromAssetNode?.(id || data?.id);
       }}
+      disabled={!accessgroupIndexDb?.access_group?.create} 
+      tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : "Create Sub Flow"}
+      tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
     >
       <img src="/factory-flow-buttons/hut.svg" alt="" />
     </Button>
@@ -334,6 +354,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
                       className="custom-checkbox"
                       checked={checked}
                       onChange={() => handleRelationsChange({ value: nextArray })}
+                      disabled={!accessgroupIndexDb?.access_group?.create}
                     />
                     <span>{opt.label}</span>
                   </div>
@@ -350,8 +371,10 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
           <Button
             label="Add"
             onClick={handleAdd}
-            disabled={!selectedRelations.length}
-            className="global-button"
+            disabled={!selectedRelations.length || !accessgroupIndexDb?.access_group?.create} 
+            className="global-button" 
+            tooltip={t("overview:access_permission")}
+            tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
           />
         </div>
       </Dialog>

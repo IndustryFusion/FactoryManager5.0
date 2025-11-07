@@ -9,6 +9,8 @@ import "../../styles/custom-asset-node.css";
 import { fetchAllShopFloors } from "@/utility/factory-site-utility";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { useShopFloor } from "@/context/shopfloor-context";
+import { getAccessGroup } from '@/utility/indexed-db';
+import { useTranslation } from 'next-i18next';
 
 type AreaOption = { label: string; value: string };
 type Floor = { id: string; floorName: string; type_of_floor: string };
@@ -36,6 +38,8 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateVisible, setIsCreateVisible] = useState(false);
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
+  const { t } = useTranslation(['overview']);
 
   const loadFloors = useCallback(async () => {
     if (!factoryIdValue) return;
@@ -143,6 +147,19 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
     setSelectedAreas((prev) => (id && !prev.includes(id) ? [...prev, id] : prev));
   }, [areasVisible, latestShopFloor]);
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
   return (
     <div className={`factory-node ${selected ? "is-selected" : ""}`}>
       <div className="fn-icon">
@@ -192,7 +209,9 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
                 e.stopPropagation();
                 setIsCreateVisible(true);
               }}
-              disabled={isLoading || !factoryIdValue}
+              disabled={isLoading || !factoryIdValue || !accessgroupIndexDb?.access_group?.create}
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
             >
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -232,6 +251,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
                         className="custom-checkbox"
                         checked={checked}
                         onChange={() => handleAreasChange({ value: nextArray })}
+                        disabled={!accessgroupIndexDb?.access_group?.create}
                       />
                       <span>{opt.label}</span>
                     </div>
@@ -245,7 +265,14 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
 
           <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
             <Button label="Close" onClick={() => setAreasVisible(false)} text className="global-button is-grey" />
-            <Button label="Add" onClick={handleAddAreas} disabled={!selectedAreas.length} className="global-button" />
+            <Button 
+              label="Add" 
+              onClick={handleAddAreas}
+              disabled={!selectedAreas.length || !accessgroupIndexDb?.access_group?.create} 
+              className="global-button" 
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+            />
           </div>
         </div>
       </Dialog>

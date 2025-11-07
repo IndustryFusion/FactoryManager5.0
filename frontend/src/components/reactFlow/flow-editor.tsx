@@ -83,6 +83,7 @@ import CustomFactoryNode from "./factory-node";
 import CustomShopFloorNode from "./shop-floor-node";
 import GroupNode from "./group-node";
 import { uploadValidationFiles } from "@/utility/flink-util";
+import { getAccessGroup } from '@/utility/indexed-db';
 
 interface RelationPayload {
   [key: string]: {
@@ -136,7 +137,7 @@ const FlowEditor: React.FC<
   const [selectedFactoryId, setSelectedFactoryId] = useState<string | null>(
     null
   );
-  const { t } = useTranslation(["button", "reactflow"]);
+  const { t } = useTranslation(["button", "reactflow", "overview"]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
   const [history, setHistory] = useState<HistoryState[]>([]);
@@ -144,6 +145,7 @@ const FlowEditor: React.FC<
   const isUndoRedoAction = useRef(false);
   const ESCAPE_MARGIN = 6;
   const [freedNodeId, setFreedNodeId] = useState<string | null>(null);
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
 
   // Initialize history when nodes or edges are first loaded
   useEffect(() => {
@@ -496,6 +498,19 @@ const FlowEditor: React.FC<
       console.warn = originalWarn;
     };
   }, [latestShopFloor, reactFlowInstance, nodes, edges, deletedShopFloors]);
+
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
 
   const checkForNewAdditionsNodesEdges = useCallback(() => {
     const newNodesAdded =
@@ -2548,6 +2563,9 @@ const FlowEditor: React.FC<
                   aria-label="Create flow"
                   className="rf-btn"
                   onClick={(e) => onOpenAssetsDialog?.(e)}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
                 >
                   <img src="/factory-flow-buttons/create-flow-icon.svg" alt="" />
                 </Button>
@@ -2558,7 +2576,9 @@ const FlowEditor: React.FC<
                   aria-label="Undo"
                   className="rf-btn"
                   onClick={handleUndo}
-                  disabled={currentHistoryIndex <= 0}
+                  disabled={currentHistoryIndex <= 0 || !accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
                 >
                   <img src="/factory-flow-buttons/undo-03.svg" alt="" />
                 </Button>
@@ -2569,37 +2589,72 @@ const FlowEditor: React.FC<
                   aria-label="Redo"
                   className="rf-btn"
                   onClick={handleRedo}
-                  disabled={currentHistoryIndex >= history.length - 1}
+                  disabled={currentHistoryIndex >= history.length - 1 || !accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
                 >
                   <img src="/factory-flow-buttons/redo.svg" alt="" />
                 </Button>
               </span>
 
               <span className="rf-tip" data-pr-tooltip="Save">
-                <Button aria-label="Save" className="rf-btn" onClick={saveOrUpdate}>
+                <Button aria-label="Save" 
+                  className="rf-btn" 
+                  onClick={saveOrUpdate}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/file-icon.svg" alt="" />
                 </Button>
               </span>
 
               <span className="rf-tip" data-pr-tooltip="Refresh">
-                <Button aria-label="Refresh" className="rf-btn" onClick={refreshFromScorpio}>
+                <Button aria-label="Refresh" 
+                  className="rf-btn" 
+                  onClick={refreshFromScorpio}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/refresh-icon.svg" alt="" />
                 </Button>
               </span>
 
               <span className="rf-tip" data-pr-tooltip="Reset">
-                <Button aria-label="Reset" className="rf-btn" onClick={deleteMongoAndScorpio}>
+                <Button 
+                  aria-label="Reset" 
+                  className="rf-btn" 
+                  onClick={deleteMongoAndScorpio}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/erase-icon.svg" alt="" />
                 </Button>
               </span>
 
               <span className="rf-tip" data-pr-tooltip="Export JPEG">
-                <Button aria-label="Export JPEG" className="rf-btn" onClick={handleExportClick}>
+                <Button 
+                  aria-label="Export JPEG" 
+                  className="rf-btn" 
+                  onClick={handleExportClick}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/image-icon.svg" alt="" />
                 </Button>
               </span>
               <span className="rf-tip" data-pr-tooltip="Auto Layout">
-                <Button aria-label="Auto Layout" className="rf-btn" onClick={handleAutoLayout}>
+                <Button 
+                  aria-label="Auto Layout" 
+                  className="rf-btn" 
+                  onClick={handleAutoLayout}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/grid-view.svg" alt="" />
                 </Button>
               </span>
@@ -2611,7 +2666,14 @@ const FlowEditor: React.FC<
                   onChange={onFilesChange}
                   style={{ display: "none" }}
                 />
-                <Button aria-label="Upload Validation Files" className="rf-btn" onClick={openPicker}>
+                <Button 
+                  aria-label="Upload Validation Files" 
+                  className="rf-btn" 
+                  onClick={openPicker}
+                  disabled={!accessgroupIndexDb?.access_group?.create}
+                  tooltip={t("overview:access_permission")}
+                  tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+                >
                   <img src="/factory-flow-buttons/file-icon.svg" alt="" />
                 </Button>
               </span>
