@@ -123,5 +123,11 @@
     "assetCategories": "Gerätekategorien",
     "filter": "Filter",
     "errorColon": "Fehler:",
-    "confirmDelete": "Löschen bestätigen"
+    "confirmDelete": "Löschen bestätigen",
+    "dragAndDropImageHere": "Bild hierher ziehen und ablegen",
+    "browse": "Durchsuchen",
+    "upload": "Hochladen",
+    "clear": "Löschen",
+    "uploadImageBeforeSubmit": "Bild vor dem Absenden hochladen, klicken Sie auf das Upload-Symbol oben",
+    "uploadedFile": "Hochgeladene Datei:"
 }

@@ -122,5 +122,11 @@
     "assetCategories": "Asset Categories",
     "filter": "Filter",
     "errorColon": "Error:",
-    "confirmDelete": "Confirm Delete"
+    "confirmDelete": "Confirm Delete",
+    "dragAndDropImageHere": "Drag and Drop Image Here",
+    "browse": "Browse",
+    "upload": "Upload",
+    "clear": "Clear",
+    "uploadImageBeforeSubmit": "Upload image before submit, click on upload icon above",
+    "uploadedFile": "Uploaded File:"
 }
