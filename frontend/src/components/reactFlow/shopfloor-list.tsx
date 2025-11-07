@@ -114,7 +114,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   const {shopFloorValue, setShopFloorValue } = useFactoryShopFloor();
   const [factoryIdValue, setFactoryIdvalue] = useState("");
   const [shopFloorName, setShopFloorName] = useState("")
-  const { t } = useTranslation(['button', 'placeholder']);
+  const { t } = useTranslation(['button', 'placeholder', 'reactflow']);
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
 
@@ -134,11 +134,11 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       const floors = await fetchAllShopFloors(factoryId);
       setShopFloors(floors);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      const errorMessage = error instanceof Error ? error.message : t('reactflow:error');
       setError(errorMessage);
       toast.current?.show({
         severity: "error",
-        summary: "Error",
+        summary: t('reactflow:error'),
         detail: errorMessage,
       });
     }
@@ -177,8 +177,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
     } else {
       toast.current?.show({
         severity: "warn",
-        summary: "Warning",
-        detail: "No shop floor selected for deletion",
+        summary: t('reactflow:warning'),
+        detail: t('reactflow:noShopFloorSelectedForDeletion'),
       });
     }
   };
@@ -200,8 +200,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         setShowConfirmDialog(false);
         toast.current?.show({
           severity: "success",
-          summary: "Success",
-          detail: "Shop floor deleted successfully",
+          summary: t('reactflow:success'),
+          detail: t('reactflow:shopFloorDeletedSuccessfully'),
         });
         if (onShopFloorDeleted) {
           onShopFloorDeleted(selectedShopFloorId);
@@ -210,16 +210,16 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       else {
         toast.current?.show({
           severity: "error",
-          summary: "Error",
-          detail: "Factory ID is undefined",
+          summary: t('reactflow:error'),
+          detail: t('reactflow:factoryIdUndefined'),
         });
       }
     } catch (error) {
       console.error("Error deleting shop floor:", error);
       toast.current?.show({
         severity: "error",
-        summary: "Error",
-        detail: "Failed to delete shop floor",
+        summary: t('reactflow:error'),
+        detail: t('reactflow:failedToDeleteShopFloor'),
       });
     }
   };
@@ -231,8 +231,8 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
       console.error("No shop floor selected for editing");
       toast.current?.show({
         severity: "warn",
-        summary: "Warning",
-        detail: "No shop floor selected for editing",
+        summary: t('reactflow:warning'),
+        detail: t('reactflow:noShopFloorSelectedForEditing'),
       });
       return;
     }
@@ -247,7 +247,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
   }
 
   // if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div>{t('reactflow:error')}: {error}</div>;
 
 
 
@@ -281,14 +281,14 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
             >
               <i className="pi pi-plus-circle add-area-cta__icon" />
               <span className="add-area-cta__text">
-                {t('button:addArea', 'Add Area')}
+                {t('reactflow:addArea')}
               </span>
             </div>
           </div>
          <ul className={formViewPage ? "list-disc" : ""} style={{ marginTop: 12 }}>
           {filteredShopFloors.map((floor, index) => {
             // Get the actual floor type from the mapped data
-            const floorType = floor.type_of_floor || "No Type Set";
+            const floorType = floor.type_of_floor || t('reactflow:noTypeSet');
             
             return (
               <li

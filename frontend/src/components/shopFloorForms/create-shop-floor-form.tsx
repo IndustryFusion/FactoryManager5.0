@@ -67,7 +67,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
   });
   const toast = useRef<Toast | null>(null);
   const { addShopFloor } = useShopFloor();
-  const { t } = useTranslation('button');
+  const { t } = useTranslation(['button', 'reactflow']);
   useEffect(() => {
     findShopFloorTemplate();
   }, []);
@@ -85,7 +85,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
    
     } catch (error) {
        if (axios.isAxiosError(error)) {
-        showError("Fetching shopfloor template");
+        showError(t('reactflow:fetchingShopFloorTemplate'));
       }
       console.error(" Fetching shopfloor template", error);
     }
@@ -198,11 +198,11 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         addShopFloor(newShopFloor);
         // setIsVisibleProp(false);
       } else if (shopFloorResponse.status === 400) {
-        showError("Please fill all required fields");
+        showError(t('reactflow:pleaseFillAllRequiredFields'));
       }
     } catch (error) {
         if (axios.isAxiosError(error)) {
-        showError("Error saving shop floor");
+        showError(t('reactflow:errorSavingShopFloor'));
       }
       console.error("Error saving shop floor", error);
     }
@@ -212,8 +212,8 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     if (toast.current !== null) {
       toast.current.show({
         severity: "success",
-        summary: "Success",
-        detail: "Shop Floor Added successfully",
+        summary: t('reactflow:success'),
+        detail: t('reactflow:shopFloorAddedSuccessfully'),
         life: 2000,
       });
     }
@@ -222,7 +222,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     if (toast.current !== null) {
       toast.current.show({
         severity: "error",
-        summary: "Error",
+        summary: t('reactflow:error'),
         detail: message,
         life: 3000,
       });
@@ -255,7 +255,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
               />
             )}
             {key === "floor_name" && validateShopFloor && (
-              <p className="input-invalid-text">ShopFloor Name is required</p>
+              <p className="input-invalid-text">{t('reactflow:shopFloorNameRequired')}</p>
             )}
           </div>
         )}
@@ -328,7 +328,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     <div className=" flex justify-content-center">   
       <Dialog
         visible={isVisibleProp}
-        header={"Shop Floor"}
+        header={t('reactflow:shopFloor')}
         modal
         footer={footerContent}
         style={{ width: "50rem" }}

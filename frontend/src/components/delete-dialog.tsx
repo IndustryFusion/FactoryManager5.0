@@ -12,7 +12,7 @@ interface DeleteDialogProps {
 }
 
 const DeleteDialog: React.FC<DeleteDialogProps> = ({ deleteDialog, setDeleteDialog, handleDelete, deleteItemName }) => {
-    const { t } = useTranslation('overview'); 
+    const { t } = useTranslation(['overview', 'reactflow']); 
     const header = () => <h3>{t('overview:confirmation')}</h3>
     return (
         <>
@@ -25,7 +25,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ deleteDialog, setDeleteDial
                 resizable={false}
             >
                 <div className="mb-6">
-                    <span>Confirm Delete</span>
+                    <span>{t('reactflow:confirmDelete')}</span>
                     <span style={{ textTransform: "capitalize", fontWeight: "bold" }}> {deleteItemName}</span>
                 </div>
 

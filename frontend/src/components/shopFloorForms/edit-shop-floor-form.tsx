@@ -57,7 +57,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
     const [isEdit, setIsEdit] = useState(true);
     const [submitDisabled, setSubmitDisabled] = useState(false);
     const [validateShopFloor, setValidateShopFloor] = useState(false);
-    const { t } = useTranslation('button');
+    const { t } = useTranslation(['button', 'reactflow']);
 
     const findShopFloorTemplate = async () => {
         try {
@@ -71,7 +71,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             setShopFloorTemplate(response.data)
         }catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('error', 'Error', "Fetching shopfloor template");
+                showToast('error', t('reactflow:error'), t('reactflow:fetchingShopFloorTemplate'));
             } 
         }
       }
@@ -107,7 +107,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             }
         }catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('error', 'Error', "Fetching shopfloor data");
+                showToast('error', t('reactflow:error'), t('reactflow:fetchingShopFloorData'));
             } 
         } 
     }
@@ -150,7 +150,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 setUploading(false);
                 setSubmitDisabled(false);
             } catch (error) {
-                showToast("error", "Error","Error uploading file");
+                showToast("error", t('reactflow:error'), t('reactflow:errorUploadingFile'));
                 console.error("Error uploading file:", error);
                 setUploading(false);
             }
@@ -162,13 +162,13 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
         setUpdateShopFloor({});
         setIsEdit(true);
         setValidateShopFloor(false);
-        showToast("success", "Success", "Reset successfully")
+        showToast("success", t('reactflow:success'), t('reactflow:resetSuccessfully'))
     }
 
     const handleSave = async () => {
         if (updateShopFloor.floor_name === "") {
             setValidateShopFloor(true);
-            showToast("error", "Error","Please fill all required fields");
+            showToast("error", t('reactflow:error'), t('reactflow:pleaseFillAllRequiredFields'));
         } else {
             try {          
                 const finalData = Object.keys(updateShopFloor).reduce((acc, key) => {
@@ -191,13 +191,13 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
                 const shopFloorResponse = response.data;
                 if (shopFloorResponse.status === 200 || shopFloorResponse.status == 204) {
-                    showToast("success", "Success", "ShopFloor Updated successfully")
+                    showToast("success", t('reactflow:success'), t('reactflow:shopFloorUpdatedSuccessfully'))
                 } else {
-                    showToast("error", "Error","Error Updating ShopFloor");
+                    showToast("error", t('reactflow:error'), t('reactflow:errorUpdatingShopFloor'));
                 }
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    showToast('error', 'Error', "saving shopfloor");
+                    showToast('error', t('reactflow:error'), t('reactflow:savingShopFloor'));
                 }
             }
         }
@@ -238,7 +238,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                             />
                         }
                         {key === "floor_name" && validateShopFloor &&
-                            <p className="input-invalid-text" >ShopFloor Name is required</p>
+                            <p className="input-invalid-text" >{t('reactflow:shopFloorNameRequired')}</p>
                         }
                     </div>
                 }
@@ -318,7 +318,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
             visible={isEditProp}
             modal
             footer={footerContent}
-            header={"Edit Shop Floor"}
+            header={t('reactflow:editShopFloor')}
             className="create-shop-floor"
             style={{ width: "50rem" }}
             onHide={() => setIsEditProp(false)}

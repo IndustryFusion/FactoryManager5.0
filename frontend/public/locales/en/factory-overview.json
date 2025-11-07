@@ -10,5 +10,17 @@
     "view": "View",
     "edit": "Edit",
     "delete": "Delete",
-    "factory_name_required": "Factory Name is required"
+    "factory_name_required": "Factory Name is required",
+    "editFactory": "Edit Factory",
+    "fetchingFactoryTemplate": "fetching factory template",
+    "fetchingFactoryDetails": "fetching factory details",
+    "factoryEditedSuccessfully": "Factory edited successfully",
+    "browseAndUploadImage": "Browse and Upload the image",
+    "updatingFactory": "Updating factory",
+    "noShopFloors": "No Shop Floors",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "pleaseFillAllRequiredFields": "Please fill all required fields",
+    "resetSuccessfully": "Reset successfully"
 }

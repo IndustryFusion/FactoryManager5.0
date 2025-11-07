@@ -35,12 +35,14 @@ import {
 } from "@/utility/factory-site-utility";
 import { FactoryShopFloorProvider } from "@/context/factory-shopfloor-context";
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import Sidebar from "@/components/navBar/sidebar";
 import "@/styles/react-flow-page.css"
 import { TabPanel, TabView } from "primereact/tabview";
 import { OverlayPanel } from "primereact/overlaypanel";
 
 const ShopFloorManager: React.FC = () => {
+  const { t } = useTranslation('reactflow');
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
   const router = useRouter();
   const elementRef = useRef(null);
@@ -80,12 +82,12 @@ const ShopFloorManager: React.FC = () => {
   const renderAssetsTabView = () => (
     <div className="assets-tabview">
       <div className="overlay-header">
-        <p className="add-shopFloor-header">Add Floor Component</p>
+        <p className="add-shopFloor-header">{t('addFloorComponent')}</p>
 
         <button
           type="button"
           className="overlay-close-btn"
-          aria-label="Close overlay"
+          aria-label={t('closeOverlay')}
           onClick={() => opRef.current?.hide()}
         >
           <img
@@ -103,14 +105,14 @@ const ShopFloorManager: React.FC = () => {
         onTabChange={(e) => setLeftTabIndex(e.index)}
         renderActiveOnly={false}
       >
-        <TabPanel header="Areas">
+        <TabPanel header={t('areas')}>
           <ShopFloorList
             factoryId={factoryId}
             onShopFloorDeleted={handleShopFloorDeleted}
             setShopfloorProp={setShopfloor}
           />
         </TabPanel>
-        <TabPanel header="Assets">
+        <TabPanel header={t('assets')}>
           <UnallocatedAssets factoryId={factoryId} product_name="" />
         </TabPanel>
       </TabView>
@@ -123,7 +125,7 @@ const ShopFloorManager: React.FC = () => {
       <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
         <FactoryShopFloorProvider>
           <div className="navbar_wrapper mt-4">
-            <Navbar navHeader="Factory Flow" />
+            <Navbar navHeader={t('factoryFlow')} />
           </div>
           <div className="main-content bg-gray-100">
             <ShopFloorProvider>
@@ -148,7 +150,7 @@ const ShopFloorManager: React.FC = () => {
                     onOpenAssetsDialog={(e) => opRef.current?.toggle(e)}
                   />
                 ) : (
-                  <div className="loading-state">Loading factory details...</div>
+                  <div className="loading-state">{t('loadingFactoryDetails')}</div>
                 )}
               </div>
             </ShopFloorProvider>

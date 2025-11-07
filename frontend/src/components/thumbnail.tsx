@@ -21,6 +21,7 @@ import { Tag } from "primereact/tag";
 import { Tooltip } from "primereact/tooltip";
 import "@/styles/factory-form.css"
 import { useEffect, useState } from "react";
+import { useTranslation } from "next-i18next";
 
 interface HeaderTemplateOptions {
     className: string;
@@ -62,6 +63,7 @@ const Thumbnail: React.FC<ThumbnailProps> = (
     }
 
 ) => {
+    const { t } = useTranslation('reactflow');
     const [fileName, setFileName] = useState(fileProp)
 
 
@@ -125,7 +127,7 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 />
                
             </div>
-            {uploadedFileNameProp === "" && <p className="input-invalid-text">Upload image before submit, click on upload icon above</p> }
+            {uploadedFileNameProp === "" && <p className="input-invalid-text">{t('reactflow:uploadImageBeforeSubmit')}</p> }
             
             </div>
         );
@@ -142,7 +144,7 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                     style={{height:"60px", width:"60px"}}
                 />
                 <span style={{ fontSize: '12px',fontWeight:"bold", fontFamily: "Comic Sans MS",color: 'var(--text-color-secondary)' }} className="my-3">
-                    Drag and Drop Image Here
+                    {t('reactflow:dragAndDropImageHere')}
                 </span>
             </div>
         );
@@ -155,9 +157,9 @@ const Thumbnail: React.FC<ThumbnailProps> = (
 
     return (
         <>
-            <Tooltip target=".custom-choose-btn" content="Browse" position="bottom" />
-            <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
-            <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
+            <Tooltip target=".custom-choose-btn" content={t('reactflow:browse')} position="bottom" />
+            <Tooltip target=".custom-upload-btn" content={t('reactflow:upload')} position="bottom" />
+            <Tooltip target=".custom-cancel-btn" content={t('reactflow:clear')} position="bottom" />
             <FileUpload
                 id="file"
                 key={fileUploadKeyProp}
@@ -202,7 +204,7 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 <ProgressBar mode="indeterminate" style={{ marginTop: "2rem", height: '6px' }} />
             )}
             {!uploadingProp && uploadedFileNameProp.length > 0 ? (
-                <p className="p-2">Uploaded File: {uploadedFileNameProp}</p>
+                <p className="p-2">{t('reactflow:uploadedFile')} {uploadedFileNameProp}</p>
             ) : null}
         </>
     )

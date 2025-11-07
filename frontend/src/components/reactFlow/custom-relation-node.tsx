@@ -24,6 +24,7 @@ import { RootState } from "@/redux/store";
 import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css";
 import { Toast } from "primereact/toast";
+import { useTranslation } from "next-i18next";
 
 type Option = {
   asset_serial_number: string; label: string; value: string; asset_category: string
@@ -35,6 +36,7 @@ interface CustomRelationNodeProps {
 }
 
 const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => {
+  const { t } = useTranslation('reactflow');
   const { createAssetNodeAndEdgeFromRelation, setNodes, setEdges } = useContext(EdgeAddContext);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -117,8 +119,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
         setEdges((prev: any[]) => prev.filter((e) => e.id !== existingEdge.id));
         toast.current?.show({
           severity: "info",
-          summary: "Old node removed",
-          detail: "Machine relation can only connect to one asset. Replaced with your new selection.",
+          summary: t('oldNodeRemoved'),
+          detail: t('machineRelationReplaced'),
           life: 3000,
         });
       }
@@ -141,7 +143,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
 
   const toTitle = (s?: string) => (s ?? "") .toString() .replace(/[_-]+/g, " ")     .toLowerCase() .replace(/\b\w/g, c => c.toUpperCase());
 
-  const dialogHeader = `Select ${toTitle(desiredCategory)}`;
+  const dialogHeader = t('selectCategory', { category: toTitle(desiredCategory) });
   return (
     <div className="customNode relationNode">
    
@@ -171,9 +173,9 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
         icon="pi pi-plus"
         rounded
         text
-        aria-label="Add target assets"
+        aria-label={t('addTargetAssets')}
         className="global-button is-grey nodrag nopan asset-add-btn"
-        tooltip="Add target assets"
+        tooltip={t('addTargetAssets')}
         tooltipOptions={{ position: "top" }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
@@ -214,7 +216,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
               </div>
             ) : (
               <div className="text-center text-gray-500 mt-2">
-                No products available
+                {t('noProductsAvailable')}
               </div>
             )
           ) : 
@@ -238,14 +240,14 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
               </div>
             ) : (
               <div className="text-center text-gray-500 mt-2">
-                No compatible unallocated assets
+                {t('noCompatibleUnallocatedAssets')}
               </div>
           )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-          <Button label="Cancel" text onClick={() => setDialogVisible(false)} className="global-button is-grey" />
-          <Button label="Add" onClick={onConfirm} disabled={!selected.length} className="global-button" />
+          <Button label={t('cancel')} text onClick={() => setDialogVisible(false)} className="global-button is-grey" />
+          <Button label={t('add')} onClick={onConfirm} disabled={!selected.length} className="global-button" />
         </div>
       </Dialog>
     </div>

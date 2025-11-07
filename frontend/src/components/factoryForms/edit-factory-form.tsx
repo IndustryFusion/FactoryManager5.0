@@ -63,7 +63,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     const [selectedCountry, setSelectedCountry] = useState<any>({});
     const [validateFactory, setValidateFactory] = useState(false);
     const [submitDisabled, setSubmitDisabled] = useState(false);
-    const { t } = useTranslation('button');
+    const { t } = useTranslation(['button', 'factory-overview']);
     
     const findFactoryTemplate = async () => {
         try {
@@ -78,7 +78,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             setSchema(responseData);
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('error', 'Error', "fetching factory template");
+                showToast('error', t('factory-overview:error'), t('factory-overview:fetchingFactoryTemplate'));
             } 
         }
     }
@@ -130,7 +130,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                 }
             }catch (error) {
                 if (axios.isAxiosError(error)) {
-                    showToast('error', 'Error', "fetching factory details");
+                    showToast('error', t('factory-overview:error'), t('factory-overview:fetchingFactoryDetails'));
                 } 
             }            
         };
@@ -212,7 +212,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             />
                         }
                         {key === "factory_name" && validateFactory &&
-                            <p className="input-invalid-text" >Factory Name is required</p>}
+                            <p className="input-invalid-text" >{t('factory-overview:factory_name_required')}</p>}
                     </div>
                 )}
                 {property.type === "object" &&
@@ -315,7 +315,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         }
 
         if (Object.values(updateData).every(value => value === '')) {
-            showToast("error", "Error", "Please fill all required fields");
+            showToast("error", t('factory-overview:error'), t('factory-overview:pleaseFillAllRequiredFields'));
             return;
         }
         const dataToUpdate = {
@@ -326,21 +326,21 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         try {
             const response = await updateFactory(transformedData, factory!);
             if (response.success) {
-                showToast("success", "Success", "Factory edited successfully")
+                showToast("success", t('factory-overview:success'), t('factory-overview:factoryEditedSuccessfully'))
                     setTimeout(() => {
                     setIsEditProp(false);  // Close the dialog after 2 seconds
                  }, 2000);
             }
             else {
                 if (response.message.detail === "Index 0 out of bounds for length 0") {
-                    showToast('warn', 'warning', "Browse and Upload the image");
+                    showToast('warn', t('factory-overview:warning'), t('factory-overview:browseAndUploadImage'));
                 } else {
-                    showToast('warn', 'warning', response.message.detail);
+                    showToast('warn', t('factory-overview:warning'), response.message.detail);
                 }
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('error', 'Error', "Updating factory");
+                showToast('error', t('factory-overview:error'), t('factory-overview:updatingFactory'));
             } 
         }
     };
@@ -353,7 +353,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
         setEditedFactory(resetFactory);
         setValidateFactory(false);
         setIsEdit(true);
-        showToast("success", "Success", "Reset successfully");
+        showToast("success", t('factory-overview:success'), t('factory-overview:resetSuccessfully'));
     }
 
     const footerContent = (
@@ -383,7 +383,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
 
   const header =()=>{
     return(
-        <h2 className="form-title">Edit Factory</h2>
+        <h2 className="form-title">{t('factory-overview:editFactory')}</h2>
     )
   }
 
@@ -417,7 +417,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                             }
                             {!editedFactory?.hasOwnProperty('hasShopFloor') && (
                                 <div className="field mb-3">
-                                    <label>No Shop Floors</label>
+                                    <label>{t('factory-overview:noShopFloors')}</label>
                                 </div>
                             )}        
                     </div>
