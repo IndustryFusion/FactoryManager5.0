@@ -24,7 +24,8 @@ import "primeicons/primeicons.css";
 import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css"
 import { Button } from "primereact/button";      
-import { Dialog } from "primereact/dialog"; 
+import { Dialog } from "primereact/dialog";
+import { useTranslation } from "next-i18next"; 
 interface RelationOption {
   label: string;
   value: string;
@@ -59,6 +60,7 @@ interface FlowState {
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected }) => {
+  const { t } = useTranslation('reactflow');
   const subFlowId = data.subFlowId ?? null;
   const isSubflowContainer = data.isSubflowContainer ?? false;
   const connectionNodeId = useStore(connectionNodeIdSelector);
@@ -192,7 +194,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       );
     });
   };
-  const title = data.label ?? "Asset";
+  const title = data.label ?? t('asset');
   const sub = data.asset_category ?? "";
   const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
 
@@ -216,10 +218,10 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     >
     <NodeToolbar isVisible={!!selected} position="top" offset={10}>
     <Button
-      aria-label="Create Sub Flow"
+      aria-label={t('createSubFlow')}
       className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
       onMouseDown={(e) => e.stopPropagation()}
-      tooltip="Create Sub Flow"
+      tooltip={t('createSubFlow')}
       onClick={(e) => {
         e.stopPropagation();
       createSubflowFromAssetNode?.(id || data?.id);
@@ -254,19 +256,19 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   <div className="an-card">
 
     <div className="an-badge-row">
-      <span className="an-pill">Asset</span>
+      <span className="an-pill">{t('asset')}</span>
 
       {data.id ? (
         <button
           type="button"
           className={`an-id-chip${copied ? " is-copied" : ""}`}
-          title={copied ? "Copied!" : data.id}
+          title={copied ? t('copied') : data.id}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             copyId();
           }}
-          aria-label="Copy asset ID"
+          aria-label={t('copyAssetId')}
         >
           <img src="/factory-flow-buttons/id.svg" alt="" className="an-id-icon-img" draggable={false} />
           <span className="an-id-text">{shortenId(data.id)}</span>
@@ -297,7 +299,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   
       <Button
         icon="pi pi-plus"
-        aria-label="Add relations"
+        aria-label={t('selectRelations')}
         className="global-button is-grey nodrag nopan asset-add-btn"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -309,7 +311,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
 
 
       <Dialog
-        header="Select Relations"           
+        header={t('selectRelations')}           
         visible={dialogVisible}             
         onHide={() => setDialogVisible(false)}
         style={{ width: "28rem" }}
@@ -318,7 +320,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       >
         <div className="p-field" style={{ marginTop: 8 }}>
           {isLoading ? (
-            <div className="text-center text-gray-500 p-2">Loading…</div>
+            <div className="text-center text-gray-500 p-2">{t('loading')}</div>
           ) : relationOptions.length ? (
            <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
              {relationOptions.map((opt) => {
@@ -341,14 +343,14 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-500 p-2">No relations available</div>
+            <div className="text-center text-gray-500 p-2">{t('noRelationsAvailable')}</div>
           )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-          <Button label="Close" onClick={() => setDialogVisible(false)} text  className="global-button is-grey"/>  
+          <Button label={t('close')} onClick={() => setDialogVisible(false)} text  className="global-button is-grey"/>  
           <Button
-            label="Add"
+            label={t('add')}
             onClick={handleAdd}
             disabled={!selectedRelations.length}
             className="global-button"

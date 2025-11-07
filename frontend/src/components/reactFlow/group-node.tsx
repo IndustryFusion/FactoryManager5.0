@@ -4,6 +4,7 @@ import { InputText } from "primereact/inputtext";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import EdgeAddContext from "@/context/edge-add-context";
+import { useTranslation } from "next-i18next";
 
 type GroupData = {
   subFlowId?: string;  
@@ -13,6 +14,7 @@ type GroupData = {
 const genDefaultId = () =>`production_line_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
 const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
+  const { t } = useTranslation('reactflow');
   const id = useNodeId()!;
   const { setNodes } = useContext(EdgeAddContext);
   const [showEditButton, setShowEditButton] = useState(false);
@@ -135,7 +137,7 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "80%" }}>
           {headerId}
         </span>
-        <span style={{ opacity: 0.6 }}>resize ↘</span>
+        <span style={{ opacity: 0.6 }}>{t('resize')}</span>
       </div>
 
       {showEditButton && (
@@ -172,7 +174,7 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
       />
 
       <Dialog
-        header="Edit Group"
+        header={t('editGroup')}
         visible={showDialog}
         draggable={false}
         modal
@@ -191,13 +193,13 @@ const GroupNode: React.FC<NodeProps<GroupData>> = ({ selected, data }) => {
                 if (e.key === "Escape") handleDialogHide();
               }}
               className="w-full"
-              placeholder="production_line_alpha | Line A | 42 ..."
+              placeholder={t('productionLinePlaceholder')}
               autoFocus
             />
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-            <Button label="Cancel" className="global-button is-grey" onClick={handleDialogHide} />
-            <Button label="Save" className="global-button" onClick={handleSave} />
+            <Button label={t('cancel')} className="global-button is-grey" onClick={handleDialogHide} />
+            <Button label={t('save')} className="global-button" onClick={handleSave} />
           </div>
         </div>
       </Dialog>

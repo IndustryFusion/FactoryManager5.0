@@ -9,6 +9,7 @@ import "../../styles/custom-asset-node.css";
 import { fetchAllShopFloors } from "@/utility/factory-site-utility";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { useShopFloor } from "@/context/shopfloor-context";
+import { useTranslation } from "next-i18next";
 
 type AreaOption = { label: string; value: string };
 type Floor = { id: string; floorName: string; type_of_floor: string };
@@ -20,6 +21,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
   xPos,
   yPos,
 }) => {
+  const { t } = useTranslation('reactflow');
   const router = useRouter();
   const { latestShopFloor } = useShopFloor();
   const { getNodes, getEdges, setNodes, setEdges, fitView } = useReactFlow();
@@ -83,7 +85,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
     selectedAreas.forEach((areaId, i) => {
       const sfNodeId = `shopFloor_${areaId}`;
       const exists = nodes.find((n) => n.id === sfNodeId);
-      const label = areaOptions.find((o) => o.value === areaId)?.label ?? "Area";
+      const label = areaOptions.find((o) => o.value === areaId)?.label ?? t('area');
 
       if (!exists) {
         toAddNodes.push({
@@ -130,10 +132,10 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
     if (!areasVisible || !latestShopFloor) return;
 
     const id = latestShopFloor.id;
-    const label =
+      const label =
       latestShopFloor?.name?.value ??
       latestShopFloor?.floorName ??
-      String(latestShopFloor?.name ?? "New Area");
+      String(latestShopFloor?.name ?? t('area'));
 
     setAreaOptions((prev) => {
       if (!id || prev.some((o) => o.value === id)) return prev;
@@ -166,12 +168,12 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
         />
       </div>
 
-      <div className="fn-pill">Factory Site</div>
+      <div className="fn-pill">{t('factorySite')}</div>
 
       <Handle id="bottom" type="source" position={Position.Bottom} className="handle-out assetNode" />
 
       <Button
-        aria-label="Add Areas"
+        aria-label={t('addAreas')}
         className="global-button is-grey nodrag nopan factory-add-btn p-button-rounded p-button-icon-only"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpenAreas}
@@ -184,9 +186,9 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
       <Dialog
         header={
           <div className="areas-header">
-            <span>Select Areas</span>
+            <span>{t('selectAreas')}</span>
             <Button
-              aria-label="Add Areas"
+              aria-label={t('addAreas')}
               className="global-button nodrag nopan add-areas-hdr-btn"
               onClick={(e) => {
                 e.stopPropagation();
@@ -197,7 +199,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span>Add Areas</span>
+              <span>{t('addAreas')}</span>
             </Button>
           </div>
         }
@@ -211,9 +213,9 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
         <div className="p-3">
           <div className="p-field" style={{ marginTop: 8 }}>
             {!factoryIdValue ? (
-              <div className="text-center text-gray-500 p-2">Missing factory id</div>
+              <div className="text-center text-gray-500 p-2">{t('missingFactoryId')}</div>
             ) : isLoading ? (
-              <div className="text-center text-gray-500 p-2">Loading…</div>
+              <div className="text-center text-gray-500 p-2">{t('loading')}</div>
             ) : areaOptions.length ? (
               <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
                 {areaOptions.map((opt) => {
@@ -239,13 +241,13 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
                 })}
               </div>
             ) : (
-              <div className="text-center text-gray-500 p-2">No areas available</div>
+              <div className="text-center text-gray-500 p-2">{t('noAreasAvailable')}</div>
             )}
           </div>
 
           <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-            <Button label="Close" onClick={() => setAreasVisible(false)} text className="global-button is-grey" />
-            <Button label="Add" onClick={handleAddAreas} disabled={!selectedAreas.length} className="global-button" />
+            <Button label={t('close')} onClick={() => setAreasVisible(false)} text className="global-button is-grey" />
+            <Button label={t('add')} onClick={handleAddAreas} disabled={!selectedAreas.length} className="global-button" />
           </div>
         </div>
       </Dialog>

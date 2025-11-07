@@ -13,6 +13,7 @@ import { Toast } from "primereact/toast";
 import CreateShopFloor from "../shopFloorForms/create-shop-floor-form";
 import EditShopFloor from "../shopFloorForms/edit-shop-floor-form";
 import DeleteDialog from "../delete-dialog";
+import { useTranslation } from "next-i18next";
 
 type ShopFloorNodeData = {
   label: string;
@@ -45,7 +46,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   data,
   selected
 }) => {
-  const pillText = data.kind || "Area";
+  const { t } = useTranslation('reactflow');
+  const pillText = data.kind || t('area');
   const router = useRouter();
   const dispatch = useDispatch();
   const { addAssetsToShopFloor ,setNodes: setGraphNodes, setEdges: setGraphEdges  } = useContext(EdgeAddContext) as {
@@ -106,14 +108,14 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       if (!factoryId) {
         toast.current?.show({
           severity: "warn",
-          summary: "Missing factory id",
+          summary: t('missingFactoryId'),
           life: 2500,
         });
         return;
       }
       setShowCreate(true);
     },
-    [factoryId]
+    [factoryId, t]
   );
 
   // Edit: open edit form
@@ -123,14 +125,14 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       if (!backendShopFloorId) {
         toast.current?.show({
           severity: "warn",
-          summary: "No shop floor id to edit",
+          summary: t('noShopFloorIdToEdit'),
           life: 2500,
         });
         return;
       }
       setShowEdit(true);
     },
-    [backendShopFloorId]
+    [backendShopFloorId, t]
   );
 
 
@@ -145,8 +147,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
     if (!factoryId || !backendShopFloorId) {
       toast.current?.show({
         severity: "warn",
-        summary: "Missing ids",
-        detail: "Factory or ShopFloor id missing",
+        summary: t('missingIds'),
+        detail: t('factoryOrShopFloorIdMissing'),
         life: 2500,
       });
       return;
@@ -163,22 +165,22 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
 
       toast.current?.show({
         severity: "success",
-        summary: "Deleted",
-        detail: `Shop floor "${data.label}" removed`,
+        summary: t('deleted'),
+        detail: t('shopFloorRemoved', { label: data.label }),
         life: 2200,
       });
     } catch (err) {
       console.error("Delete shop floor failed:", err);
       toast.current?.show({
         severity: "error",
-        summary: "Delete failed",
-        detail: "Could not delete the shop floor",
+        summary: t('deleteFailed'),
+        detail: t('couldNotDeleteShopFloor'),
         life: 2800,
       });
     } finally {
       setShowConfirmDelete(false);
     }
-  }, [factoryId, backendShopFloorId, setGraphNodes, setGraphEdges, shopFloorNodeId, data?.label]);
+  }, [factoryId, backendShopFloorId, setGraphNodes, setGraphEdges, shopFloorNodeId, data?.label, t]);
   const openAssets = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -252,44 +254,44 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         className="sf-toolbar"
       >
         <Button
-          aria-label="Add assets"
+          aria-label={t('addAssets')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleAddAssets}
-          tooltip="Add assets"
+          tooltip={t('addAssets')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/asset-plus-icon.svg" alt="" />
         </Button>
 
         <Button
-          aria-label="Add shop Floor"
+          aria-label={t('addShopFloor')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleOpenCreate}
-          tooltip="Add shop Floor"
+          tooltip={t('addShopFloor')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/hut.svg" alt="" />
         </Button>
 
         <Button
-          aria-label="Edit"
+          aria-label={t('edit')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleEdit}
-          tooltip="Edit"
+          tooltip={t('edit')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/edit-icon.svg" alt="" width="42px" height="42px" />
         </Button>
 
         <Button
-          aria-label="Delete"
+          aria-label={t('delete')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleAskDelete}
-          tooltip="Delete"
+          tooltip={t('delete')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/delete-02 (1).svg" alt="" width="22px" height="22px"/>
@@ -312,7 +314,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       <Handle id="out" type="source" position={Position.Bottom} className="handle-out customHandle" />
 
       <Button
-        aria-label="Add"
+        aria-label={t('addAssets')}
         className="global-button is-grey nodrag nopan shopfloor-add-btn p-button-rounded p-button-icon-only"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={openAssets}
@@ -332,9 +334,9 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         className="dialog-class"
         header={
           <div className="areas-header">
-            <span>Select Assets</span>
+            <span>{t('selectAssets')}</span>
             <Button
-              aria-label="Create Retrofit Assets"
+              aria-label={t('createRetrofitAssets')}
               className="global-button nodrag nopan add-areas-hdr-btn"
               onClick={(e) => {
                 e.stopPropagation();
@@ -344,16 +346,16 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span>Create Retrofit Assets</span>
+              <span>{t('createRetrofitAssets')}</span>
             </Button>
           </div>
         }
       >
         <div className="p-field" style={{ marginTop: 8 }}>
           {!factoryId ? (
-            <div className="text-center text-gray-500 p-2">Missing factory id</div>
+            <div className="text-center text-gray-500 p-2">{t('missingFactoryId')}</div>
           ) : isLoading ? (
-            <div className="text-center text-gray-500 p-2">Loading…</div>
+            <div className="text-center text-gray-500 p-2">{t('loading')}</div>
           ) : options.length ? (
             <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
               {options.map((opt) => {
@@ -383,13 +385,13 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-500 p-2">No assets available</div>
+            <div className="text-center text-gray-500 p-2">{t('noAssetsAvailable')}</div>
           )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-          <Button label="Close" onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
-          <Button label="Done" onClick={handleAdd} className="global-button" />
+          <Button label={t('close')} onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
+          <Button label={t('done')} onClick={handleAdd} className="global-button" />
         </div>
       </Dialog>
 

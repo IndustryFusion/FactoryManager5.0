@@ -564,8 +564,8 @@ const FlowEditor: React.FC<
       if (previousState.source === 'backend') {
         toast.current?.show({
           severity: 'info',
-          summary: 'Initial State',
-          detail: 'Returned to initial backend state',
+          summary: t('reactflow:initialState'),
+          detail: t('reactflow:returnedToInitialBackendState'),
           life: 3000,
         });
       }
@@ -709,8 +709,8 @@ const FlowEditor: React.FC<
         console.error("Error fetching flowchart data:", error);
         toast.current?.show({
           severity: "error",
-          summary: "Error loading flowchart",
-          detail: "Failed to load flowchart data",
+          summary: t('reactflow:errorLoadingFlowchart'),
+          detail: t('reactflow:failedToLoadFlowchartData'),
           life: 3000,
         });
       } finally {
@@ -778,7 +778,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Flowchart not updated",
+          summary: t('reactflow:flowchartNotUpdated'),
           life: 3000,
         });
       }
@@ -802,7 +802,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "error",
-          summary: "Alocated asset not updated",
+          summary: t('reactflow:allocatedAssetNotUpdated'),
           life: 3000,
         });
       }
@@ -822,7 +822,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Scorpio Not Updated",
+          summary: t('reactflow:scorpioNotUpdated'),
           life: 3000,
         });
       }
@@ -831,7 +831,7 @@ const FlowEditor: React.FC<
       console.error("Error saving flowchart:", error);
       toast.current?.show({
         severity: "error",
-        summary: "Error in Server",
+        summary: t('reactflow:errorInServer'),
         life: 3000,
       });
       //dispatch(reset());
@@ -884,7 +884,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Flowchart Not created",
+          summary: t('reactflow:flowchartNotCreated'),
           life: 3000,
         });
       }
@@ -910,7 +910,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Allocated Asset not created",
+          summary: t('reactflow:allocatedAssetNotCreated'),
           life: 3000,
         });
       }
@@ -941,7 +941,7 @@ const FlowEditor: React.FC<
       console.error("Error saving flowchart:", error);
       toast.current?.show({
         severity: "error",
-        summary: "Server Error : Not Saved",
+        summary: t('reactflow:serverErrorNotSaved'),
         life: 3000,
       });
     } finally {
@@ -1023,7 +1023,7 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Not Updated Properly",
+          summary: t('reactflow:notUpdatedProperly'),
           life: 3000,
         });
       }
@@ -1035,7 +1035,7 @@ const FlowEditor: React.FC<
       );
       toast.current?.show({
         severity: "error",
-        summary: "Server Error : Not Updated",
+        summary: t('reactflow:serverErrorNotUpdated'),
         life: 3000,
       });
     } finally {
@@ -1062,7 +1062,7 @@ const FlowEditor: React.FC<
       console.error("Failed to update flowchart:", error);
       toast.current?.show({
         severity: "error",
-        summary: "Failed to refresh flowchart",
+        summary: t('reactflow:failedToRefreshFlowchart'),
         life: 3000,
       });
     } finally {
@@ -1158,7 +1158,7 @@ const FlowEditor: React.FC<
           } else {
             toast.current?.show({
               severity: "warn",
-              summary: "Flowchart not updated",
+              summary: t('reactflow:flowchartNotUpdated'),
               life: 3000,
             });
           }
@@ -1194,7 +1194,7 @@ const FlowEditor: React.FC<
             } else {
               toast.current?.show({
                 severity: "warn",
-                summary: "Allocated Asset Not created",
+                summary: t('reactflow:allocatedAssetNotCreated'),
                 life: 3000,
               });
             }
@@ -1219,7 +1219,7 @@ const FlowEditor: React.FC<
             } else {
               toast.current?.show({
                 severity: "warn",
-                summary: "Allocated Asset Scorpio Not Updated",
+                summary: t('reactflow:allocatedAssetNotUpdated'),
                 life: 3000,
               });
             }
@@ -1258,7 +1258,7 @@ const FlowEditor: React.FC<
       );
       toast.current?.show({
         severity: "error",
-        summary: "Server Error",
+        summary: t('reactflow:errorInServer'),
         life: 3000,
       });
     } finally {
@@ -1278,8 +1278,8 @@ const FlowEditor: React.FC<
         } catch (error) {
           toast.current?.show({
             severity: "error",
-            summary: "Save Failed",
-            detail: "Failed to save changes!",
+            summary: t('reactflow:saveFailed'),
+            detail: t('reactflow:failedToSaveChanges'),
           });
           console.error("Failed to save changes:", error);
         } finally {
@@ -1491,8 +1491,8 @@ const FlowEditor: React.FC<
           if (existingConnections.length >= 1) {
             toast.current?.show({
               severity: "warn",
-              summary: "Operation not allowed",
-              detail: "Machine relation can only connect to one asset.",
+              summary: t('reactflow:operationNotAllowed'),
+              detail: t('reactflow:machineRelationOneAsset'),
             });
             return;
           }
@@ -1511,8 +1511,8 @@ const FlowEditor: React.FC<
         if (alreadyHasChild) {
           toast.current?.show({
             severity: "warn",
-            summary: "Operation not allowed",
-            detail: "A machine relation can only connect to one asset.",
+            summary: t('reactflow:operationNotAllowed'),
+            detail: t('reactflow:machineRelationOneAsset'),
           });
           return;
         }
@@ -1551,12 +1551,14 @@ const FlowEditor: React.FC<
 
         // Check if the asset category === the relation type
         if (assetCategory !== relationType) {
+          const relationName = `has${assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)}`;
           toast.current?.show({
             severity: "warn",
-            summary: "Connection not allowed",
-            detail: `Assets of category '${targetNode.asset_category
-              }' can only connect to 'has${assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1)
-              }' relations.`,
+            summary: t('reactflow:connectionNotAllowed'),
+            detail: t('reactflow:assetsCategoryConnection', {
+              category: targetNode.asset_category,
+              relation: relationName
+            }),
           });
           return; // Prevent the connection
         }
@@ -1601,8 +1603,8 @@ const FlowEditor: React.FC<
         if (toast) {
           toast.current?.show({
             severity: "error",
-            summary: "Connection not allowed",
-            detail: "Invalid connection type.",
+            summary: t('reactflow:connectionNotAllowed'),
+            detail: t('reactflow:invalidConnectionType'),
           });
         }
       }
@@ -1613,7 +1615,7 @@ const FlowEditor: React.FC<
   //@desc : on backspace button press we delete edges or nodes(expect:  factory to shopFloor edges and shopFloor/factory nodes )
   const handleBackspacePress = useCallback(() => {
     if (!selectedElements || (!selectedElements.nodes?.length && !selectedElements.edges?.length)) {
-      toast.current?.show({ severity: "warn", summary: "No selection", detail: "Please select an edge or node to delete.", life: 3000 });
+      toast.current?.show({ severity: "warn", summary: t('reactflow:noSelection'), detail: t('reactflow:pleaseSelectEdgeOrNode'), life: 3000 });
       return;
     }
 
@@ -1652,8 +1654,11 @@ const FlowEditor: React.FC<
 
     toast.current?.show({
       severity: "success",
-      summary: "Deleted",
-      detail: `Removed ${edgeIdsToDelete.size} edge(s) and ${nodeIdsToDelete.size} node(s).`,
+      summary: t('reactflow:deleted'),
+      detail: t('reactflow:removedEdgesAndNodes', {
+        edges: edgeIdsToDelete.size,
+        nodes: nodeIdsToDelete.size
+      }),
       life: 2000,
     });
   }, [selectedElements, nodes, edges, setNodes, setEdges, addToHistory, toast]);
@@ -1893,8 +1898,8 @@ const FlowEditor: React.FC<
       if (isSubf && createsParentCycle(dragged.id, container.id, byId)) {
         toast.current?.show({
           severity: "warn",
-          summary: "Invalid move",
-          detail: "Cannot move a subflow into its own descendant.",
+          summary: t('reactflow:invalidMove'),
+          detail: t('reactflow:cannotMoveSubflowIntoDescendant'),
           life: 2000,
         });
         return;
@@ -2309,7 +2314,7 @@ const FlowEditor: React.FC<
 
   const handleValidationUpload = (files: File[]) => {
     if (files.length === 0) {
-      toast.current?.show({ severity: "warn", summary: "No file selected", life: 2000 });
+      toast.current?.show({ severity: "warn", summary: t('reactflow:noFileSelected'), life: 2000 });
       return;
     }
 
@@ -2317,13 +2322,13 @@ const FlowEditor: React.FC<
     const deployRes = uploadValidationFiles(files);
     deployRes.then(res => {
       if (res.status) {
-        toast.current?.show({ severity: "success", summary: "Job running successfully", detail: res.jobId, life: 5000 });
+        toast.current?.show({ severity: "success", summary: t('reactflow:jobRunningSuccessfully'), detail: res.jobId, life: 5000 });
       } else {
-        toast.current?.show({ severity: "error", summary: "Upload failed", detail: res.message, life: 4000 });
+        toast.current?.show({ severity: "error", summary: t('reactflow:uploadFailed'), detail: res.message, life: 4000 });
       }
     }).catch(err => {
       console.error("Upload error:", err);
-      toast.current?.show({ severity: "error", summary: "Upload error", detail: err.message || String(err), life: 4000 });
+      toast.current?.show({ severity: "error", summary: t('reactflow:uploadError'), detail: err.message || String(err), life: 4000 });
     });
   }
 
@@ -2423,7 +2428,7 @@ const FlowEditor: React.FC<
 
     toast.current?.show({
       severity: "success",
-      summary: "Auto layout applied",
+      summary: t('reactflow:autoLayoutApplied'),
       life: 1600,
     });
   }, [edges, setNodes, addToHistory, reactFlowInstance]);
@@ -2435,7 +2440,7 @@ const FlowEditor: React.FC<
       nodes.find(n => isAssetNode(n) && (n.data as any)?.id === assetNodeIdOrEntityId);
 
     if (!anchor) {
-      toast.current?.show({ severity: "warn", summary: "Asset not found", life: 2000 });
+      toast.current?.show({ severity: "warn", summary: t('reactflow:assetNotFound'), life: 2000 });
       return;
     }
 
@@ -2443,7 +2448,7 @@ const FlowEditor: React.FC<
     const alreadyInside = isInAnySubflow(anchor, new Map(nodes.map(n => [n.id, n])));
 
     if (existing && !alreadyInside) {
-      toast.current?.show({ severity: "info", summary: "Opening subflow", life: 1400 });
+      toast.current?.show({ severity: "info", summary: t('reactflow:openingSubflow'), life: 1400 });
       return;
     }
 
@@ -2463,8 +2468,8 @@ const FlowEditor: React.FC<
 
     toast.current?.show({
       severity: "success",
-      summary: "Subflow created",
-      detail: "Grouped nodes under this anchor",
+      summary: t('reactflow:subflowCreated'),
+      detail: t('reactflow:groupedNodesUnderAnchor'),
       life: 1800,
     });
   }, [nodes, edges, setNodes, setEdges, addToHistory]);
@@ -2492,7 +2497,7 @@ const FlowEditor: React.FC<
       <Toast ref={toast} />
       <ReactFlowProvider>
         <Dialog
-          header="Factory Details"
+          header={t('reactflow:factoryDetails')}
           visible={dialogVisible}
           onHide={() => setDialogVisible(false)}
           style={{ width: "50vw" }}
@@ -2500,7 +2505,7 @@ const FlowEditor: React.FC<
         >
           <hr style={{ margin: "0" }} />
           <p>
-            <span className="bold-text">Factory ID: </span>{" "}
+            <span className="bold-text">{t('reactflow:factoryId')} </span>{" "}
             <span>{selectedFactoryId}</span>
           </p>
         </Dialog>
@@ -2543,9 +2548,9 @@ const FlowEditor: React.FC<
             <div className="rf-toolbar">
               <Tooltip target=".rf-tip" position="top" showDelay={150} hideDelay={0} />
 
-              <span className="rf-tip" data-pr-tooltip="Create flow">
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:createFlow')}>
                 <Button
-                  aria-label="Create flow"
+                  aria-label={t('reactflow:createFlow')}
                   className="rf-btn"
                   onClick={(e) => onOpenAssetsDialog?.(e)}
                 >
@@ -2553,9 +2558,9 @@ const FlowEditor: React.FC<
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Undo (Ctrl+Z)">
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:undoTooltip')}>
                 <Button
-                  aria-label="Undo"
+                  aria-label={t('reactflow:undo')}
                   className="rf-btn"
                   onClick={handleUndo}
                   disabled={currentHistoryIndex <= 0}
@@ -2564,9 +2569,9 @@ const FlowEditor: React.FC<
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Redo (Ctrl+Shift+Z)">
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:redoTooltip')}>
                 <Button
-                  aria-label="Redo"
+                  aria-label={t('reactflow:redo')}
                   className="rf-btn"
                   onClick={handleRedo}
                   disabled={currentHistoryIndex >= history.length - 1}
@@ -2575,35 +2580,35 @@ const FlowEditor: React.FC<
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Save">
-                <Button aria-label="Save" className="rf-btn" onClick={saveOrUpdate}>
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:save')}>
+                <Button aria-label={t('reactflow:save')} className="rf-btn" onClick={saveOrUpdate}>
                   <img src="/factory-flow-buttons/file-icon.svg" alt="" />
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Refresh">
-                <Button aria-label="Refresh" className="rf-btn" onClick={refreshFromScorpio}>
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:refresh')}>
+                <Button aria-label={t('reactflow:refresh')} className="rf-btn" onClick={refreshFromScorpio}>
                   <img src="/factory-flow-buttons/refresh-icon.svg" alt="" />
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Reset">
-                <Button aria-label="Reset" className="rf-btn" onClick={deleteMongoAndScorpio}>
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:reset')}>
+                <Button aria-label={t('reactflow:reset')} className="rf-btn" onClick={deleteMongoAndScorpio}>
                   <img src="/factory-flow-buttons/erase-icon.svg" alt="" />
                 </Button>
               </span>
 
-              <span className="rf-tip" data-pr-tooltip="Export JPEG">
-                <Button aria-label="Export JPEG" className="rf-btn" onClick={handleExportClick}>
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:exportJPEG')}>
+                <Button aria-label={t('reactflow:exportJPEG')} className="rf-btn" onClick={handleExportClick}>
                   <img src="/factory-flow-buttons/image-icon.svg" alt="" />
                 </Button>
               </span>
-              <span className="rf-tip" data-pr-tooltip="Auto Layout">
-                <Button aria-label="Auto Layout" className="rf-btn" onClick={handleAutoLayout}>
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:autoLayout')}>
+                <Button aria-label={t('reactflow:autoLayout')} className="rf-btn" onClick={handleAutoLayout}>
                   <img src="/factory-flow-buttons/grid-view.svg" alt="" />
                 </Button>
               </span>
-              <span className="rf-tip" data-pr-tooltip="Upload Validation Files">
+              <span className="rf-tip" data-pr-tooltip={t('reactflow:uploadValidationFiles')}>
                 <input
                   ref={fileRef}
                   type="file"
@@ -2611,7 +2616,7 @@ const FlowEditor: React.FC<
                   onChange={onFilesChange}
                   style={{ display: "none" }}
                 />
-                <Button aria-label="Upload Validation Files" className="rf-btn" onClick={openPicker}>
+                <Button aria-label={t('reactflow:uploadValidationFiles')} className="rf-btn" onClick={openPicker}>
                   <img src="/factory-flow-buttons/file-icon.svg" alt="" />
                 </Button>
               </span>

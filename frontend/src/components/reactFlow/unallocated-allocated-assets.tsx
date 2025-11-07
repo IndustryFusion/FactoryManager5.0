@@ -172,8 +172,8 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     event.dataTransfer.effectAllowed = "move";
   }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div>{t('reactflow:loading')}</div>;
+  if (error) return <div>{t('reactflow:errorColon')} {error}</div>;
   const handleSearchChange = (value: string) => {
     setSearchTerm(value.toLowerCase());
   };
@@ -196,11 +196,11 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
           icon="pi pi-filter-fill"
           onClick={(e) => menu.current?.toggle(e)}
           className="p-button-text"
-          aria-label="Filter"
+          aria-label={t('reactflow:filter')}
         />
         <Menu 
           model={[{
-            label: 'Asset Categories',
+            label: t('reactflow:assetCategories'),
             items: assetCategories.map(category => ({
               template: () => (
                 <div className="flex align-items-center p-2">
