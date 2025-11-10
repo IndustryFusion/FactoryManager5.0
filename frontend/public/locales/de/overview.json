@@ -31,6 +31,7 @@
     "view_logs": "Synchronisierungsprotokolle anzeigen",
     "done": "Fertig",
     "sync_pdt": "PDT synchronisieren",
+    "access_permission": "Sie haben keine Zugriffsrechte. Bitten Sie Ihren Firmenadministrator um die Zugriffsrechte",
     "sync_dialog": {
         "dialog_title": "Produktdaten synchronisieren",
         "message": "Sie sind dabei, <strong>{{modelCount}}</strong> Produktmodelle und <strong>{{productCount}}</strong> Produkte zu synchronisieren.",

@@ -13,6 +13,7 @@ import { Toast } from "primereact/toast";
 import CreateShopFloor from "../shopFloorForms/create-shop-floor-form";
 import EditShopFloor from "../shopFloorForms/edit-shop-floor-form";
 import DeleteDialog from "../delete-dialog";
+import { getAccessGroup } from '@/utility/indexed-db';
 import { useTranslation } from "next-i18next";
 
 type ShopFloorNodeData = {
@@ -46,8 +47,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   data,
   selected
 }) => {
-  const { t } = useTranslation('reactflow');
-  const pillText = data.kind || t('area');
+  const { t } = useTranslation(["overview","reactflow"]);
+  const pillText = data.kind || t('reactflow:area');
   const router = useRouter();
   const dispatch = useDispatch();
   const { addAssetsToShopFloor ,setNodes: setGraphNodes, setEdges: setGraphEdges  } = useContext(EdgeAddContext) as {
@@ -81,6 +82,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<Option[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
 
   const optionsFromStore = useCallback((storeVal: any): Option[] => {
     const list: StoreAsset[] = Array.isArray(storeVal)
@@ -243,6 +246,19 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
     setAssetsVisible(false);
   };
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
   return (
     <div className={`shopfloor-node ${selected ? "is-selected" : ""}`} 
       onClick={(e) => { e.stopPropagation(); setShowActions(true); }}
@@ -251,47 +267,48 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         isVisible={showActions}
         position="top"
         offset={10}
-        className="sf-toolbar"
+        className="sf-toolbar flex"
       >
         <Button
-          aria-label={t('addAssets')}
+          aria-label={t('reactflow:addAssets')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleAddAssets}
-          tooltip={t('addAssets')}
-          tooltipOptions={{ position: "top" }}
+          disabled={!accessgroupIndexDb?.access_group?.create} 
+          tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : t('reactflow:addAssets')}
+          tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
         >
           <img src="/factory-flow-buttons/asset-plus-icon.svg" alt="" />
         </Button>
 
         <Button
-          aria-label={t('addShopFloor')}
+          aria-label={t('reactflow:addShopFloor')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleOpenCreate}
-          tooltip={t('addShopFloor')}
+          tooltip={t('reactflow:addShopFloor')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/hut.svg" alt="" />
         </Button>
 
         <Button
-          aria-label={t('edit')}
+          aria-label={t('reactflow:edit')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={handleEdit}
-          tooltip={t('edit')}
+          tooltip={t('reactflow:edit')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/edit-icon.svg" alt="" width="42px" height="42px" />
         </Button>
 
         <Button
-          aria-label={t('delete')}
+          aria-label={t('reactflow:delete')}
           className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
           onMouseDown={(e) => e.stopPropagation()}
            onClick={handleAskDelete}
-          tooltip={t('delete')}
+          tooltip={t('reactflow:delete')}
           tooltipOptions={{ position: "top" }}
         >
           <img src="/factory-flow-buttons/delete-02 (1).svg" alt="" width="22px" height="22px"/>
@@ -314,7 +331,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       <Handle id="out" type="source" position={Position.Bottom} className="handle-out customHandle" />
 
       <Button
-        aria-label={t('addAssets')}
+        aria-label={t('reactflow:addAssets')}
         className="global-button is-grey nodrag nopan shopfloor-add-btn p-button-rounded p-button-icon-only"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={openAssets}
@@ -334,28 +351,30 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         className="dialog-class"
         header={
           <div className="areas-header">
-            <span>{t('selectAssets')}</span>
+            <span>{t('reactflow:selectAssets')}</span>
             <Button
-              aria-label={t('createRetrofitAssets')}
+              aria-label={t('reactflow:createRetrofitAssets')}
               className="global-button nodrag nopan add-areas-hdr-btn"
               onClick={(e) => {
                 e.stopPropagation();
               }}
-              disabled={!factoryId}
+              disabled={!factoryId || !accessgroupIndexDb?.access_group?.create} 
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
             >
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span>{t('createRetrofitAssets')}</span>
+              <span>{t('reactflow:createRetrofitAssets')}</span>
             </Button>
           </div>
         }
       >
         <div className="p-field" style={{ marginTop: 8 }}>
           {!factoryId ? (
-            <div className="text-center text-gray-500 p-2">{t('missingFactoryId')}</div>
+            <div className="text-center text-gray-500 p-2">{t('reactflow:missingFactoryId')}</div>
           ) : isLoading ? (
-            <div className="text-center text-gray-500 p-2">{t('loading')}</div>
+            <div className="text-center text-gray-500 p-2">{t('reactflow:loading')}</div>
           ) : options.length ? (
             <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
               {options.map((opt) => {
@@ -367,6 +386,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
                       className="custom-checkbox"
                       checked={checked}
                       onChange={() => toggle(opt.value)}  // << create on click
+                      disabled={!accessgroupIndexDb?.access_group?.create}
                     />
                     <span>
                       {opt.label}
@@ -385,13 +405,13 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-500 p-2">{t('noAssetsAvailable')}</div>
+            <div className="text-center text-gray-500 p-2">{t('reactflow:noAssetsAvailable')}</div>
           )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-          <Button label={t('close')} onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
-          <Button label={t('done')} onClick={handleAdd} className="global-button" />
+          <Button label={t('reactflow:close')} onClick={() => setAssetsVisible(false)} text className="global-button is-grey" />
+          <Button label={t('reactflow:done')} onClick={handleAdd} className="global-button" />
         </div>
       </Dialog>
 
