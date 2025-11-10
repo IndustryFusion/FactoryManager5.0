@@ -25,7 +25,9 @@ import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css"
 import { Button } from "primereact/button";      
 import { Dialog } from "primereact/dialog";
-import { useTranslation } from "next-i18next"; 
+import { getAccessGroup } from '@/utility/indexed-db';
+import { useTranslation } from "next-i18next";
+
 interface RelationOption {
   label: string;
   value: string;
@@ -60,7 +62,6 @@ interface FlowState {
 const connectionNodeIdSelector = (state:FlowState) => state.connectionNodeId;
 
 const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected }) => {
-  const { t } = useTranslation('reactflow');
   const subFlowId = data.subFlowId ?? null;
   const isSubflowContainer = data.isSubflowContainer ?? false;
   const connectionNodeId = useStore(connectionNodeIdSelector);
@@ -79,7 +80,9 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   const [isLoading, setIsLoading] = useState(false);
   const [imgErr, setImgErr] = useState(false);
   const [copied, setCopied] = useState(false);
- 
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
+  const { t } = useTranslation(["overview","reactflow"]);
+
   const shortenId = (s = "") =>
     s.length > 18 ? `${s.slice(0, 8)}…${s.slice(-12)}` : s;
 
@@ -194,7 +197,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       );
     });
   };
-  const title = data.label ?? t('asset');
+  const title = data.label ?? t('reactflow:asset');
   const sub = data.asset_category ?? "";
   const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
 
@@ -209,6 +212,19 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     }
   };
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
 
   return (
   <div className="customNode" 
@@ -216,16 +232,18 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     onClick={onSelect}
     
     >
-    <NodeToolbar isVisible={!!selected} position="top" offset={10}>
+    <NodeToolbar isVisible={!!selected}  offset={10}>
     <Button
-      aria-label={t('createSubFlow')}
+      aria-label={t('reatflow:createSubFlow')}
       className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
       onMouseDown={(e) => e.stopPropagation()}
-      tooltip={t('createSubFlow')}
       onClick={(e) => {
         e.stopPropagation();
       createSubflowFromAssetNode?.(id || data?.id);
       }}
+      disabled={!accessgroupIndexDb?.access_group?.create} 
+      tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : t('reatflow:createSubFlow')}
+      tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
     >
       <img src="/factory-flow-buttons/hut.svg" alt="" />
     </Button>
@@ -256,19 +274,19 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   <div className="an-card">
 
     <div className="an-badge-row">
-      <span className="an-pill">{t('asset')}</span>
+      <span className="an-pill">{t('reactflow:asset')}</span>
 
       {data.id ? (
         <button
           type="button"
           className={`an-id-chip${copied ? " is-copied" : ""}`}
-          title={copied ? t('copied') : data.id}
+          title={copied ? t('reactflow:copied') : data.id}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             copyId();
           }}
-          aria-label={t('copyAssetId')}
+          aria-label={t('reactflow:copyAssetId')}
         >
           <img src="/factory-flow-buttons/id.svg" alt="" className="an-id-icon-img" draggable={false} />
           <span className="an-id-text">{shortenId(data.id)}</span>
@@ -299,7 +317,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
   
       <Button
         icon="pi pi-plus"
-        aria-label={t('selectRelations')}
+        aria-label={t('reactflow:selectRelations')}
         className="global-button is-grey nodrag nopan asset-add-btn"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -311,7 +329,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
 
 
       <Dialog
-        header={t('selectRelations')}           
+        header={t('reactflow:selectRelations')}           
         visible={dialogVisible}             
         onHide={() => setDialogVisible(false)}
         style={{ width: "28rem" }}
@@ -320,7 +338,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       >
         <div className="p-field" style={{ marginTop: 8 }}>
           {isLoading ? (
-            <div className="text-center text-gray-500 p-2">{t('loading')}</div>
+            <div className="text-center text-gray-500 p-2">{t('reactflow:loading')}</div>
           ) : relationOptions.length ? (
            <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
              {relationOptions.map((opt) => {
@@ -336,6 +354,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
                       className="custom-checkbox"
                       checked={checked}
                       onChange={() => handleRelationsChange({ value: nextArray })}
+                      disabled={!accessgroupIndexDb?.access_group?.create}
                     />
                     <span>{opt.label}</span>
                   </div>
@@ -343,17 +362,19 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-500 p-2">{t('noRelationsAvailable')}</div>
+            <div className="text-center text-gray-500 p-2">{t('reactflow:noRelationsAvailable')}</div>
           )}
         </div>
 
         <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-          <Button label={t('close')} onClick={() => setDialogVisible(false)} text  className="global-button is-grey"/>  
+          <Button label={t('reactflow:close')} onClick={() => setDialogVisible(false)} text  className="global-button is-grey"/>  
           <Button
-            label={t('add')}
+            label={t('reactflow:add')}
             onClick={handleAdd}
-            disabled={!selectedRelations.length}
-            className="global-button"
+            disabled={!selectedRelations.length || !accessgroupIndexDb?.access_group?.create} 
+            className="global-button" 
+            tooltip={t("overview:access_permission")}
+            tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
           />
         </div>
       </Dialog>

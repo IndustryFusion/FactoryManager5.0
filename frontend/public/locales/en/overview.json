@@ -31,6 +31,7 @@
     "view_logs": "View Sync Logs",
     "done": "Done",
     "sync_pdt": "Sync PDT",
+    "access_permission": "no access rights. Ask your company admin for the access",
     "sync_dialog": {
         "dialog_title": "Sync Product Data",
         "message": "You’re about to sync <strong>{{modelCount}}</strong> product models and <strong>{{productCount}}</strong> products.",

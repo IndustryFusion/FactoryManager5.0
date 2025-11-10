@@ -172,7 +172,8 @@ export async function getServerSideProps({ locale }: { locale: string }) {
         'reactflow',
         'dashboard',
         'placeholder',
-        'overview'
+        'overview',
+        'navigation'
       ])),
     },
   }

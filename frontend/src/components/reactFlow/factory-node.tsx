@@ -9,7 +9,8 @@ import "../../styles/custom-asset-node.css";
 import { fetchAllShopFloors } from "@/utility/factory-site-utility";
 import CreateShopFloor from "@/components/shopFloorForms/create-shop-floor-form";
 import { useShopFloor } from "@/context/shopfloor-context";
-import { useTranslation } from "next-i18next";
+import { getAccessGroup } from '@/utility/indexed-db';
+import { useTranslation } from 'next-i18next';
 
 type AreaOption = { label: string; value: string };
 type Floor = { id: string; floorName: string; type_of_floor: string };
@@ -21,7 +22,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
   xPos,
   yPos,
 }) => {
-  const { t } = useTranslation('reactflow');
+
   const router = useRouter();
   const { latestShopFloor } = useShopFloor();
   const { getNodes, getEdges, setNodes, setEdges, fitView } = useReactFlow();
@@ -38,6 +39,8 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateVisible, setIsCreateVisible] = useState(false);
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
+  const { t } = useTranslation(['overview',"reactflow"]);
 
   const loadFloors = useCallback(async () => {
     if (!factoryIdValue) return;
@@ -85,7 +88,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
     selectedAreas.forEach((areaId, i) => {
       const sfNodeId = `shopFloor_${areaId}`;
       const exists = nodes.find((n) => n.id === sfNodeId);
-      const label = areaOptions.find((o) => o.value === areaId)?.label ?? t('area');
+      const label = areaOptions.find((o) => o.value === areaId)?.label ?? t("reactflow:area");
 
       if (!exists) {
         toAddNodes.push({
@@ -145,6 +148,19 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
     setSelectedAreas((prev) => (id && !prev.includes(id) ? [...prev, id] : prev));
   }, [areasVisible, latestShopFloor]);
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
   return (
     <div className={`factory-node ${selected ? "is-selected" : ""}`}>
       <div className="fn-icon">
@@ -186,20 +202,22 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
       <Dialog
         header={
           <div className="areas-header">
-            <span>{t('selectAreas')}</span>
+            <span>{t('reactflow:selectAreas')}</span>
             <Button
-              aria-label={t('addAreas')}
+              aria-label={t('reactflow:addAreas')}
               className="global-button nodrag nopan add-areas-hdr-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCreateVisible(true);
               }}
-              disabled={isLoading || !factoryIdValue}
+              disabled={isLoading || !factoryIdValue || !accessgroupIndexDb?.access_group?.create}
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
             >
               <svg className="btn-plus-icon" viewBox="0 0 24 24" role="img" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <span>{t('addAreas')}</span>
+              <span>{t('reactflow:addAreas')}</span>
             </Button>
           </div>
         }
@@ -234,6 +252,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
                         className="custom-checkbox"
                         checked={checked}
                         onChange={() => handleAreasChange({ value: nextArray })}
+                        disabled={!accessgroupIndexDb?.access_group?.create}
                       />
                       <span>{opt.label}</span>
                     </div>
@@ -246,8 +265,15 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
           </div>
 
           <div className="flex justify-content-end gap-2" style={{ marginTop: 12 }}>
-            <Button label={t('close')} onClick={() => setAreasVisible(false)} text className="global-button is-grey" />
-            <Button label={t('add')} onClick={handleAddAreas} disabled={!selectedAreas.length} className="global-button" />
+            <Button label={t('reactflow:close')} onClick={() => setAreasVisible(false)} text className="global-button is-grey" />
+            <Button 
+              label={t('reactflow:add')}
+              onClick={handleAddAreas}
+              disabled={!selectedAreas.length || !accessgroupIndexDb?.access_group?.create} 
+              className="global-button" 
+              tooltip={t("overview:access_permission")}
+              tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
+            />
           </div>
         </div>
       </Dialog>

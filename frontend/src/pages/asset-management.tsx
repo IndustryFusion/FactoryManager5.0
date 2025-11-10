@@ -14,6 +14,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
 import { RootState } from '@/redux/store';
 import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
+import { Button } from 'primereact/button';
+import { getAccessGroup } from '@/utility/indexed-db';
 
 interface ImportResponseData {
   modelpassedCount: number;
@@ -33,7 +35,7 @@ const AssetManagementPage = () => {
   const [dataInitialized, setDataInitialized] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [importResponseData, setImportResponseData] = useState<ImportResponseData | null>(null);
-
+  const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -77,6 +79,19 @@ const AssetManagementPage = () => {
     return response;
   };
 
+  useEffect(() => {
+    const fetchAccessGroup = async () => {
+      try {
+        const data = await getAccessGroup();
+        setAccessgroupIndexedDb(data);
+      } catch(error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchAccessGroup();
+  }, []);
+
 
 
   return (
@@ -103,13 +118,16 @@ const AssetManagementPage = () => {
                   </div>
                 </div>
                 <div>
-                  <button
+                  <Button
                     className="asset-btn-white"
                     onClick={() => { handleDialogOpen(); }}
+                    disabled={!accessgroupIndexDb?.access_group?.create}
+                    tooltip={t("overview:access_permission")}
+                    tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
                   >
                     {t('overview:sync_pdt')}
                     <img src="/download_icon.svg" alt="plus icon" width={20} height={20} />
-                  </button>
+                  </Button>
                 </div>
 
               </div>
