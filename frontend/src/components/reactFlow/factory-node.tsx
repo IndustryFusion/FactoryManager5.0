@@ -138,7 +138,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
       const label =
       latestShopFloor?.name?.value ??
       latestShopFloor?.floorName ??
-      String(latestShopFloor?.name ?? t('area'));
+      String(latestShopFloor?.name ?? t('reactflow:area'));
 
     setAreaOptions((prev) => {
       if (!id || prev.some((o) => o.value === id)) return prev;
@@ -184,12 +184,12 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
         />
       </div>
 
-      <div className="fn-pill">{t('factorySite')}</div>
+      <div className="fn-pill">{t('reactflow:factorySite')}</div>
 
       <Handle id="bottom" type="source" position={Position.Bottom} className="handle-out assetNode" />
 
       <Button
-        aria-label={t('addAreas')}
+        aria-label={t('reactflow:addAreas')}
         className="global-button is-grey nodrag nopan factory-add-btn p-button-rounded p-button-icon-only"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpenAreas}
@@ -231,9 +231,9 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
         <div className="p-3">
           <div className="p-field" style={{ marginTop: 8 }}>
             {!factoryIdValue ? (
-              <div className="text-center text-gray-500 p-2">{t('missingFactoryId')}</div>
+              <div className="text-center text-gray-500 p-2">{t('reactflow:missingFactoryId')}</div>
             ) : isLoading ? (
-              <div className="text-center text-gray-500 p-2">{t('loading')}</div>
+              <div className="text-center text-gray-500 p-2">{t('reactflow:loading')}</div>
             ) : areaOptions.length ? (
               <div style={{ maxHeight: 260, overflowY: "auto" }} className="flex flex-column gap-2">
                 {areaOptions.map((opt) => {
@@ -260,7 +260,7 @@ const CustomFactoryNode: React.FC<NodeProps<FactoryNodeData>> = ({
                 })}
               </div>
             ) : (
-              <div className="text-center text-gray-500 p-2">{t('noAreasAvailable')}</div>
+              <div className="text-center text-gray-500 p-2">{t('reactflow:noAreasAvailable')}</div>
             )}
           </div>
 
