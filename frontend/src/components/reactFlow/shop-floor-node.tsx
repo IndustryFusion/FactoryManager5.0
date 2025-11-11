@@ -111,7 +111,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       if (!factoryId) {
         toast.current?.show({
           severity: "warn",
-          summary: t('missingFactoryId'),
+          summary: t('reactflow:missingFactoryId'),
           life: 2500,
         });
         return;
@@ -128,7 +128,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
       if (!backendShopFloorId) {
         toast.current?.show({
           severity: "warn",
-          summary: t('noShopFloorIdToEdit'),
+          summary: t('reactflow:noShopFloorIdToEdit'),
           life: 2500,
         });
         return;
@@ -150,8 +150,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
     if (!factoryId || !backendShopFloorId) {
       toast.current?.show({
         severity: "warn",
-        summary: t('missingIds'),
-        detail: t('factoryOrShopFloorIdMissing'),
+        summary: t('reactflow:missingIds'),
+        detail: t('reactflow:factoryOrShopFloorIdMissing'),
         life: 2500,
       });
       return;
@@ -168,16 +168,16 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
 
       toast.current?.show({
         severity: "success",
-        summary: t('deleted'),
-        detail: t('shopFloorRemoved', { label: data.label }),
+        summary: t('reactflow:deleted'),
+        detail: t('reactflow:shopFloorRemoved', { label: data.label }),
         life: 2200,
       });
     } catch (err) {
       console.error("Delete shop floor failed:", err);
       toast.current?.show({
         severity: "error",
-        summary: t('deleteFailed'),
-        detail: t('couldNotDeleteShopFloor'),
+        summary: t('reactflow:deleteFailed'),
+        detail: t('reactflow:couldNotDeleteShopFloor'),
         life: 2800,
       });
     } finally {
