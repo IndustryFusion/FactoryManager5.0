@@ -87,7 +87,7 @@
     "onboard_form": "Onboarding-Formular",
     "onboard_form_text_1": "Bitte führen Sie das Onboarding des Asset-Gateways durch, bevor Sie zum Dashboard wechseln.",
     "onboard_form_text_2": "Senden Sie das Formular ab, um die Asset-Onboarding zu starten.",
-    "ip_address": "IP-Adresse",
+    "ip_address": "Verbindungszeichenfolge",
     "main_topic": "Haupttopic",
     "protocol": "Protokoll",
     "app_config": "App-Konfiguration",

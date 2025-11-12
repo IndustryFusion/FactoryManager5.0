@@ -188,15 +188,15 @@ const CombineSensorChart: React.FC = () => {
       },
       zoom: {
         pan: {
-          enabled: true,
+          enabled: false,
           mode: "xy",
         },
         zoom: {
           wheel: {
-            enabled: true,
+            enabled: false,
           },
           pinch: {
-            enabled: true,
+            enabled: false,
           },
           mode: "xy",
         },
@@ -208,12 +208,12 @@ const CombineSensorChart: React.FC = () => {
         time: {
           tooltipFormat: "PPpp",
           displayFormats: {
-            millisecond: "MMM dd, yyyy HH:mm:ss",
-            second: "MMM dd, yyyy HH:mm:ss",
-            minute: "MMM dd, yyyy HH:mm",
-            hour: "MMM dd, yyyy HH:mm",
-            day: "MMM dd, yyyy",
-            week: "MMM dd, yyyy",
+            millisecond: "HH:mm:ss",
+            second: "HH:mm:ss",
+            minute: "HH:mm",
+            hour: "HH:mm",
+            day: "MMM dd",
+            week: "MMM dd",
             month: "MMM yyyy",
             quarter: "QQQ yyyy",
             year: "yyyy",
@@ -221,18 +221,42 @@ const CombineSensorChart: React.FC = () => {
         },
         ticks: {
           source: "auto",
-          maxTicksLimit: 20,
+          maxTicksLimit: 8,
+          autoSkip: true,
+          maxRotation: 45,
+          minRotation: 0,
           major: {
             enabled: true,
           },
+          font: {
+            size: 11,
+          },
           callback: function (val: number | string, index: number) {
             const labelDate = new Date(val);
-            return format(labelDate, "MMM dd, yyyy HH:mm");
+            const now = new Date();
+            const diffInHours = (now.getTime() - labelDate.getTime()) / (1000 * 60 * 60);
+            
+            // If within 24 hours, show time only
+            if (diffInHours < 24) {
+              return format(labelDate, "HH:mm");
+            }
+            // If within 7 days, show day and time
+            else if (diffInHours < 168) {
+              return format(labelDate, "MMM dd HH:mm");
+            }
+            // Otherwise show date only
+            else {
+              return format(labelDate, "MMM dd, yyyy");
+            }
           },
         },
         title: {
-          display: true,
+          display: false,
           text: "",
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          lineWidth: 1,
         },
       },
       y: {

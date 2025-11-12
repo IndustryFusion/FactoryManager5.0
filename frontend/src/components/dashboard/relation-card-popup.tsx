@@ -19,7 +19,7 @@ import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "../../styles/relation-container.css"
-import { getAssetById } from "@/utility/factory-site-utility";
+import { getAssetById } from "@/utility/asset";
 import { useTranslation } from "next-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -27,6 +27,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 interface RelationPopupProps {
     relationsProp: boolean;
     setRelationsProp: Dispatch<SetStateAction<boolean>>;
+    selectedAssetData: {[key:string]:any};
 }
 
 interface ParentRelationData {
@@ -38,9 +39,8 @@ interface ParentRelationData {
 }
 
 
-const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp }) => {
+const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelationsProp, selectedAssetData }) => {
     const [parentRelations, setParentRelations] = useState<ParentRelationData[]>([]);
-    const { selectedAssetData, entityIdValue } = useDashboard();
     const [hasPropertiesArray, setHasPropertiesArray] = useState<{[key:string]:string[]}[]>([]);
     const {t} = useTranslation("dashboard")
 
@@ -51,15 +51,17 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
             if (Array.isArray(relationData) && relationData.length > 0) {
                 for (let item of relationData) {
                     const response = await getAssetById(item?.object);  
-                    const productKey = Object.keys(response).find(key => key.includes("product_name"));                
-                    let product_name = productKey ? response[productKey]?.value : undefined;
+                    const productKey = Object.keys(response).find(key => key === "product_name");
+                    let product_name = productKey ? response[productKey] : undefined;
                     newArr.push(product_name);
                 }
             }
              else if (relationData.object && relationData.object !== "json-ld-1.1") {
+                
                 const response = await getAssetById(relationData?.object);
-                const productKey = Object.keys(response).find(key => key.includes("product_name"));
-                let product_name = productKey ? response[productKey]?.value : undefined;
+
+                const productKey = Object.keys(response).find(key => key === "product_name");
+                let product_name = productKey ? response[productKey] : undefined;
                 newArr.push(product_name);
             }
             return newArr;
@@ -70,9 +72,10 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
 
     const getHasProperties = async () => {
         const propertiesArray: { [key: string]: string[] }[] = [];
+        
         for (const key in selectedAssetData) {
-            if (key.startsWith("has")) {
-                const propertyName = key.substring(3); // Remove the "has" prefix
+            if (key.startsWith("https://industry-fusion.org/base/v0.1/has")) {
+                const propertyName = key?.split('/').pop()?.substring(3) || ""; // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
                 let dataValues = await getAssetData(propertyValue) || [];
                 propertiesArray.push({ [propertyName]: dataValues });

@@ -85,8 +85,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error("Error response:", error.response?.data.message);
-                showToast('error', 'Error',  error.response?.data.message ?? 'fetching onboarded data');
+                showToast('warn', 'Warn',  error.response?.data.message + ". \n\n Please onboard the asset first!");
             }
         }
     }

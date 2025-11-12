@@ -96,6 +96,7 @@ const Alerts = () => {
         setJobsCount(jobResponse.jobs?.length || 0);
 
         const alertResponse = await getAlerts();
+        
         setAlerts(alertResponse.alerts || []);
         setAlertsCount(alertResponse.alerts?.length || 0);
         

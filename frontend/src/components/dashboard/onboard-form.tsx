@@ -29,6 +29,7 @@ import { useTranslation } from "next-i18next";
 import { OnboardData } from "@/types/onboard-form";
 import { Asset } from "@/types/asset-types";
 import YAML from 'yaml';
+import { getAssetById } from "@/utility/asset";
 
 type OnboardDataKey = keyof OnboardData;
 
@@ -68,17 +69,57 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     asset, setBlocker,
     setOnboardAssetProp
 }) => {
+    const [assetData, setAssetData] = useState<Asset | null>(null);
+    const mqttConfigTemplate = `fusionmqttdataservice:
+  specification:
+    - topic: "airtracker-74145/relay1"
+      key: []
+      parameter:
+        - "https://industry-fusion.org/base/v0.1/machine_state"`;
+
+    const opcConfigTemplate = `fusionopcuadataservice:
+  specification:
+    - node_id: "ns=4"
+      identifier: "i=39"
+      parameter: "https://industry-fusion.org/base/v0.1/machine_state"`;
+
+
+    useEffect(() => {
+        const fetchAssetData = async () => {
+            if (asset?.id) {
+                try {
+                    const assetDataFromScorio = await getAssetById(asset.id);
+                    setAssetData(assetDataFromScorio);
+                    const productName = assetDataFromScorio?.product_name === undefined && assetDataFromScorio?.asset_communication_protocol === undefined ? "" : `${assetDataFromScorio?.product_name}-${assetDataFromScorio?.asset_communication_protocol}`;
+                    const podName = productName.toLowerCase().replace(/ /g, '');
+                    setOnboardForm(prevForm => ({
+                        ...prevForm,
+                        dataservice_image_config: assetDataFromScorio?.asset_communication_protocol === "opc-ua" ? "docker.io/ibn40/fusionopcuadataservice:v0.0.1" : assetDataFromScorio?.asset_communication_protocol === "mqtt" ? "docker.io/ibn40/fusionmqttdataservice:v0.0.1" : "",
+                        agentservice_image_config: "docker.io/ibn40/iff-iot-agent:v0.0.4",
+                        protocol: assetDataFromScorio?.asset_communication_protocol || "",
+                        pod_name: podName,
+                        device_id: assetDataFromScorio?.id,
+                        gateway_id: assetDataFromScorio?.id,
+                        app_config: assetDataFromScorio?.asset_communication_protocol === "mqtt" ? mqttConfigTemplate : assetDataFromScorio?.asset_communication_protocol === "opc-ua" ? opcConfigTemplate : ""
+                    }));
+                } catch (error) {
+                    console.error("Failed to fetch asset data:", error);
+                }
+            }
+        };
+
+        fetchAssetData();
+    }, [asset?.id]);
+
     const { t } = useTranslation(['button', 'dashboard']);
-    const productName = asset?.product_name === undefined && asset?.asset_communication_protocol === undefined ? "" : `${asset?.product_name}-${asset?.asset_communication_protocol}`;
-    const podName = productName.toLowerCase().replace(/ /g, '');
-    const assetProtocol = asset?.asset_communication_protocol === undefined ? "" : asset?.asset_communication_protocol;
+
     const [onboardForm, setOnboardForm] = useState<OnboardFormData>(
         {
             ip_address: "",
             main_topic: "",
-            protocol: assetProtocol,
+            protocol: "",
             app_config: "",
-            pod_name: podName,
+            pod_name: "",
             pdt_mqtt_hostname: "",
             pdt_mqtt_port: 0,
             secure_config: false,
@@ -264,7 +305,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     id="ip_address"
                                     value={onboardForm.ip_address}
                                     type="text"
-                                    placeholder="ex:192.168.49.26"
+                                    placeholder="opc.tcp://192.168.49.xx:4840"
                                     onChange={(e) => handleInputChange(e.target.value, "ip_address")}
                                     style={{ border: validateInput?.ip_address ? "1px solid red" : "" }}
                                 />
