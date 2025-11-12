@@ -127,11 +127,77 @@ Then execute the following commands one by one,
 
 CREATE VIEW value_change_state_entries AS SELECT * FROM ( SELECT *, LAG(value) OVER (PARTITION BY "entityId" ORDER BY "observedAt" ASC) AS prev_value FROM attributes WHERE "attributeId"='https://industry-fusion.org/base/v0.1/machine_state') AS subquery WHERE value IS DISTINCT FROM prev_value;
 
-CREATE VIEW power_emission_entries_days AS SELECT subquery."entityId", DATE_TRUNC('day', subquery.hour) AS day, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM attributes WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('day', subquery.hour) ORDER BY day;
+CREATE OR REPLACE VIEW power_emission_entries_days AS
+SELECT
+  subquery."entityId",
+  DATE_TRUNC('day', subquery.hour) AS day,
+  SUM(subquery.average_power_consumption) AS total_power_consumption,
+  SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission
+FROM (
+  SELECT
+    "entityId",
+    DATE_TRUNC('hour', "observedAt") AS hour,
+    AVG(
+      COALESCE(
+        NULLIF(REGEXP_REPLACE("value", '^[Nn][Uu][Ll][Ll]$', '0'), '')::FLOAT,
+        0
+      ) / 1000
+    ) AS average_power_consumption
+  FROM attributes
+  WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption'
+  GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
+) AS subquery
+GROUP BY subquery."entityId", DATE_TRUNC('day', subquery.hour)
+ORDER BY day;
 
-CREATE VIEW power_emission_entries_months AS SELECT subquery."entityId", DATE_TRUNC('month', subquery.hour) AS month, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM attributes WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('month', subquery.hour) ORDER BY month;
 
-CREATE VIEW power_emission_entries_weeks AS SELECT subquery."entityId", DATE_TRUNC('week', subquery.hour) AS week, SUM(subquery.average_power_consumption) AS total_power_consumption, SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission FROM ( SELECT "entityId", DATE_TRUNC('hour', "observedAt") AS hour, AVG(CAST("value" AS FLOAT)) / 1000 AS average_power_consumption FROM attributes WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption' GROUP BY "entityId", DATE_TRUNC('hour', "observedAt") ) AS subquery GROUP BY subquery."entityId", DATE_TRUNC('week', subquery.hour) ORDER BY week;
+CREATE OR REPLACE VIEW power_emission_entries_weeks AS
+SELECT
+  subquery."entityId",
+  DATE_TRUNC('week', subquery.hour) AS week,
+  SUM(subquery.average_power_consumption) AS total_power_consumption,
+  SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission
+FROM (
+  SELECT
+    "entityId",
+    DATE_TRUNC('hour', "observedAt") AS hour,
+    AVG(
+      COALESCE(
+        NULLIF(REGEXP_REPLACE("value", '^[Nn][Uu][Ll][Ll]$', '0'), '')::FLOAT,
+        0
+      ) / 1000
+    ) AS average_power_consumption
+  FROM attributes
+  WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption'
+  GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
+) AS subquery
+GROUP BY subquery."entityId", DATE_TRUNC('week', subquery.hour)
+ORDER BY week;
+
+
+CREATE OR REPLACE VIEW power_emission_entries_months AS
+SELECT
+  subquery."entityId",
+  DATE_TRUNC('month', subquery.hour) AS month,
+  SUM(subquery.average_power_consumption) AS total_power_consumption,
+  SUM(subquery.average_power_consumption) * 0.485 AS total_carbon_emission
+FROM (
+  SELECT
+    "entityId",
+    DATE_TRUNC('hour', "observedAt") AS hour,
+    AVG(
+      COALESCE(
+        NULLIF(REGEXP_REPLACE("value", '^[Nn][Uu][Ll][Ll]$', '0'), '')::FLOAT,
+        0
+      ) / 1000
+    ) AS average_power_consumption
+  FROM attributes
+  WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/power_consumption'
+  GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
+) AS subquery
+GROUP BY subquery."entityId", DATE_TRUNC('month', subquery.hour)
+ORDER BY month;
+
 
 GRANT SELECT ON value_change_state_entries TO pgrest;
 
