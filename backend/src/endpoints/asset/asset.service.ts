@@ -368,8 +368,6 @@ export class AssetService {
         ? scorpioDataResponseRaw.data.map((item) => this.flattenTranslation(item))
         : this.flattenTranslation(scorpioDataResponseRaw.data);
       
-      console.log("scorpioDataResponse", scorpioDataResponse);
-      
       const batchSize = 50;
       const scorpioUpdatedAssetIds = [], cacheUpdatedAssetIds = [];
 

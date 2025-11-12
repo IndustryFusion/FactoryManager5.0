@@ -38,6 +38,7 @@ import Image from "next/image";
 import AssetSelector from "./asset-selector";
 import IfricIdBadge from "./ifric-id-badge";
 import { Skeleton } from "primereact/skeleton";
+import { getAssetById } from "@/utility/factory-site-utility";
 
 interface PrefixedAssetProperty {
   key: string;
@@ -145,6 +146,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       },
       withCredentials: true,
     });
+    const  asset = await getAssetById(selectedAsset.id || "");
+    
 
     // Collect keys where the segment is 'realtime'
     const prefixedKeys = Object.keys(response.data.properties).filter(
@@ -155,15 +158,15 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
     });
     dispatch(update(selectedAsset?.id));
-    setSelectedAssetData(selectedAsset);
+    setSelectedAssetData(asset);
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
     }
 
-    const machineStateKey = Object.keys(selectedAsset).find(key => key.includes('machine_state'));
-    if (machineStateKey && selectedAsset[machineStateKey]) {
-      setMachineStateValue(selectedAsset[machineStateKey])
+    const machineStateKey = Object.keys(asset).find(key => key === "https://industry-fusion.org/base/v0.1/machine_state");
+    if (machineStateKey && asset[machineStateKey]) {
+      setMachineStateValue(asset[machineStateKey].value)
     }
   };
 
@@ -283,14 +286,17 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                             <Image src="/no-image-icon.svg" width={20} height={20} alt="Missing image"></Image>
                           </div>
                         )}
-
-                        <div className="selected_product_status">
-                        </div>
+                        
+                        {machineStateValue !== "0" && machineStateValue !== "NULL"  ? (
+                          <div className="selected_product_status"></div>
+                        ) : (
+                          <div className=""></div>
+                        )}
                       </div>
                       <div className="flex flex-column gap-1">
                         <div className="selected_product_title">{selectedRow.product_name}</div>
                         <div className="selected_product_room_name">{getProductType(selectedRow.type)}</div>
-                        <div className="selected_product_status_text">{machineStateValue === "2" ? t("dashboard:running") : t("dashboard:offline")}<span className="time_span">{runningSince}</span></div>
+                        <div className="selected_product_status_text">{machineStateValue !== "0" && machineStateValue !== "NULL" ? t("dashboard:running") : t("dashboard:offline")}</div>
                       </div>
                     </div>
                     <div className="selected_product_actions">

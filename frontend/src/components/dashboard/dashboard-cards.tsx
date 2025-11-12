@@ -84,7 +84,7 @@ const DashboardCards: React.FC = () => {
                 }) 
     
                 if (Array.isArray(response.data) && response.data.length > 0) {
-                    if (response.data[0]?.value === "2") {
+                    if (response.data[0]?.value !== "0" && response.data[0]?.value !== "NULL") {
                         const timeValueReceived = findDifference(response.data[0]?.observedAt);
                         setDifference(timeValueReceived);
                         setPrevTimer(timeValueReceived); //set intial timer value
@@ -148,10 +148,12 @@ const DashboardCards: React.FC = () => {
     const getHasProperties = () => {
         const propertiesArray = [];
         for (const key in selectedAssetData) {
-            if (key.startsWith("has")) {
-                const propertyName = key.substring(3); // Remove the "has" prefix
+            if (key.startsWith("https://industry-fusion.org/base/v0.1/has")) {
+                const propertyName = key?.split('/').pop()?.substring(3); // Remove the "has" prefix
                 const propertyValue = selectedAssetData[key];
-                propertiesArray.push({ [propertyName]: propertyValue });
+                if (propertyName) {
+                    propertiesArray.push({ [propertyName]: propertyValue });
+                }
             }
         }
         console.log("propertiesArray ",propertiesArray)
@@ -199,7 +201,7 @@ const DashboardCards: React.FC = () => {
     }
 
     useEffect(() => {
-        if (machineStateValue === "2") {
+        if (machineStateValue !== "0" && machineStateValue !== "NULL") {
             runningSince();
         } else {
             setDifference("00:00:00")
@@ -208,10 +210,12 @@ const DashboardCards: React.FC = () => {
         const hasPropertiesArray = [];
         if (Object.keys(selectedAssetData).length > 0) {
             for (const key in selectedAssetData) {
-                if (key.startsWith("has")) {
-                    const propertyName = key.substring(3); // Remove the "has" prefix
+                if (key.startsWith("https://industry-fusion.org/base/v0.1/has")) {
+                    const propertyName = key?.split('/').pop()?.substring(3);  // Remove the "has" prefix
                     const propertyValue = selectedAssetData[key];
-                    hasPropertiesArray.push({ [propertyName]: propertyValue });
+                    if (propertyName) {
+                        hasPropertiesArray.push({ [propertyName]: propertyValue });
+                    }
                 }
             }
         }
@@ -250,7 +254,7 @@ const DashboardCards: React.FC = () => {
                         </div>
                         <div className="flex flex-column gap-1">
                             <div className="dashboard-card-text">{t('machineState')}</div>
-                            <div className="dashboard-card-value">{machineStateValue == "2" ? t("online") : t("offline")}</div>
+                            <div className="dashboard-card-value">{machineStateValue !== "0" && machineStateValue !== "NULL" ? t("online") : t("offline")}</div>
                         </div>
                     </div>
                 </div>
@@ -305,6 +309,7 @@ const DashboardCards: React.FC = () => {
                         <RelationDialog
                             relationsProp={relations}
                             setRelationsProp={setRelations}
+                            selectedAssetData={selectedAssetData}
                         />
                     }
                 </div>

@@ -137,7 +137,7 @@ const PowerCo2Chart = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
-        showToast('error', 'Error', `Power-co2-data ${error.response?.data.message}`);
+        showToast('warn', 'Warn', `Power consumption data: ${error.response?.data.message}`);
       } else {
         console.error("Error:", (error as Error).message);
         showToast('error', 'Error', (error as Error).message);

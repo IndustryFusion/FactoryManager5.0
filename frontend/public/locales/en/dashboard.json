@@ -87,7 +87,7 @@
     "onboard_form": "Onboard Form",
     "onboard_form_text_1": "Please onboard the asset gateway before moving to dashboard.",
     "onboard_form_text_2": "Submit the form to start the Asset onboard",
-    "ip_address": "IP Address",
+    "ip_address": "Connection String",
     "main_topic": "Main Topic",
     "protocol": "Protocol",
     "app_config": "App Config",

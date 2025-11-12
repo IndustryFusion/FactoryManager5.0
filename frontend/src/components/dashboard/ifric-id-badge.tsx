@@ -14,7 +14,7 @@ interface IfricIdBadgeProps{
     ifricId: string;
     toast: RefObject<Toast>;
     setShowBlocker: React.Dispatch<React.SetStateAction<boolean>>;
-    editOnboardBodyTemplate: () => {}
+    editOnboardBodyTemplate: () => void;
 }
 export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboardBodyTemplate }: IfricIdBadgeProps) {
 

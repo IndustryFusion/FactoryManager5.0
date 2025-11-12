@@ -27,6 +27,7 @@ import Head from "next/head";
 import "@/app/globals.css";
 import { UnauthorizedPopup } from '../utility/jwt';
 import FloatingXanaButton from "@/components/floating-xana-button";
+import { PrimeReactProvider } from 'primereact/api';
 
 
 function MyApp({ Component, pageProps, router }: AppProps) {
@@ -38,12 +39,14 @@ function MyApp({ Component, pageProps, router }: AppProps) {
       : withAuth(Component);
   return (
     <Provider store={store}>
-      <Head>
-        <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-      </Head>
-      <AuthComponent {...pageProps} />
-      <FloatingXanaButton />
-      <UnauthorizedPopup />
+      <PrimeReactProvider>
+        <Head>
+          <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        </Head>
+        <AuthComponent {...pageProps} />
+        <FloatingXanaButton />
+        <UnauthorizedPopup />
+      </PrimeReactProvider>
     </Provider>
   );
 }
