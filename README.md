@@ -243,6 +243,59 @@ SELECT
 FROM percentages
 ORDER BY day DESC;
 
+CREATE OR REPLACE VIEW machine_state_2h_stats AS
+WITH cleaned AS (
+    SELECT
+        ("observedAt" AT TIME ZONE 'UTC')::date AS day,
+        EXTRACT(HOUR FROM ("observedAt" AT TIME ZONE 'UTC')) AS hour,
+        CASE 
+            WHEN "value" IS NULL THEN 0
+            WHEN "value"::text ILIKE 'null' THEN 0
+            WHEN "value" ~ '^[0-2]$' THEN "value"::int
+            ELSE 0
+        END AS state
+    FROM attributes
+    WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/machine_state'
+      AND "observedAt" >= now() - INTERVAL '10 days'
+),
+intervals AS (
+    SELECT
+        day,
+        FLOOR(hour / 2)::int AS interval_index,
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE state = 0) AS count_0,
+        COUNT(*) FILTER (WHERE state = 1) AS count_1,
+        COUNT(*) FILTER (WHERE state = 2) AS count_2
+    FROM cleaned
+    GROUP BY day, interval_index
+),
+formatted AS (
+    SELECT
+        day,
+        to_char(day, 'DD.MM.YYYY') AS date,
+        interval_index,
+
+        -- Label only end of the interval: 02:00, 04:00, ...
+        LPAD(((interval_index * 2) + 2)::text, 2, '0') || ':00'
+        AS hour_mark,
+
+        round((count_0::decimal / NULLIF(total,0)) * 100, 2) AS pct_0,
+        round((count_1::decimal / NULLIF(total,0)) * 100, 2) AS pct_1,
+        round((count_2::decimal / NULLIF(total,0)) * 100, 2) AS pct_2,
+
+        round((count_0::decimal / NULLIF(total, 0)) * 2, 2) AS hours_0,
+        round((count_1::decimal / NULLIF(total, 0)) * 2, 2) AS hours_1,
+        round((count_2::decimal / NULLIF(total, 0)) * 2, 2) AS hours_2
+    FROM intervals
+)
+SELECT
+    date,
+    hour_mark AS "hour",
+    pct_0, pct_1, pct_2,
+    hours_0, hours_1, hours_2
+FROM formatted
+ORDER BY day DESC, interval_index ASC;
+
 GRANT SELECT ON value_change_state_entries TO pgrest;
 
 GRANT SELECT ON power_emission_entries_days TO pgrest;
@@ -253,6 +306,7 @@ GRANT SELECT ON power_emission_entries_months TO pgrest;
 
 GRANT SELECT ON machine_state_daily_stats TO pgrest;
 
+GRANT SELECT ON machine_state_2h_stats TO pgrest;
 ```
 
 After creation, close the pod console and refresh the timescale bridge. For more information, use [this](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md#pdt-endpoints) document.
