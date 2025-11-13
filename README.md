@@ -126,8 +126,35 @@ Then execute the following commands one by one,
 ```sql
 
 CREATE OR REPLACE VIEW value_change_state_entries AS
-WITH cleaned AS (
+SELECT *
+FROM (
     SELECT
+        -- normalize value *in place*
+        CASE
+            WHEN value IS NULL THEN '0'
+            WHEN value ILIKE 'null' THEN '0'
+            ELSE value
+        END AS value,
+
+        -- normalize prev_value *in place*
+        CASE
+            WHEN LAG(value) OVER (
+                     PARTITION BY "entityId"
+                     ORDER BY "observedAt" ASC
+                 ) IS NULL
+                THEN '0'
+            WHEN LAG(value) OVER (
+                     PARTITION BY "entityId"
+                     ORDER BY "observedAt" ASC
+                 ) ILIKE 'null'
+                THEN '0'
+            ELSE LAG(value) OVER (
+                     PARTITION BY "entityId"
+                     ORDER BY "observedAt" ASC
+                 )
+        END AS prev_value,
+
+        -- keep all other columns untouched
         "id",
         "entityId",
         "attributeId",
@@ -139,31 +166,12 @@ WITH cleaned AS (
         "valueType",
         "unitCode",
         "lang",
-        "deleted",
+        "deleted"
 
-        -- rewrite the value here (default = 1 now)
-        CASE
-            WHEN "value" IS NULL THEN 1
-            WHEN "value" ILIKE 'null' THEN 1
-            WHEN "value" ~ '^[0-2]$' THEN "value"::int
-            ELSE 1
-        END AS "value"
     FROM attributes
     WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/machine_state'
-),
-with_prev AS (
-    SELECT
-        *,
-        LAG("value") OVER (
-            PARTITION BY "entityId"
-            ORDER BY "observedAt" ASC
-        ) AS prev_value
-    FROM cleaned
-)
-SELECT *
-FROM with_prev
-WHERE "value" IS DISTINCT FROM prev_value;
-
+) sub
+WHERE value IS DISTINCT FROM prev_value;
 
 CREATE OR REPLACE VIEW power_emission_entries_days AS
 SELECT
