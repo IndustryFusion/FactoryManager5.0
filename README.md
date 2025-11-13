@@ -198,6 +198,50 @@ FROM (
 GROUP BY subquery."entityId", DATE_TRUNC('month', subquery.hour)
 ORDER BY month;
 
+CREATE OR REPLACE VIEW machine_state_daily_stats AS
+WITH cleaned AS (
+    SELECT
+        ("observedAt" AT TIME ZONE 'UTC')::date AS day,
+        CASE 
+            WHEN "value" IS NULL THEN 0
+            WHEN "value"::text ILIKE 'null' THEN 0
+            WHEN "value" ~ '^[0-2]$' THEN "value"::int
+            ELSE 0
+        END AS state
+    FROM attributes
+    WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/machine_state'
+      AND "observedAt" >= now() - INTERVAL '10 days'
+),
+counts AS (
+    SELECT
+        day,
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE state = 0) AS count_0,
+        COUNT(*) FILTER (WHERE state = 1) AS count_1,
+        COUNT(*) FILTER (WHERE state = 2) AS count_2
+    FROM cleaned
+    GROUP BY day
+),
+percentages AS (
+    SELECT
+        to_char(day, 'DD.MM.YYYY') AS date,
+        round((count_0::decimal / NULLIF(total,0)) * 100, 2) AS pct_0,
+        round((count_1::decimal / NULLIF(total,0)) * 100, 2) AS pct_1,
+        round((count_2::decimal / NULLIF(total,0)) * 100, 2) AS pct_2,
+
+        round((count_0::decimal / NULLIF(total, 0)) * 24, 2) AS hours_0,
+        round((count_1::decimal / NULLIF(total, 0)) * 24, 2) AS hours_1,
+        round((count_2::decimal / NULLIF(total, 0)) * 24, 2) AS hours_2,
+
+        day   -- keep for sorting, not exposed in final select
+    FROM counts
+)
+SELECT
+    date,
+    pct_0, pct_1, pct_2,
+    hours_0, hours_1, hours_2
+FROM percentages
+ORDER BY day DESC;
 
 GRANT SELECT ON value_change_state_entries TO pgrest;
 
@@ -206,6 +250,8 @@ GRANT SELECT ON power_emission_entries_days TO pgrest;
 GRANT SELECT ON power_emission_entries_weeks TO pgrest;
 
 GRANT SELECT ON power_emission_entries_months TO pgrest;
+
+GRANT SELECT ON machine_state_daily_stats TO pgrest;
 
 ```
 
