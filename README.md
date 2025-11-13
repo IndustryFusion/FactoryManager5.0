@@ -125,7 +125,45 @@ Then execute the following commands one by one,
 
 ```sql
 
-CREATE VIEW value_change_state_entries AS SELECT * FROM ( SELECT *, LAG(value) OVER (PARTITION BY "entityId" ORDER BY "observedAt" ASC) AS prev_value FROM attributes WHERE "attributeId"='https://industry-fusion.org/base/v0.1/machine_state') AS subquery WHERE value IS DISTINCT FROM prev_value;
+CREATE OR REPLACE VIEW value_change_state_entries AS
+WITH cleaned AS (
+    SELECT
+        "id",
+        "entityId",
+        "attributeId",
+        "observedAt",
+        "modifiedAt",
+        "datasetId",
+        "nodeType",
+        "attributeType",
+        "valueType",
+        "unitCode",
+        "lang",
+        "deleted",
+
+        -- rewrite the value here (default = 1 now)
+        CASE
+            WHEN "value" IS NULL THEN 1
+            WHEN "value" ILIKE 'null' THEN 1
+            WHEN "value" ~ '^[0-2]$' THEN "value"::int
+            ELSE 1
+        END AS "value"
+    FROM attributes
+    WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/machine_state'
+),
+with_prev AS (
+    SELECT
+        *,
+        LAG("value") OVER (
+            PARTITION BY "entityId"
+            ORDER BY "observedAt" ASC
+        ) AS prev_value
+    FROM cleaned
+)
+SELECT *
+FROM with_prev
+WHERE "value" IS DISTINCT FROM prev_value;
+
 
 CREATE OR REPLACE VIEW power_emission_entries_days AS
 SELECT
