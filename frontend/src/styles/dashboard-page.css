@@ -381,7 +381,7 @@ div:has(>.machine_uptime_chart_tooltip) {
 .muct_row {
     display: grid;
     gap: 12px;
-    grid-template-columns: 76px 27px 34px;
+    grid-template-columns: 76px 70px 34px;
 }
 
 .muct_row>div:not(:first-child) {

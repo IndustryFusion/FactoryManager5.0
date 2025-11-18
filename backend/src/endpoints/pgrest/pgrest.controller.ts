@@ -25,6 +25,26 @@ export class PgRestController {
     private readonly tokenService: TokenService
   ) {}
 
+  @Get('machine-state/10-days')
+  async getTenDaysMachineState() {
+    try{
+      let token = await this.tokenService.getToken();
+      return this.pgRestService.getTenDaysMachineState(token);
+    } catch(err) {
+      throw new NotFoundException("Error finding the details: " + err);
+    }
+  }
+
+  @Get('machine-state/intra-day')
+  async getIntraDayMachineState() {
+    try{
+      let token = await this.tokenService.getToken();
+      return this.pgRestService.getIntraDayMachineState(token);
+    } catch(err) {
+      throw new NotFoundException("Error finding the details: " + err);
+    }
+  }
+
   @Get()
   async findAll(@Query() queryParams: any, key: string) {
     try{

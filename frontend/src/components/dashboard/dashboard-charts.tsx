@@ -1,23 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { getMachineState10Days, getMachineStateIntraDays } from '@/utility/chartUtility';
+import { showToast } from "@/utility/toast";
+import { Toast } from "primereact/toast";
+import axios from "axios";
 
-const StackedPercentageBarChart: React.FC = () => {
-  const simulatedData = [
-    { date: '2025-05-17', Offline: 3, Error: 2, Maintenance: 1, Idle: 6, Running: 12 },
-    { date: '2025-05-18', Offline: 4, Error: 1, Maintenance: 2, Idle: 7, Running: 10 },
-    { date: '2025-05-19', Offline: 2, Error: 1, Maintenance: 3, Idle: 5, Running: 13 },
-    { date: '2025-05-20', Offline: 1, Error: 3, Maintenance: 2, Idle: 8, Running: 10 },
-    { date: '2025-05-21', Offline: 5, Error: 2, Maintenance: 1, Idle: 4, Running: 12 },
-    { date: '2025-05-22', Offline: 3, Error: 1, Maintenance: 2, Idle: 9, Running: 9 },
-    { date: '2025-05-23', Offline: 2, Error: 2, Maintenance: 1, Idle: 7, Running: 12 },
-    { date: '2025-05-24', Offline: 4, Error: 1, Maintenance: 3, Idle: 6, Running: 10 },
-    { date: '2025-05-25', Offline: 1, Error: 2, Maintenance: 2, Idle: 5, Running: 14 },
-    { date: '2025-05-26', Offline: 3, Error: 1, Maintenance: 2, Idle: 6, Running: 12 }
-  ];
+interface StackedPercentageBarChartProps {
+  activityInterval: string;
+}
 
-  const states = ["Offline", "Error", "Maintenance", "Idle", "Running"]
+const StackedPercentageBarChart: React.FC<StackedPercentageBarChartProps> = ({activityInterval}) => {
+  const [machineState, setMachineState] = useState<Record<string,any>[]>([]);
+  const toast = useRef<Toast>(null);
+  const fetchData = async () => {
+    try {
+      if(activityInterval === "10-days") {
+        const response = await getMachineState10Days();
+        setMachineState(response);
+      } else {
+        const response = await getMachineStateIntraDays();
+        setMachineState(response);
+      }
+    } catch(error) {
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+          showToast(toast, "error", "Error", error.response.data.message);
+      } else {
+          showToast(toast, "error", "Error", "Error fetching machine state data");
+      }
+    }
+  }
 
-  const series = states.slice().reverse().map((state, index, arr) => ({
+  useEffect(() => {
+    fetchData();
+  },[activityInterval])
+
+  const stateMap = {
+    "Offline": "hours_0",
+    "Online Idle": "hours_1",
+    "Online Running": "hours_2",
+  };
+  const states = Object.keys(stateMap);
+
+  const series = states.map((state, index, arr) => ({
     name: state,
     type: 'bar',
     stack: 'total',
@@ -26,7 +50,7 @@ const StackedPercentageBarChart: React.FC = () => {
     itemStyle: {
       borderRadius: index === 0 ? [0, 0, 4, 4] : index === arr.length - 1 ? [4, 4, 0, 0] : 0
     },
-    data: simulatedData.map((d) => d[state]),
+    data: machineState.map((d) => d[stateMap[state]]),
   }));
 
   const option = {
@@ -37,15 +61,16 @@ const StackedPercentageBarChart: React.FC = () => {
       trigger: 'axis',
       formatter: (params: any) => {
         const dateStr = params[0].dataIndex !== undefined
-          ? simulatedData[params[0].dataIndex].date
+          ? machineState[params[0].dataIndex].date
           : '';
-        const date = new Date(dateStr);
+
+        const [day, month, year] = dateStr.split('.');
+        const validDateStr = `${year}-${month}-${day}`;
+
+        const date = new Date(validDateStr);
 
         const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
         const dayName = dayNames[date.getDay()];
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
 
         const total = params.reduce((sum: number, p: any) => sum + p.value, 0);
         const header = `${dayName}. ${day}.${month}.${year} <span>(${total}h)<span>`;
@@ -54,7 +79,7 @@ const StackedPercentageBarChart: React.FC = () => {
           .slice().reverse().map((p: any) => {
             const hours = p.value;
             const percent = ((hours / total) * 100).toFixed(1);
-            return `<div class="muct_row"><div>${p.marker} ${p.seriesName === "Maintenance" ? "Maint." : p.seriesName}</div><div><span>${percent}%</span></div><div>${hours}<span>h</span></div></div>`;
+            return `<div class="muct_row"><div>${p.marker} ${p.seriesName}</div><div><span>${percent}%</span></div><div>${hours}<span>h</span></div></div>`;
           })
           .join('');
         return `<div class="machine_uptime_chart_tooltip"><div class="muct_header">${header}</div><div class="muct_details">${details}<div></div>`;
@@ -63,11 +88,10 @@ const StackedPercentageBarChart: React.FC = () => {
     xAxis: {
       type: 'category',
       axisLine: { show: false },
-      data: simulatedData.map((d) => {
-        const date = new Date(d.date);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${day}.${month}`;
+      data: machineState.map((d) => {
+        const [day, month, year] = d.date.split(".");
+        const formatted = `${day}.${month}`;
+        return formatted;
       }),
       axisTick: { show: false }
     },

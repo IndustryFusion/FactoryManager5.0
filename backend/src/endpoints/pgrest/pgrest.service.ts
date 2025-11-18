@@ -19,9 +19,12 @@ import axios from 'axios';
 import { RedisService } from '../redis/redis.service';
 import * as moment from 'moment';
 import { AssetService } from '../asset/asset.service';
+import { HttpException, HttpStatus } from '@nestjs/common';
 @Injectable()
 export class PgRestService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
+  private readonly machineState10DaysUrl = process.env.MACHINE_STATE_10_DAYS_URL;
+  private readonly machineStateIntraDayUrl = process.env.MACHINE_STATE_INTRA_DAY_URL;
   constructor(
     private redisService: RedisService,
     private readonly assetService: AssetService
@@ -121,5 +124,65 @@ export class PgRestService {
         return [];
       }
 
+  }
+
+  async getTenDaysMachineState(token: string) {
+    try {
+      if (!token) {
+        throw new Error("Authorization token is missing");
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`
+      };
+
+      const response = await axios.get(this.machineState10DaysUrl, { headers });
+      return response.data;
+    } catch(err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
+    }
+  }
+
+  async getIntraDayMachineState(token: string) {
+    try {
+      if (!token) {
+        throw new Error("Authorization token is missing");
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`
+      };
+
+      const response = await axios.get(this.machineStateIntraDayUrl, { headers });
+      const data = response.data;
+
+      // return only last 24hr data
+      const endTime = new Date();
+      const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000); 
+
+      const filtered = data.filter((item) => {
+        const [day, month, year] = item.date.split(".");
+        const time = item.time; 
+
+        const dateObj = new Date(`${year}-${month}-${day}T${time}:00`);
+
+        return dateObj >= startTime;
+      });
+      return filtered;
+    } catch(err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
+    }
   }
 }

@@ -119,3 +119,34 @@ export const fetchAssets = async (assetId: string) => {
 
   return finalDays;
 };
+
+export const getMachineState10Days = async () => {
+  try {
+    const response = await axios.get(API_URL + '/pgrest/machine-state/10-days', {
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        withCredentials: true,
+    });
+    return response.data;
+  } catch(err) {
+    throw err;
+  }
+}
+
+export const getMachineStateIntraDays = async () => {
+  try {
+    const response = await axios.get(API_URL + '/pgrest/machine-state/intra-day', {
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        withCredentials: true,
+    });
+    return response.data;
+  } catch(err) {
+    throw err;
+  }
+}
+
