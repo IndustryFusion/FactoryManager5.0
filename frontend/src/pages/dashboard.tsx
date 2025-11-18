@@ -37,6 +37,8 @@ const DashboardPage: React.FC = () => {
     const [country, setCountry] = useState("")
     const [userImage, setUserImage] = useState("")
     const avatarLetter =  (userName ?? "").trim().charAt(0).toUpperCase() || "";
+    const [activityInterval, setActivityInterval] = useState<string>("10-days");
+
     useEffect(() => {
         const fetchUserData = async (): Promise<void> => {
             try {
@@ -189,11 +191,11 @@ const DashboardPage: React.FC = () => {
                                 <div className="card-header">
                                     <span className="card-title">{t("asset_activity")}</span>
                                     <div className="tab-buttons">
-                                        <button className="tab-button active">{t("chart_btn_1")}</button>
-                                        <button className="tab-button">{t("chart_btn_2")}</button>
+                                        <button className={`tab-button ${activityInterval === "10-days" ? "active" : ""}`} onClick={() => setActivityInterval("10-days")}>{t("chart_btn_1")}</button>
+                                        <button className={`tab-button ${activityInterval === "intra-day" ? "active" : ""}`} onClick={() => setActivityInterval("intra-day")}>{t("chart_btn_2")}</button>
                                     </div>
                                 </div>
-                                <StackedPercentageBarChart />
+                                <StackedPercentageBarChart activityInterval={activityInterval}/>
                             </div>
 
                             <div className="notification-card">
