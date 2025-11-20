@@ -307,7 +307,7 @@ WITH cleaned AS (
 intervals AS (
     SELECT
         day,
-        FLOOR(hour / 2)::int AS interval_index,
+        FLOOR(time / 2)::int AS interval_index,
         COUNT(*) AS total,
         COUNT(*) FILTER (WHERE state = 0) AS count_0,
         COUNT(*) FILTER (WHERE state = 1) AS count_1,
@@ -336,7 +336,7 @@ formatted AS (
 )
 SELECT
     date,
-    hour_mark AS "hour",
+    hour_mark AS "time",
     pct_0, pct_1, pct_2,
     hours_0, hours_1, hours_2
 FROM formatted
