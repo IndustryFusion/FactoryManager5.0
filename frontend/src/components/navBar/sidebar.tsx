@@ -155,7 +155,7 @@ function Sidebar() {
                 tooltip={!sidebarOpen ? t("sidebar.production_lines") : t("sidebar.coming_soon")}
                 tooltipOptions={{ position: "right", event: "both" }}
               >
-                <Image src="/Component 1.svg" width={18} height={18} alt="line_icon" />
+                <Image src="/product-loading.svg" width={18} height={18} alt="line_icon" />
                 <div className={`sidebar_navlink_text_cs ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
                   {t("sidebar.production_lines")}
                 </div>
@@ -228,7 +228,7 @@ function Sidebar() {
               tooltip={!sidebarOpen ? t("sidebar.data_viewer") : undefined}
               tooltipOptions={{ position: "right", event: "both" }}
             >
-              <Image src="/sidebar/data_viewer_icon.svg" width={18} height={18} alt="data_icon" />
+              <Image src="/chart-line-data-02.svg" width={18} height={18} alt="data_icon" />
               <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>{t("sidebar.data_viewer")}</div>
             </Button>
 

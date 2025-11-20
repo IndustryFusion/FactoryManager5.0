@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Sidebar from '@/components/navBar/sidebar';
@@ -16,6 +16,7 @@ import { RootState } from '@/redux/store';
 import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
 import { Button } from 'primereact/button';
 import { getAccessGroup } from '@/utility/indexed-db';
+import { OverlayPanel } from 'primereact/overlaypanel';
 
 interface ImportResponseData {
   modelpassedCount: number;
@@ -36,6 +37,13 @@ const AssetManagementPage = () => {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [importResponseData, setImportResponseData] = useState<ImportResponseData | null>(null);
   const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
+  const [searchInput,setSearchInput]=useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");   
+  const [productTypeFilter, setProductTypeFilter] = useState<string[]>([]);
+  const [selectedGroupOption, setSelectedGroupOption] = useState<string | null>(null);
+  const opFilter = useRef(null);
+  const opGroup = useRef(null);
+  const [sortAscending, setSortAscending] = useState<boolean>(true);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -92,6 +100,24 @@ const AssetManagementPage = () => {
     fetchAccessGroup();
   }, []);
 
+  const productTypes = [...new Set(
+    assets
+      .map(a => a.type?.split('/').pop())
+      .filter((t): t is string => !!t)
+  )];
+
+
+  const toggleProductType = (type: string) => {
+    setProductTypeFilter(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const handleGroupSelection = (option: string) => {
+    setSelectedGroupOption(prev => (prev === option ? null : option));
+  };
 
 
   return (
@@ -148,24 +174,123 @@ const AssetManagementPage = () => {
                 paddingLeft: "12px"
               }}
             >
-              <img src="/search_icon.svg" alt="Search" className="search-icon" />
-              <input type="text" placeholder={t("overview:search")} className="search-input" />
+              <img
+                src="/search_icon.svg"
+                alt="Search"
+                className="search-icon"
+              />
+              <input
+                type="text"
+                placeholder={t("overview:search")}
+                className="search-input"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="toolbar-right">
-            <div className="toolbar-item">
-              <img src="/Sort.svg" alt="Filter" className="search-img-container" />
-              <span>{t("overview:filter")}</span>
+            <div
+              className={`toolbar-item filter-dropdown ${productTypeFilter.length > 0 ? "filter-active" : ""
+                }`}
+              onClick={(e) => opFilter.current.toggle(e)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="flex align-items-center gap-2">
+
+                <img src="/Sort.svg" alt="Filter" className="search-img-container" />
+                <span>{t("overview:filter")}</span>
+                {productTypeFilter.length > 0 && (
+                  <>
+                    <span className="filter-count-badge">
+                      {productTypeFilter.length}
+                    </span>
+
+                    <span
+                      className="filter-clear-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProductTypeFilter([]);
+                      }}
+                    >
+                      <img src="filter_reset_icon.svg" />
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="toolbar-item">
+            <OverlayPanel ref={opFilter} className="global_dropdown_panel left-positioned">
+              <div className="filter-label">Product Type</div>
+
+              {productTypes.map((type) => {
+                const formattedType = type
+                  .replace(/[-/]/g, " ")
+                  .replace(/([a-z])([A-Z])/g, "$1 $2")
+                  .split(" ")
+                  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+
+                return (
+                  <div key={type} className="filter_dropdown_item">
+                    <input
+                      type="checkbox"
+                      id={`checkbox-${type}`}
+                      checked={productTypeFilter.includes(type)}
+                      onChange={() => toggleProductType(type)}
+                    />
+                    <label htmlFor={`checkbox-${type}`} className="filter_item_label">
+                      {formattedType}
+                    </label>
+                  </div>
+                );
+              })}
+            </OverlayPanel>
+
+            <div
+              className="toolbar-item"
+              onClick={() => setSortAscending(prev => !prev)}
+              style={{ cursor: "pointer" }}
+            >
               <img src="/filter.svg" alt="Sort" />
               <span>{t("overview:sort")}</span>
             </div>
-            <div className="toolbar-item">
-              <img src="/Group.svg" alt="Group" />
+            <div
+              className={`toolbar-item group-dropdown ${selectedGroupOption ? "filter-active" : ""
+                }`}
+              onClick={(e) => opGroup.current.toggle(e)}
+              style={{ cursor: "pointer", position: "relative" }}
+            >
+              <img src="/Group.svg" alt="Group" className="search-img-container" />
               <span>{t("overview:group")}</span>
+              {selectedGroupOption && (
+                <span
+                  className="filter-clear-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGroupOption(null);
+                  }}
+                >
+                  <img src="filter_reset_icon.svg" />
+                </span>
+              )}
             </div>
+            <OverlayPanel
+              ref={opGroup}
+              className="global_dropdown_panel left-positioned"
+              style={{ width: "180px" }}
+            >
+              <div className="filter_dropdown_item">
+                <input
+                  type="checkbox"
+                  id="group-product-type"
+                  checked={selectedGroupOption === "product_type"}
+                  onChange={() => handleGroupSelection("product_type")}
+                />
+                <label htmlFor="group-product-type" className="filter_item_label">
+                  Product Type
+                </label>
+              </div>
+            </OverlayPanel>
             <div className="toolbar-item">
               <img src="/manage-column.svg" alt="Manage Columns" />
               <span>{t("overview:manage_columns")}</span>
@@ -174,7 +299,14 @@ const AssetManagementPage = () => {
         </div>
 
         {/* Render Tab Content Based on Selected Index */}
-        {activeIndex === 0 && <AssetManagement />}
+        {activeIndex === 0 && (
+          <AssetManagement
+            searchQuery={searchQuery}
+            productTypeFilter={productTypeFilter}
+            groupBy={selectedGroupOption}
+            sortAscending={sortAscending}
+          />
+        )}
         {activeIndex === 1 && <AllocatedAsset />}
 
         {/* <Footer /> */}
