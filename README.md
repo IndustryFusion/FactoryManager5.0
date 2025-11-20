@@ -293,7 +293,7 @@ CREATE OR REPLACE VIEW machine_state_2h_stats AS
 WITH cleaned AS (
     SELECT
         ("observedAt" AT TIME ZONE 'UTC')::date AS day,
-        EXTRACT(HOUR FROM ("observedAt" AT TIME ZONE 'UTC')) AS hour,
+        EXTRACT(HOUR FROM ("observedAt" AT TIME ZONE 'UTC')) AS time,
         CASE 
             WHEN "value" IS NULL THEN 0
             WHEN "value"::text ILIKE 'null' THEN 0
