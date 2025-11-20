@@ -1,0 +1,25 @@
+.loading_circle_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 5px !important;
+    margin-right: 8px;
+}
+
+.loading_circle_element {
+    width: 20px;
+    height: 20px;
+    margin: 0px 0px;
+    background-image: url("/loading_circle_blue.svg");
+    animation: loading_circle_blue 0.7s linear infinite;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px;
+    transform-origin: center;
+}
+
+@keyframes loading_circle_blue {
+    to {
+        transform: rotate(360deg);
+    }
+}

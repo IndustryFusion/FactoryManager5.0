@@ -3,12 +3,8 @@ import React, { useState } from "react";
 import "@/styles/sync-dialog.css";
 import { useTranslation } from "next-i18next";
 
-interface Product {
-  product_name: string;
-}
-
 interface ExpandableProductProps {
-  products: Product[];
+  products: string[];
   activeTab?: string;
 }
 
@@ -30,9 +26,9 @@ const ExpandableProduct: React.FC<ExpandableProductProps> = ({
       </div>
 
       <div className="serials-list">
-        {displayedProducts.map((item, idx) => (
+        {displayedProducts.map((product_name, idx) => (
           <div key={idx} className="serial-item">
-            <span className="serial-name">{item.product_name}</span>
+            <span className="serial-name">{product_name}</span>
           </div>
         ))}
       </div>
