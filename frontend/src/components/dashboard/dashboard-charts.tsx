@@ -15,9 +15,11 @@ const StackedPercentageBarChart: React.FC<StackedPercentageBarChartProps> = ({ac
   const fetchData = async () => {
     try {
       if(activityInterval === "10-days") {
+        setMachineState([]);
         const response = await getMachineState10Days();
         setMachineState(response);
       } else {
+        setMachineState([]);
         const response = await getMachineStateIntraDays();
         setMachineState(response);
       }
@@ -73,7 +75,7 @@ const StackedPercentageBarChart: React.FC<StackedPercentageBarChartProps> = ({ac
         const dayName = dayNames[date.getDay()];
 
         const total = params.reduce((sum: number, p: any) => sum + p.value, 0);
-        const header = `${dayName}. ${day}.${month}.${year} <span>(${total}h)<span>`;
+        const header = `${dayName}. ${day}.${month}.${year} ${activityInterval === "intra-day" ? machineState[params[0].dataIndex].time : ""} <span>(${total}h)<span>`;
 
         const details = params
           .slice().reverse().map((p: any) => {
@@ -97,7 +99,7 @@ const StackedPercentageBarChart: React.FC<StackedPercentageBarChartProps> = ({ac
     },
     yAxis: {
       type: 'value',
-      max: 24,
+      max: activityInterval === "10-days" ? 24 : 2,
       show: false
     },
     series

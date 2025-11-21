@@ -34,7 +34,7 @@
     "access_permission": "no access rights. Ask your company admin for the access",
     "sync_dialog": {
         "dialog_title": "Sync Product Data",
-        "message": "You’re about to sync <strong>{{modelCount}}</strong> product models and <strong>{{productCount}}</strong> products.",
+        "message": "You’re about to sync <strong>{{productCount}}</strong> products.",
         "product_models": "Product Models",
         "continue_text": "Once your Product Data are imported, you can start using them to create Process Data Twins. Do you want to continue?",
         "importing": "Importing...",

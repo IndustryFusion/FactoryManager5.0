@@ -172,3 +172,14 @@ export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
       console.error("error")
   }
 };
+
+export const getSyncPdtData = async (company_ifric_id: string)=> {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/company/get-sync-pdt-data/${company_ifric_id}`);
+    console.log("resposne from getSyncPdtData ",response.data)
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};

@@ -16,7 +16,7 @@
 
 import { Controller, Post, Delete, Session, Req, Body } from '@nestjs/common';
 import { TokenService } from '../session/token.service';
-import { FindIndexedDbAuthDto } from './dto/token.dto';
+import { FindIndexedDbAuthDto, EncryptRouteDto } from './dto/token.dto';
 import { AuthService } from './auth.service';
 @Controller('auth')
 export class AuthController {
@@ -50,10 +50,19 @@ export class AuthController {
     }
   }
 
-  @Post('get-indexed-db-data')
-  getIndexedData(@Body() data: FindIndexedDbAuthDto) {
+  @Post('encrypt-route')
+  encryptRoute(@Body() data: EncryptRouteDto) {
     try {
-      return this.authService.getIndexedData(data);
+      return this.authService.encryptRoute(data);
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  @Post('decrypt-route')
+  decryptRoute(@Body() data: FindIndexedDbAuthDto) {
+    try {
+      return this.authService.decryptRoute(data);
     } catch (err) {
       throw err;
     }

@@ -79,6 +79,8 @@ import { FlinkDeployController } from './endpoints/flink-deploy/flink-deploy.con
 import { FlinkDeployService } from './endpoints/flink-deploy/flink-deploy.service';
 import { AssetModule } from './endpoints/asset/asset.module';
 import { FlinkJob, FlinkJobSchema } from './endpoints/schemas/flink-job.schema';
+import { CompanyController } from './endpoints/company/company.controller';
+import { CompanyService } from './endpoints/company/company.service';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -128,7 +130,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     ContractController,
     BindingController,
     FactoryPdtCacheController,
-    FlinkDeployController
+    FlinkDeployController,
+    CompanyController
   ],
   providers: [
     AppService,
@@ -158,7 +161,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     ContractService,
     BindingService,
     FactoryPdtCacheService,
-    FlinkDeployService
+    FlinkDeployService,
+    CompanyService
   ]
 })
 export class AppModule {

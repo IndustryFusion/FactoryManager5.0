@@ -34,7 +34,7 @@
     "access_permission": "Sie haben keine Zugriffsrechte. Bitten Sie Ihren Firmenadministrator um die Zugriffsrechte",
     "sync_dialog": {
         "dialog_title": "Produktdaten synchronisieren",
-        "message": "Sie sind dabei, <strong>{{modelCount}}</strong> Produktmodelle und <strong>{{productCount}}</strong> Produkte zu synchronisieren.",
+        "message": "Sie sind dabei, <strong>{{productCount}}</strong> Produkte zu synchronisieren.",
         "product_models": "Produktmodelle",
         "continue_text": "Sobald Ihre Produktdaten importiert sind, können Sie sie verwenden, um Process Data Twins zu erstellen. Möchten Sie fortfahren?",
         "importing": "Importiere...",
