@@ -35,8 +35,8 @@ export default function WelcomePage() {
       await getAccessGroupData(token);
 
       // Get current full URL
-      const fullUrl = window.location.href;  // url?asssetId=sdasd/?token=sdsadsad
-      const baseUrl = fullUrl.split("/?token")[0];  // remove query params
+      const fullUrl = window.location.href;  
+      const baseUrl = fullUrl.split("?token")[0];  // remove query params
 
       // Check if baseUrl ends with .com or .org
       const isTopLevelDomain =
