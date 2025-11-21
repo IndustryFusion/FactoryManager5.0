@@ -352,11 +352,11 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const encryptedToken = await this.encryptData(req.headers['authorization'].split(" ")[1]);
+      
       const ifxHeaders = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${this.mask(encryptedToken, process.env.MASK_SECRET)}`
+        'Authorization': req.headers['authorization']
       };
 
       const [scorpioDataResponseRaw, cacheDataResponse] = await Promise.all([

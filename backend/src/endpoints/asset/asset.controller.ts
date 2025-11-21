@@ -14,12 +14,13 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query, UseGuards } from '@nestjs/common';
 import { AssetService } from './asset.service';
 import { TokenService } from '../session/token.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import { Request } from 'express';
+import { AuthGuard } from '../auth/auth.guard';
 @Controller('asset')
 export class AssetController {
   constructor(
@@ -43,6 +44,7 @@ export class AssetController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Get('/asset-management/:company_ifric_id')
   async getAssetManagementData(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {

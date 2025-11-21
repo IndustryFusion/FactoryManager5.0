@@ -33,7 +33,21 @@ export default function WelcomePage() {
     try {
       // fetch access data and store in indexed db and route to asset-overview.
       await getAccessGroupData(token);
-      router.push('/factory-site/factory-overview');
+
+      // Get current full URL
+      const fullUrl = window.location.href;  // url?asssetId=sdasd/?token=sdsadsad
+      const baseUrl = fullUrl.split("/?token")[0];  // remove query params
+
+      // Check if baseUrl ends with .com or .org
+      const isTopLevelDomain =
+        baseUrl.endsWith(".com") || baseUrl.endsWith(".org");
+
+      if (isTopLevelDomain) {
+        router.push('/factory-site/factory-overview');
+      } else {
+        // redirect to the base URL
+        window.location.href = baseUrl;
+      }
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         if (error?.response && error?.response?.status === 401) {
