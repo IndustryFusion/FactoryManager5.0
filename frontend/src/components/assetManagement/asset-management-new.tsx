@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
@@ -14,7 +14,13 @@ import '../../styles/asset-management.css'
 import { Dropdown } from 'primereact/dropdown';
 import { useTranslation } from 'next-i18next';
 
-const AssetManagement: React.FC = () => {
+interface Props {
+  searchQuery?: string;
+  productTypeFilter:string[]
+  groupBy: string | null;
+  sortAscending: boolean;
+}
+const AssetManagement: React.FC<Props> = ({ searchQuery, productTypeFilter, groupBy, sortAscending}) => {
   const dispatch = useDispatch<AppDispatch>();
   const { assets, loading, selectedAssets } = useSelector((state: RootState) => state.assetManagement);
   const [globalFilterValue, setGlobalFilterValue] = useState<string>('');
@@ -24,6 +30,7 @@ const AssetManagement: React.FC = () => {
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const {t} = useTranslation("overview")
+  const [filteredData, setFilteredData] = useState([]);
 
   const [filters, setFilters] = useState<DataTableFilterMeta>({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -33,6 +40,38 @@ const AssetManagement: React.FC = () => {
     product_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
     asset_manufacturer_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
   });
+
+  useEffect(() => {
+    let temp = [...assets];
+    if (searchQuery && searchQuery.trim() !== "") {
+      temp = temp.filter(item =>
+        Object.values(item).some(val =>
+          String(val).toLowerCase().includes(searchQuery)
+        )
+      );
+    }
+    if (productTypeFilter.length > 0) {
+      temp = temp.filter(item => {
+        const pType = item.type?.split('/').pop();
+        return pType && productTypeFilter.includes(pType);
+      });
+    }
+    if (groupBy === "product_type") {
+      temp = temp.sort((a, b) => {
+        const aType = a.type?.split("/").pop() || "";
+        const bType = b.type?.split("/").pop() || "";
+        return aType.localeCompare(bType);
+      });
+    }
+    temp.sort((a, b) => {
+      const nameA = a.product_name?.toLowerCase() || "";
+      const nameB = b.product_name?.toLowerCase() || "";
+      return sortAscending
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    });
+    setFilteredData(temp);
+  }, [assets, searchQuery, productTypeFilter, groupBy, sortAscending]);
 
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -162,7 +201,7 @@ const AssetManagement: React.FC = () => {
         </div>
       ) : (
         <DataTable
-          value={assets}
+          value={filteredData}
           paginator
           rows={40}
           rowsPerPageOptions={[10, 20, 40, 50]}
