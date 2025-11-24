@@ -14,11 +14,12 @@
 // limitations under the License. 
 // 
 
-import { Controller, Post, Delete, Session, Req, Body } from '@nestjs/common';
+import { Controller, Post, Delete, Session, Req, Body, UseGuards, Get, Param, Query, Patch } from '@nestjs/common';
 import { TokenService } from '../session/token.service';
-import { FindIndexedDbAuthDto, EncryptRouteDto } from './dto/token.dto';
+import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto } from './dto/token.dto';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
+import { AuthGuard } from './auth.guard';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -51,6 +52,7 @@ export class AuthController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Post('encrypt-route')
   encryptRoute(@Body() data: EncryptRouteDto, @Req() req: Request) {
     try {
@@ -73,4 +75,47 @@ export class AuthController {
   generateToken(@Body() data: Record<string, any>) {
     return this.authService.generateToken(data);
   }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-user-details-by-email/:email')
+  getUserDetailsByEmail(@Param('email') email: string, @Req() req: Request) {
+    return this.authService.getUserDetailsByEmail(email, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-company-details/:company_ifric_id')
+  getCompanyDetails(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+    return this.authService.getCompanyDetails(company_ifric_id, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-company-details-id/:id')
+  getCompanyDetailsByID(@Param('id') id: string, @Req() req: Request) {
+    return this.authService.getCompanyDetailsbyRecord(id, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-category-specific-company/:categoryName')
+  getCategorySpecificCompanies(@Param('categoryName') categoryName: string, @Req() req: Request) {
+    return this.authService.getCategorySpecificCompanies(categoryName, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-user-details')
+  getUserDetails(@Query('user_email') user_email: string, @Query('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+    return this.authService.getUserDetails(user_email, company_ifric_id, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('/get-company-products/:company_ifric_id')
+  getCompanyProducts(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+    return this.authService.getCompanyProducts(company_ifric_id, req);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('/update-company-twin')
+  updateCompanyTwin(@Body() data: CompanyTwinDto, @Req() req: Request) {
+    return this.authService.updateCompanyTwin(data, req);
+  }
+  
 }
