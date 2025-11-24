@@ -148,7 +148,7 @@ const ContractDetails: React.FC = () => {
         try {
             const userData = await getAccessGroup();
             dispatch(fetchContractsRedux(userData?.company_ifric_id));
-            if (userData && userData.jwt_token) {
+            if (userData && userData.ifricdi) {
                 // Fetch template data (from backend)
                 const templateResponse =  await getTemplateByName("predictiveMaintenance_laserCutter");
                 const template = templateResponse?.data[0];

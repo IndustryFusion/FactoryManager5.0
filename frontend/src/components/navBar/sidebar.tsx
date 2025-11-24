@@ -82,7 +82,7 @@ function Sidebar() {
 
   async function handleXanaRoute() {
     const token = await getAccessGroup();
-    const response = await generateToken({ token: token.jwt_token });
+    const response = await generateToken({ token: token.ifricdi });
     if (response && response.data) {
       const token2 = response.data.token;
       window.open(`${xana_url}?token=${token2}`, '_blank', 'noopener,noreferrer');

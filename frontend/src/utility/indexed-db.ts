@@ -29,7 +29,7 @@ if (!process.env.NEXT_PUBLIC_JWT_SECRET) {
 }
 
 interface LoginData {
-    ifricdi?: string;
+    ifricdi: string;
     company_ifric_id: string;
     user_name: string;
     jwt_token: string;
@@ -104,7 +104,6 @@ async function ensureObjectStore(db: IDBDatabase, storeName: string): Promise<vo
 
 export async function storeAccessGroup(loginData: LoginData) : Promise<void> {
     try {
-        const encryptedJWT = await encryptJWT(loginData.jwt_token);
         const db = await openDatabase();
         const transaction = db.transaction(["accessGroupStore"], "readwrite");
         const objectStore = transaction.objectStore("accessGroupStore");
@@ -113,7 +112,6 @@ export async function storeAccessGroup(loginData: LoginData) : Promise<void> {
             id: "accessGroup",
             company_ifric_id: loginData.company_ifric_id,
             user_name: loginData.user_name,
-            jwt_token: encryptedJWT,
             ifricdi: loginData.ifricdi,
             user_role: loginData.user_role,
             access_group: loginData.access_group,
@@ -152,7 +150,6 @@ export async function getAccessGroup(): Promise<AccessGroupData> {
             request.onsuccess = async () => {
                 const result = request.result as AccessGroupData;
                 if (result) {
-                    result.jwt_token = await decryptJWT(result.jwt_token)
                     resolve(result);
                 } 
                 resolve(result);

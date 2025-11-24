@@ -21,7 +21,7 @@ export default function FloatingXanaButton() {
   useEffect(() => {
     (async () => {
       const token = await getAccessGroup();
-      setIsLoggedIn(!!token?.jwt_token);
+      setIsLoggedIn(!!token?.ifricdi);
     })();
 
     const saved = localStorage.getItem("xanaFabXY");
@@ -38,7 +38,7 @@ export default function FloatingXanaButton() {
   async function handleXanaOpen() {
     if (dragging) return; // block click during drag
     const token = await getAccessGroup();
-    const response = await generateToken({ token: token.jwt_token, product_name: "XANA AI" });
+    const response = await generateToken({ token: token.ifricdi, product_name: "XANA AI" });
     if (response?.data?.token) {
       const token2 = response.data.token;
       const xana_url =
