@@ -149,7 +149,7 @@ export const getAssetById = async (assetId: string): Promise<Asset | null> => {
 export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
   try {
     const access_group = await getAccessGroup();
-    const token = access_group.jwt_token
+    const token = access_group.ifricdi
     
     if (!token) {
       throw new Error('Authentication token not found');
