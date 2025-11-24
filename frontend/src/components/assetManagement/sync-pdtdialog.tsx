@@ -196,7 +196,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                 <div className="flex align-items-stretch gap-4">
                   <div className="import_fp_badge flex align-items-center">
                     <img
-                      src="/fp_circular_logo.svg"
+                      src="/IF-X-logo.svg"
                       width={48}
                       height={48}
                       alt="fp_logo"
@@ -224,7 +224,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
 
                   <div className="import_fp_badge flex align-items-center">
                     <img
-                      src="/import_ifx_logo.svg"
+                      src="/sidebar/logo_expanded.svg"
                       width={215}
                       height={48}
                       alt="IFX Logo"
