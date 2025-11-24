@@ -166,10 +166,10 @@ export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
       },
       }
     );
-    console.log("post setOwner asset endpoint console",response.data)
+    console.log("post setOwner asset endpoint console",response.data);
     return response.data;
   } catch (error: any) {
-      console.error("error")
+      console.error(error);
   }
 };
 
