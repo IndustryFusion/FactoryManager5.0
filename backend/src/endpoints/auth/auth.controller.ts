@@ -18,6 +18,7 @@ import { Controller, Post, Delete, Session, Req, Body } from '@nestjs/common';
 import { TokenService } from '../session/token.service';
 import { FindIndexedDbAuthDto, EncryptRouteDto } from './dto/token.dto';
 import { AuthService } from './auth.service';
+import { Request } from 'express';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -51,9 +52,9 @@ export class AuthController {
   }
 
   @Post('encrypt-route')
-  encryptRoute(@Body() data: EncryptRouteDto) {
+  encryptRoute(@Body() data: EncryptRouteDto, @Req() req: Request) {
     try {
-      return this.authService.encryptRoute(data);
+      return this.authService.encryptRoute(data, req);
     } catch (err) {
       throw err;
     }
