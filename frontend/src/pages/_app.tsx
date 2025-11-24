@@ -32,18 +32,13 @@ import { PrimeReactProvider } from 'primereact/api';
 
 function MyApp({ Component, pageProps, router }: AppProps) {
 
-
-  const AuthComponent =
-    ["/auth/login", "/auth/register", "/recover-password", "/auth/reset/update-password", "/privacy", "/terms-and-conditions"].includes(router.pathname)
-      ? Component
-      : withAuth(Component);
   return (
     <Provider store={store}>
       <PrimeReactProvider>
         <Head>
           <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         </Head>
-        <AuthComponent {...pageProps} />
+        <Component {...pageProps} />
         <FloatingXanaButton />
         <UnauthorizedPopup />
       </PrimeReactProvider>

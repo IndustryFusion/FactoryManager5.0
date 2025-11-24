@@ -30,29 +30,10 @@ interface CustomJwtPayload extends JwtPayload {
     user: string;  
 }
 
-export const fetchUserDetailsForRecoverPassword = async(email: string) => {
-    try {
-    const url = `${REGISTRY_API_URL}/auth/get-user-details-by-email-recover-password/${email}`;
-    // Fetch user data
-    const response = await axios.get(url, {
-    headers: {
-        "Content-Type": "application/json",
-    }});
-    return response.data;
-    } catch(error: any) {
-        console.log('err from update user details by email ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
 export const fetchUserDetails = async(email: string) => {
     try {
     
-    const url = `${REGISTRY_API_URL}/auth/get-user-details-by-email/${email}`;
+    const url = `${BACKEND_URL}/auth/get-user-details-by-email/${email}`;
 
     // Fetch user data
     const response = await api.get(url, {
@@ -71,83 +52,9 @@ export const fetchUserDetails = async(email: string) => {
     }
 }
 
-export const updateUserAccessGroup = async(userId: string | string[] | undefined, userData: Record<string, any>) => {
-    try {
-    return await api.patch(`${REGISTRY_API_URL}/auth/update-user-access-group/${userId}`,
-        userData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-        },
-    })
-
-    } catch(error: any) {
-        console.log('err from update access group ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
-export const getUserProductAccess = async(userId: string | string[] | undefined) => {
-    try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-user-product-access/${userId}`,{
-            headers: {
-              "Content-Type": "application/json",
-            },
-        });
-
-    } catch(error: any) {
-        console.log('err from fetch user details by id ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
-export const getCompanyAccessGroup = async(company_ifric_id: string) => {
-    try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-company-access-group/${company_ifric_id}`,{
-            headers: {
-              "Content-Type": "application/json",
-            },
-        });
-    
-    } catch(error: any) {
-        console.log('err from fetch user company access group ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
-export const getAccessGroupById = async(access_group_id: string) => {
-    try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-access-group/${access_group_id}`,{
-            headers: {
-              "Content-Type": "application/json",
-            },
-        })
-    
-    } catch(error: any) {
-        console.log('err from fetch access group by id ',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
 export const getCompanyDetailsById = async(company_id: string) => {
     try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-company-details/${company_id}`,{
+        return await api.get(`${BACKEND_URL}/auth/get-company-details/${company_id}`,{
             headers: {
               "Content-Type": "application/json",
             }         
@@ -165,7 +72,7 @@ export const getCompanyDetailsById = async(company_id: string) => {
 
 export const getCompanyDetailsByRecordId = async(company_id: string) => {
     try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-company-details-id/${company_id}`,{
+        return await api.get(`${BACKEND_URL}/auth/get-company-details-id/${company_id}`,{
             headers: {
               "Content-Type": "application/json",
             }         
@@ -181,49 +88,10 @@ export const getCompanyDetailsByRecordId = async(company_id: string) => {
     }
 }
 
-export const getCompanyDetailsByIfricId = async(company_ifric_id: string) => {
-    try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-company-details/${company_ifric_id}`,{
-            headers: {
-              "Content-Type": "application/json",
-            }         
-        })
-    
-    } catch(error: any) {
-        console.log('err from fetch company details by ifric id',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
-export const updateCompanyDetails = async(company_ifric_id: string, dataToSend: Record<string, any>) => {
-    try {
-        return await api.patch(
-            `${REGISTRY_API_URL}/auth/update-company/${company_ifric_id}`,
-            dataToSend,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-        );
-    } catch(error: any) {
-        console.log('err from fetch company details by ifric id',error);
-        if (error?.response && error?.response?.status === 401) {
-        updatePopupVisible(true);
-        } else {
-        throw error;
-        }
-    }
-}
-
 export const updateCompanyTwin = async(dataToSend: Record<string, any>) => {
     try {
         return await api.patch(
-            `${REGISTRY_API_URL}/auth/update-company-twin`,
+            `${BACKEND_URL}/auth/update-company-twin`,
             dataToSend
         );
     } catch(error: any) {
@@ -238,7 +106,7 @@ export const updateCompanyTwin = async(dataToSend: Record<string, any>) => {
 
 export const getCategorySpecificCompany = async(categoryName: string) => {
     try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-category-specific-company/${categoryName}`);
+        return await api.get(`${BACKEND_URL}/auth/get-category-specific-company/${categoryName}`);
     } catch(error: any) {
         console.log('err from update company twin',error);
         if (error?.response && error?.response?.status === 401) {
@@ -280,7 +148,7 @@ export const verifyCompanyCertificate = async(company_ifric_id: string) => {
 
 export const getUserDetails = async (dataToSend: Record<string, string>) => {
     try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-user-details`, {
+        return await api.get(`${BACKEND_URL}/auth/get-user-details`, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -299,7 +167,7 @@ export const getUserDetails = async (dataToSend: Record<string, string>) => {
 
 export const fetchCompanyProduct = async (dataCompanyIfricId: string) => {
     try {
-        return await api.get(`${REGISTRY_API_URL}/auth/get-company-products/${dataCompanyIfricId}`,{
+        return await api.get(`${BACKEND_URL}/auth/get-company-products/${dataCompanyIfricId}`,{
             headers: {
               "Content-Type": "application/json",
             },
