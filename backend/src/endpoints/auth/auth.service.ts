@@ -20,7 +20,7 @@ import { FindIndexedDbAuthDto, EncryptRouteDto } from './dto/token.dto';
 import * as jwt from 'jsonwebtoken';
 import { createHash } from 'crypto';
 import { CompactEncrypt } from 'jose';
-
+import { Request } from 'express';
 
 /**
  * Retrieves tokens from the keylock service.
@@ -66,13 +66,17 @@ export class AuthService {
     }
   }
 
-  async encryptRoute(data: EncryptRouteDto) {
+  async encryptRoute(data: EncryptRouteDto, req: Request) {
     try { 
+      const registryHeader = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        Authorization: req.headers['authorization'],
+      };
+
       // check whether the product is installed or not
       const companyProducts = await axios.get(`${this.registryUrl}/auth/get-company-products/${data.company_ifric_id}`,{
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: registryHeader,
       });
       const installed = Array.isArray(companyProducts.data) &&
                       companyProducts.data.some((p: any) => p.product_name === data.product_name);
