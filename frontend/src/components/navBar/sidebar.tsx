@@ -288,6 +288,36 @@ function Sidebar() {
                 className="sidebar_profile_dropdown_icon"
               />
             </div>
+              <div className="sidebar-bottom">
+            <Button
+              className={`sidebar_navlink if_button ${!sidebarOpen ? 'mini_version' : ''}`}
+              tooltip={!sidebarOpen ? t("sidebar.back_to_if") : undefined}
+              tooltipOptions={{ position: "right", event: "both", className: "sidebar_tooltip" }}
+              onClick={() => {
+                router.push("https://dev-platform.industry-fusion.com/dashboard-new")
+              }}
+          >
+            <img
+              src="/hive (1).svg"
+              width={40}
+              height={40}
+              alt="Buy Components Icon"
+            />
+            <div
+              className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""
+                }`}
+            >
+              IndustryFusion
+            </div>
+            <img
+              src="/arrow-left-02.svg"
+              width={16}
+              height={16}
+              alt="Back arrow"
+              style={{marginLeft: 'auto'}}
+            />
+          </Button>
+        </div>
           </div>
         </div>
       </div>

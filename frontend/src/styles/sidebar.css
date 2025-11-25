@@ -471,6 +471,7 @@ line-height: normal;
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .sidebar_profile_section {
@@ -538,4 +539,32 @@ line-height: normal;
 .sidebar_profile_dropdown_icon {
   width: 14px;
   height: 14px;
+}
+
+.sidebar_navlink.if_button {
+  margin-top: auto;
+  background-color: var(--common-text-grey-100);
+  transition: padding 200ms ease;
+  margin-bottom: 0px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sidebar_navlink.if_button:is(:hover, :focus-visible) {
+  background-color: var(--common-text-grey-200);
+}
+
+.sidebar_navlink.if_button img:first-child {
+  transition: all 200ms ease;
+}
+
+.sidebar_navlink.if_button.mini_version {
+  padding: 7px;
+  border-radius: 8px;
+}
+
+.sidebar_navlink.if_button.mini_version img:first-child {
+  width: 27px;
+  height: 27px;
 }
