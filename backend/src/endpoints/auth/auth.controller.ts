@@ -112,6 +112,11 @@ export class AuthController {
     return this.authService.getCompanyProducts(company_ifric_id, req);
   }
 
+  @Get('authenticate-token/:ifricdi')
+  authenticateToken(@Param('ifricdi') ifricdi: string) {
+    return this.authService.authenticateToken(ifricdi);
+  }
+
   @UseGuards(AuthGuard)
   @Patch('/update-company-twin')
   updateCompanyTwin(@Body() data: CompanyTwinDto, @Req() req: Request) {

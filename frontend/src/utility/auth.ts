@@ -195,3 +195,12 @@ export const generateToken = async (data: Record<string, string>) => {
         }
     }
 };
+
+export const authenticateToken = async (token: string) => {
+  try {
+    const response = await api.get(`${BACKEND_URL}/auth/authenticate-token/${token}`);
+    return response.data;
+  } catch(error: any) {
+    throw error;
+  }
+}

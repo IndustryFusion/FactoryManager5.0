@@ -28,17 +28,48 @@ import "@/app/globals.css";
 import { UnauthorizedPopup } from '../utility/jwt';
 import FloatingXanaButton from "@/components/floating-xana-button";
 import { PrimeReactProvider } from 'primereact/api';
-
+import { getAccessGroupData } from "@/utility/auth";
+import axios from "axios";
+import { useEffect } from "react";
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
 
+  useEffect(() => {
+    const handleTokenRouting = async () => {
+      if (!router.isReady) return;
+
+      if (router.asPath.includes("?token=")) {
+        try {
+          const [routeUrl, token] = router.asPath.split("?token=");
+          await getAccessGroupData(token);
+          router.replace(routeUrl);
+        } catch (error: any) {
+          if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+              window.location.href = `${ifxSuiteUrl}/home`;
+            } else {
+              console.error("Error response:", error.response?.data?.message);
+            }
+          }
+        }
+      }
+    };
+
+    handleTokenRouting();
+  }, [router.isReady, router.asPath]);
+
+  const AuthComponent =
+    ["/auth/login", "/auth/register", "/recover-password", "/auth/reset/update-password", "/privacy", "/terms-and-conditions"].includes(router.pathname)
+      ? Component
+      : withAuth(Component);
   return (
     <Provider store={store}>
       <PrimeReactProvider>
         <Head>
           <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         </Head>
-        <Component {...pageProps} />
+        <AuthComponent {...pageProps} />
         <FloatingXanaButton />
         <UnauthorizedPopup />
       </PrimeReactProvider>
