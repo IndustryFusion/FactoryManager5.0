@@ -524,7 +524,7 @@ export class AssetService {
           responses.push(response);
         }
 
-        // update all children assetIds factory_site and shop_floor data
+        // update children assetIds factory_site and shop_floor data
         if(assetIds.length) {
           // fetch asset cache data for parent asset
           const assetCacheData = await this.factoryPdtCacheModel.find({id: key});
