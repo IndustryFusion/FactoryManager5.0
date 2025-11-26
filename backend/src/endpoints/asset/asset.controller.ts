@@ -75,6 +75,7 @@ export class AssetController {
     }
   }
 
+  @UseGuards(AuthGuard)
   @Post('/get-owner-asset/:company_ifric_id')
   async setFactoryOwnerAssets(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {

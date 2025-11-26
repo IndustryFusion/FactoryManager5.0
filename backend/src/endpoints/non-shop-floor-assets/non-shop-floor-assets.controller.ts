@@ -14,10 +14,11 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, UseGuards } from '@nestjs/common';
 import { NonShopFloorAssetsService } from './non-shop-floor-assets.service';
 import { TokenService } from '../session/token.service';
 import { Request } from 'express';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('non-shop-floor-assets')
 export class NonShopFloorAssetsController {
@@ -26,6 +27,7 @@ export class NonShopFloorAssetsController {
     private readonly tokenService: TokenService
   ) {}
 
+  @UseGuards(AuthGuard)
   @Get(':company_ifric_id/:id')
   async findAll( @Param('company_ifric_id') company_ifric_id: string,  @Param('id') id: string, @Req() req: Request ) {
     try {
