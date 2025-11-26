@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AssetService } from './asset.service';
-import { FactoryPdtCache, FactoryPdtCacheSchema } from '../schemas/factory-pdt-cache.schema';
+import { FactoryPdtCacheModule } from '../factory-pdt-cache/factory-pdt-cache.module';
 
 @Module({
   imports: [
-    // use 'factory' here *only if* AssetService injects with that connection name
-    MongooseModule.forFeature(
-      [{ name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema }]
-      // , 'factory'
-    ),
+    FactoryPdtCacheModule,
   ],
   providers: [AssetService],
   exports: [AssetService],
