@@ -78,11 +78,11 @@ export class FactoryPdtCache extends Document {
     @Prop({ type: String, default: ""})
     factory_site: string;
 
-    @Prop({ type: String, default: ""})
-    shop_floor: string;
+    @Prop({ type: String, default: []})
+    shop_floor: [];
 
-    @Prop({ type: String, default: ""})
-    product_line: string;
+    @Prop({ type: String, default: []})
+    product_line: [];
   
     @Prop({ type: Array, default: []})
     report: [];
