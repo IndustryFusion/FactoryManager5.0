@@ -26,12 +26,14 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
 @Injectable()
 export class AssetService {
   constructor(
     @InjectModel(FactoryPdtCache.name)
     private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
+    private readonly factoryPdtCacheService: FactoryPdtCacheService
   ) { }
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   private readonly scorpioTypesUrl = process.env.SCORPIO_TYPES_URL;
@@ -495,10 +497,11 @@ export class AssetService {
       const responses = [];
       for (let key in data) {
         const assetData = await this.getAssetDataById(key, token);
-        let relationData = data[key];
+        let relationData = data[key], assetIds = [];
         for (let relationKey in relationData) {
           let finalKey = Object.keys(assetData).find(key => key.includes(relationKey))
           let relationArray = relationData[relationKey];
+          assetIds.push(...relationArray);
           if (relationArray.length > 0) {
             assetData[finalKey] = [];
             for (let i = 0; i < relationArray.length; i++) {
@@ -519,6 +522,15 @@ export class AssetService {
         if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
           const response = await axios.post(this.scorpioUrl, assetData, { headers });
           responses.push(response);
+        }
+
+        // update all children assetIds factory_site and shop_floor data
+        if(assetIds.length) {
+          // fetch asset cache data for parent asset
+          const assetCacheData = await this.factoryPdtCacheModel.find({id: key});
+          if(assetCacheData.length) {
+            await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: assetIds, factory_site: assetCacheData[0].factory_site, shop_floor: assetCacheData[0].shop_floor});
+          }
         }
       }
 

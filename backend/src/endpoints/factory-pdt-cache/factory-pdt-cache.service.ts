@@ -34,7 +34,7 @@ export class FactoryPdtCacheService {
   }
   async updateFactoryAndShopFloor(data: Record<string, any>) {
     try {
-      return await this.factoryPdtCacheModel.updateMany({id: { $in: data.assetIds }}, { factory_site: data.factory_site, shop_floor: data.shop_floor }, {new: true})
+      return await this.factoryPdtCacheModel.updateMany({id: { $in: data.assetIds }}, { factory_site: data.factory_site, $addToSet: { shop_floor: data.shop_floor } }, {new: true})
     } catch(err) {
       if (err instanceof HttpException) {
         throw err;
