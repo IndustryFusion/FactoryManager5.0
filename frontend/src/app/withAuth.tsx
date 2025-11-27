@@ -34,8 +34,8 @@ const withAuth = (WrappedComponent: NextComponentType<NextPageContext>) => {
       const checkAuth = async () => {
         try {
           const loginData = await getAccessGroup();
-          if (loginData && loginData.jwt_token) {
-            const token = loginData.jwt_token;
+          if (loginData && loginData.ifricdi) {
+            const token = loginData.ifricdi;
             try {
               const response = await authenticateToken(token);
               if(!response) {
