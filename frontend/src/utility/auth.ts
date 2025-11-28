@@ -21,7 +21,7 @@ import api from "./jwt";
 import axios from "axios";
 import { updatePopupVisible } from './update-popup';
 import { jwtDecode, JwtPayload } from "jwt-decode";
-import { storeAccessGroup } from "./indexed-db";
+import { getAccessGroup, storeAccessGroup } from "./indexed-db";
 
 const REGISTRY_API_URL =process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -202,5 +202,109 @@ export const authenticateToken = async (token: string) => {
     return response.data;
   } catch(error: any) {
     throw error;
+  }
+}
+
+
+export const encryptRoute = async (data: {
+    environment: string;
+    pageName: string;
+    product_name: string;
+    t?: (key: string) => string;
+}) => {
+    try {
+        const accessGroupData = await getAccessGroup();
+        if (!accessGroupData || !accessGroupData.ifricdi || !accessGroupData.company_ifric_id) {
+            const errorMessage = data.t ? data.t("unableToRetrieveAuthData"):"";
+            throw new Error(errorMessage);
+        }
+
+        const token = accessGroupData.ifricdi;
+        const company_ifric_id = accessGroupData.company_ifric_id;
+        
+        const baseURL = getBaseURL(data.environment, data.product_name);
+        const route = `${baseURL}${data.pageName}`;
+
+        const requestData = {
+            token,
+            product_name: data.product_name,
+            company_ifric_id,
+            route
+        };
+
+        const response = await api.post(
+            `${BACKEND_URL}/auth/encrypt-route`,
+            requestData,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        return response.data;
+    } catch (error: any) {
+        console.log('err from encrypt route ', error);
+        if (error?.response && (error?.response?.status === 401 || error?.response?.status === 403)) {
+            updatePopupVisible(true);
+        } else {
+            throw error;
+        }
+    }
+}
+
+
+export const getBaseURL = (environment: string | undefined, productName: string): string => {
+  switch (productName) {
+    case "DPP Creator":
+      if (environment === "dev") {
+        return "https://dev-platform.industry-fusion.com";
+      } else if (environment === "local") {
+        return "http://localhost:3003";
+      } else {
+        return "https://platform.industry-fusion.com";
+      }
+
+    case "IFX Platform":
+      if (environment === "dev") {
+        return "https://dev-platform.industryfusion-x.org";
+      } else if (environment === "local") {
+        return "http://localhost:3008";
+      } else {
+        return "https://platform.industryfusion-x.org";
+      }
+
+    case "Contract Manager":
+      if (environment === "dev") {
+        return "https://dev-contract.industryfusion-x.org";
+      } else if (environment === "local") {
+        return "http://localhost:3020";
+      } else {
+        return "https://contract.industryfusion-x.org";
+      }
+
+    case "Factory Manager":
+      if (environment === "dev") {
+        return "https://dev-factory.industry-fusion.com";
+      } else if (environment === "local") {
+        return "http://localhost:3002";
+      } else {
+        return "https://factory.industry-fusion.com";
+      }
+     case "Fleet Manager":
+        if (environment === "dev") {
+            return "https://dev-fleet.industry-fusion.com";
+        } else if (environment === "local") {
+            return "http://localhost:3001";
+        } else {
+            return "https://fleet.industry-fusion.com";
+        }
+    default:
+       if (environment === "dev") {
+        return "https://dev-factory.industry-fusion.com";
+      } else if (environment === "local") {
+        return "http://localhost:3002";
+      } else {
+        return "https://factory.industry-fusion.com";
+      }
   }
 }
