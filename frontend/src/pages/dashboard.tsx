@@ -263,7 +263,7 @@ const DashboardPage: React.FC = () => {
                                 onClick={() => router.push("/production-lines")}
                                 style={{ cursor: "pointer" }}
                             >
-                                <img src="/workspace.svg" className="img-smallcard" alt="Monitor Production Line" />
+                                <img src="/product_lines.svg" className="img-smallcard" alt="Monitor Production Line" />
                                 <div className="small-card-section">
                                     <div className="small-card-title">{t("card_sub_1")}</div>
                                     <div className="small-card-name">{t("card_title_2")}</div>

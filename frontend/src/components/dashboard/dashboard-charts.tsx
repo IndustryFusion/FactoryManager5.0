@@ -56,7 +56,7 @@ const StackedPercentageBarChart: React.FC<StackedPercentageBarChartProps> = ({ac
   }));
 
   const option = {
-    color: ['#3CA0C9', '#454F63', '#FCA82B', '#A73737','#E4E7EC'],
+    color: ['#E4E7EC','#454F63','#3CA0C9','#FCA82B','#A73737'],
     legend: { top: 0, show: false },
     grid: { left: 10, right: 10, top: 0, bottom: 40 },
     tooltip: {
