@@ -1,0 +1,6 @@
+{
+    "error": "Error",
+    "unableToRetrieveAuthData": "Unable to retrieve user authentication data",
+    "failedToGenerateEncryptedRoute": "Failed to generate encrypted route",
+    "failedToStartBuilding": "Failed to start building. Please try again."
+}

@@ -1,0 +1,6 @@
+{
+    "error": "Fehler",
+    "unableToRetrieveAuthData": "Benutzerauthentifizierungsdaten konnten nicht abgerufen werden",
+    "failedToGenerateEncryptedRoute": "Verschlüsselte Route konnte nicht generiert werden",
+    "failedToStartBuilding": "Starten fehlgeschlagen. Bitte versuchen Sie es erneut."
+}

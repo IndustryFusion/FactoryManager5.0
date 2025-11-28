@@ -643,33 +643,33 @@ const FlowEditor: React.FC<
               getReactFlowMongo.data.factoryData.nodes.map(node => [node.id, node])
             ).values()
           );
+          
+          // const dagreGraph = new dagre.graphlib.Graph();
+          // dagreGraph.setGraph({
+          //   ranksep: 30,
+          //   nodesep: 90,
+          // });
+          // dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-          const dagreGraph = new dagre.graphlib.Graph();
-          dagreGraph.setGraph({
-            ranksep: 30,
-            nodesep: 90,
-          });
-          dagreGraph.setDefaultEdgeLabel(() => ({}));
+          // // Add nodes to dagre graph
+          // uniqueNodes.forEach((node: Node) => {
+          //   dagreGraph.setNode(node.id, { width: 150, height: 100 });
+          // });
 
-          // Add nodes to dagre graph
-          uniqueNodes.forEach((node: Node) => {
-            dagreGraph.setNode(node.id, { width: 150, height: 100 });
-          });
+          // // Add edges to dagre graph
+          // getReactFlowMongo.data.factoryData.edges.forEach((edge: Edge) => {
+          //   dagreGraph.setEdge(edge.source, edge.target);
+          // });
 
-          // Add edges to dagre graph
-          getReactFlowMongo.data.factoryData.edges.forEach((edge: Edge) => {
-            dagreGraph.setEdge(edge.source, edge.target);
-          });
+          // // Run the layout
+          // dagre.layout(dagreGraph);
 
-          // Run the layout
-          dagre.layout(dagreGraph);
-
-          // Get the positioned nodes
+          // Get the positioned nodes - preserve positions from backend
           const layoutedNodes = uniqueNodes.map((node: Node) => {
-            const nodeWithPosition = dagreGraph.node(node.id);
             const base = {
               ...node,
-              position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
+              // Preserve position exactly as saved in backend
+              position: node.position,
               type: node.type || node.data?.type,
               data: { ...node.data, type: node.type || node.data?.type },
             };
