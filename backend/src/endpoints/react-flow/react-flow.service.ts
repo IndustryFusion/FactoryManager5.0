@@ -24,7 +24,7 @@ import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import { AssetService } from '../asset/asset.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { error } from 'console';
-
+import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
 @Injectable()
 export class ReactFlowService {
@@ -34,7 +34,7 @@ export class ReactFlowService {
     private readonly shopFloorAssetService : ShopFloorAssetsService,  private readonly shopFloorService : ShopFloorService,
     private readonly assetService : AssetService,
     private readonly factorySiteService : FactorySiteService,
-
+    private readonly factoryPdtCacheService: FactoryPdtCacheService
   ) {}
 
   async create(data: ReactFlowDto) {
@@ -78,6 +78,18 @@ export class ReactFlowService {
       const updatedUser = await this.factoryModel.updateOne({factoryId} , data, {
         new: true, 
       });
+
+      // take subFlowIds to update product_line for assets
+      const subFlowData = data.factoryData.nodes.reduce((acc, node) => {
+        if (node.data.subFlowId) {
+          acc[node.data.id] = node.data.subFlowId;
+        }
+        return acc;
+      }, {});
+
+      if(Object.keys(subFlowData).length) {
+        await this.factoryPdtCacheService.updateProductLine(subFlowData);
+      }
       return updatedUser;
     } catch(err) {
       throw err;

@@ -48,7 +48,7 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    [key: string]: AssetProperty | AssetRelationship | string ;
+    asset_serial_number: string;
 }
 
 interface UnAllocatedAssetState {
@@ -73,7 +73,7 @@ const AllocatedAsset = () => {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedCategoriesAllocated, setSelectedCategoriesAllocated] = useState<string[]>([]);
     let allocatedAssetsArray = null;
-    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as unknown as UnAllocatedAssetState;
+    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as Asset[];
     const dispatch = useDispatch();
     const { selectItems, saveAllocatedAssets } = useFactoryShopFloor();
     const [factoryIdValue, setFactoryIdValue] = useState("");
@@ -92,15 +92,6 @@ const AllocatedAsset = () => {
             if (Array.isArray(fetchedAllocatedAssets) && fetchedAllocatedAssets.length > 0) {
                 allocatedAssetsArray = fetchedAllocatedAssets;
             }
-          
-            // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-         const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
-            return {
-                id: unAllocatedAssetData[key].id,
-                product_name: unAllocatedAssetData[key].product_name?.value,
-                asset_category: unAllocatedAssetData[key].asset_category?.value,
-            };
-        });
 
             // destructuring the asset id, product_name, asset_catagory for allocated Asset
             const unifiedAllocatedAssets = Object.keys(fetchedAllocatedAssets).map(key => ({
@@ -110,9 +101,9 @@ const AllocatedAsset = () => {
             }));
 
             // combined asset catagories from both allocated asset and un allocated asset
-            const categories = Array.from(new Set([...fetchedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+            const categories = Array.from(new Set([...unAllocatedAssetData, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
             setAssetCategories(categories);
-            setAssets(fetchedAssets);
+            setAssets(unAllocatedAssetData);
             setAllocatedAssets(fetchedAllocatedAssets);
             setLoading(false);
 

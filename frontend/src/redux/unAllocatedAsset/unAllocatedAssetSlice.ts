@@ -18,16 +18,10 @@ import { createSlice } from '@reduxjs/toolkit';
 import { string } from 'prop-types';
 
 interface unAllocatedAssetState {
-    asset_serial_number: {
-        value:string
-    } ;
+    asset_serial_number: string;
     id: string;
-    product_name:{
-        value:string
-    } ;
-    asset_category:{
-        value:string
-    } ;
+    product_name: string;
+    asset_category: string;
 };
 
 const initialState: unAllocatedAssetState[]  = [];

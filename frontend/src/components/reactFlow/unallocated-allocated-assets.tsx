@@ -41,7 +41,7 @@ interface Asset {
   id: string;
   product_name: string;
   asset_category: string;
- [key: string]:string,
+  asset_serial_number: string;
 }
 const getCategoryIcon = (category?: string) => {
   // Return a professional asset-like icon
@@ -69,7 +69,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { t } = useTranslation(['placeholder', 'reactflow']);
   let allocatedAssetsArray = null;
-  let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset);
+  let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as Asset[];
 
   const dispatch = useDispatch();
   const [selectedUnallocatedAsset, setSelectedUnallocatedAsset] = useState<string | null>( null);
@@ -90,16 +90,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
         } else {
           fetchedAllocatedAssets = [];
         }
-        // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-      const fetchedUnallocatedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key:any) => {
-      const asset = unAllocatedAssetData[key];
-      return {
-        id: asset.id,
-        product_name: asset.product_name?.value ,
-        asset_category: asset.asset_category?.value ,
-        asset_serial_number:asset.asset_serial_number?.value
-       };
-      });
+       
         // destructuring the asset id, product_name, asset_catagory for allocated Asset
       const unifiedAllocatedAssets = fetchedAllocatedAssets.map((asset:Asset) => ({
       id: asset.id,
@@ -109,10 +100,10 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
     }));
 
         // combined asset catagories from both allocated asset and un allocated asset
-      const categories = Array.from(new Set([...fetchedUnallocatedAssets, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
+      const categories = Array.from(new Set([...unAllocatedAssetData, ...unifiedAllocatedAssets].map(asset => asset.asset_category))).filter(Boolean);
 
       setAssetCategories(categories);
-      setAssets(fetchedUnallocatedAssets);
+      setAssets(unAllocatedAssetData);
     
       setLoading(false);
 
