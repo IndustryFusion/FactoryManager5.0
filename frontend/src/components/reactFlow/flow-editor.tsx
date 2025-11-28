@@ -672,9 +672,6 @@ const FlowEditor: React.FC<
               position: node.position,
               type: node.type || node.data?.type,
               data: { ...node.data, type: node.type || node.data?.type },
-              // Preserve parentNode and extent from backend
-              parentNode: (node as any).parentNode,
-              extent: (node as any).extent,
             };
 
             if ((base.data as any)?.type === "asset") {
