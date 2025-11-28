@@ -189,8 +189,8 @@
     color: white;
     display: grid;
     place-items: center;
-    font-size: 34px;
-    font-weight: 400;
+    font-size: 20px;
+    font-weight: 500;
     margin: -5px 5px 0px 5px;
     border: 2px solid #fff;
 }
