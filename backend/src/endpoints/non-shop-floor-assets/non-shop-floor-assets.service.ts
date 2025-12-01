@@ -18,95 +18,69 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AssetService } from '../asset/asset.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import { Request } from 'express';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
+
 @Injectable()
 export class NonShopFloorAssetsService {
   constructor(
+    @InjectModel(FactoryPdtCache.name)
+    private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
     private readonly assetService: AssetService,
     private readonly allocatedAssetService: AllocatedAssetService,
   ) {}
   
-  async findAll(id: string, token: string, company_ifric_id: string, req: Request) {
+  async findAll(company_ifric_id: string) {
     try {
-
-      let data = await this.assetService.getAssetManagementData(company_ifric_id, token, req);
-      data = Array.isArray(data) ? data : []; 
-      const assetIds = [...new Set(data .map((e: any) => e?.id ?? e?.['@id'] ?? e?.asset_ifric_id) .filter(Boolean))];
-
-      // Get allocated assets (now returns array of IDs directly)
-      const allocatedAssetIds = await this.allocatedAssetService.getGlobalAllocatedAssets(token);
-
-      // Filter out allocated assets and special cases, ensure uniqueness
-      const availableAssetIds = [...new Set(
-        assetIds.filter(assetId => 
-          assetId && 
-          !allocatedAssetIds.includes(assetId) && 
-          assetId !== "json-ld-1.1"
-        )
-      )];
-
-      // Get details for available assets
-      const processedIds = new Set(); // Track processed IDs
-      const filteredArray = [];
-
-      for (let id of availableAssetIds) {
-        try {
-          // Skip if we've already processed this ID
-          if (processedIds.has(id)) {
-            continue;
+      return await this.factoryPdtCacheModel.aggregate([
+        {
+          $match: { company_ifric_id, factory_site: "" }
+        },
+        {
+          $project: {
+            _id: 0,
+            id: "$_id",
+            product_name: 1,
+            asset_category: 1,
+            asset_serial_number: 1
           }
-
-          const assetData = await this.assetService.getAssetDataById(id, token);
-          if (!assetData) {
-            continue;
-          }
-
-          // Create filtered object with required properties
-          const filteredObject = {
-            id,
-            product_name: '',
-            asset_category: '',
-            asset_serial_number:''
-          };
-
-          // Find and set product name
-          const productNameKey = Object.keys(assetData).find(key => key?.includes("product_name"));
-          if (productNameKey) {
-            filteredObject.product_name = assetData[productNameKey];
-          }
-
-          // Find and set asset category
-          const assetCategoryKey = Object.keys(assetData).find(key => key?.includes("asset_category"));
-          if (assetCategoryKey) {
-            filteredObject.asset_category = assetData[assetCategoryKey];
-          }
-
-          // Find and set asset serial number
-          const assetSerialKey = Object.keys(assetData).find(key => key?.includes("asset_serial_number"));
-          if (assetSerialKey) {
-            filteredObject.asset_serial_number = assetData[assetSerialKey];
-          }
-          // Add properties that include 'has'
-          Object.entries(assetData).forEach(([key, value]) => {
-            if (key?.includes('has')) {
-              filteredObject[key] = value;
-            }
-          });
-
-          // Mark this ID as processed
-          processedIds.add(id);
-          
-          filteredArray.push(filteredObject);
-        } catch (innerError) {
-          continue;
         }
-      }
-
-      return filteredArray;
-
+      ])
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
+    }
+  }
+
+  async findByProductType(company_ifric_id: string, product_type: string) {
+    try {
+      return this.factoryPdtCacheModel.aggregate([
+        {
+          $match: { company_ifric_id, type: product_type, factory_site: "" }
+        },
+        {
+          $project: {
+            product_name: 1,
+            assasset_category: 1,
+            asset_serial_number: 1
+          }
+        }
+      ])
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

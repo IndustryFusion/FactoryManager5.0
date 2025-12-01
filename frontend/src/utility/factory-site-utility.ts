@@ -292,7 +292,7 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
   const company_ifric_id = data.company_ifric_id;
   try {
     const response = await api.get(
-      `${API_URL}/non-shop-floor-assets/${company_ifric_id}/${factoryId}`,
+      `${API_URL}/non-shop-floor-assets/${company_ifric_id}`,
       {
         headers: {
           "Content-Type": "application/json",

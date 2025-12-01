@@ -108,10 +108,7 @@ export class AssetService {
       // we need to remove registry company twin call Factory server as each factory has its own scorpio
       const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`, { headers: registryHeaders });
       if (!(companyData.data.length)) {
-        return {
-          status: 404,
-          message: 'No company found with the provided ID'
-        };
+        throw new HttpException('No company found with the provided ID', HttpStatus.NOT_FOUND);
       }
 
       const response = await axios.get(`${this.registryUrl}/auth/get-owner-asset/${companyData.data[0]['_id']}`, { headers: registryHeaders });
@@ -527,7 +524,7 @@ export class AssetService {
         // update children assetIds factory_site and shop_floor data
         if(assetIds.length) {
           // fetch asset cache data for parent asset
-          const assetCacheData = await this.factoryPdtCacheModel.find({id: key});
+          const assetCacheData = await this.factoryPdtCacheModel.find({id: key}).lean();
           if(assetCacheData.length) {
             await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: assetIds, factory_site: assetCacheData[0].factory_site, shop_floor: assetCacheData[0].shop_floor});
           }

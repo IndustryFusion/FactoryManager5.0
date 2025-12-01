@@ -17,8 +17,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, UseGuards } from '@nestjs/common';
 import { NonShopFloorAssetsService } from './non-shop-floor-assets.service';
 import { TokenService } from '../session/token.service';
-import { Request } from 'express';
-import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('non-shop-floor-assets')
 export class NonShopFloorAssetsController {
@@ -27,14 +25,21 @@ export class NonShopFloorAssetsController {
     private readonly tokenService: TokenService
   ) {}
 
-  @UseGuards(AuthGuard)
-  @Get(':company_ifric_id/:id')
-  async findAll( @Param('company_ifric_id') company_ifric_id: string,  @Param('id') id: string, @Req() req: Request ) {
+  @Get(':company_ifric_id/:product_type')
+  async findByProductType(@Param('company_ifric_id') company_ifric_id: string, @Param('product_type') product_type: string) {
     try {
-      const token = await this.tokenService.getToken();
-      return this.nonShopFloorAssetsService.findAll(id, token,company_ifric_id,req);
+      return this.nonShopFloorAssetsService.findByProductType(company_ifric_id, product_type);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
+    }
+  }
+
+  @Get(':company_ifric_id')
+  async findAll( @Param('company_ifric_id') company_ifric_id: string) {
+    try {
+      return this.nonShopFloorAssetsService.findAll(company_ifric_id);
+    } catch (err) {
+      throw err;
     }
   }
 }
