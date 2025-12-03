@@ -47,16 +47,28 @@ export class FactoryPdtCacheService {
     }
   }
 
-  async updateProductLine(data: Record<string, string>) {
+  async updateProductLine(data: Record<string, string[]>) {
     try {
       await Promise.all(
-        Object.entries(data).map(([assetId, subFlowId]) =>
-          this.factoryPdtCacheModel.updateOne(
-            { id: assetId },
+        Object.entries(data).map(async ([subFlowId, assetIds]) => {
+          // need to remove product_line for assets removed from the production line
+          // filter out assets which are matching with current product_line but not present in react flow
+          const matchingAssetData = await this.factoryPdtCacheModel.find({product_line: subFlowId}).lean();
+          if(matchingAssetData.length) {
+            const matchingAssetIds = matchingAssetData.map(asset => asset.id);
+            const filteredAssetIds = matchingAssetIds.filter(id => !assetIds.includes(id));
+            await this.factoryPdtCacheModel.updateMany(
+              {id: {$in: filteredAssetIds}},
+              { $pull: { product_line: subFlowId } }
+            )
+          }
+
+          await this.factoryPdtCacheModel.updateMany(
+            { id: { $in: assetIds } },
             { $addToSet: { product_line: subFlowId } },
             { new: true }
           )
-        )
+        })
       );
       return {
         status: 204,

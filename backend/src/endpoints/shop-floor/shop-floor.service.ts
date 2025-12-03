@@ -20,11 +20,16 @@ import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AssetService } from '../asset/asset.service';
 import axios from 'axios';
 import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   constructor(
+    @InjectModel(FactoryPdtCache.name)
+    private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
     private readonly factorySiteService: FactorySiteService,
     private readonly assetService: AssetService,
     private readonly factoryPdtCacheService: FactoryPdtCacheService
@@ -407,6 +412,17 @@ export class ShopFloorService {
         // add shopfloor and factory in cache to assets attached to shopfloor
         await Promise.all(
           Object.keys(shopFloorobj).map(async(key) => {
+            // need to remove shop_floor value for assets removed from the shopfloor
+            // filter out assets which are matching with current shop_floor but not present in react flow
+            const matchingAssetData = await this.factoryPdtCacheModel.find({ shop_floor: key }).lean();
+            if(matchingAssetData.length) {
+              const matchingAssetIds = matchingAssetData.map(asset => asset.id);
+              const filteredAssetIds = matchingAssetIds.filter(id => !shopFloorobj[key].includes(id));
+              await this.factoryPdtCacheModel.updateMany(
+                {id: {$in: filteredAssetIds}},
+                { $pull: { shop_floor: key } }
+              )
+            }
             await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
           })
         )
@@ -420,6 +436,17 @@ export class ShopFloorService {
           // add shopfloor and factory in cache to assets attached to shopfloor
           await Promise.all(
             Object.keys(shopFloorobj).map(async(key) => {
+              // need to remove shop_floor for assets removed from the shopfloor
+              // filter out assets which are matching with current shop_floor but not present in react flow
+              const matchingAssetData = await this.factoryPdtCacheModel.find({ shop_floor: key }).lean();
+              if(matchingAssetData.length) {
+                const matchingAssetIds = matchingAssetData.map(asset => asset.id);
+                const filteredAssetIds = matchingAssetIds.filter(id => !shopFloorobj[key].includes(id));
+                await this.factoryPdtCacheModel.updateMany(
+                  {id: {$in: filteredAssetIds}},
+                  { $pull: { shop_floor: key } }
+                )
+              }
               await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
             })
           )

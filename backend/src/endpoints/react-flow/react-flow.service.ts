@@ -81,8 +81,14 @@ export class ReactFlowService {
 
       // take subFlowIds to update product_line for assets
       const subFlowData = data.factoryData.nodes.reduce((acc, node) => {
-        if (node.data.subFlowId) {
-          acc[node.data.id] = node.data.subFlowId;
+        const subFlowId = node.data.subFlowId;
+        const id = node.data.id;
+
+        if (subFlowId) {
+          if (!acc[subFlowId]) {
+            acc[subFlowId] = [];
+          }
+          acc[subFlowId].push(id);
         }
         return acc;
       }, {});
