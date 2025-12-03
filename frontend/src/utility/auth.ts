@@ -117,7 +117,7 @@ export const getCategorySpecificCompany = async(categoryName: string) => {
     }
 }
 
-export const getAccessGroupData = async(token: string, from?: string, isIFXSuite?:string) => {
+export const getAccessGroupData = async(token: string, from?: string, isIFXSuite?:boolean) => {
     try {
         const registryHeader = {
             'Content-Type': 'application/json',
