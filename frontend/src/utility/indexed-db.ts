@@ -37,6 +37,7 @@ interface LoginData {
     access_group: string;
     access_group_Ifric_Dashboard: string;
     user_email: string;
+    from?: string;
 }
 
 interface AccessGroupData extends Omit<LoginData, 'jwt_token'> {
@@ -116,7 +117,8 @@ export async function storeAccessGroup(loginData: LoginData) : Promise<void> {
             user_role: loginData.user_role,
             access_group: loginData.access_group,
             access_group_Ifric_Dashboard: loginData.access_group_Ifric_Dashboard,
-            user_email: loginData.user_email
+            user_email: loginData.user_email,
+            from: loginData.from
         };
 
         const request = objectStore.put(dataToStore);
