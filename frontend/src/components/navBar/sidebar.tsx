@@ -70,14 +70,8 @@ function Sidebar() {
 
    const handleIFNavigation = async () => {
     try {
-      const pageName = "/ifx-dashboard";
-      const product_name = "DPP Creator";
-      const data = await getAccessGroup();
-      
-      if(data?.from && data?.isIFXSuite === true ){
-        window.open(data.from, '_blank');
-        return;
-      }
+      const pageName = "/home";
+      const product_name = "IFRIC Dashboard";
       
       const routeResponse = await encryptRoute({
         environment,
@@ -89,7 +83,7 @@ function Sidebar() {
       const encryptedPath = routeResponse?.path;
 
       if (encryptedPath) {
-        window.open(encryptedPath, '_blank');
+        window.open(encryptedPath, '_self');
       } else {
         console.error("Failed to generate encrypted route path");
       }
@@ -337,7 +331,7 @@ function Sidebar() {
               className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""
                 }`}
             >
-              IndustryFusion
+              IndustryFusion-x
             </div>
             <img
               src="/arrow-left-02.svg"
