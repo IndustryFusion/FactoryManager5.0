@@ -31,7 +31,7 @@ export class ValueChangeStateController {
       const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findOne(queryParams, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -41,7 +41,7 @@ export class ValueChangeStateController {
       const token = await this.tokenService.getToken();
       return await this.valueChangeStateService.findAll(assetId, attributeId, type, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 }

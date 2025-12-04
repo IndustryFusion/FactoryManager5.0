@@ -47,16 +47,22 @@ export class AlertsService {
         return response.data;
       }
       else {
-        throw new Error("Alerta fetch failed")
+        throw new HttpException("Alerta fetch failed", HttpStatus.INTERNAL_SERVER_ERROR)
       }
       
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
-      } else if(err.response) {
-        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `PG_${err.response.status}`,
+          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException({
+          errorCode: "PG_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -74,10 +80,16 @@ export class AlertsService {
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
-      } else if(err.response) {
-        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `PG_${err.response.status}`,
+          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException({
+          errorCode: "PG_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -95,10 +107,16 @@ export class AlertsService {
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
-      } else if(err.response) {
-        throw new HttpException(typeof err.response.data === "object" ? err.response.data.message : err.response.data, err.response.status);
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `PG_${err.response.status}`,
+          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException({
+          errorCode: "PG_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }

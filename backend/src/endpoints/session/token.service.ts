@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { AuthService } from "../auth/auth.service";
 import * as jwt from 'jsonwebtoken';
@@ -51,8 +51,20 @@ export class TokenService {
       } else {
           return tokenData.accessToken;
       }
-    }catch(err){
-      return err;
+    }catch(err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `RD_${err.response.status}`,
+          message: err.response.data.message
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "RD_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 

@@ -35,10 +35,7 @@ export class OnboardingAssetController {
         return response;
       }
     }catch(err){
-      return { 
-        success: false,
-        message: err
-      };
+      throw err;
     }
   }
 
@@ -56,7 +53,7 @@ export class OnboardingAssetController {
     try {
       return this.onboardingAssetService.findOneByIp(id);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -74,7 +71,7 @@ export class OnboardingAssetController {
         return response;
       }
     }catch(err){
-      throw new Error('failed to update specific file ' + err);
+      throw err;
     }
   }
 }

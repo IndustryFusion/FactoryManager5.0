@@ -40,7 +40,7 @@ export class AssetController {
         return await this.assetService.getAssetData(token);
       }
     } catch (err) {
-      throw new NotFoundException("Error fetching assets " + err);
+      throw err;
     }
   }
 
@@ -61,7 +61,7 @@ export class AssetController {
       const token = await this.tokenService.getToken();
       return await this.assetService.getAssetByType(atob(type), token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -71,7 +71,7 @@ export class AssetController {
       const token = await this.tokenService.getToken();
       return await this.assetService.getParentIds(assetId, assetCategory, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -81,7 +81,7 @@ export class AssetController {
       const token = await this.tokenService.getToken();
       return await this.assetService.setFactoryOwnerAssets(company_ifric_id, token, req);
     } catch(err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -91,7 +91,7 @@ export class AssetController {
       const token = await this.tokenService.getToken();
       return await this.assetService.getAssetDataById(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -101,7 +101,7 @@ export class AssetController {
       const token = await this.tokenService.getToken();
       return await this.assetService.getkeyValuesById(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -118,11 +118,7 @@ export class AssetController {
         }
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -139,11 +135,7 @@ export class AssetController {
         }
       }
     } catch (err) {
-      return { 
-        success: false,
-        status: err.response.status,
-        message: "Error while updating asset relationships"
-      };
+      throw err;
     }
   }
 
@@ -160,11 +152,7 @@ export class AssetController {
         }
       }
     } catch (err) {
-      return {
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -181,11 +169,7 @@ export class AssetController {
         }
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -202,11 +186,7 @@ export class AssetController {
         }
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 }

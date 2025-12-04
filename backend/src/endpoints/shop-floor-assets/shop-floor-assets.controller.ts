@@ -31,7 +31,7 @@ export class ShopFloorAssetsController {
       const token = await this.tokenService.getToken();
       return this.shopFloorAssetsService.findAll(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 }

@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -29,7 +29,13 @@ export class MongodbTemplatesService {
       const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates`);
       return response.data;
     } catch (error) {
-      throw new NotFoundException('Failed to fetch templates');
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException(error.response.data.message, error.response.status);
+      } else {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -38,7 +44,13 @@ export class MongodbTemplatesService {
       const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/${id}`);
       return response.data;
     } catch (error) {
-      throw new NotFoundException(`Template with ID ${id} not found` +  error);
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException(error.response.data.message, error.response.status);
+      } else {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -47,7 +59,13 @@ export class MongodbTemplatesService {
       const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/mongo/${id}`);
       return response.data;
     } catch (error) {
-      throw new NotFoundException(`Template with ID ${id} not found` +  error);
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException(error.response.data.message, error.response.status);
+      } else {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -56,7 +74,13 @@ export class MongodbTemplatesService {
       const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/type/${type}`);
       return response.data;
     } catch (error) {
-      throw new NotFoundException(`Template with ID ${type} not found` +  error);
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException(error.response.data.message, error.response.status);
+      } else {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

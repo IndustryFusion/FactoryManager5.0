@@ -77,18 +77,38 @@ export class AssetService {
       let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for (let i = 0; i < typeArr.length; i++) {
-        let type = typeArr[i];
-        const url = this.scorpioUrl + '?type=' + type;
-        const response = await axios.get(url, { headers });
-        if (response.data.length > 0) {
-          response.data.forEach(data => {
-            assetData.push(data);
-          });
+        try {
+          let type = typeArr[i];
+          const url = this.scorpioUrl + '?type=' + type;
+          const response = await axios.get(url, { headers });
+          if (response.data.length > 0) {
+            response.data.forEach(data => {
+              assetData.push(data);
+            });
+          }
+        } catch(err) {
+          if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         }
       }
       return assetData;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -132,9 +152,15 @@ export class AssetService {
               if (err.response?.status === 404) {
                 return null;
               } else if (err.response) {
-                throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+                throw new HttpException({
+                  errorCode: `FS_${err.response.status}`,
+                  message: err.response.data.message || err.response.data.title
+                }, err.response.status);
               } else {
-                throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+                throw new HttpException({
+                  errorCode: "FS_500",
+                  message: err.message
+                }, HttpStatus.INTERNAL_SERVER_ERROR);
               }
             }
           })
@@ -168,12 +194,16 @@ export class AssetService {
         throw new NotFoundException('asset not found');
       }
     } catch (err) {
-      if (err instanceof HttpException) {
-        throw err;
-      } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -190,9 +220,23 @@ export class AssetService {
 
       const typesResponse = await axios.get(this.scorpioTypesUrl, { headers });
       for (const type of typesResponse.data.typeList) {
-        const url = this.scorpioUrl + '/?type=' + type;
-        const response = await axios.get(url, { headers });
-        finalResult.push(...response.data);
+        try {
+          const url = this.scorpioUrl + '/?type=' + type;
+          const response = await axios.get(url, { headers });
+          finalResult.push(...response.data);
+        } catch(err) {
+          if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        }
       }
       if (finalResult.length < 0) {
         throw new NotFoundException('No assets found');
@@ -218,13 +262,19 @@ export class AssetService {
       };
       const url = this.scorpioUrl + '/' + id + '?options=keyValues';
       const response = await axios.get(url, { headers });
-      if (response.data) {
-        return response.data;
-      } else {
-        throw new NotFoundException('asset not found');
-      }
+      return response.data;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -237,13 +287,19 @@ export class AssetService {
       };
       const url = this.scorpioUrl + '?type=' + type;
       const response = await axios.get(url, { headers });
-      if (response.data) {
-        return response.data;
-      } else {
-        throw new NotFoundException('asset not found');
-      }
+      return response.data;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -261,19 +317,38 @@ export class AssetService {
       // console.log("typeArr",typeArr)
       typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
       for (let i = 0; i < typeArr.length; i++) {
-        let type = typeArr[i];
-        const url = this.scorpioUrl + '?type=' + type;
-        const response = await axios.get(url, { headers });
-        if (response.data.length > 0) {
-          response.data.forEach(data => {
-            assetData.push(data.id);
-          });
+        try {
+          let type = typeArr[i];
+          const url = this.scorpioUrl + '?type=' + type;
+          const response = await axios.get(url, { headers });
+          if (response.data.length > 0) {
+            response.data.forEach(data => {
+              assetData.push(data.id);
+            });
+          }
+        } catch(err) {
+          if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         }
       }
-      // console.log("assetData",assetData)
       return assetData;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -305,7 +380,17 @@ export class AssetService {
       }
       return assetData;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -380,6 +465,16 @@ export class AssetService {
             if (err.response?.status === 404) {
               await axios.post(this.scorpioUrl, asset, { headers });
               scorpioUpdatedAssetIds.push(assetId);
+            } else if (err.response) {
+              throw new HttpException({
+                errorCode: `FS_${err.response.status}`,
+                message: err.response.data.message || err.response.data.title
+              }, err.response.status);
+            } else {
+              throw new HttpException({
+                errorCode: "FS_500",
+                message: err.message
+              }, HttpStatus.INTERNAL_SERVER_ERROR);
             }
           } finally {
             const exists = await this.factoryPdtCacheModel.exists({ id: assetId, company_ifric_id });
@@ -461,7 +556,17 @@ export class AssetService {
         statusText: response.statusText
       }
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -480,7 +585,17 @@ export class AssetService {
         data: response.data
       }
     } catch (err) {
-      throw new Error('failed to update asset ' + err);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -515,10 +630,24 @@ export class AssetService {
           }
         }
 
-        const deleteResponse = await this.deleteAssetById(key, token);
-        if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-          const response = await axios.post(this.scorpioUrl, assetData, { headers });
-          responses.push(response);
+        try {
+          const deleteResponse = await this.deleteAssetById(key, token);
+          if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+            const response = await axios.post(this.scorpioUrl, assetData, { headers });
+            responses.push(response);
+          }
+        } catch(err) {
+          if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         }
 
         // update children assetIds factory_site and shop_floor data
@@ -545,7 +674,13 @@ export class AssetService {
         };
       }
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -563,7 +698,17 @@ export class AssetService {
         data: response.data
       }
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -575,44 +720,76 @@ export class AssetService {
         'Accept': 'application/ld+json'
       };
       let factoryId = '';
-      // Delete AssetId From Factory Specific Allocated Asset
-      let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`;
-      const factoryAssetsResponse = await axios.get(factoryAssetsUrl, { headers });
-      if (factoryAssetsResponse.data.length > 0) {
-        factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
-        let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
-        if (Array.isArray(lastData)) {
-          const newArray = lastData.filter(item => item.id !== assetId);
-          factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = newArray;
-        } else {
-          factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = '';
+      try {
+        // Delete AssetId From Factory Specific Allocated Asset
+        let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`;
+        const factoryAssetsResponse = await axios.get(factoryAssetsUrl, { headers });
+        if (factoryAssetsResponse.data.length > 0) {
+          factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
+          let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
+          if (Array.isArray(lastData)) {
+            const newArray = lastData.filter(item => item.id !== assetId);
+            factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = newArray;
+          } else {
+            factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = '';
+          }
+          let deleteFactoryResponse = await this.deleteAssetById(factoryAssetsResponse.data[0].id, token);
+          if (deleteFactoryResponse['status'] == 200 || deleteFactoryResponse['status'] == 204) {
+            await axios.post(this.scorpioUrl, factoryAssetsResponse.data[0], { headers });
+          }
         }
-        let deleteFactoryResponse = await this.deleteAssetById(factoryAssetsResponse.data[0].id, token);
-        if (deleteFactoryResponse['status'] == 200 || deleteFactoryResponse['status'] == 204) {
-          await axios.post(this.scorpioUrl, factoryAssetsResponse.data[0], { headers });
+      } catch(err) {
+        if (err instanceof HttpException) {
+          throw err;
+        } else if (err.response) {
+          throw new HttpException({
+            errorCode: `FS_${err.response.status}`,
+            message: err.response.data.message || err.response.data.title
+          }, err.response.status);
+        } else {
+          throw new HttpException({
+            errorCode: "FS_500",
+            message: err.message
+          }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
       }
 
       // Update Global Allocated Assets
       await allocatedAssetService.updateGlobal(token);
 
-      // Remove AssetId From HasAsset Relation Of ShopFloor
-      let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`;
-      const shopFloorResponse = await axios.get(shopFloorUrl, { headers });
-      if (shopFloorResponse.data.length > 0) {
-        let hasAssetData = shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"];
-        if (Array.isArray(hasAssetData)) {
-          const newArray = hasAssetData.filter(item => item.object !== assetId);
-          shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = newArray;
-        } else {
-          shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = {
-            type: 'Relationship',
-            object: ''
+      try {
+        // Remove AssetId From HasAsset Relation Of ShopFloor
+        let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`;
+        const shopFloorResponse = await axios.get(shopFloorUrl, { headers });
+        if (shopFloorResponse.data.length > 0) {
+          let hasAssetData = shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"];
+          if (Array.isArray(hasAssetData)) {
+            const newArray = hasAssetData.filter(item => item.object !== assetId);
+            shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = newArray;
+          } else {
+            shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = {
+              type: 'Relationship',
+              object: ''
+            }
+          }
+          let deleteResponse = await this.deleteAssetById(shopFloorResponse.data[0].id, token);
+          if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+            await axios.post(this.scorpioUrl, shopFloorResponse.data[0], { headers });
           }
         }
-        let deleteResponse = await this.deleteAssetById(shopFloorResponse.data[0].id, token);
-        if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-          await axios.post(this.scorpioUrl, shopFloorResponse.data[0], { headers });
+      } catch(err) {
+        if (err instanceof HttpException) {
+          throw err;
+        } else if (err.response) {
+          throw new HttpException({
+            errorCode: `FS_${err.response.status}`,
+            message: err.response.data.message || err.response.data.title
+          }, err.response.status);
+        } else {
+          throw new HttpException({
+            errorCode: "FS_500",
+            message: err.message
+          }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
       }
 
@@ -638,9 +815,25 @@ export class AssetService {
               object: ''
             }
           }
-          let deleteResponse = await this.deleteAssetById(response.data[i].id, token);
-          if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-            await axios.post(this.scorpioUrl, response.data[i], { headers });
+          try {
+            let deleteResponse = await this.deleteAssetById(response.data[i].id, token);
+            if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+              await axios.post(this.scorpioUrl, response.data[i], { headers });
+            }
+          } catch(err) {
+            if (err instanceof HttpException) {
+              throw err;
+            } else if (err.response) {
+              throw new HttpException({
+                errorCode: `FS_${err.response.status}`,
+                message: err.response.data.message || err.response.data.title
+              }, err.response.status);
+            } else {
+              throw new HttpException({
+                errorCode: "FS_500",
+                message: err.message
+              }, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
           }
         }
       }
@@ -649,14 +842,34 @@ export class AssetService {
         await reactFlowService.findFactoryAndShopFloors(factoryId, token);
       }
       // Delete AssetId From Scorpio
-      const finalUrl = this.scorpioUrl + '/' + assetId;
-      let deleteResponse = await axios.delete(finalUrl, { headers });
-      return {
-        status: deleteResponse.status,
-        data: deleteResponse.data
+      try {
+        const finalUrl = this.scorpioUrl + '/' + assetId;
+        let deleteResponse = await axios.delete(finalUrl, { headers });
+        return {
+          status: deleteResponse.status,
+          data: deleteResponse.data
+        }
+      } catch(err) {
+        if (err.response) {
+          throw new HttpException({
+            errorCode: `FS_${err.response.status}`,
+            message: err.response.data.message || err.response.data.title
+          }, err.response.status);
+        } else {
+          throw new HttpException({
+            errorCode: "FS_500",
+            message: err.message
+          }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
       }
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

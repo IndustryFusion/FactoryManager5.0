@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as YAML from 'js-yaml';
 import { Onboarding } from '../schemas/onboarding.schema';
@@ -48,7 +48,13 @@ export class OnboardingAssetService {
         "message": "Created Successfully"
       }
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -60,7 +66,13 @@ export class OnboardingAssetService {
       }
       return onbaordDevice;
     } catch (err) {
-      throw new NotFoundException(err.message);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -83,7 +95,13 @@ export class OnboardingAssetService {
       }
       
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -95,9 +113,13 @@ export class OnboardingAssetService {
       }
       return onbaordDevice;
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch onboarding data: ${err.message}`,
-      );
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 

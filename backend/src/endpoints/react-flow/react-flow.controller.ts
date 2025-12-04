@@ -32,7 +32,7 @@ export class ReactFlowController {
       const response = await this.reactFlowService.create(data);
       return response;
     } catch(err) {
-      return err.response;
+      throw err;
     }
   }
 
@@ -42,7 +42,7 @@ export class ReactFlowController {
       const response = await this.reactFlowService.findOne(id);
       return response;
     } catch(err) {
-      return err.response;
+      throw err;
     }
   }
 
@@ -52,7 +52,7 @@ export class ReactFlowController {
       const response = await this.reactFlowService.update(id, data);
       return response;
     } catch(err) {
-      return err.response;
+      throw err;
     }
   }
 
@@ -62,7 +62,7 @@ export class ReactFlowController {
       const response = await this.reactFlowService.remove(id);
       return response;
     } catch(err) {
-      return err.response;
+      throw err;
     }
   }
  
@@ -74,7 +74,7 @@ export class ReactFlowController {
       
       return response;
     } catch(err) {
-      return err.response;
+      throw err;
     }
   }
 }

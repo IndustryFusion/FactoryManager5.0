@@ -13,12 +13,7 @@ export class CertificateController {
     try {
       return await this.certificateService.generateCompanyCertificate(data.company_ifric_id, new Date(data.expiry), data.user_email, req);
     } catch(err) {
-      return { 
-        success: false, 
-        status: err?.response?.status,
-        message: 'Failed to generate certificate',
-        error: err.message
-      };
+      throw err;
     }
   }
 
@@ -39,12 +34,7 @@ export class CertificateController {
       const response = await this.certificateService.verifyCompanyCertificate(company_ifric_id, req);
       return response;
     } catch(err) {
-      return { 
-        success: false,
-        status: err?.response?.status,
-        message: 'Failed to fetch certificate',
-        error: err.message
-      };
+      throw err;
     }
   }
 
@@ -54,12 +44,7 @@ export class CertificateController {
     try {
       return await this.certificateService.generateAssetCertificate(data.company_ifric_id, data.asset_ifric_id, data.user_email, new Date(data.expiry), req);
     } catch(err) {
-      return { 
-        success: false, 
-        status: err?.response?.status,
-        message: 'Failed to generate certificate',
-        error: err.message
-      };
+      throw err;
     }
   }
 
@@ -69,12 +54,7 @@ export class CertificateController {
     try {
       return await this.certificateService.getAssetCertificates(asset_ifric_id, company_ifric_id, req);
     } catch(err) {
-      return { 
-        success: false, 
-        status: err?.response?.status,
-        message: 'Failed to fetch certificate',
-        error: err.message
-      };
+      throw err;
     }
   }
 

@@ -43,7 +43,17 @@ export class PgRestService {
       const response = await axios.get(url, {headers});
       return response.data;
     } catch(err) {
-      return [];
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -59,7 +69,7 @@ export class PgRestService {
     }
     
     if (!token) {
-      throw new Error("Authorization token is missing");
+      throw new HttpException("Authorization token is missing", HttpStatus.NOT_FOUND);
     }
 
     const headers = {
@@ -93,11 +103,11 @@ export class PgRestService {
           startTime = moment(customStart);
           endTime = moment(customEnd);
           if (!startTime.isValid() || !endTime.isValid()) {
-            throw new Error("Custom time range parameters are invalid");
+            throw new HttpException("Custom time range parameters are invalid", HttpStatus.BAD_REQUEST);
           }
           break;
       default:
-        throw new Error("Invalid interval type specified");
+        throw new HttpException("Invalid interval type specified", HttpStatus.BAD_REQUEST);
       }
     }
 
@@ -121,15 +131,24 @@ export class PgRestService {
         const response = await axios.get(url, { headers });
         return response.data;
       } catch (err) {
-        return [];
+        if (err.response) {
+          throw new HttpException({
+            errorCode: `PG_${err.response.status}`,
+            message: err.response.data.message || err.response.data.title
+          }, err.response.status);
+        } else {
+          throw new HttpException({
+            errorCode: "PG_500",
+            message: err.message
+          }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
       }
-
   }
 
   async getTenDaysMachineState(token: string) {
     try {
       if (!token) {
-        throw new Error("Authorization token is missing");
+        throw new HttpException("Authorization token is missing", HttpStatus.NOT_FOUND);
       }
 
       const headers = {
@@ -139,12 +158,16 @@ export class PgRestService {
       const response = await axios.get(this.machineState10DaysUrl, { headers });
       return response.data;
     } catch(err) {
-      if (err instanceof HttpException) {
-        throw err;
-      } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `PG_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+        throw new HttpException({
+          errorCode: "PG_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -152,7 +175,7 @@ export class PgRestService {
   async getIntraDayMachineState(token: string) {
     try {
       if (!token) {
-        throw new Error("Authorization token is missing");
+        throw new HttpException("Authorization token is missing", HttpStatus.NOT_FOUND);
       }
 
       const headers = {
@@ -176,12 +199,16 @@ export class PgRestService {
       });
       return filtered;
     } catch(err) {
-      if (err instanceof HttpException) {
-        throw err;
-      } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `PG_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+        throw new HttpException({
+          errorCode: "PG_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }

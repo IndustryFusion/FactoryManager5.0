@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { extname } from 'path';
 
@@ -48,7 +48,13 @@ export class FileService {
       const response = await s3.upload(s3UploadParams).promise();
       return response.Location;
     } catch (err) {
-      throw new Error(`Error uploading file to IONOS S3: ${err}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }
