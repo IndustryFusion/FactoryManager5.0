@@ -26,7 +26,7 @@ export class MongodbTemplatesController {
     try {
       return await this.mongodbTemplatesService.getTemplates();
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -35,7 +35,7 @@ export class MongodbTemplatesController {
     try {
       return await this.mongodbTemplatesService.getTemplateById(id);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -44,7 +44,7 @@ export class MongodbTemplatesController {
     try {
       return await this.mongodbTemplatesService.getTemplateByType(type);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 

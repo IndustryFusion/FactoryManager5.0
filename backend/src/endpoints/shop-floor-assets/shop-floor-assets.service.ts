@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { AssetService } from '../asset/asset.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 
@@ -41,7 +41,13 @@ export class ShopFloorAssetsService {
       }
       return hasAssetArr; 
     } catch(err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     } 
   }
 }

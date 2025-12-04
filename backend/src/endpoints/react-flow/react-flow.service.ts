@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException, HttpException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReactFlowDto } from './dto/react-flow.dto';
@@ -52,7 +52,13 @@ export class ReactFlowService {
       }
       
     } catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -60,7 +66,13 @@ export class ReactFlowService {
     try {
       return await this.factoryModel.findOne({factoryId});
     }catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -69,7 +81,13 @@ export class ReactFlowService {
       let result = await this.factoryModel.find({});
       return result;
     }catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -92,7 +110,13 @@ export class ReactFlowService {
       }
       return updatedUser;
     } catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -100,7 +124,13 @@ export class ReactFlowService {
     try {
       return await this.factoryModel.deleteOne({factoryId});
     } catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -185,11 +215,18 @@ export class ReactFlowService {
             return await this.create(reactFlowData); 
         }   
     } catch (err) {
-        throw new HttpException(err.message, 500);
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
 }
 
 async processAsset(asset, token, result, parentNodeId = null, depth = 0, siblingOffset = 0, yOffset = 0) {
+  try {
     const assetData = await this.assetService.getAssetDataById(asset.id, token);
     const xOffsetStart = 40; // Starting X offset for assets
     const horizontalSpacing = 200; // Space between assets horizontally
@@ -207,7 +244,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
             type: "asset",
             id: asset.id,
         },
-       
+        
     };
     result.nodes.push(assetNode);
 
@@ -241,7 +278,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
                     type: "relation",
                     position: { x: xPos+ relationXPos , y: newYPos }, // Keep same y-axis for relations of the same asset
                     data: { label: relationType, type: "relation" },
-                   
+                    
                 };
                 result.nodes.push(relationNode);
 
@@ -261,6 +298,15 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
             }
         }
     }
+  } catch(err) {
+    if (err instanceof HttpException) {
+      throw err;
+    } else if (err.response) {
+      throw new HttpException(err.response.data.message, err.response.status);
+    } else {
+      throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+    }
+  }
 }
 
   

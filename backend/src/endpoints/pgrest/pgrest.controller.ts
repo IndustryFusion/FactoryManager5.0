@@ -31,7 +31,7 @@ export class PgRestController {
       let token = await this.tokenService.getToken();
       return this.pgRestService.getTenDaysMachineState(token);
     } catch(err) {
-      throw new NotFoundException("Error finding the details: " + err);
+      throw err;
     }
   }
 
@@ -41,7 +41,7 @@ export class PgRestController {
       let token = await this.tokenService.getToken();
       return this.pgRestService.getIntraDayMachineState(token);
     } catch(err) {
-      throw new NotFoundException("Error finding the details: " + err);
+      throw err;
     }
   }
 
@@ -51,7 +51,7 @@ export class PgRestController {
       let token = await this.tokenService.getToken();
       return this.pgRestService.findAll(token, queryParams, key);
     } catch(err) {
-      throw new NotFoundException("Error finding the details: " + err);
+      throw err;
     }
   }
 }

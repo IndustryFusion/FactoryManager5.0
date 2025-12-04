@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
@@ -46,27 +46,43 @@ export class AllocatedAssetService {
       // Transform array into required format
       const formattedAssetArr = assetArr.map(id => ({ id }));
       if (assetArr.length > 0) {
-        const headers = {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/ld+json',
-          'Accept': 'application/ld+json'
-        };
-        let id = `${factoryId}:allocated-assets`;
-        const data = {
-          "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-          "id": id,
-          "type": "urn-holder",
-          "http://www.industry-fusion.org/schema#last-data": {
-             value: {
-              items: formattedAssetArr
+        try {
+            const headers = {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/ld+json',
+            'Accept': 'application/ld+json'
+          };
+          let id = `${factoryId}:allocated-assets`;
+          const data = {
+            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+            "id": id,
+            "type": "urn-holder",
+            "http://www.industry-fusion.org/schema#last-data": {
+              value: {
+                items: formattedAssetArr
+              }
             }
+          };
+          let response = await axios.post(this.scorpioUrl, data, {headers});
+          await this.updateGlobal(token)
+          return {
+            status: response.status,
+            statusText: response.statusText
           }
-        };
-        let response = await axios.post(this.scorpioUrl, data, {headers});
-        await this.updateGlobal(token)
-        return {
-          status: response.status,
-          statusText: response.statusText
+        } catch(err) {
+          if(err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         }
       } else {
         return {
@@ -75,7 +91,13 @@ export class AllocatedAssetService {
         }
       }
     } catch(err){
-      return err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
   
@@ -110,26 +132,47 @@ async createGlobal(token: string) {
       'Content-Type': 'application/ld+json',
       'Accept': 'application/ld+json'
     };
-    // console.log("assetArr",assetArr)
-    const data = {
-      "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-      "id": "urn:ngsi-ld:global-allocated-assets-store",
-      "type": "urn-holder",
-      "http://www.industry-fusion.org/schema#last-data": {
-        type: "Property",
-        value: {
-          items: assetArr
+   
+    try {
+      const data = {
+        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+        "id": "urn:ngsi-ld:global-allocated-assets-store",
+        "type": "urn-holder",
+        "http://www.industry-fusion.org/schema#last-data": {
+          type: "Property",
+          value: {
+            items: assetArr
+          }
         }
-      }
-    };
+      };
 
-    let response = await axios.post(this.scorpioUrl, data, {headers});
-    return {
-      status: response.status,
-      statusText: response.statusText
+      let response = await axios.post(this.scorpioUrl, data, {headers});
+      return {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data
+      }
+    } catch(err) {
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   } catch(err) {
-    return err;
+    if (err instanceof HttpException) {
+      throw err;
+    } else if (err.response) {
+      throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+    } else {
+      throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+    }
   }
 }
 
@@ -180,10 +223,18 @@ async createGlobal(token: string) {
       }
       return finalArray;
     } catch(err) {
-      if (err.response && err.response.status === 404) {
-        return [];
+      if(err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
       } else {
-        return err;
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -204,7 +255,17 @@ async createGlobal(token: string) {
       // console.log("findAll",response.data) 
       return response.data;
     } catch(err) {
-      return err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -237,7 +298,13 @@ async createGlobal(token: string) {
       }
       return finalData;
     }catch(err){
-      return err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -276,18 +343,13 @@ async createGlobal(token: string) {
     return [];
     
   } catch (err) {
-    const headers = {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/ld+json',
-      'Accept': 'application/ld+json'
-    };
-    
     if (err.response && err.response.status === 404) {
       await this.createGlobal(token);
       return await this.getGlobalAllocatedAssets(token);
+    } else if (err.response) {
+      throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
     } else {
-      console.error('Error fetching global allocated assets:', err);
-      return [];
+      throw new HttpException(err.message, HttpStatus.NOT_FOUND);
     }
   }
 }
@@ -307,7 +369,13 @@ async createGlobal(token: string) {
         }
       }
     } catch(err) {
-      return err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -319,45 +387,61 @@ async createGlobal(token: string) {
         'Accept': 'application/ld+json'
       };
       for (let key in data) {
-        let id = `${key}:allocated-assets`;
-        // Convert incoming asset IDs to the required format
-        let finalAssetData = data[key].map(assetId => ({ id: assetId }));
-        
-        let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
-        let response = await axios.get(checkUrl, {
-          headers
-        });
-
-        if (response.data.length > 0) {
-          let assetData = response.data[0];
+        try {
+          let id = `${key}:allocated-assets`;
+          // Convert incoming asset IDs to the required format
+          let finalAssetData = data[key].map(assetId => ({ id: assetId }));
           
-          // Extract existing assets from the new data structure
-          let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
-          
-          if (Array.isArray(getAllocatedAssets)) {
-            finalAssetData = [...finalAssetData, ...getAllocatedAssets];
-          } else if (getAllocatedAssets.id) {
-            finalAssetData = [...finalAssetData, getAllocatedAssets];
-          }
-          
-          await this.remove(id, token);
-        }
+          let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+          let response = await axios.get(checkUrl, {
+            headers
+          });
 
-        // Remove duplicates based on asset ID
-        finalAssetData = [...new Map(finalAssetData.map(item => [item.id, item])).values()];
-
-        const finalData = {
-          "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-          "id": id,
-          "type": "urn-holder",
-          "http://www.industry-fusion.org/schema#last-data": {
-            type: 'Property',
-            value: {
-              "https://industry-fusion.org/base/v0.1/items": finalAssetData
+          if (response.data.length > 0) {
+            let assetData = response.data[0];
+            
+            // Extract existing assets from the new data structure
+            let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
+            
+            if (Array.isArray(getAllocatedAssets)) {
+              finalAssetData = [...finalAssetData, ...getAllocatedAssets];
+            } else if (getAllocatedAssets.id) {
+              finalAssetData = [...finalAssetData, getAllocatedAssets];
             }
+            
+            await this.remove(id, token);
           }
-        };
-        await axios.post(this.scorpioUrl, finalData, {headers});
+
+          // Remove duplicates based on asset ID
+          finalAssetData = [...new Map(finalAssetData.map(item => [item.id, item])).values()];
+
+          const finalData = {
+            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+            "id": id,
+            "type": "urn-holder",
+            "http://www.industry-fusion.org/schema#last-data": {
+              type: 'Property',
+              value: {
+                "https://industry-fusion.org/base/v0.1/items": finalAssetData
+              }
+            }
+          };
+          await axios.post(this.scorpioUrl, finalData, {headers});
+        } catch(err) {
+          if (err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        }
       }
       await this.updateGlobal(token);
       return {
@@ -380,7 +464,13 @@ async createGlobal(token: string) {
         };
       }
     } catch(err) {
-      return err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -398,7 +488,17 @@ async createGlobal(token: string) {
         data: response.data,
       };
     } catch(err) {
-      return err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

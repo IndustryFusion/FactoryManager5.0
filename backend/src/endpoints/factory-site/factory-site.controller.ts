@@ -47,11 +47,7 @@ export class FactorySiteController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -66,10 +62,7 @@ export class FactorySiteController {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findAll(token);
     } catch (err) {
-      if (err.response?.status === 401) {
-        throw new UnauthorizedException('Repository unauthorized');
-      }
-      throw new err;
+      throw err;
     }
   }
 
@@ -79,10 +72,7 @@ export class FactorySiteController {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.companySpecificFactories(company_ifric_id, token);
     } catch (err) {
-      if (err.response?.status === 401) {
-        throw new UnauthorizedException('Repository unauthorized');
-      }
-      throw new err;
+      throw err;
     }
   }
 
@@ -92,7 +82,7 @@ export class FactorySiteController {
       const token = await this.tokenService.getToken();
       return await this.factorySiteService.findOne(id, token);
     } catch (err) {
-      throw new err;
+      throw err;
     }
   }
 
@@ -111,11 +101,7 @@ export class FactorySiteController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -139,11 +125,7 @@ export class FactorySiteController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios, { Axios } from 'axios';
 import { CompactEncrypt } from 'jose';
 import { createHash } from 'crypto';
@@ -81,10 +81,13 @@ export class CertificateService {
 
       return response.data;
     } catch (err) {
-      if (err.response.status == 401) {
-        throw new UnauthorizedException();
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
-      throw new InternalServerErrorException(`Failed to create company certificate: ${err.message}`);
     }
   }
 
@@ -99,7 +102,13 @@ export class CertificateService {
       const companyCertificates = await axios.get(`${this.ifricRegistryUrl}/certificate/get-company-certificate/${company_ifric_id}`, { headers: registryHeaders });
       return companyCertificates.data;
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -140,7 +149,13 @@ export class CertificateService {
             }
 
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -209,7 +224,7 @@ export class CertificateService {
           }
         }
       } else {
-        throw new Error("No user found with the provided mailId");
+        throw new HttpException("No user found with the provided mailId", HttpStatus.NOT_FOUND);
       }
 
       const response = await axios.post(`${this.ifxPlatformUrl}/certificate/create-asset-certificate`,{
@@ -221,7 +236,13 @@ export class CertificateService {
 
       return response.data;
     } catch(err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -244,19 +265,13 @@ export class CertificateService {
       );
       console.log("response ",response.data);
       return response.data;
-    } catch (error: any) {
-      if (error?.response && error?.response?.status === 401) {
-        return {
-          "success": false,
-          "status": 401,
-          "message": "Login Expired"
-        }
+    } catch (err: any) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
       } else {
-        return {
-          "success": false,
-          "status": 500,
-          "message": error.response?.data?.message || "Error fetching certificates"
-        }
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
     }
   }
@@ -301,7 +316,13 @@ export class CertificateService {
       }
       
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

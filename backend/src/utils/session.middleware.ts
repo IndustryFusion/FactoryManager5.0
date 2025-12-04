@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, HttpException, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from '../endpoints/auth/auth.service'
 import { RedisService } from '../endpoints/redis/redis.service';
@@ -45,10 +45,22 @@ export class SessionMiddleware implements NestMiddleware {
         }
         await this.redisService.saveData(tokenKey, tokenData);
       } else {
-        throw new Error('Invaid Credentials');
+        throw new HttpException('Invaid Credentials', HttpStatus.FORBIDDEN);
       }
     } catch (error) {
-      throw new Error('Failed ' + error.message);
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException({
+          errorCode: `RD_${error.response.status}`,
+          message: error.response.data.message
+        }, error.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "RD_500",
+          message: error.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
 
     next();
