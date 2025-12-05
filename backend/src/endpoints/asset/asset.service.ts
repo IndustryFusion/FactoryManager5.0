@@ -526,6 +526,18 @@ export class AssetService {
           // fetch asset cache data for parent asset
           const assetCacheData = await this.factoryPdtCacheModel.find({id: key}).lean();
           if(assetCacheData.length) {
+            // need to remove shop_floor for assets removed from the shopfloor
+            // filter out assets which are matching with current shop_floor but not present in react flow
+            const matchingAssetData = await this.factoryPdtCacheModel.find({ shop_floor: { $in: assetCacheData[0].shop_floor } }).lean();
+            
+            if(matchingAssetData.length) {
+              const matchingAssetIds = matchingAssetData.map(asset => asset.id);
+              const filteredAssetIds = matchingAssetIds.filter(id => !assetIds.includes(id));
+              await this.factoryPdtCacheModel.updateMany(
+                {id: {$in: filteredAssetIds}},
+                { $pull: { shop_floor: { $in: assetCacheData[0].shop_floor } } }
+              )
+            }
             await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: assetIds, factory_site: assetCacheData[0].factory_site, shop_floor: assetCacheData[0].shop_floor});
           }
         }
