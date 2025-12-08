@@ -71,7 +71,7 @@ function Sidebar() {
    const handleIFNavigation = async () => {
     try {
       let pageName = "";
-      const product_name = "IFRIC Dashboard";
+      const product_name = "DPP Creator";
       const data = await  getAccessGroup();
       if(data && data.from){
         pageName = atob(data.from);
