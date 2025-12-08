@@ -129,7 +129,7 @@ export const getAccessGroupData = async(token: string, from?: string) => {
         });
         const loginData = {
           ...response.data.data,
-          ...(from ? { from } : {})
+          ...(from !== undefined ? { from } : {})
       };
       await storeAccessGroup(loginData);
     } catch(error: any) {
