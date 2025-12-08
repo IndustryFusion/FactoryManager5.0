@@ -129,7 +129,7 @@ export const getAccessGroupData = async(token: string, from?: string) => {
         });
         const loginData = {
           ...response.data.data,
-          from: from,
+          ...(from ? { from } : {})
       };
       await storeAccessGroup(loginData);
     } catch(error: any) {
@@ -225,9 +225,7 @@ export const encryptRoute = async (data: {
 
         const token = accessGroupData.ifricdi;
         const company_ifric_id = accessGroupData.company_ifric_id;
-        
-        const baseURL = getBaseURL(data.environment, data.product_name);
-        const route = `${baseURL}${data.pageName}`;
+        const route = data.pageName;
 
         const requestData = {
             token,

@@ -70,9 +70,12 @@ function Sidebar() {
 
    const handleIFNavigation = async () => {
     try {
-      const pageName = "/home";
+      let pageName = "";
       const product_name = "IFRIC Dashboard";
-      
+      const data = await  getAccessGroup();
+      if(data && data.from){
+        pageName = atob(data.from);
+      }
       const routeResponse = await encryptRoute({
         environment,
         pageName,
