@@ -420,7 +420,26 @@ export class ShopFloorService {
               const filteredAssetIds = matchingAssetIds.filter(id => !shopFloorobj[key].includes(id));
               await this.factoryPdtCacheModel.updateMany(
                 {id: {$in: filteredAssetIds}},
-                { $pull: { shop_floor: key } }
+                [
+                  {
+                    $set: {
+                      shop_floor: {
+                        $setDifference: ["$shop_floor", [key]]  // remove shop_floor for filtered assetIds
+                      }
+                    }
+                  },
+                  {
+                    $set: {
+                      factory_site: {
+                        $cond: [
+                          { $eq: ["$shop_floor", []] },  // set factory_site to "" when shop_floor becomes empty array after update
+                          "",
+                          "$factory_site"
+                        ]
+                      }
+                    }
+                  }
+                ]
               )
             }
             await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
@@ -444,7 +463,26 @@ export class ShopFloorService {
                 const filteredAssetIds = matchingAssetIds.filter(id => !shopFloorobj[key].includes(id));
                 await this.factoryPdtCacheModel.updateMany(
                   {id: {$in: filteredAssetIds}},
-                  { $pull: { shop_floor: key } }
+                  [
+                    {
+                      $set: {
+                        shop_floor: {
+                          $setDifference: ["$shop_floor", [key]]   // remove shop_floor for filtered assetIds
+                        }
+                      }
+                    },
+                    {
+                      $set: {
+                        factory_site: {
+                          $cond: [
+                            { $eq: ["$shop_floor", []] },  // set factory_site to "" when shop_floor becomes empty array after update
+                            "",
+                            "$factory_site"
+                          ]
+                        }
+                      }
+                    }
+                  ]
                 )
               }
               await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: shopFloorobj[key], factory_site: factoryId, shop_floor: key});
