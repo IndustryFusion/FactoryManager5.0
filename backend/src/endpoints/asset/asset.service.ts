@@ -664,7 +664,26 @@ export class AssetService {
               const filteredAssetIds = matchingAssetIds.filter(id => !assetIds.includes(id));
               await this.factoryPdtCacheModel.updateMany(
                 {id: {$in: filteredAssetIds}},
-                { $pull: { shop_floor: { $in: assetCacheData[0].shop_floor } } }
+                [
+                  {
+                    $set: {
+                      shop_floor: {
+                        $setDifference: ["$shop_floor", assetCacheData[0].shop_floor]  // remove shop_floor for filtered assetIds
+                      }
+                    }
+                  },
+                  {
+                    $set: {
+                      factory_site: {
+                        $cond: [
+                          { $eq: ["$shop_floor", []] }, // set factory_site to "" when shop_floor becomes empty array after update
+                          "",   
+                          "$factory_site"                 
+                        ]
+                      }
+                    }
+                  }
+                ]
               )
             }
             await this.factoryPdtCacheService.updateFactoryAndShopFloor({assetIds: assetIds, factory_site: assetCacheData[0].factory_site, shop_floor: assetCacheData[0].shop_floor});

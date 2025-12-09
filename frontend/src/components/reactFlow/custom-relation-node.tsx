@@ -15,7 +15,7 @@
 // limitations under the License. 
 // 
 
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useMemo, useRef, useState, useEffect } from "react";
 import { Handle, Position, useStore } from "reactflow";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
@@ -25,6 +25,7 @@ import EdgeAddContext from "@/context/edge-add-context";
 import "../../styles/custom-asset-node.css";
 import { Toast } from "primereact/toast";
 import { useTranslation } from "next-i18next";
+import { getNonShopFloorAssetByType } from "@/utility/factory-site-utility";
 
 type Option = {
   asset_serial_number: string; label: string; value: string; asset_category: string
@@ -44,6 +45,8 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
   const nodes = useStore((s: any) => s.nodes ?? []);
   const edges = useStore((s: any) => s.edges ?? []);
   const unAllocated = useSelector((state: RootState) => state.unAllocatedAsset);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const connectedBackendIds = useMemo(() => {
     const ids = new Set<string>();
@@ -64,51 +67,54 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
 
   const capFirst = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 
-  const options: Option[] = useMemo(() => {
+  useEffect(() => {
+    const fetchOptions =  async () => {
+      try {
+        if (!desiredCategory || !dialogVisible) return;
+        setIsLoading(true);
+        const list = await getNonShopFloorAssetByType(data?.asset_category || "");
+        const processed = list
+          .map((asset: any) => {
+            const rawLabel = asset.product_name 
 
-    if (!desiredCategory) return [];
+            const rawCategory = asset.asset_category
 
-    const list = Object.values(unAllocated ?? {}) as any[];
+            const label_clean = String(rawLabel).toLowerCase().replace(/\btemplate\b/gi, "").trim();
+            const asset_category_clean = String(rawCategory).toLowerCase().replace(/\btemplate\b/gi, "").trim();
 
-    return list
-      .map((asset: any) => {
-        const rawLabel =
-          asset?.product_name?.value ??
-          asset?.product_name ??
-          asset?.label ??
-          asset?.id;
+            if (asset_category_clean !== desiredCategory) return null;
 
-        const rawCategory =
-          asset?.asset_category?.value ?? asset?.asset_category ?? "";
+            if (connectedBackendIds.has(asset?.id)) return null;
+            if (data?.parentId) {
+              const parentNode = (nodes ?? []).find((n: any) => n.id === data.parentId);
+              if (parentNode?.data?.id && parentNode.data.id === asset?.id) return null;
+            }
 
-        const label_clean = String(rawLabel).toLowerCase().replace(/\btemplate\b/gi, "").trim();
-        const asset_category_clean = String(rawCategory).toLowerCase().replace(/\btemplate\b/gi, "").trim();
+            return {
+              label: asset.product_name,
+              value: asset.id,
+              asset_category: asset.asset_category,
+              asset_serial_number: asset.asset_serial_number,
+              label_clean,
+              asset_category_clean,
+            } as Option & { label_clean: string; asset_category_clean: string };
+          })
+          .filter(Boolean) as Option[];
+        setOptions(processed);
+      } catch(err: any) {
+        toast.current?.show({
+          severity: "error",
+          summary: "Error",
+          detail: err.response?.data?.message ?? err.message ?? "failed to fetch unallocated asset by product type",
+          life: 3000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-
-        if (asset_category_clean !== desiredCategory) return null;
-
-
-        if (connectedBackendIds.has(asset?.id)) return null;
-        if (data?.parentId) {
-          const parentNode = (nodes ?? []).find((n: any) => n.id === data.parentId);
-          if (parentNode?.data?.id && parentNode.data.id === asset?.id) return null;
-        }
-
-
-        return {
-          label: rawLabel,
-          value: asset?.id,
-          asset_category: rawCategory,
-          asset_serial_number:asset?.asset_serial_number?.value,
-          label_clean,
-          asset_category_clean,
-        } as Option & { label_clean: string; asset_category_clean: string };
-      })
-      .filter(Boolean) as Option[];
-  }, [unAllocated, desiredCategory, connectedBackendIds, data?.parentId, nodes]);
-
-
-
+    fetchOptions();
+  }, [dialogVisible]);
 
   const onConfirm = () => {
     if (data.class === "machine") {
@@ -194,7 +200,11 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
         dismissableMask
       >
         <div className="p-field" style={{ marginTop: 8 }}>
-         {data.class === "machine" ? (
+         {
+          isLoading ? (
+            <div className="text-center text-gray-500 p-2">{t('reactflow:loading')}</div>
+          ) :
+         data.class === "machine" ? (
             options.length > 0 ? (
               <div className="flex flex-column gap-2">
                 {options.map((o) => {

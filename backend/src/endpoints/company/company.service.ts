@@ -19,7 +19,7 @@ export class CompanyService {
       const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-data/${company_ifric_id}`);
       const factoryPdtData = await this.factoryPdtCache.find({company_ifric_id, isScorpioUpadted: true, isCacheUpdated: true});
       const result = [...response.data, ...factoryPdtData].reduce((acc, obj) => {
-        acc[obj.asset_serial_number] = obj;
+        acc[`${obj.product_name}_${obj.asset_serial_number}`] = obj;
         return acc;
       }, {} as Record<string, any>);
 

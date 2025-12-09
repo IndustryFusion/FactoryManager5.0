@@ -44,14 +44,13 @@ interface Asset {
     id: string;
     product_name: string;
     asset_category: string;
-    relation: {}
 }
 
 interface UnAllocatedAssetState {
     [key: string]: {
         id: string;
-        product_name: { value: string };
-        asset_category: { value: string };
+        product_name: string;
+        asset_category: string;
     };
 }
 interface PickListEvent {
@@ -64,7 +63,7 @@ const PicklistAssets = () => {
     const [shopFloorAssets, setShopFloorAssets] = useState<Asset[]>([]);
     const [source, setSource] = useState<Asset[]>([]);
     const [target, setTarget] = useState<Asset[]>([]);
-    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as unknown as UnAllocatedAssetState;
+    let unAllocatedAssetData = useSelector((state: RootState) => state.unAllocatedAsset) as Asset[];
     const dispatch = useDispatch();
     const router = useRouter();
     const { selectItems, setAsset, setSaveAllocatedAssets, shopFloorValue, saveAllocatedAssets } = useFactoryShopFloor();
@@ -113,30 +112,9 @@ const PicklistAssets = () => {
                 dispatch(create(fetchedAssetIds));
             }
 
-            // destructuring the asset id, product_name, asset_catagory for un-allocated Asset
-            const fetchedAssets: Asset[] = Object.keys(unAllocatedAssetData).map((key) => {
-                const relationsArr: string[] = [];
-                Object.keys(unAllocatedAssetData[key]).forEach(innerKey => {
-                    // Check if the innerKey starts with the specified string
-                    if (innerKey.includes('has')) {
-                        const modifiedKey = innerKey.split('/').pop() || '';
-                        relationsArr.push(modifiedKey);
-                    }
-                });
-
-                return ({
-                    id: unAllocatedAssetData[key].id,
-                    product_name: unAllocatedAssetData[key].product_name?.value,
-                    asset_category: unAllocatedAssetData[key].asset_category?.value,
-                    relation: relationsArr
-                })
-            }
-
-            );
-
-            setTarget(fetchedAssets);
+            setTarget(unAllocatedAssetData);
             // combined asset catagories from both allocated asset and un allocated asset
-            const categories = Array.from(new Set([...fetchedAssets].map(asset => asset.asset_category))).filter(Boolean);
+            const categories = Array.from(new Set([...unAllocatedAssetData].map(asset => asset.asset_category))).filter(Boolean);
         } catch (err) {
             console.error(err)
         }

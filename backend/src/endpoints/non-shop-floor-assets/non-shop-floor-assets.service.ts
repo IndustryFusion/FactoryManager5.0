@@ -41,7 +41,7 @@ export class NonShopFloorAssetsService {
         {
           $project: {
             _id: 0,
-            id: "$_id",
+            id: 1,
             product_name: 1,
             asset_category: 1,
             asset_serial_number: 1
@@ -63,12 +63,14 @@ export class NonShopFloorAssetsService {
     try {
       return this.factoryPdtCacheModel.aggregate([
         {
-          $match: { company_ifric_id, type: product_type, factory_site: "" }
+          $match: { company_ifric_id, asset_category: { $regex: product_type, $options: "i" }, factory_site: "" }
         },
         {
           $project: {
+            _id: 0,
+            id: 1,
             product_name: 1,
-            assasset_category: 1,
+            asset_category: 1,
             asset_serial_number: 1
           }
         }
