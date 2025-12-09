@@ -12,7 +12,7 @@ import { Coming_Soon } from "next/font/google";
 import { useTranslation } from "next-i18next";
 
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
-const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ||"" ;
+const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
 function Sidebar() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
