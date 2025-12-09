@@ -334,7 +334,7 @@ function Sidebar() {
               className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""
                 }`}
             >
-              IndustryFusion-x
+              IndustryFusion-X
             </div>
             <img
               src="/arrow-left-02.svg"
