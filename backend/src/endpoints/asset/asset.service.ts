@@ -548,8 +548,8 @@ export class AssetService {
                       factory_site: {
                         $cond: [
                           { $eq: ["$shop_floor", []] }, // set factory_site to "" when shop_floor becomes empty array after update
-                          "$factory_site"
-                          "",                          
+                          "",   
+                          "$factory_site"                 
                         ]
                       }
                     }
