@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { shopFloorDescriptionDto } from './dto/shopFloorDescription.dto';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AssetService } from '../asset/asset.service';
@@ -73,12 +73,21 @@ export class ShopFloorService {
             }
             const response = await axios.post(this.scorpioUrl, shopStore, {headers});
             if (response.status !== 201){
-              return {
-                "success": false,
-                "status": 500,
-                "message": "Initial Shopfloor URN holder creation failed"
-              }
+              throw new HttpException({
+                errorCode: `FS_${response.status}`,
+                message: response.data.message || response.data.title
+              }, response.status);
             }
+          } else if (error.response) {
+            throw new HttpException({
+              errorCode: `FS_${error.response.status}`,
+              message: error.response.data.message || error.response.data.title
+            }, error.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: error.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         }
         
@@ -147,7 +156,19 @@ export class ShopFloorService {
         }
       }
     } catch (err) {
-      throw err;
+      if(err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -164,7 +185,17 @@ export class ShopFloorService {
         statusText: response.statusText,
       }
     }catch(err){
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -193,9 +224,13 @@ export class ShopFloorService {
       
       return shopFloorData;
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -214,9 +249,17 @@ export class ShopFloorService {
         throw new NotFoundException('shop-floor not found');
       }
     } catch (err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -267,7 +310,13 @@ export class ShopFloorService {
         };
       }
     } catch (err) {
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -305,7 +354,17 @@ export class ShopFloorService {
         }
       }
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -323,7 +382,17 @@ export class ShopFloorService {
         data: response.data,
       };
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -463,7 +532,13 @@ export class ShopFloorService {
         }
       }
     } catch(err){
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
     
   }
@@ -476,35 +551,51 @@ export class ShopFloorService {
         Accept: 'application/ld+json',
       };
       for(let i = 0; i < node.length; i++){
-        let id = node[i].id;
-        if(id.includes('shopFloor')){
-          let response = await this.remove(id.split('_').pop(), token);
-          if(response['status'] == 200 || response['status'] == 204){
-            continue;
-          } else {
-            return response;
-          }
-        }
-        if(id.includes('asset')){
-          let assetData = await this.assetService.getAssetDataById(id.split('_')[1], token);
-          if(Object.keys(assetData).length > 0){
-          for (const key in assetData){
-            if (key.includes('has')){
-              assetData[key] = {
-                type: 'Relationship',
-                object: ''
-              }
+        try {
+          let id = node[i].id;
+          if(id.includes('shopFloor')){
+            let response = await this.remove(id.split('_').pop(), token);
+            if(response['status'] == 200 || response['status'] == 204){
+              continue;
+            } else {
+              return response;
             }
           }
-          const deleteResponse = await this.assetService.deleteAssetById(id.split('_')[1], token);
-          if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-            await axios.post(this.scorpioUrl, assetData, { headers });
-            continue;
-          }else{
-            return deleteResponse;
+          if(id.includes('asset')){
+            let assetData = await this.assetService.getAssetDataById(id.split('_')[1], token);
+            if(Object.keys(assetData).length > 0){
+              for (const key in assetData){
+                if (key.includes('has')){
+                  assetData[key] = {
+                    type: 'Relationship',
+                    object: ''
+                  }
+                }
+              }
+              const deleteResponse = await this.assetService.deleteAssetById(id.split('_')[1], token);
+              if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
+                await axios.post(this.scorpioUrl, assetData, { headers });
+                continue;
+              }else{
+                return deleteResponse;
+              }
+            }else{
+              continue;
+            }
           }
-          }else{
-            continue;
+        } catch(err) {
+          if (err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         }
       }
@@ -513,7 +604,13 @@ export class ShopFloorService {
         message: 'Delete Successfully'
       }
     } catch(err){
-      throw err;
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

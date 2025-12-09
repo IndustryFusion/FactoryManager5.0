@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { ShopFloorService } from './shop-floor.service';
 import * as jsonData from './shop-floor-schema.json';
 import { TokenService } from '../session/token.service';
@@ -78,21 +78,31 @@ export class ShopFloorController {
           }
         }
         catch(err){
-          return { 
-            success: false, 
-            status: err.response.status,
-            message: err.response.data 
-          };
+          if(err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         }
       } else{
         return createResponse;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 
@@ -107,7 +117,7 @@ export class ShopFloorController {
       const token = await this.tokenService.getToken();
       return await this.shopFloorService.findAll(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -117,7 +127,7 @@ export class ShopFloorController {
       const token = await this.tokenService.getToken();
       return await this.shopFloorService.findOne(id, token);
     } catch (err) {
-      throw new NotFoundException();
+      throw err;
     }
   }
 
@@ -139,11 +149,7 @@ export class ShopFloorController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -162,11 +168,7 @@ export class ShopFloorController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -185,11 +187,7 @@ export class ShopFloorController {
         return response;
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
   
@@ -206,11 +204,7 @@ export class ShopFloorController {
         }
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      throw err;
     }
   }
 
@@ -249,19 +243,29 @@ export class ShopFloorController {
             }
           }
         } catch(err) {
-          return { 
-            success: false, 
-            status: err.response.status,
-            message: err.response.data 
+          if(err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
+            throw new HttpException({
+              errorCode: `FS_${err.response.status}`,
+              message: err.response.data.message || err.response.data.title
+            }, err.response.status);
+          } else {
+            throw new HttpException({
+              errorCode: "FS_500",
+              message: err.message
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         }
       }
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
     }
   }
 }

@@ -44,11 +44,7 @@ export class AuthController {
         };
         return Promise.resolve(token);
     } catch (err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      }
+      throw err;
     }
   }
 

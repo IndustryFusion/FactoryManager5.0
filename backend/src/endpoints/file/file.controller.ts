@@ -54,6 +54,7 @@ export class FileController {
         }, 'image');
       } catch(err) {
         this.logger.error('Failed to Upload File ',err.stack);
+        throw err;
       }
     }
 

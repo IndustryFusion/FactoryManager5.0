@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { FactorySiteDescriptionDto } from './dto/factorySiteDescription.dto';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 import axios from 'axios';
@@ -134,7 +134,17 @@ export class FactorySiteService {
         }
       }
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -157,7 +167,17 @@ export class FactorySiteService {
       }
       return factorySiteData;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -187,7 +207,17 @@ export class FactorySiteService {
       }
       return factorySiteData;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -200,13 +230,19 @@ export class FactorySiteService {
       };
       const url = this.scorpioUrl + '/' + id;
       const response = await axios.get(url, {headers});
-      if(response.data) {
-        return response.data;
-      } else {
-        throw new NotFoundException('factory-site not found');
-      }
+      return response.data;
     } catch (err) {
-      throw new NotFoundException(`Failed to fetch repository data: ${err.message}`);
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -244,7 +280,17 @@ export class FactorySiteService {
         }
       }
     } catch(err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -276,7 +322,19 @@ export class FactorySiteService {
         }
       }
     } catch (err) {
-      throw err;
+      if(err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -294,7 +352,17 @@ export class FactorySiteService {
         data: response.data
       }
     } catch (err) {
-      throw err;
+      if (err.response) {
+        throw new HttpException({
+          errorCode: `FS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "FS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

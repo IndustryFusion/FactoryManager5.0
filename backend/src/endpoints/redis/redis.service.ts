@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable,Logger  } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus  } from '@nestjs/common';
 import Redis from 'ioredis';
 import {isEqual} from 'lodash'
 import { Cluster } from 'ioredis';
@@ -58,7 +58,19 @@ export class RedisService {
       if (error.code === 'MOVED' && retryAttempts > 0) {
         return this.saveData(key, data, ttl, retryAttempts - 1);
       }
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      } else if (error.response) {
+        throw new HttpException({
+          errorCode: `RD_${error.response.status}`,
+          message: error.response.data.message
+        }, error.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "RD_500",
+          message: error.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 

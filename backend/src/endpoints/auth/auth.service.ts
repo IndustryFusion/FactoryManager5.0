@@ -60,10 +60,16 @@ export class AuthService {
           refreshToken
         }
       } else {
-        throw new Error('Invalid credentials');
+        throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
       }
-    } catch (error) {
-      throw new Error('Failed to fetch access token ' + error);
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -173,7 +179,7 @@ export class AuthService {
 
   private unmask(masked: string, key: string): string {
     if (!key) {
-      throw new Error("Mask secret is not defined");
+      throw new HttpException("Mask secret is not defined", HttpStatus.NOT_FOUND);
     }
     const bytes = masked.match(/.{1,2}/g)!.map((h) => parseInt(h, 16));
     return String.fromCharCode(

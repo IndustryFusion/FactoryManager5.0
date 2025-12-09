@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as moment from 'moment';
 import { RedisService } from '../redis/redis.service'; 
@@ -49,9 +49,19 @@ export class ValueChangeStateService {
         throw new NotFoundException('asset not found');
       }
     } catch(err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `TS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "TS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -116,9 +126,19 @@ export class ValueChangeStateService {
       });
       return finalData;
     }catch(err) {
-      throw new NotFoundException(
-        `Failed to fetch repository data: ${err.message}`,
-      );
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException({
+          errorCode: `TS_${err.response.status}`,
+          message: err.response.data.message || err.response.data.title
+        }, err.response.status);
+      } else {
+        throw new HttpException({
+          errorCode: "TS_500",
+          message: err.message
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
