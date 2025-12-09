@@ -307,6 +307,26 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
   }
 };
 
+export const getNonShopFloorAssetByType = async (asset_category: string, ) => {
+  const data = await getAccessGroup()
+  const company_ifric_id = data.company_ifric_id;
+  try {
+    const response = await api.get(
+      `${API_URL}/non-shop-floor-assets/${company_ifric_id}/${asset_category}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+     console.log("Error fetching non-shop-floor assets by type", error);
+  }
+};
+
 export const getNonShopFloorAssetDetails = async (assetId: string) => {
   try {
     const response = await axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
