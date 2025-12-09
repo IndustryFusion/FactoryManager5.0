@@ -37,6 +37,13 @@ export default function WelcomePage() {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         if (error?.response && error?.response?.status === 401) {
+          toast?.current?.show({
+            severity: "error",
+            summary: "Error",
+            detail: "Route token mismatch from Suite",
+          });
+
+          
           window.location.href = `${ifxSuiteUrl}/home`;   
         } else {
           console.error("Error response:", error.response?.data.message);
