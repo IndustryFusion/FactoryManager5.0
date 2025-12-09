@@ -4,7 +4,7 @@ import "../../styles/sidebar.css";
 import Image from "next/image";
 import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
+import { encryptRoute, generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
@@ -12,7 +12,7 @@ import { Coming_Soon } from "next/font/google";
 import { useTranslation } from "next-i18next";
 
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
-
+const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
 function Sidebar() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -66,6 +66,28 @@ function Sidebar() {
 
   function handleSidebarClose() {
     setSidebarOpen(false);
+  }
+
+   const handleIFNavigation = async () => {
+    try {
+       let pageName = "ifxRoute";
+       const product_name = "IFRIC Dashboard";
+      const routeResponse = await encryptRoute({
+        pageName,
+        product_name,
+        t
+    });
+      
+      const encryptedPath = routeResponse?.path;
+
+      if (encryptedPath) {
+        window.open(encryptedPath, '_self');
+      } else {
+        console.error("Failed to generate encrypted route path");
+      }
+    } catch (error) {
+      console.error("Error generating encrypted route:", error);
+    }
   }
 
   function handleSidebarOpen() {
@@ -294,7 +316,7 @@ function Sidebar() {
               tooltip={!sidebarOpen ? t("sidebar.back_to_if") : undefined}
               tooltipOptions={{ position: "right", event: "both", className: "sidebar_tooltip" }}
               onClick={() => {
-                router.push("https://dev-platform.industry-fusion.com/dashboard-new")
+                 handleIFNavigation();
               }}
           >
             <img
@@ -307,7 +329,7 @@ function Sidebar() {
               className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""
                 }`}
             >
-              IndustryFusion
+              IndustryFusion-X
             </div>
             <img
               src="/arrow-left-02.svg"

@@ -25,7 +25,7 @@ import { getAccessGroup, storeAccessGroup } from "./indexed-db";
 
 const REGISTRY_API_URL =process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
+const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ;
 interface CustomJwtPayload extends JwtPayload {
     user: string;  
 }
@@ -117,7 +117,7 @@ export const getCategorySpecificCompany = async(categoryName: string) => {
     }
 }
 
-export const getAccessGroupData = async(token: string) => {
+export const getAccessGroupData = async(token: string, from?: string) => {
     try {
         const registryHeader = {
             'Content-Type': 'application/json',
@@ -127,7 +127,11 @@ export const getAccessGroupData = async(token: string) => {
         const response = await axios.post(`${BACKEND_URL}/auth/decrypt-route`, {token, product_name: "Factory Manager"}, {
             headers: registryHeader
         });
-        await storeAccessGroup(response.data.data)
+        const loginData = {
+          ...response.data.data,
+          ...(from  ? { from } : undefined)
+      };
+      await storeAccessGroup(loginData);
     } catch(error: any) {
         throw error;
     }
@@ -207,7 +211,6 @@ export const authenticateToken = async (token: string) => {
 
 
 export const encryptRoute = async (data: {
-    environment: string;
     pageName: string;
     product_name: string;
     t?: (key: string) => string;
@@ -221,10 +224,17 @@ export const encryptRoute = async (data: {
 
         const token = accessGroupData.ifricdi;
         const company_ifric_id = accessGroupData.company_ifric_id;
-        
-        const baseURL = getBaseURL(data.environment, data.product_name);
-        const route = `${baseURL}${data.pageName}`;
-
+         let route =""   ;
+        if(data.pageName === 'ifxRoute'){ 
+          if (accessGroupData.from && accessGroupData !== null && accessGroupData.from !== undefined) {
+            route = atob(accessGroupData.from);
+          } else {
+              route = `${getBaseURL("DPP Creator")}/ifx-dashboard`;
+          }
+        }
+       else{
+          route = `${getBaseURL(data.product_name)}${data.pageName}`;
+      }
         const requestData = {
             token,
             product_name: data.product_name,
@@ -253,7 +263,7 @@ export const encryptRoute = async (data: {
 }
 
 
-export const getBaseURL = (environment: string | undefined, productName: string): string => {
+export const getBaseURL = (productName: string): string => {
   switch (productName) {
     case "DPP Creator":
       if (environment === "dev") {
