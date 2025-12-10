@@ -1,5 +1,8 @@
-.sync-pdt-count.p-badge {
-    width: 20px;
-    height: 15px;
-    border-radius: 50px;
+.p-badge.sync-pdt-count {
+    padding: 0 6px !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    height: 17px !important;
+    border-radius: 50px !important;
+    font-size: 10px !important;
 }
