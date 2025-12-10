@@ -17,6 +17,8 @@ import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
 import { Button } from 'primereact/button';
 import { getAccessGroup } from '@/utility/indexed-db';
 import { OverlayPanel } from 'primereact/overlaypanel';
+import { getSyncPdtCount } from '@/utility/asset';
+import { Badge } from "primereact/badge";
 
 interface ImportResponseData {
   modelpassedCount: number;
@@ -44,6 +46,7 @@ const AssetManagementPage = () => {
   const opFilter = useRef(null);
   const opGroup = useRef(null);
   const [sortAscending, setSortAscending] = useState<boolean>(true);
+  const [syncPdtCount, setSyncPdtCount] = useState<number>(0);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -92,6 +95,10 @@ const AssetManagementPage = () => {
       try {
         const data = await getAccessGroup();
         setAccessgroupIndexedDb(data);
+
+        // fetch sync pdt count
+        const response = await getSyncPdtCount(data.company_ifric_id);
+        setSyncPdtCount(response.assetsWithUpdates);
       } catch(error) {
         console.error("Error fetching user data:", error);
       }
@@ -143,7 +150,10 @@ const AssetManagementPage = () => {
                     </TabView>
                   </div>
                 </div>
-                <div>
+                <div style={{
+                  position: 'relative',
+                  display: 'inline-block'
+                }}>
                   <Button
                     className="asset-btn-white"
                     onClick={() => { handleDialogOpen(); }}
@@ -154,6 +164,16 @@ const AssetManagementPage = () => {
                     {t('overview:sync_pdt')}
                     <img src="/download_icon.svg" alt="plus icon" width={20} height={20} />
                   </Button>
+                  {syncPdtCount > 0 && 
+                    <div style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      fontSize: '0.2rem',
+                    }}>
+                      <Badge className="sync-pdt-count" value={syncPdtCount} ></Badge>
+                    </div>
+                  }
                 </div>
 
               </div>

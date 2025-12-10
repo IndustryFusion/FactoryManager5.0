@@ -35,4 +35,37 @@ export class CompanyService {
       }
     }
   }
+
+  async getSyncPdtCountData(company_ifric_id: string) {
+    try {
+      const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-count-data/${company_ifric_id}`);
+      const factoryPdtData = await this.factoryPdtCache.find({company_ifric_id, isScorpioUpadted: true, isCacheUpdated: true});
+      const result = [...response.data, ...factoryPdtData].reduce((acc, obj) => {
+        acc[obj.id] = obj;
+        return acc;
+      }, {} as Record<string, any>);
+
+      // return count of dinstinct assets
+      return {
+        success: true,
+        status: 200,
+        assetsWithUpdates: Object.keys(result).length
+      }
+    } catch(err) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+        return {
+          success: true,
+          status: 200,
+          assetsWithUpdates: 0
+        };
+      } else if (err instanceof HttpException) {
+        throw err;
+      } else if(err.response) {
+        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
+    }
+  }
+
 }

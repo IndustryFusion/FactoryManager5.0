@@ -183,3 +183,13 @@ export const getSyncPdtData = async (company_ifric_id: string)=> {
     throw error;
   }
 };
+
+export const getSyncPdtCount = async (company_ifric_id: string)=> {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/company/get-sync-pdt-count/${company_ifric_id}`);
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
+};
