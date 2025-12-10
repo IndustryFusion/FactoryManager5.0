@@ -9,4 +9,9 @@ export class CompanyController {
   getSyncPdtData(@Param('company_ifric_id') company_ifric_id: string) {
     return this.companyService.getSyncPdtData(company_ifric_id);
   }
+
+  @Get('get-sync-pdt-count/:company_ifric_id')
+  getSyncPdtCountData(@Param('company_ifric_id') company_ifric_id: string) {
+    return this.companyService.getSyncPdtCountData(company_ifric_id);
+  }
 }
