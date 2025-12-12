@@ -189,7 +189,7 @@ const AssetManagement: React.FC<Props> = ({ searchQuery, productTypeFilter, grou
       </button>
     );
   };
-
+  console.log("Filtered Data:", filteredData);
   return (
     <div className="asset-management-container">
       <Toast ref={toast} />
@@ -266,18 +266,19 @@ const AssetManagement: React.FC<Props> = ({ searchQuery, productTypeFilter, grou
           />
           <Column
             field="asset_manufacturer_name"
-            header={t("manufacturer")}
+            header={t("machine_serial_number")}
             body={(rowData: Asset) => (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10182B', fontFamily: '"League Spartan"', fontSize: '14px', fontWeight: 600, letterSpacing: '-0.07px' }}>
-                <img src="/manufacturer-img.svg" alt="manufacturer" width={28} height={28} />
-                {rowData.asset_manufacturer_name}
+                {/* <img src="/manufacturer-img.svg" alt="manufacturer" width={28} height={28} /> */}
+                {rowData.asset_serial_number}
               </div>
             )}
           />
           <Column field="type" header={t("product_type")} body={(rowData: Asset) => rowData.type.split('/').pop()} />
           <Column field="id" header="ID" body={(rowData) => renderExpandableCell(rowData, 'id')} style={{ textAlign: 'left' }} />
           <Column field="area" header={t("area")} body="--" />
-          <Column field="factory_site" header={t("factory_site")} body="--" />
+          <Column field="factory_site" header={t("factory_site")} body="--" />     
+          <Column field="factory_site" header={t("production_line")} body={(rowData: Asset) => rowData.production_line ? rowData.production_line : "--"} />
 
           <Column body={actionItemsTemplate} headerStyle={{ width: '5rem' }} />
         </DataTable>

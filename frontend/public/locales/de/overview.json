@@ -31,6 +31,8 @@
     "view_logs": "Synchronisierungsprotokolle anzeigen",
     "done": "Fertig",
     "sync_pdt": "PDT synchronisieren",
+    "machine_serial_number": "Maschinen-Seriennummer",
+    "production_line": "Produktionslinie",
     "access_permission": "Sie haben keine Zugriffsrechte. Bitten Sie Ihren Firmenadministrator um die Zugriffsrechte",
     "sync_dialog": {
         "dialog_title": "Produktdaten synchronisieren",

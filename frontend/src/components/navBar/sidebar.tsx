@@ -286,7 +286,7 @@ function Sidebar() {
 
           </div>
           <div className="sidebar_bottom_section">
-            <div className={`sidebar_profile_section ${sidebarOpen ? "" : "collapsed"}`}>
+            {/* <div className={`sidebar_profile_section ${sidebarOpen ? "" : "collapsed"}`}>
               <div className="user_profile_avatar">
                 {userImage === "/avatar.svg" ? (
                   <div style={{width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "var(--black)", color: "white", fontWeight: "500", fontSize: "18px",paddingTop: "2px", display: "grid", placeItems: "center"}}>{userName.charAt(0).toUpperCase()}</div>
@@ -309,7 +309,7 @@ function Sidebar() {
                 alt="dropdown_arrow"
                 className="sidebar_profile_dropdown_icon"
               />
-            </div>
+            </div> */}
               <div className="sidebar-bottom">
             <Button
               className={`sidebar_navlink if_button ${!sidebarOpen ? 'mini_version' : ''}`}
