@@ -31,6 +31,8 @@
     "view_logs": "View Sync Logs",
     "done": "Done",
     "sync_pdt": "Sync PDT",
+    "machine_serial_number": "Machine Serial Number",
+    "production_line": "Production Line",
     "access_permission": "no access rights. Ask your company admin for the access",
     "sync_dialog": {
         "dialog_title": "Sync Product Data",
