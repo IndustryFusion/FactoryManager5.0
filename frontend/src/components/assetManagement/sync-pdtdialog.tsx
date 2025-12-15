@@ -12,24 +12,19 @@ import { getAccessGroup } from "@/utility/indexed-db";
 import LoadingCircle from "@/components/loader/dialog-loader";
 
 interface ImportResponseData {
-  modelpassedCount: number;
-  productPassedCount: number;
-  modelFailedCount?: number;
-  productFailedCount?: number;
-  modelFailedLogs: Record<string, string>;
-  productFailedLogs: Record<string, Record<string, string>>;
+  successCount: number;
+  failureCount: number;
+  logDetails: Record<string, string>;
 }
 
 interface SyncPdtDialogProps {
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
-  onSync?: () => Promise<ImportResponseData>;
 }
 
 const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   visible,
   setVisible,
-  onSync,
 }) => {
   const {t} = useTranslation("overview")
   const [step, setStep] = useState<number>(1);
@@ -38,32 +33,14 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   const [showLog, setShowLog] = useState<boolean>(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const productCount = 50; 
-  const modelCount = 5; 
-  const syncDone = startProgress && processedCount >= productCount;
+  const [productCount, setProductCount] = useState<number>(0);
+  const [ isSyncDone, setIsSyncDone ] = useState<boolean>(false);
 
   const [localImportData, setLocalImportData] = useState<ImportResponseData>({
-    modelpassedCount: 0,
-    productPassedCount: 0,
-    modelFailedCount: 0,
-    productFailedCount: 0,
-    modelFailedLogs: {},
-    productFailedLogs: {},
+    successCount: 0,
+    failureCount: 0,
+    logDetails: {},
   });
-
-  useEffect(() => {
-    if (!startProgress) return;
-    const timer = setInterval(() => {
-      setProcessedCount((prev) => {
-        if (prev >= productCount) {
-          clearInterval(timer);
-          return productCount;
-        }
-        return prev + 1;
-      });
-    }, 100);
-    return () => clearInterval(timer);
-  }, [startProgress]);
 
   const fetchSelectedProducts = async () => {
     try {
@@ -91,13 +68,52 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   const handleStartSync = async () => {
     setStep(2);
     setStartProgress(true);
-    if (onSync) {
-      try {
-        const result = await onSync();
-        setLocalImportData(result);
-      } catch (error) {
-        console.error("Sync PDT failed:", error);
+    try {
+      const indexedDbData = await getAccessGroup();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/company/sync-pdt/${indexedDbData.company_ifric_id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${indexedDbData?.ifricdi}`,
+            "Content-Type": "application/json",
+            Accept: "application/x-ndjson",
+          },
+          credentials: "include",
+        }
+      );
+      const reader = response?.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+  
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+  
+        let lines = buffer.split("\n");
+        buffer = lines.pop(); 
+  
+        for (const line of lines) {
+          const parsed = JSON.parse(line);
+          console.log("NDJSON message:", parsed);
+  
+          // only set sync done when response has status as its final response.
+          if ("status" in parsed) {
+            setIsSyncDone(true);
+            setLocalImportData({
+              successCount: parsed.data.successCount,
+              failureCount: parsed.data.failureCount,
+              logDetails: parsed.data.logDetails
+            });
+          } else {
+            setProcessedCount(parsed.processed);
+            setProductCount(parsed.total);
+          }
+        }
       }
+    } catch (error) {
+      console.error("Sync PDT failed:", error);
     }
   };
 
@@ -108,13 +124,11 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
     setProcessedCount(0);
     setShowLog(false);
     setLocalImportData({
-      modelpassedCount: 0,
-      productPassedCount: 0,
-      modelFailedCount: 0,
-      productFailedCount: 0,
-      modelFailedLogs: {},
-      productFailedLogs: {},
+      successCount: 0,
+      failureCount: 0,
+      logDetails: {}
     });
+    setIsSyncDone(false);
   };
 
   const footerContent = (
@@ -149,7 +163,6 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             )}
             label={t("view_logs")}
             onClick={() => setShowLog(true)}
-            disabled={processedCount < productCount}
           />
           <Button
             className="global-button"
@@ -158,7 +171,6 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             )}
             label={t("done")}
             onClick={handleClose}
-            disabled={processedCount < productCount}
           />
         </>
       )}
@@ -210,7 +222,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                         height={24}
                         alt="product model"
                       />
-                      <div>{modelCount} {t("sync_dialog.product_models")}</div>
+                      <div>{selectedProducts.length} {t("sync_dialog.products")}</div>
                     </div>
                   </div>
 
@@ -243,10 +255,10 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             ) : (
               <div className="flex flex-column gap-2 align-items-center">
                 <div className="import_dialog_heading">
-                  {!syncDone ? t("sync_dialog.importing") : t("sync_dialog.import_finished")}
+                  {!isSyncDone ? t("sync_dialog.importing") : t("sync_dialog.import_finished")}
                 </div>
 
-                {!syncDone ? (
+                {!isSyncDone ? (
                   <div className="import-progress-bar">
                     <div className="import_progressbar_track">
                       <ProgressBar
@@ -270,15 +282,11 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                   <div className="import_summary_block">
                     <div className="flex align-items-center gap-4 import_summary_header">
                       <div>
-                        <strong>{localImportData.modelpassedCount}</strong> {t("sync_dialog.product_model")}
-                      </div>
-                      <div>
-                        <strong>{localImportData.productPassedCount}</strong> {t("sync_dialog.products")}
+                        <strong>{localImportData.successCount}</strong> {t("sync_dialog.products")}
                       </div>
                       <div>
                         <strong>
-                          {(localImportData.modelFailedCount ?? 0) +
-                            (localImportData.productFailedCount ?? 0)}
+                          {(localImportData.failureCount ?? 0)}
                         </strong>{" "}
                         {t("sync_dialog.errors")}
                       </div>
@@ -287,51 +295,13 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
                     <div
                       className={`import_log_wrapper ${showLog ? "log_active" : ""}`}
                     >
-                      <div className="flex flex-column gap-2">
-                        <div className="log_details_title">
-                          <strong>{localImportData.modelFailedCount ?? 0}</strong> {t("sync_dialog.model_errors")}
-                        </div>
-                        {Object.keys(localImportData.modelFailedLogs).length > 0 &&
-                          Object.entries(localImportData.modelFailedLogs).map(
-                            ([key, value]) => (
-                              <div
-                                key={key}
-                                className="log_details_cell flex align-items-center justify-content-between gap-4"
-                              >
-                                <div className="log_details_cell flex align-items-center gap-2">
-                                  <Image
-                                    src="/industryFusion_icon-removebg-preview.png"
-                                    draggable={false}
-                                    width={28}
-                                    height={28}
-                                    alt="product model"
-                                    className="log_details_cell_image"
-                                  />
-                                  <div>{key}</div>
-                                </div>
-                                <Button
-                                  style={{
-                                    cursor: "auto",
-                                    flexShrink: "0",
-                                    background: "transparent",
-                                    padding: "0px",
-                                    border: "0px",
-                                    outline: "0px",
-                                  }}
-                                  tooltip={value}
-                                  tooltipOptions={{ position: "bottom" }}
-                                />
-                              </div>
-                            )
-                          )}
-                      </div>
 
-                      {Object.keys(localImportData.productFailedLogs).length > 0 && (
+                      {localImportData.failureCount > 0 && (
                         <div className="flex flex-column gap-2 mt-3">
                           <div className="log_details_title">
-                            <strong>{localImportData.productFailedCount ?? 0}</strong> {t("sync_dialog.product_errors")}
+                            <strong>{localImportData.failureCount ?? 0}</strong> {t("sync_dialog.product_errors")}
                           </div>
-                          {Object.entries(localImportData.productFailedLogs).map(
+                          {Object.entries(localImportData.logDetails).map(
                             ([modelName, productErrors]) => (
                               <div key={modelName} className="log_details_product_block">
                                 <div className="flex align-items-center gap-2 mb-1">
