@@ -14,7 +14,7 @@ export class CreateFactoryPdtCacheDto {
     archived: boolean;
     production_date: string;
     isPurchased: boolean;
-    isScorpioUpadted: boolean;
+    isScorpioUpdated: boolean;
     isCacheUpdated: boolean;
     factory_site: string;
     shop_floor: string;

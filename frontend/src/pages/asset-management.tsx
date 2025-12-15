@@ -20,15 +20,6 @@ import { OverlayPanel } from 'primereact/overlaypanel';
 import { getSyncPdtCount } from '@/utility/asset';
 import { Badge } from "primereact/badge";
 
-interface ImportResponseData {
-  modelpassedCount: number;
-  productPassedCount: number;
-  modelFailedCount?: number;
-  productFailedCount?: number;
-  modelFailedLogs: Record<string, string>;
-  productFailedLogs: Record<string, Record<string, string>>;
-}
-
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
   const dispatch = useDispatch();
@@ -37,7 +28,6 @@ const AssetManagementPage = () => {
   const { t } = useTranslation(['common', 'button', 'overview']);
   const [dataInitialized, setDataInitialized] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [importResponseData, setImportResponseData] = useState<ImportResponseData | null>(null);
   const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
   const [searchInput,setSearchInput]=useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");   
@@ -72,23 +62,6 @@ const AssetManagementPage = () => {
 
   const handleDialogOpen = () => setDialogVisible(true);
   // const handleDialogClose = () => setDialogVisible(false);
-
-  const handleSyncPdt = async (): Promise<ImportResponseData> => {
-    const response: ImportResponseData = {
-      modelpassedCount: 5,
-      productPassedCount: 50,
-      modelFailedCount: 1,
-      productFailedCount: 2,
-      modelFailedLogs: { "Model X": "Failed due to missing fields" },
-      productFailedLogs: {
-        "Product A": { "Product 123": "Error in configuration" },
-        "Product B": { "Product 456": "Invalid data format" },
-      },
-    };
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setImportResponseData(response);
-    return response;
-  };
 
   useEffect(() => {
     const fetchAccessGroup = async () => {
@@ -333,7 +306,6 @@ const AssetManagementPage = () => {
         <SyncPdtDialog
           visible={dialogVisible}
           setVisible={setDialogVisible}
-          onSync={handleSyncPdt}
         />
       </div>
     </div>

@@ -70,7 +70,7 @@ export class FactoryPdtCache extends Document {
     isPurchased: boolean;
 
     @Prop({ type: Boolean, default: false })
-    isScorpioUpadted: boolean;
+    isScorpioUpdated: boolean;
 
     @Prop({ type: Boolean, default: false })
     isCacheUpdated: boolean;

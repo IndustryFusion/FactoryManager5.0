@@ -620,16 +620,19 @@ export class AssetService {
           let finalKey = Object.keys(assetData).find(key => key.includes(relationKey))
           let relationArray = relationData[relationKey];
           assetIds.push(...relationArray);
+          const assetRelationData = assetData[finalKey];
           if (relationArray.length > 0) {
             assetData[finalKey] = [];
             for (let i = 0; i < relationArray.length; i++) {
               assetData[finalKey].push({
+                ...assetRelationData,
                 type: 'Relationship',
                 object: relationArray[i],
               });
             }
           } else {
             assetData[finalKey] = {
+              ...assetRelationData,
               type: 'Relationship',
               object: ''
             }
