@@ -12,8 +12,6 @@ import "../../styles/certificates.css";
 import { fetchCompanyCertificates, generateCompanyCertificate } from "@/utility/certificates";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_FLEET_MANAGER_BACKEND_URL;
-const BACKEND_REGISTRY_API_URL =
-  process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 
 interface Certificate {
   id: string;

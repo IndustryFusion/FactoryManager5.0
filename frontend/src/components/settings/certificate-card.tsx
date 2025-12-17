@@ -7,7 +7,7 @@ import { Tooltip } from "primereact/tooltip";
 import { useEffect, useState } from "react";
 import { FiCopy } from "react-icons/fi";
 
-const REGISTRY_API_URL =process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const CertificateCard:React.FC<any> =({certificate})=>{
     const [companyName, setCompanyName]= useState("");
@@ -38,7 +38,7 @@ const CertificateCard:React.FC<any> =({certificate})=>{
       const handleDownload = async () => {
         let company_ifric_id = "";
         try {
-            const response = await axios.get(`${REGISTRY_API_URL}/auth/get-company-details-id/${certificate?.company_id}`,{
+            const response = await axios.get(`${BACKEND_URL}/certificate/get-company-details-id/${certificate?.company_id}`,{
               headers: {
                 "Content-Type": "application/json",
               }         

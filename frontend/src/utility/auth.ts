@@ -23,7 +23,6 @@ import { updatePopupVisible } from './update-popup';
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import { getAccessGroup, storeAccessGroup } from "./indexed-db";
 
-const REGISTRY_API_URL =process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ;
 interface CustomJwtPayload extends JwtPayload {
