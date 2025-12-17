@@ -45,9 +45,20 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
   const { t } = useTranslation(["navigation"]);
   const [profileDetail, setProfileDetail] = useState(false);
   const router = useRouter();
+  const assetName = typeof router.query.asset === "string" ? router.query.asset : null;
   const [userData, setUserData] = useState<UserData>(userInfo);
   const toastRef = useRef(null);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    const handleRouteChangeStart = () => {
+      sessionStorage.setItem("previousPath", window.location.pathname);
+    };
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+    };
+  }, [router]);
 
   const fetchUserData = async () => {
     try {
@@ -102,9 +113,18 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
   }, [userInfo]);
 
   const fullPath = router.asPath;
+  const previousPath =
+  typeof window !== "undefined"
+    ? sessionStorage.getItem("previousPath")
+    : null;
+
   const breadcrumbItems = generateBreadcrumbItems();
   const showBackButton = breadcrumbItems.length >= 2;
+  let localNavHeader = navHeader;
 
+  if (router.pathname === "/factory-site/dashboard" && assetName) {
+     localNavHeader = "Asset Details";
+  }
   const handleBackClick = () => {
     router.back();
   };
@@ -156,6 +176,19 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     };
 
     const currentUrnId = getUrnId(fullPath);
+    if (
+      fullPath.startsWith("/factory-site/dashboard") &&
+      fullPath.includes("asset=") &&
+      previousPath?.startsWith("/asset-management")
+    ) {
+      return [
+        {
+          label: t("navbar.breadcrumb.asset_management"),
+          url: "/asset-management",
+        },
+        createLastItem(assetName as string),
+      ];
+    }
 
     // Route-specific breadcrumbs with dynamic URN handling
     if (fullPath.startsWith('/factory-site/factory-shopfloor/urn:ngsi-ld:factories')) {
@@ -195,7 +228,24 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
           },
           createLastItem("Contract")
         ]
-        }
+      }
+
+    if (fullPath.startsWith("/factory-site/factory-management/urn:ngsi-ld:factories")) {
+      return [
+        {
+          label: t("navbar.breadcrumb.factory_site"),
+          url: "/factory-site/factory-overview",
+        },
+        {
+          label: t("navbar.breadcrumb.factory_flow"),
+          className: "current-page",
+          command: (event: any) => {
+            event.originalEvent.preventDefault();
+            event.originalEvent.stopPropagation();
+          },
+        },
+      ];
+       }
     // Route-specific breadcrumbs
     const routeBreadcrumbs: Record<string, BreadcrumbItem[]> = {
       "/factory-site/factory-overview": [
@@ -268,7 +318,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         <div className="flex justify-content-between">
           <div className="flex align-items-center">
             <div>
-              <h2 className="nav-header">{navHeader}</h2>         
+              <h2 className="nav-header">{localNavHeader}</h2>         
                 <BreadCrumb
                   model={breadcrumbItems}
                   home={home}

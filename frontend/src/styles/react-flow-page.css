@@ -13,14 +13,14 @@
 
 .factory-container-collapse {
   flex: 1;
-  margin-left: 10px; 
+  /* margin-left: 10px;  */
   transition: margin-left 0.3s ease-in-out;
 }
 
 /* Navbar Area */
 .navbar_wrapper {
-  margin-top: 16px;
-  padding: 0 16px;
+  /* margin-top: 16px; */
+  padding: 0;
 }
 
 /* Main Content Layout */
