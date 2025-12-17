@@ -30,10 +30,11 @@ import FloatingXanaButton from "@/components/floating-xana-button";
 import { PrimeReactProvider } from 'primereact/api';
 import { getAccessGroupData } from "@/utility/auth";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function MyApp({ Component, pageProps, router }: AppProps) {
   const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const handleTokenRouting = async () => {
@@ -42,16 +43,21 @@ function MyApp({ Component, pageProps, router }: AppProps) {
       const url = new URL(window.location.href);
       const token = url.searchParams.get("token");
       const from = url.searchParams.get("from") ?? undefined;
-      if (!token) return;
 
+      if (!token) {
+        setIsReady(true);
+        return;
+      }
+      
       try {
         await getAccessGroupData(token, from);
-
+        
         // remove only token and route to url
         url.searchParams.delete("token");
         url.searchParams.delete("from");
-
+        
         router.replace(url.pathname + url.search);
+        setIsReady(true);
       } catch (error: any) {
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
@@ -60,6 +66,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
             console.error("Error response:", error.response?.data?.message);
           }
         }
+        setIsReady(true);
       }
     };
 
@@ -76,9 +83,13 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         <Head>
           <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         </Head>
+        {isReady && (
+        <>
         <AuthComponent {...pageProps} />
         <FloatingXanaButton />
         <UnauthorizedPopup />
+        </>
+        )}
       </PrimeReactProvider>
     </Provider>
   );
