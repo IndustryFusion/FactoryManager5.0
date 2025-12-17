@@ -29,7 +29,9 @@ export class CompanyService {
       // return array of asset_serial_number strings
       return Object.keys(result);
     } catch(err) {
-      if (err instanceof HttpException) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+        return [];
+      } else if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
         throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
