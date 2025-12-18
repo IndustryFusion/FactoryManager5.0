@@ -56,7 +56,6 @@ interface DataItem {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const SOCKET_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 type AttributeOption = {
   selectedDatasetIndex: number;
