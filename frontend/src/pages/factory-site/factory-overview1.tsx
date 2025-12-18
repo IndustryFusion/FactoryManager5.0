@@ -195,7 +195,7 @@ const FactoryOverview1 = () => {
             ]}
           />
           <div>
-            <FactoryMap factories={null}/>
+            <FactoryMap/>
           </div>
         
         </div>
