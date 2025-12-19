@@ -501,7 +501,13 @@ export class AssetService {
         message: 'Scorpio and cache updated successfully',
       };
     } catch (err) {
-      if (err instanceof HttpException) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+        return {
+          success: true,
+          status: 200,
+          message: "IFX fetch and scorpio update skipped due to network issues."
+        };
+      } else if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
         throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
@@ -614,16 +620,19 @@ export class AssetService {
           let finalKey = Object.keys(assetData).find(key => key.includes(relationKey))
           let relationArray = relationData[relationKey];
           assetIds.push(...relationArray);
+          const assetRelationData = assetData[finalKey];
           if (relationArray.length > 0) {
             assetData[finalKey] = [];
             for (let i = 0; i < relationArray.length; i++) {
               assetData[finalKey].push({
+                ...assetRelationData,
                 type: 'Relationship',
                 object: relationArray[i],
               });
             }
           } else {
             assetData[finalKey] = {
+              ...assetRelationData,
               type: 'Relationship',
               object: ''
             }

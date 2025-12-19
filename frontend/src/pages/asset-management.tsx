@@ -17,15 +17,8 @@ import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
 import { Button } from 'primereact/button';
 import { getAccessGroup } from '@/utility/indexed-db';
 import { OverlayPanel } from 'primereact/overlaypanel';
-
-interface ImportResponseData {
-  modelpassedCount: number;
-  productPassedCount: number;
-  modelFailedCount?: number;
-  productFailedCount?: number;
-  modelFailedLogs: Record<string, string>;
-  productFailedLogs: Record<string, Record<string, string>>;
-}
+import { getSyncPdtCount } from '@/utility/asset';
+import { Badge } from "primereact/badge";
 
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
@@ -35,7 +28,6 @@ const AssetManagementPage = () => {
   const { t } = useTranslation(['common', 'button', 'overview']);
   const [dataInitialized, setDataInitialized] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [importResponseData, setImportResponseData] = useState<ImportResponseData | null>(null);
   const [accessgroupIndexDb, setAccessgroupIndexedDb] = useState<any>(null);
   const [searchInput,setSearchInput]=useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");   
@@ -44,6 +36,7 @@ const AssetManagementPage = () => {
   const opFilter = useRef(null);
   const opGroup = useRef(null);
   const [sortAscending, setSortAscending] = useState<boolean>(true);
+  const [syncPdtCount, setSyncPdtCount] = useState<number>(0);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -70,28 +63,15 @@ const AssetManagementPage = () => {
   const handleDialogOpen = () => setDialogVisible(true);
   // const handleDialogClose = () => setDialogVisible(false);
 
-  const handleSyncPdt = async (): Promise<ImportResponseData> => {
-    const response: ImportResponseData = {
-      modelpassedCount: 5,
-      productPassedCount: 50,
-      modelFailedCount: 1,
-      productFailedCount: 2,
-      modelFailedLogs: { "Model X": "Failed due to missing fields" },
-      productFailedLogs: {
-        "Product A": { "Product 123": "Error in configuration" },
-        "Product B": { "Product 456": "Invalid data format" },
-      },
-    };
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setImportResponseData(response);
-    return response;
-  };
-
   useEffect(() => {
     const fetchAccessGroup = async () => {
       try {
         const data = await getAccessGroup();
         setAccessgroupIndexedDb(data);
+
+        // fetch sync pdt count
+        const response = await getSyncPdtCount(data.company_ifric_id);
+        setSyncPdtCount(response.assetsWithUpdates);
       } catch(error) {
         console.error("Error fetching user data:", error);
       }
@@ -143,7 +123,10 @@ const AssetManagementPage = () => {
                     </TabView>
                   </div>
                 </div>
-                <div>
+                <div style={{
+                  position: 'relative',
+                  display: 'inline-block'
+                }}>
                   <Button
                     className="asset-btn-white"
                     onClick={() => { handleDialogOpen(); }}
@@ -154,6 +137,16 @@ const AssetManagementPage = () => {
                     {t('overview:sync_pdt')}
                     <img src="/download_icon.svg" alt="plus icon" width={20} height={20} />
                   </Button>
+                  {syncPdtCount > 0 && 
+                    <div style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      fontSize: '0.2rem',
+                    }}>
+                      <Badge className="sync-pdt-count" value={syncPdtCount} ></Badge>
+                    </div>
+                  }
                 </div>
 
               </div>
@@ -313,7 +306,6 @@ const AssetManagementPage = () => {
         <SyncPdtDialog
           visible={dialogVisible}
           setVisible={setDialogVisible}
-          onSync={handleSyncPdt}
         />
       </div>
     </div>
