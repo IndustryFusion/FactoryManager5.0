@@ -31,6 +31,7 @@ import { PrimeReactProvider } from 'primereact/api';
 import { getAccessGroupData } from "@/utility/auth";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { updatePopupVisible } from "@/utility/update-popup";
 
 function MyApp({ Component, pageProps, router }: AppProps) {
   const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
@@ -53,7 +54,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
            if(isReady){
-            window.location.href = `${ifxSuiteUrl}/home`;
+             updatePopupVisible(true);
            }
           } else {
             console.error("Error response:", error.response?.data?.message);
