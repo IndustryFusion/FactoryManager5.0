@@ -36,6 +36,7 @@ import { updatePopupVisible } from "@/utility/update-popup";
 function MyApp({ Component, pageProps, router }: AppProps) {
   const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
   const [isReady, setIsReady] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false)
 
   useEffect(() => {
     const handleTokenRouting = async (token) => {
@@ -54,7 +55,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
            if(isReady){
-             updatePopupVisible(true);
+              setPopupVisible(true)
            }
           } else {
             console.error("Error response:", error.response?.data?.message);
@@ -90,7 +91,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         <>
         <AuthComponent {...pageProps} />
         <FloatingXanaButton />
-        <UnauthorizedPopup />
+        <UnauthorizedPopup popupVisible={popupVisible}/>
         </>
         )}
       </PrimeReactProvider>

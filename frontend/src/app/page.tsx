@@ -22,6 +22,7 @@ import axios from "axios";
 import { getAccessGroupData } from "@/utility/auth";
 import { Toast } from "primereact/toast";
 import { showToast } from "@/utility/toast";
+import { updatePopupVisible } from "@/utility/update-popup";
 
 const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
 
@@ -44,7 +45,7 @@ export default function WelcomePage() {
           });
 
           
-          window.location.href = `${ifxSuiteUrl}/home`;   
+          updatePopupVisible(true);  
         } else {
           console.error("Error response:", error.response?.data.message);
           showToast(toast, "error", "Error", "Error during login");
