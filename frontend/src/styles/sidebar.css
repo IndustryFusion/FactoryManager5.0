@@ -257,7 +257,7 @@ line-height: normal;
   top: 0px;
   left: 0;
   right: 0;
-  height: 72px;
+  /* height: 72px; */
   /* padding-top: 16px; */
   display: flex;
   align-items: center;

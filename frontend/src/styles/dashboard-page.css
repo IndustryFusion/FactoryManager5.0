@@ -280,6 +280,7 @@ body {
     justify-content: space-between;
     border-radius: 24px;
     background: var(--Secondary-Grey, #F7F8FA);
+    padding: 16px 48px;
 }
 
 .xana-content {
@@ -409,4 +410,19 @@ div:has(>.machine_uptime_chart_tooltip) {
 .muct_row>div:first-child>span {
     width: 8px !important;
     height: 8px !important;
+}
+
+.dashboard-id {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 4px;
+    background: var(--Common-Text-Grey-100, #F2F4F7);
+    color: var(--Common-Text-Grey-900, #10182B);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 10px;
 }

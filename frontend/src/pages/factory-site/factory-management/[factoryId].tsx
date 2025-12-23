@@ -124,7 +124,7 @@ const ShopFloorManager: React.FC = () => {
       <Sidebar />
       <div className={isSidebarExpand ? "factory-container" : "factory-container-collapse"}>
         <FactoryShopFloorProvider>
-          <div className="navbar_wrapper mt-4">
+          <div className="navbar_wrapper">
             <Navbar navHeader={t('factoryFlow')} />
           </div>
           <div className="main-content bg-gray-100">

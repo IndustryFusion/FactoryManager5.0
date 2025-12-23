@@ -108,14 +108,8 @@ const DashboardPage: React.FC = () => {
                         navHeader={
                             <div style={{ lineHeight: "1.2" }}>
                                 <div style={{ fontWeight: 600 }}>{companyName}</div>
-                                <div
-                                    style={{
-                                        fontSize: 13,
-                                        color: "rgb(108, 117, 125)",
-                                        alignItems: "center",
-                                        display: "flex",
-                                        gap: "4px",
-                                    }}
+                                <div className="dashboard-id"
+                                   
                                 >
                                     <img src="/id.svg" alt="ID icon" />
                                     {truncateCompanyId(companyId)}
