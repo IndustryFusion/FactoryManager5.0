@@ -18,6 +18,12 @@ export class CertificateController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('get-company-details-id/:id')
+  getCompanyDetailsByID(@Param('id') id: string, @Req() req: Request) {
+    return this.certificateService.getCompanyDetailsbyRecord(id, req);
+  }
+
+  @UseGuards(AuthGuard)
   @Get('get-company-certificates/:company_ifric_id')
   async getCompanyCertificates(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
     try {

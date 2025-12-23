@@ -4,7 +4,6 @@ import api from "./jwt";
 import { updatePopupVisible } from './update-popup';
 
 const FACTORY_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const IFRIC_REGISTRY_BACKEND_URL = process.env.NEXT_PUBLIC_IFRIC_REGISTRY_BACKEND_URL;
 
 
 export const generateAssetCertificate = async (assetData: {

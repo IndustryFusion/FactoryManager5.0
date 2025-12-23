@@ -56,7 +56,6 @@ interface DataItem {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const SOCKET_API_URL = process.env.NEXT_PUBLIC_BACKEND_SOCKET_URL;
 
 type AttributeOption = {
   selectedDatasetIndex: number;
@@ -608,7 +607,7 @@ const CombineSensorChart: React.FC = () => {
 
   useEffect(() => {
 
-    const socket = socketIOClient(`${SOCKET_API_URL}/`, {
+    const socket = socketIOClient(`${API_URL}/`, {
       transports: ["websocket"],
       rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
       reconnectionAttempts: 5, // Retry if connection fails

@@ -91,6 +91,26 @@ export class CertificateService {
     }
   }
 
+  async getCompanyDetailsbyRecord(company_id: string, req: Request) {
+    try {
+      const registryHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': req.headers['authorization']
+      };
+      const companyCertificates = await axios.get(`${this.ifricRegistryUrl}/auth/get-company-details-id/${company_id}`, { headers: registryHeaders });
+      return companyCertificates.data;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(err.response.data.message, err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+      }
+    }
+  }
+
 
   async getCompanyCertificates(company_ifric_id: string, req: Request) {
     try {

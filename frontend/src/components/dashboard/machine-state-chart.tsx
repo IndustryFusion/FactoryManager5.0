@@ -75,7 +75,6 @@ interface MachineStateLabelContext{
 };
 type FinalData = Record<string,   {[key: string]: any} >;
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-const SOCKET_API_URL = process.env.NEXT_PUBLIC_BACKEND_SOCKET_URL;
 
 const MachineStateChart = () => {
     const [chartData, setChartData] = useState({});
@@ -572,7 +571,7 @@ const MachineStateChart = () => {
 
     // useEffect to handle socket receiving data
     useEffect(() => {
-        const socket = socketIOClient(`${SOCKET_API_URL}/`,  {
+        const socket = socketIOClient(`${API_URL}/`,  {
             transports: ["websocket"],
             rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
             reconnectionAttempts: 5, // Retry if connection fails
