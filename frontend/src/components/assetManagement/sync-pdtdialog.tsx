@@ -255,7 +255,7 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
             ) : (
               <div className="flex flex-column gap-2 align-items-center">
                 <div className="import_dialog_heading">
-                  {!isSyncDone ? t("sync_dialog.importing") : t("sync_dialog.import_finished")}
+                  {!isSyncDone ? t("sync_dialog.syncing") : t("sync_dialog.sync_finished")}
                 </div>
 
                 {!isSyncDone ? (
