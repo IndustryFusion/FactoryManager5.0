@@ -10,10 +10,8 @@ import {
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
-  namespace: '/camera',  // must match PUSH_NAMESPACE (default: /camera)
-  cors: { origin: '*' }, // restrict in production
-  transports: ['websocket', 'polling'], // allow python-socketio polling handshake
-  allowEIO3: true,       // accept Engine.IO v3 clients (python-socketio compat)
+  namespace: '/camera', // must match PUSH_NAMESPACE (default: /camera)
+  // cors / transports / allowEIO3 are set globally in SocketIoAdapter
 })
 export class CameraGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -35,6 +33,10 @@ export class CameraGateway
       secret?: string;
     };
 
+    console.log(
+      `[CameraGateway] handleConnection — id=${client.id} deviceId=${deviceId ?? '(none)'} transport=${client.conn.transport.name}`,
+    );
+
     // Only edge-gateway connections supply a deviceId.
     // Browser consumers connect without auth — let them through.
     if (!deviceId) {
@@ -44,6 +46,9 @@ export class CameraGateway
     // Validate shared secret for gateway connections
     const expected = process.env.CAMERA_PUSH_SECRET ?? '';
     if (expected && secret !== expected) {
+      console.warn(
+        `[CameraGateway] rejected ${deviceId}: secret mismatch (expected=${expected ? '<set>' : '<empty>'} received=${secret ? '<set>' : '<empty>'})`,
+      );
       client.disconnect(true);
       return;
     }
@@ -55,7 +60,7 @@ export class CameraGateway
       this.deviceCameras.set(deviceId, new Set());
     }
 
-    console.log(`[CameraGateway] gateway connected: ${deviceId}`);
+    console.log(`[CameraGateway] gateway accepted: ${deviceId}`);
   }
 
   handleDisconnect(client: Socket) {
@@ -76,8 +81,7 @@ export class CameraGateway
       jpeg: Buffer;        // raw JPEG bytes
     },
     @ConnectedSocket() _client: Socket,
-  ) {
-    const key = `${data.deviceId}:${data.cameraIndex}`;
+  ) {    const key = `${data.deviceId}:${data.cameraIndex}`;
     this.frames.set(key, data.jpeg);
 
     // Track this camera index for the device

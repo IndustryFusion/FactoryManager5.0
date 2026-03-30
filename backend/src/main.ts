@@ -16,16 +16,19 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SocketIoAdapter } from './adapters/socket-io.adapter';
 import * as cors from 'cors';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import * as dotenv from 'dotenv';
 import { AllExceptionsFilter } from './utils/exception.middleware';
+import * as bodyParser from 'body-parser';
 
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useWebSocketAdapter(new SocketIoAdapter(app));
   const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors({
@@ -42,6 +45,10 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
+
+  app.use(bodyParser.json({ limit: '100mb' }));
+  app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+  
   await app.listen(4002);
 }
 bootstrap();
