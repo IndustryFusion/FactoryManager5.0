@@ -81,6 +81,7 @@ import { AssetModule } from './endpoints/asset/asset.module';
 import { FlinkJob, FlinkJobSchema } from './endpoints/schemas/flink-job.schema';
 import { CompanyController } from './endpoints/company/company.controller';
 import { CompanyService } from './endpoints/company/company.service';
+import { CameraModule } from './endpoints/camera/camera.module';
 
 dotenv.config();
 const mongoURI = process.env.MONGO_URL;
@@ -104,7 +105,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule,
-    AssetModule
+    AssetModule,
+    CameraModule,
   ],
   controllers: [
     AppController,

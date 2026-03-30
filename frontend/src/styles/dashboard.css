@@ -655,3 +655,218 @@ margin-bottom: 24px
     margin-top: 4px;
     margin-bottom: 18px;
 }
+
+/* ── Camera Feed Block ─────────────────────────────────────────────────────── */
+
+.camera_feed_block {
+    margin-top: 24px;
+}
+
+.camera_feed_block_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.camera_feed_title_row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.camera_feed_header_icon {
+    color: var(--ifx-blue);
+    flex-shrink: 0;
+}
+
+.camera_feed_meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.camera_stream_count {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--grey-primary);
+    background: var(--grey-box);
+    border-radius: 20px;
+    padding: 3px 10px;
+}
+
+.camera_refresh_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--dividers);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--grey-primary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    padding: 0;
+}
+
+.camera_refresh_btn:hover {
+    background: var(--grey-box);
+    color: var(--black);
+}
+
+/* Grid */
+.camera_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* Individual camera tile */
+.camera_tile {
+    border: 1px solid var(--dividers);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0f0f0f;
+    display: flex;
+    flex-direction: column;
+}
+
+.camera_tile_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.camera_tile_label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.camera_status_badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    border-radius: 4px;
+    padding: 2px 7px;
+}
+
+.camera_status_live {
+    background: rgba(60, 160, 201, 0.2);
+    color: var(--ifx-blue);
+    border: 1px solid rgba(60, 160, 201, 0.35);
+}
+
+.camera_status_waiting {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.camera_tile_body {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    min-height: 160px;
+}
+
+.camera_tile_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* No-signal placeholder */
+.camera_no_frame {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #111316;
+}
+
+.camera_no_frame_icon {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.camera_no_frame_text {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+    letter-spacing: 0.4px;
+}
+
+.camera_no_frame_subtext {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 0;
+    text-align: center;
+    padding: 0 16px;
+}
+
+/* Loading state */
+.camera_feed_loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 48px 0;
+    color: var(--grey-primary);
+    font-size: 14px;
+}
+
+.camera_spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--dividers);
+    border-top-color: var(--ifx-blue);
+    border-radius: 50%;
+    animation: camera_spin 0.8s linear infinite;
+}
+
+@keyframes camera_spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.camera_feed_empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 0;
+    color: var(--grey-secondary);
+}
+
+.camera_feed_empty_icon {
+    color: var(--common-text-grey-200);
+}
+
+.camera_feed_empty_title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--grey-primary);
+    margin: 0;
+}
+
+.camera_feed_empty_sub {
+    font-size: 13px;
+    color: var(--grey-secondary);
+    margin: 0;
+    text-align: center;
+}
