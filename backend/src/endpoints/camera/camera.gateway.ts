@@ -12,6 +12,8 @@ import { Server, Socket } from 'socket.io';
 @WebSocketGateway({
   namespace: '/camera',  // must match PUSH_NAMESPACE (default: /camera)
   cors: { origin: '*' }, // restrict in production
+  transports: ['websocket', 'polling'], // allow python-socketio polling handshake
+  allowEIO3: true,       // accept Engine.IO v3 clients (python-socketio compat)
 })
 export class CameraGateway
   implements OnGatewayConnection, OnGatewayDisconnect
