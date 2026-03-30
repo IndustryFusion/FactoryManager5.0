@@ -26,6 +26,7 @@ const AutoRefresh = dynamic(() => import("@/components/dashboard/dashboard-heade
 const DashboardAssets = dynamic(() => import("@/components/dashboard/dashboard-assets"), { ssr: false });
 const MachineStateChart = dynamic(() => import("@/components/dashboard/machine-state-chart"), { ssr: false });
 const PowerCo2Chart = dynamic(() => import("@/components/dashboard/power-co2-chart"), { ssr: false });
+const CameraFeedBlock = dynamic(() => import("@/components/dashboard/camera-feed"), { ssr: false });
 import { useRouter } from "next/router";
 import { DashboardProvider, useDashboard } from "@/context/dashboard-context";
 import { ProgressSpinner } from "primereact/progressspinner";
@@ -115,6 +116,7 @@ const Dashboard = () => {
                         <PowerCo2Chart />
                         <MachineStateChart />
                       </div>
+                      <CameraFeedBlock />
                     </div>
                   )}
                   {currentTab === "performance" && (
