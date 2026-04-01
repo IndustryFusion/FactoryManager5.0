@@ -175,7 +175,9 @@ const CombineSensorChart: React.FC = () => {
         intersect: false,
         callbacks: {
           label: function (context: TooltipItem<"line">) {
-            return `${context.dataset.label}: ${context.parsed.y}`;
+            const yVal = context.parsed.y;
+            const formatted = Number.isInteger(yVal) ? yVal.toString() : parseFloat(yVal.toFixed(4)).toString();
+            return `${context.dataset.label}: ${formatted}`;
           },
           title: function (context: TooltipItem<"line">[]) {
             return format(new Date(context[0].parsed.x), "PPpp");
@@ -205,9 +207,9 @@ const CombineSensorChart: React.FC = () => {
       x: {
         type: "time",
         time: {
-          tooltipFormat: "PPpp",
+          tooltipFormat: "PPpp.SSS",
           displayFormats: {
-            millisecond: "HH:mm:ss",
+            millisecond: "HH:mm:ss.SSS",
             second: "HH:mm:ss",
             minute: "HH:mm",
             hour: "HH:mm",
@@ -235,9 +237,17 @@ const CombineSensorChart: React.FC = () => {
             const now = new Date();
             const diffInHours = (now.getTime() - labelDate.getTime()) / (1000 * 60 * 60);
             
+            // Check the zoom level by looking at the range
+            const chart = (this as any).chart;
+            const range = chart?.scales?.x?.max - chart?.scales?.x?.min;
+            
+            // If zoomed to less than 1 minute, show milliseconds
+            if (range && range < 60000) {
+              return format(labelDate, "HH:mm:ss.SSS");
+            }
             // If within 24 hours, show time only
-            if (diffInHours < 24) {
-              return format(labelDate, "HH:mm");
+            else if (diffInHours < 24) {
+              return format(labelDate, "HH:mm:ss");
             }
             // If within 7 days, show day and time
             else if (diffInHours < 168) {
@@ -261,6 +271,10 @@ const CombineSensorChart: React.FC = () => {
       y: {
         type: "linear",
         beginAtZero: true,
+        min: 0,
+        ticks: {
+          precision: 4,
+        },
         title: {
           display: true,
           text: "Value",
@@ -441,25 +455,39 @@ const CombineSensorChart: React.FC = () => {
         tension: 0.4,
       };
 
-      if (selectedInterval != "custom") {
-        setChartData(prevData => ({
-          ...prevData,
-          labels,
-          datasets: [...prevData.datasets, newDataset]
-        }));
+      // Calculate average for the average line
+      const validDataPoints = dataPoints.filter((point): point is number => point !== null);
+      const average = validDataPoints.length > 0 
+        ? validDataPoints.reduce((sum, val) => sum + val, 0) / validDataPoints.length 
+        : 0;
 
-      } else {
-        setChartData({
-          labels,
-          datasets: [newDataset],
-        });
-      }
+      // Create average line dataset
+      const averageDataset = {
+        label: 'Average',
+        data: labels.map(() => average),
+        fill: false,
+        borderColor: 'rgba(255, 99, 132, 1)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderWidth: 2,
+        borderDash: [5, 5],
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+      };
+
+      // For live intervals, replace the chart data instead of appending
+      setChartData({
+        labels,
+        datasets: [newDataset, averageDataset],
+      });
+      
       setSelectedAttributeId(`eq.${attributeId}`);
       setLoading(false);
       setNoChartData(false);
     } catch (error) {
-      console.error("Error fetching data for attribute:", error);
+      console.error("Error fetching chart data:", error);
       setNoChartData(true);
+      setLoading(false);
     }
   }
 
@@ -536,6 +564,7 @@ const CombineSensorChart: React.FC = () => {
       const datasetIndex = newChartData.datasets.findIndex(
         (ds) => ds.label === cleanAttributeId
       );
+      
       if (datasetIndex === -1) {
         return; // If no dataset matches, skip this data item
       }
@@ -577,6 +606,22 @@ const CombineSensorChart: React.FC = () => {
         ds.data = sortedIndices.map((index) => ds.data[index]); // Sort each dataset's data array
       });
 
+      // Recalculate average for all non-average datasets
+      newChartData.datasets.forEach((dataset, idx) => {
+        if (dataset.label !== 'Average') {
+          const validPoints = dataset.data.filter((point): point is number => point !== null);
+          const average = validPoints.length > 0
+            ? validPoints.reduce((sum, val) => sum + val, 0) / validPoints.length
+            : 0;
+          
+          // Find and update the average dataset
+          const avgDataset = newChartData.datasets.find(ds => ds.label === 'Average');
+          if (avgDataset) {
+            avgDataset.data = newChartData.labels.map(() => average);
+          }
+        }
+      });
+
       return newChartData; // Return the updated chart data
     } else {
       return currentChartData; // Return the original chart data if no changes were made
@@ -589,12 +634,12 @@ const CombineSensorChart: React.FC = () => {
     setSelectedAttribute("");
   }, [entityIdValue]);
 
-  const fetchData = async () => {
-    await fetchAsset();
-    await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval, selectedDate, startTime, endTime);
-  }
-
   useEffect(() => {
+    const fetchData = async () => {
+      await fetchAsset();
+      await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval, selectedDate, startTime, endTime);
+    };
+
     if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
       return;
     }
@@ -602,10 +647,10 @@ const CombineSensorChart: React.FC = () => {
       fetchData();
     }
 
-  }, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady, zoomLevel]);
-
+  }, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady]);
 
   useEffect(() => {
+    console.log("WebSocket: Connecting to", API_URL);
 
     const socket = socketIOClient(`${API_URL}/`, {
       transports: ["websocket"],
@@ -617,19 +662,86 @@ const CombineSensorChart: React.FC = () => {
     );
     socketRef.current = socket;
 
-    socketRef.current.on("dataUpdate", (updatedData: []) => {
-      setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
-
+    socketRef.current.on("connect", () => {
+      console.log("WebSocket: Connected");
     });
+
+    socketRef.current.on("connect_error", (error) => {
+      console.error("WebSocket: Connection error", error);
+    });
+
+    socketRef.current.on("dataUpdate", (updatedData: []) => {
+      console.log("WebSocket: Received update (", updatedData.length, "records)");
+      setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("WebSocket: Disconnected");
+    });
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, [data]);
+  }, []); // Fixed: empty dependency array to prevent reconnection on every data update
+
+  const recalculateVisibleAverage = (chart: any) => {
+    try {
+      const xScale = chart.scales?.x;
+      if (!xScale) return;
+      const xMin = xScale.min;
+      const xMax = xScale.max;
+      const labels: string[] = chart.data?.labels;
+      const datasets = chart.data?.datasets;
+      if (!labels || !datasets) return;
+      const mainDataset = datasets.find((ds: any) => ds.label !== 'Average');
+      const avgDataset = datasets.find((ds: any) => ds.label === 'Average');
+      if (!mainDataset || !avgDataset) return;
+      const visibleValues = labels
+        .map((label: string, idx: number) => ({ time: new Date(label).getTime(), value: mainDataset.data[idx] }))
+        .filter((p: any) => p.time >= xMin && p.time <= xMax && p.value !== null && !isNaN(p.value))
+        .map((p: any) => p.value as number);
+      if (visibleValues.length === 0) return;
+      const avg = visibleValues.reduce((sum, v) => sum + v, 0) / visibleValues.length;
+      const rounded = parseFloat(avg.toFixed(4));
+      avgDataset.data = labels.map(() => rounded);
+      requestAnimationFrame(() => {
+        if (chart && !chart.destroyed && chart.canvas && chart.canvas.isConnected) {
+          chart.update('none');
+        }
+      });
+    } catch (e) {
+      // Silently ignore errors during zoom/pan transitions
+    }
+  };
 
   const chartOptionsWithZoomPan = {
     ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      zoom: {
+        pan: {
+          enabled: selectedInterval !== 'live',
+          mode: "x" as const,
+          onPanComplete: ({ chart }: any) => recalculateVisibleAverage(chart),
+        },
+        zoom: {
+          wheel: {
+            enabled: selectedInterval !== 'live',
+          },
+          pinch: {
+            enabled: selectedInterval !== 'live',
+          },
+          mode: "x" as const,
+          onZoomComplete: ({ chart }: any) => recalculateVisibleAverage(chart),
+        },
+        limits: {
+          x: { minRange: 100 },
+          y: { min: 0, minRange: 0.0001 },
+        },
+      },
+    },
     scales: {
       x: {
         ...chartOptions.scales?.x,
@@ -828,12 +940,12 @@ const CombineSensorChart: React.FC = () => {
               </div>
             ) : data.datasets && data.datasets.length > 0 && !noChartData ? (
               <Chart
-                key={JSON.stringify(data)}
+                key={selectedAttribute + '_' + selectedInterval}
                 type="line"
                 data={{
                   ...data,
                   datasets: data.datasets.filter(
-                    (dataset) => dataset.label === selectedAttribute
+                    (dataset) => dataset.label === selectedAttribute || dataset.label === 'Average'
                   ),
                 }}
                 options={chartOptionsWithZoomPan}

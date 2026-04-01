@@ -59,10 +59,12 @@ export class CronService  {
     let storedQueryParams = await this.redisService.getData('storedDataQueryParams');
 
     if (storedQueryParams && storedQueryParams.intervalType !== 'live') {
+      console.log('⏭️  Skipping cron - not in live mode');
       return; // Only proceed if the interval type is 'live'
     }
 
     if (!storedData || storedData.length == 0) {
+      console.log('⏭️  Skipping cron - no stored data in Redis');
       return;
     }
 
@@ -75,16 +77,16 @@ export class CronService  {
     };
 
     try {
-      console.log("Getting token")
+      console.log("🔄 Getting token for live data update")
       let token = await this.tokenService.getToken();
-      console.log("debug chart socket 1", token, modifiedQueryParams)
+      console.log("🔄 Fetching live data from DB with params:", modifiedQueryParams)
       const newData = await this.pgRestService.findLiveData(token, modifiedQueryParams);
-      console.log("debug chart socket 2", newData)
+      console.log("✅ Emitting data to WebSocket clients:", newData.length, "records")
       if (newData) {
         this.emitDataChangeToClient(newData);
       }
     } catch (error) {
-      console.error("Error during data fetch:", error);
+      console.error("❌ Error during data fetch:", error);
     }
   }
 

@@ -25,15 +25,433 @@
     background: #ecfeff !important;
     color: #0e7490 !important;
 }
-.onboard-form input::placeholder {
-    color: #ccc;
+.onboard-form input::placeholder,
+.onboard-form textarea::placeholder {
+    color: #9ca3af;
     font-style: italic;
     font-size: 13px;
-  }
+}
+
+.onboard-form .field {
+    margin-bottom: 1.75rem;
+}
+
+.onboard-form .field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #1f2937;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.onboard-form .field small {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+.onboard-form .field .p-inputtext,
+.onboard-form .field .p-inputtextarea,
+.onboard-form .field .p-inputnumber input {
+    font-size: 14px;
+    width: 100%;
+}
+
+.onboard-form .field .p-inputtextarea {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.onboard-form .field .p-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.onboard-form .field .p-invalid {
+    border-color: #ef4444 !important;
+}
+
+.onboard-form .field .p-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Step content layout */
+.onboard-form .step-content {
+    width: 100%;
+    max-width: 100%;
+}
+
+.onboard-form .step-header {
+    margin-bottom: 2rem;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.onboard-form .step-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-left: 0.5rem;
+}
+
+.onboard-form .step-title i {
+    color: #3b82f6;
+    font-size: 1.25rem;
+    margin-right: 0.8rem;
+}
+
+.onboard-form .step-description {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Steps component - remove connecting line */
+.onboard-steps .p-steps .p-steps-item:before {
+    content: none !important;
+    display: none !important;
+}
+
+.onboard-steps .p-steps .p-steps-item:after {
+    content: none !important;
+    display: none !important;
+}
+
+.onboard-steps .p-steps {
+    padding: 1.5rem 0;
+    position: relative !important;
+    border: none !important;
+}
+
+/* Remove all borders, shadows, and lines from steps */
+.onboard-steps,
+.onboard-steps *,
+.onboard-steps *::before,
+.onboard-steps *::after {
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.onboard-steps .p-steps,
+.onboard-steps .p-steps-list,
+.onboard-steps ul,
+.onboard-steps li {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove the horizontal line connecting steps */
+.onboard-steps .p-steps::before,
+.onboard-steps .p-steps::after {
+    display: none !important;
+    content: none !important;
+}
+
+.onboard-steps .p-steps ul::before,
+.onboard-steps .p-steps ul::after {
+    display: none !important;
+    content: none !important;
+}
+
+.onboard-steps .p-steps-list::before,
+.onboard-steps .p-steps-list::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+}
+
+.onboard-steps .p-steps .p-steps-item {
+    flex: 1;
+    background: none !important;
+    position: relative !important;
+}
+
+.onboard-steps .p-steps .p-steps-item::before,
+.onboard-steps .p-steps .p-steps-item::after {
+    border: none !important;
+    background: none !important;
+    display: none !important;
+    content: none !important;
+}
+
+/* Remove any separator/connector line in steps */
+.onboard-steps .p-steps-item .p-steps-item-before,
+.onboard-steps .p-steps-item-connector,
+.onboard-steps .p-steps .p-menuitem-link::before,
+.onboard-steps .p-steps .p-menuitem-link::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+}
+
+/* Target all possible connector elements */
+.onboard-steps .p-steps-item + .p-steps-item::before {
+    display: none !important;
+}
+
+.onboard-steps .p-steps .p-steps-item:not(:last-child)::after {
+    display: none !important;
+}
+
+/* Specifically target first step - aggressive removal */
+.onboard-steps .p-steps .p-steps-item:first-child::before,
+.onboard-steps .p-steps .p-steps-item:first-child::after,
+.onboard-steps .p-steps .p-steps-item:first-child > *::before,
+.onboard-steps .p-steps .p-steps-item:first-child > *::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.onboard-steps .p-steps .p-steps-item:first-child .p-menuitem-link::before,
+.onboard-steps .p-steps .p-steps-item:first-child .p-menuitem-link::after,
+.onboard-steps .p-steps .p-steps-item:first-child * {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.onboard-steps .p-steps .p-steps-item:first-child .p-menuitem-link {
+    overflow: visible !important;
+    position: relative !important;
+}
+
+/* Remove any border/line that might appear */
+.onboard-steps .p-steps .p-steps-item:first-child,
+.onboard-steps .p-steps .p-steps-item:first-child * {
+    border-top-width: 0 !important;
+}
+
+.onboard-steps .p-steps .p-steps-item .p-menuitem-link {
+    background: transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: visible;
+}
+
+.onboard-steps .p-steps .p-steps-item .p-steps-number {
+    background: #e5e7eb;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+    width: 2.5rem;
+    height: 2.5rem;
+    line-height: 2.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    box-shadow: none !important;
+}
+
+.onboard-steps .p-steps .p-steps-item.p-highlight .p-steps-number {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+.onboard-steps .p-steps .p-steps-item .p-steps-title {
+    color: #9ca3af;
+    font-weight: 500;
+    font-size: 13px;
+    margin-top: 0.5rem;
+}
+
+.onboard-steps .p-steps .p-steps-item.p-highlight .p-steps-title {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* Footer buttons */
+.onboard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+    margin-top: 2rem;
+}
+
+.onboard-footer .footer-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.onboard-footer .back-btn {
+    background: transparent;
+    color: #6b7280;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.onboard-footer .back-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.onboard-footer .back-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.onboard-footer .back-btn:focus {
+    box-shadow: none;
+}
+
+.onboard-footer .cancel-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.onboard-footer .cancel-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+}
+
+.onboard-footer .cancel-btn:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.onboard-footer .next-btn,
+.onboard-footer .submit-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.onboard-footer .next-btn:hover,
+.onboard-footer .submit-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.onboard-footer .next-btn:focus,
+.onboard-footer .submit-btn:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.onboard-footer .submit-btn {
+    background: #22c55e;
+}
+
+.onboard-footer .submit-btn:hover {
+    background: #16a34a;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4);
+}
+
+.onboard-footer .submit-btn:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+/* Prettify button */
+.prettify-btn {
+    background: transparent;
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+    padding: 0.5rem 1rem;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    height: auto;
+    transition: all 0.2s ease;
+}
+
+.prettify-btn:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.prettify-btn:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Onboard form content wrapper */
+.onboard-form-content {
+    padding: 1rem 0.5rem;
+    min-height: 400px;
+}
+
+/* Ensure all inputs take full width */
+.onboard-form .field .p-inputtext,
+.onboard-form .field .p-inputtextarea,
+.onboard-form .field .p-password,
+.onboard-form .field .p-inputnumber {
+    width: 100% !important;
+}
+
+.onboard-form .field .p-password input,
+.onboard-form .field .p-inputnumber input {
+    width: 100%;
+}
+
+/* Secure config checkbox styling */
+.onboard-form .field .flex.items-center {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.onboard-form .field .flex.items-center:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.onboard-form .field .flex.items-center label {
+    margin-bottom: 0 !important;
+    font-size: 14px;
+}
+
+.onboard-form .field .flex.items-center .p-checkbox {
+    margin-right: 0.5rem;
+}
+
 .onboardform-header h3{
     margin-bottom: 7px;
     letter-spacing: 0.2px;
 }
+
 .onboardform-header p{
     font-size: 13.5px;
 }

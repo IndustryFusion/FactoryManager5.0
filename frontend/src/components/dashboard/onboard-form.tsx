@@ -24,6 +24,9 @@ import { InputNumber } from "primereact/inputnumber";
 import { Password } from "primereact/password";
 import { Checkbox } from "primereact/checkbox";
 import { Toast, ToastMessage } from "primereact/toast";
+import { Steps } from "primereact/steps";
+import { Divider } from "primereact/divider";
+import { Message } from "primereact/message";
 import "../../styles/dashboard.css"
 import { useTranslation } from "next-i18next";
 import { OnboardData } from "@/types/onboard-form";
@@ -146,6 +149,16 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         protocol: false
     })
 
+    const [activeStep, setActiveStep] = useState(0);
+
+    const stepItems = [
+        { label: 'Connection' },
+        { label: 'Configuration' },
+        { label: 'Services' },
+        { label: 'MQTT Settings' },
+        { label: 'Authentication' }
+    ];
+
     const toast = useRef<Toast>(null);
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -167,6 +180,95 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         setOnboardForm({ ...onboardForm, [key]: e.target.value });
         setValidateInput(prev => ({ ...prev, [key]: false }));
     }
+
+    const prettifyYAML = () => {
+        try {
+            const parsed = YAML.parse(onboardForm.app_config);
+            const prettified = YAML.stringify(parsed, { indent: 2 });
+            setOnboardForm({ ...onboardForm, app_config: prettified });
+            showToast('success', 'Success', 'YAML formatted successfully');
+        } catch (error) {
+            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+        }
+    };
+
+    const goToNextStep = () => {
+        if (activeStep < stepItems.length - 1) {
+            setActiveStep(activeStep + 1);
+        }
+    };
+
+    const goToPreviousStep = () => {
+        if (activeStep > 0) {
+            setActiveStep(activeStep - 1);
+        }
+    };
+
+    const validateCurrentStep = () => {
+        let isValid = true;
+        
+        switch (activeStep) {
+            case 0: // Connection
+                if (!onboardForm.ip_address || !onboardForm.protocol) {
+                    setValidateInput(prev => ({
+                        ...prev,
+                        ip_address: !onboardForm.ip_address,
+                        protocol: !onboardForm.protocol
+                    }));
+                    isValid = false;
+                }
+                break;
+            case 1: // Configuration
+                if (!onboardForm.app_config || !onboardForm.pod_name) {
+                    setValidateInput(prev => ({
+                        ...prev,
+                        app_config: !onboardForm.app_config
+                    }));
+                    isValid = false;
+                }
+                break;
+            case 2: // Services
+                if (!onboardForm.dataservice_image_config || !onboardForm.agentservice_image_config) {
+                    setValidateInput(prev => ({
+                        ...prev,
+                        dataservice_image_config: !onboardForm.dataservice_image_config,
+                        agentservice_image_config: !onboardForm.agentservice_image_config
+                    }));
+                    isValid = false;
+                }
+                break;
+            case 3: // MQTT Settings
+                if (!onboardForm.pdt_mqtt_hostname || !onboardForm.pdt_mqtt_port) {
+                    setValidateInput(prev => ({
+                        ...prev,
+                        pdt_mqtt_hostname: !onboardForm.pdt_mqtt_hostname,
+                        pdt_mqtt_port: !onboardForm.pdt_mqtt_port
+                    }));
+                    isValid = false;
+                }
+                break;
+            case 4: // Authentication
+                if (!onboardForm.keycloak_url || !onboardForm.realm_password) {
+                    setValidateInput(prev => ({
+                        ...prev,
+                        keycloak_url: !onboardForm.keycloak_url,
+                        realm_password: !onboardForm.realm_password
+                    }));
+                    isValid = false;
+                }
+                break;
+        }
+        
+        return isValid;
+    };
+
+    const handleNext = () => {
+        if (validateCurrentStep()) {
+            goToNextStep();
+        } else {
+            showToast('warn', 'Validation', 'Please fill all required fields in this step');
+        }
+    };
 
 
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -262,201 +364,462 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
     const headerElement = (
         <div className="onboardform-header">
-            <h3>{t("dashboard:onboard_form")}</h3>
-            <p className="m-0">{t("dashboard:onboard_form_text_1")}</p>
-            <p className="m-0">{t("dashboard:onboard_form_text_2")}</p>
+            <h3 className="text-2xl font-semibold mb-2">{t("dashboard:onboard_form")}</h3>
+            <p className="text-gray-600 text-sm m-0">{t("dashboard:onboard_form_text_1")}</p>
+            <p className="text-gray-600 text-sm m-0 mb-3">{t("dashboard:onboard_form_text_2")}</p>
+            <Steps 
+                model={stepItems} 
+                activeIndex={activeStep} 
+                onSelect={(e) => setActiveStep(e.index)}
+                readOnly={false}
+                className="onboard-steps mb-4"
+            />
         </div>
+    );
 
+    const renderStepContent = () => {
+        switch (activeStep) {
+            case 0: // Connection Details
+                return (
+                    <div className="step-content">
+                        <div className="step-header">
+                            <h4 className="step-title">
+                                <i className="pi pi-link"></i>
+                                Connection Details
+                            </h4>
+                            <p className="step-description">Configure the device connection parameters</p>
+                        </div>
 
-    )
+                        <div className="field">
+                            <label htmlFor="ip_address" className="font-semibold">
+                                {t("dashboard:ip_address")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Enter the device IP address or connection URL
+                            </small>
+                            <InputText
+                                id="ip_address"
+                                value={onboardForm.ip_address}
+                                type="text"
+                                placeholder="opc.tcp://192.168.49.xx:4840"
+                                onChange={(e) => handleInputChange(e.target.value, "ip_address")}
+                                className={`w-full ${validateInput?.ip_address ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.ip_address && (
+                                <small className="p-error">IP address is required</small>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="protocol" className="font-semibold">
+                                {t("dashboard:protocol")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Communication protocol (e.g., mqtt, opc-ua)
+                            </small>
+                            <InputText
+                                id="protocol"
+                                value={onboardForm.protocol}
+                                type="text"
+                                placeholder="mqtt or opc-ua"
+                                onChange={(e) => handleInputChange(e.target.value, "protocol")}
+                                className={`w-full ${validateInput?.protocol ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.protocol && (
+                                <small className="p-error">Protocol is required</small>
+                            )}
+                        </div>
+
+                        {onboardForm.protocol === "mqtt" && (
+                            <div className="field">
+                                <label htmlFor="main_topic" className="font-semibold">
+                                    {t("dashboard:main_topic")}
+                                </label>
+                                <small className="block mb-2 text-gray-600">
+                                    MQTT main topic for data publishing
+                                </small>
+                                <InputText
+                                    id="main_topic"
+                                    value={onboardForm.main_topic}
+                                    type="text"
+                                    placeholder="ex: airtracker-74145/relay1"
+                                    onChange={(e) => handleInputChange(e.target.value, "main_topic")}
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+
+                        <div className="field">
+                            <label htmlFor="device_id" className="font-semibold">
+                                {t("dashboard:device_id")}
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Unique device identifier (auto-populated)
+                            </small>
+                            <InputText
+                                id="device_id"
+                                value={onboardForm.device_id}
+                                disabled
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="gateway_id" className="font-semibold">
+                                {t("dashboard:gateway_id")}
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Gateway identifier (auto-populated)
+                            </small>
+                            <InputText
+                                id="gateway_id"
+                                value={onboardForm.gateway_id}
+                                disabled
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+                );
+
+            case 1: // Configuration
+                return (
+                    <div className="step-content">
+                        <div className="step-header">
+                            <h4 className="step-title">
+                                <i className="pi pi-cog"></i>
+                                Application Configuration
+                            </h4>
+                            <p className="step-description">Define the application configuration in YAML format</p>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="pod_name" className="font-semibold">
+                                {t("dashboard:pod_name")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Kubernetes pod name for this service
+                            </small>
+                            <InputText
+                                id="pod_name"
+                                value={onboardForm.pod_name}
+                                type="text"
+                                onChange={(e) => handleInputChange(e.target.value, "pod_name")}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="app_config" className="font-semibold">
+                                {t("dashboard:app_config")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                YAML configuration for data service specifications
+                            </small>
+                            <InputTextarea
+                                id="app_config"
+                                value={onboardForm.app_config}
+                                rows={12}
+                                cols={30}
+                                onChange={(e) => handleInputTextAreaChange(e, "app_config")}
+                                className={`w-full font-mono ${validateInput?.app_config ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.app_config && (
+                                <small className="p-error">Valid YAML configuration is required</small>
+                            )}
+                            <div className="mt-2">
+                                <Button
+                                    type="button"
+                                    label="Prettify YAML"
+                                    icon="pi pi-sparkles"
+                                    onClick={prettifyYAML}
+                                    size="small"
+                                    outlined
+                                    className="prettify-btn"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 2: // Services
+                return (
+                    <div className="step-content">
+                        <div className="step-header">
+                            <h4 className="step-title">
+                                <i className="pi pi-box"></i>
+                                Service Images
+                            </h4>
+                            <p className="step-description">Specify Docker images for data and agent services</p>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="dataservice_image_config" className="font-semibold">
+                                {t("dashboard:dataservice_image_config")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Docker image for the data service
+                            </small>
+                            <InputText
+                                id="dataservice_image_config"
+                                value={onboardForm.dataservice_image_config}
+                                onChange={e => handleInputChange(e.target.value, "dataservice_image_config")}
+                                placeholder="ex: docker.io/ibn40/fusionmqttdataservice:v0.0.1"
+                                className={`w-full ${validateInput?.dataservice_image_config ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.dataservice_image_config && (
+                                <small className="p-error">Data service image is required</small>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="agentservice_image_config" className="font-semibold">
+                                {t("dashboard:agentservice_image_config")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Docker image for the IoT agent service
+                            </small>
+                            <InputText
+                                id="agentservice_image_config"
+                                value={onboardForm.agentservice_image_config}
+                                onChange={e => handleInputChange(e.target.value, "agentservice_image_config")}
+                                placeholder="ex: docker.io/ibn40/iff-iot-agent:v0.0.4"
+                                className={`w-full ${validateInput?.agentservice_image_config ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.agentservice_image_config && (
+                                <small className="p-error">Agent service image is required</small>
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 3: // MQTT Settings
+                return (
+                    <div className="step-content">
+                        <div className="step-header">
+                            <h4 className="step-title">
+                                <i className="pi pi-server"></i>
+                                MQTT Settings
+                            </h4>
+                            <p className="step-description">Configure MQTT broker connection settings</p>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="pdt_mqtt_hostname" className="font-semibold">
+                                PDT MQTT {t("dashboard:hostname")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                MQTT broker hostname or IP address
+                            </small>
+                            <InputText
+                                id="pdt_mqtt_hostname"
+                                value={onboardForm.pdt_mqtt_hostname}
+                                type="text"
+                                placeholder="ex: devalerta.industry-fusion.com"
+                                onChange={(e) => handleInputChange(e.target.value, "pdt_mqtt_hostname")}
+                                className={`w-full ${validateInput?.pdt_mqtt_hostname ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.pdt_mqtt_hostname && (
+                                <small className="p-error">MQTT hostname is required</small>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="pdt_mqtt_port" className="font-semibold">
+                                PDT MQTT {t("dashboard:port")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                MQTT broker port number (typically 1883 or 8883 for SSL)
+                            </small>
+                            <InputNumber
+                                id="pdt_mqtt_port"
+                                value={onboardForm.pdt_mqtt_port}
+                                placeholder="ex: 8883"
+                                useGrouping={false}
+                                onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
+                                className={`w-full ${validateInput?.pdt_mqtt_port ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.pdt_mqtt_port && (
+                                <small className="p-error">MQTT port is required</small>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+                                <Checkbox
+                                    inputId="secure_config"
+                                    checked={onboardForm.secure_config}
+                                    onChange={(e) => handleInputChange(e.target.checked, "secure_config")}
+                                />
+                                <label htmlFor="secure_config" className="font-semibold mb-0 cursor-pointer">
+                                    {t("dashboard:secure_config")}
+                                </label>
+                                <span className="ml-auto px-3 py-1 rounded-full text-sm font-medium" 
+                                    style={{backgroundColor: onboardForm.secure_config ? '#22c55e20' : '#ef444420', 
+                                            color: onboardForm.secure_config ? '#16a34a' : '#dc2626'}}>
+                                    {onboardForm.secure_config ? "Enabled" : "Disabled"}
+                                </span>
+                            </div>
+                            <small className="block mt-2 text-gray-600">
+                                Enable SSL/TLS encryption for MQTT connection
+                            </small>
+                        </div>
+                    </div>
+                );
+
+            case 4: // Authentication
+                return (
+                    <div className="step-content">
+                        <div className="step-header">
+                            <h4 className="step-title">
+                                <i className="pi pi-shield"></i>
+                                Authentication
+                            </h4>
+                            <p className="step-description">Configure authentication and credentials</p>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="keycloak_url" className="font-semibold">
+                                {t("dashboard:keycloak_url")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Keycloak authentication server URL
+                            </small>
+                            <InputText
+                                id="keycloak_url"
+                                autoComplete="KeyCloak Url"
+                                value={onboardForm.keycloak_url}
+                                placeholder="ex: https://development.industry-fusion.com/auth/realms"
+                                onChange={e => handleInputChange(e.target.value, "keycloak_url")}
+                                className={`w-full ${validateInput?.keycloak_url ? 'p-invalid' : ''}`}
+                            />
+                            {validateInput?.keycloak_url && (
+                                <small className="p-error">Keycloak URL is required</small>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="realm_password" className="font-semibold">
+                                {t("dashboard:realm_password")} <span className="text-red-500">*</span>
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Realm password for authentication
+                            </small>
+                            <Password
+                                inputId="realm_password"
+                                value={onboardForm.realm_password}
+                                toggleMask
+                                autoComplete=""
+                                onChange={(e) => handleInputChange(e.target.value, "realm_password")}
+                                className={`w-full ${validateInput?.realm_password ? 'p-invalid' : ''}`}
+                                inputClassName="w-full"
+                            />
+                            {validateInput?.realm_password && (
+                                <small className="p-error">Realm password is required</small>
+                            )}
+                        </div>
+
+                        <Divider />
+
+                        <div className="field">
+                            <label htmlFor="username_config" className="font-semibold">
+                                {t("dashboard:username_config")}
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Optional: Additional username configuration
+                            </small>
+                            <InputText
+                                id="username_config"
+                                value={onboardForm.username_config}
+                                onChange={e => handleInputChange(e.target.value, "username_config")}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="password_config" className="font-semibold">
+                                {t("dashboard:password_config")}
+                            </label>
+                            <small className="block mb-2 text-gray-600">
+                                Optional: Additional password configuration
+                            </small>
+                            <InputText
+                                id="password_config"
+                                value={onboardForm.password_config}
+                                onChange={e => handleInputChange(e.target.value, "password_config")}
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
     const footerContent = (
-        <div>
-            <div className="finish-btn">
+        <div className="onboard-footer">
+            <Button
+                label="Back"
+                icon="pi pi-arrow-left"
+                onClick={goToPreviousStep}
+                disabled={activeStep === 0}
+                className="back-btn"
+                text
+            />
+            <div className="footer-actions">
                 <Button
-                    onClick={handleSubmit}
-                    label={t('button:submit')} autoFocus />
+                    label="Cancel"
+                    icon="pi pi-times"
+                    onClick={() => {
+                        setShowBlockerProp(false);
+                        setOnboardAssetProp(false);
+                        setActiveStep(0);
+                    }}
+                    className="cancel-btn"
+                />
+                {activeStep < stepItems.length - 1 ? (
+                    <Button
+                        label="Next"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        onClick={handleNext}
+                        className="next-btn"
+                    />
+                ) : (
+                    <Button
+                        label={t('button:submit')}
+                        icon="pi pi-check"
+                        onClick={handleSubmit}
+                        className="submit-btn"
+                    />
+                )}
             </div>
         </div>
-    )
+    );
 
 
 
     return (
         <>
             <Toast ref={toast} />
-            <Dialog visible={showBlockerProp} modal
+            <Dialog 
+                visible={showBlockerProp} 
+                modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '50rem' }}
+                style={{ width: '60rem', maxWidth: '95vw' }}
                 onHide={() => {
-                    setShowBlockerProp(false)
-                    setOnboardAssetProp(false)
-                }
-                }
+                    setShowBlockerProp(false);
+                    setOnboardAssetProp(false);
+                    setActiveStep(0);
+                }}
                 draggable={false}
                 resizable={false}
+                blockScroll
             >
-                <div className="card onboard-form">
-                    <form >
-                        <div className="p-fluid p-formgrid p-grid px-3">
-                            <div className="field">
-                                <label htmlFor="ip_address" >{t("dashboard:ip_address")}</label>
-                                <InputText
-                                    id="ip_address"
-                                    value={onboardForm.ip_address}
-                                    type="text"
-                                    placeholder="opc.tcp://192.168.49.xx:4840"
-                                    onChange={(e) => handleInputChange(e.target.value, "ip_address")}
-                                    style={{ border: validateInput?.ip_address ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="main_topic" >{t("dashboard:main_topic")}</label>
-                                <InputText
-                                    id="main_topic"
-                                    value={onboardForm.main_topic}
-                                    type="text"
-                                    placeholder="ex:airtracker-74145/relay1"
-                                    onChange={(e) => handleInputChange(e.target.value, "main_topic")}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="protocol" >{t("dashboard:protocol")}</label>
-                                <InputText
-                                    id="protocol"
-                                    value={onboardForm.protocol}
-                                    type="text"
-                                    onChange={(e) => handleInputChange(e.target.value, "protocol")}
-                                    style={{ border: validateInput?.protocol ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="app_config" >{t("dashboard:app_config")}</label>
-                                <InputTextarea
-                                    id="app_config"
-                                    value={onboardForm.app_config}
-                                    rows={10}
-                                    cols={30}
-                                    onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-                                    style={{ border: validateInput?.app_config ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="pod_name">{t("dashboard:pod_name")}</label>
-                                <InputText
-                                    id="pod_name"
-                                    value={onboardForm.pod_name}
-                                    type="text"
-                                    onChange={(e) => handleInputChange(e.target.value, "pod_name")}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="pdt_mqtt_hostname">PDT MQTT{" "}{t("dashboard:hostname")}</label>
-                                <InputText
-                                    id="pdt_mqtt_hostname"
-                                    value={onboardForm.pdt_mqtt_hostname}
-                                    type="text"
-                                    placeholder="ex:devalerta.industry-fusion.com"
-                                    onChange={(e) => handleInputChange(e.target.value, "pdt_mqtt_hostname")}
-                                    style={{ border: validateInput?.pdt_mqtt_hostname ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="pdt_mqtt_port">PDT MQTT {t("dashboard:port")}</label>
-                                <InputNumber
-                                    id="pdt_mqtt_port"
-                                    value={onboardForm.pdt_mqtt_port}
-                                    placeholder="ex:8883"
-                                    useGrouping={false}
-                                    onChange={(e) => handleInputChange(e.value, "pdt_mqtt_port")}
-                                    style={{ border: validateInput?.pdt_mqtt_port ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field my-4">
-                                <div className="flex gap-2">
-                                    <label htmlFor="secure_config">{t("dashboard:secure_config")}</label>
-                                    <Checkbox
-                                        checked={onboardForm.secure_config}
-                                        onChange={(e) => handleInputChange(e.target.checked, "secure_config")}
-                                    />
-                                    <span >{onboardForm.secure_config ? "true" : "false"}</span>
-                                </div>
-                            </div>
-                            <div className="field">
-                                <label htmlFor="device_id">{t("dashboard:device_id")}</label>
-                                <InputText
-                                    id="device_id"
-                                    value={onboardForm.device_id}
-                                    disabled
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="gateway_id">{t("dashboard:gateway_id")}</label>
-                                <InputText
-                                    id="gateway_id"
-                                    value={onboardForm.gateway_id}
-                                    disabled
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="keycloak_url">{t("dashboard:keycloak_url")}</label>
-                                <InputText
-                                    id="keycloak_url"
-                                    autoComplete="KeyCloak Url"
-                                    value={onboardForm.keycloak_url}
-                                    placeholder="ex:https://development.industry-fusion.com/auth/realms"
-                                    onChange={e => handleInputChange(e.target.value, "keycloak_url")}
-                                    style={{ border: validateInput?.keycloak_url ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="realm_password">{t("dashboard:realm_password")}</label>
-                                <Password
-                                    value={onboardForm.realm_password}
-                                    toggleMask
-                                    autoComplete=""
-                                    onChange={(e) => handleInputChange(e.target.value, "realm_password")}
-                                    style={{ border: validateInput?.realm_password ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="username_config">{t("dashboard:username_config")}</label>
-                                <InputText
-                                    id="username_config"
-                                    value={onboardForm.username_config}
-                                    onChange={e => handleInputChange(e.target.value, "username_config")}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="password_config">{t("dashboard:password_config")}</label>
-                                <InputText
-                                    id="password_config"
-                                    value={onboardForm.password_config}
-                                    onChange={e => handleInputChange(e.target.value, "password_config")}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="dataservice_image_config">{t("dashboard:dataservice_image_config")}</label>
-                                <InputText
-                                    id="dataservice_image_config"
-                                    value={onboardForm.dataservice_image_config}
-                                    onChange={e => handleInputChange(e.target.value, "dataservice_image_config")}
-                                    placeholder="ex:fusionmqttdataservice:latest"
-                                    style={{ border: validateInput?.dataservice_image_config ? "1px solid red" : "" }}
-                                />
-                            </div>
-                            <div className="field">
-                                <label htmlFor="agentservice_image_config">{t("dashboard:agentservice_image_config")}</label>
-                                <InputText
-                                    id="agentservice_image_config"
-                                    value={onboardForm.agentservice_image_config}
-                                    onChange={e => handleInputChange(e.target.value, "agentservice_image_config")}
-                                    placeholder="ex:iff-iot-agent:v0.0.2"
-                                    style={{ border: validateInput?.agentservice_image_config ? "1px solid red" : "" }}
-                                />
-                            </div>
-                        </div>
-                    </form>
+                <div className="onboard-form-content">
+                    {renderStepContent()}
                 </div>
             </Dialog>
         </>
