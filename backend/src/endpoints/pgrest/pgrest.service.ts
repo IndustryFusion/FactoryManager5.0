@@ -129,6 +129,19 @@ export class PgRestService {
       
       try {
         const response = await axios.get(url, { headers });
+        
+        // Store data in Redis for live updates via WebSocket
+        if (queryParams.intervalType === 'live' && response.data && response.data.length > 0) {
+          await this.redisService.saveData('storedData', response.data);
+          await this.redisService.saveData('storedDataQueryParams', queryParams);
+          console.log('✅ Saved live data to Redis for WebSocket updates');
+        } else if (queryParams.intervalType !== 'live') {
+          // Clear Redis data when switching away from live mode
+          await this.redisService.deleteKey('storedData');
+          await this.redisService.deleteKey('storedDataQueryParams');
+          console.log('🧹 Cleared live data from Redis (non-live interval selected)');
+        }
+        
         return response.data;
       } catch (err) {
         if (err.response) {

@@ -361,7 +361,8 @@ export class AssetService {
       };
 
       let assetValue = await this.getAssetDataById(assetId, token);
-      assetCategory = assetCategory.split(" ").pop();
+      const parts = assetCategory.split(" ");
+      assetCategory = parts[parts.length - 1] || assetCategory;
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
       let splitData = assetValue.type.split('/');
       splitData[splitData.length - 1] = assetCategory;
@@ -835,7 +836,9 @@ export class AssetService {
 
       // Delete Asset From Scorpio
       let assetData = await this.getAssetDataById(assetId, token);
-      let assetCategory = assetData[Object.keys(assetData).find(key => key.includes("asset_category"))].value.split(" ").pop();
+      const assetCategoryValue = assetData[Object.keys(assetData).find(key => key.includes("asset_category"))].value;
+      const parts = assetCategoryValue.split(" ");
+      let assetCategory = parts[parts.length - 1] || assetCategoryValue;
       assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
       let splitData = assetData.type.split('/');
       splitData[splitData.length - 1] = assetCategory;
