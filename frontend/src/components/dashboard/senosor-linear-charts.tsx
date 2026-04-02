@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { ChartData, ChartOptions, TooltipItem } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
@@ -40,8 +40,72 @@ import { OverlayPanel } from "primereact/overlaypanel";
 import Image from "next/image";
 import { getAssetById } from "@/utility/factory-site-utility";
 
-// Register the zoom plugin
-ChartJS.register(zoomPlugin);
+// ─── Inline Chart.js Plugins ────────────────────────────────────────────────
+
+/** Draws a vertical crosshair line and timestamp label at the cursor position. */
+const crosshairPlugin = {
+  id: "crosshair",
+  _x: null as number | null,
+  afterDraw(chart: any) {
+    const x = (this as any)._x;
+    if (x === null) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    if (x < chartArea.left || x > chartArea.right) return;
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(100,100,100,0.5)";
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    const xVal = scales.x?.getValueForPixel(x);
+    if (xVal !== undefined) {
+      const label = format(new Date(xVal), "HH:mm:ss");
+      ctx.fillStyle = "rgba(60,60,60,0.85)";
+      ctx.font = "11px sans-serif";
+      const tw = ctx.measureText(label).width;
+      const lx = Math.min(x + 6, chartArea.right - tw - 4);
+      ctx.fillRect(lx - 2, chartArea.bottom + 2, tw + 4, 16);
+      ctx.fillStyle = "#fff";
+      ctx.fillText(label, lx, chartArea.bottom + 14);
+    }
+    ctx.restore();
+  },
+};
+
+/** Draws coloured vertical band backgrounds for machine state periods. */
+const machineStateBandsPlugin = {
+  id: "machineStateBands",
+  beforeDatasetsDraw(chart: any) {
+    const bands: Array<{ from: number; to: number; state: string }> =
+      chart.options?.plugins?.machineStateBands?.bands ?? [];
+    if (!bands.length) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    const colorMap: Record<string, string> = {
+      "Online Running": "rgba(56, 189, 103, 0.10)",
+      "Online Idle": "rgba(250, 173, 20, 0.12)",
+      Offline: "rgba(130, 130, 130, 0.10)",
+    };
+    ctx.save();
+    bands.forEach(({ from, to, state }) => {
+      const x1 = scales.x?.getPixelForValue(from);
+      const x2 = scales.x?.getPixelForValue(to);
+      if (x1 === undefined || x2 === undefined) return;
+      const left = Math.max(chartArea.left, Math.min(x1, x2));
+      const right = Math.min(chartArea.right, Math.max(x1, x2));
+      if (right <= left) return;
+      ctx.fillStyle = colorMap[state] ?? "rgba(180,180,180,0.08)";
+      ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+    });
+    ctx.restore();
+  },
+};
+
+// Register plugins
+ChartJS.register(zoomPlugin, crosshairPlugin, machineStateBandsPlugin);
 
 interface DataItem {
   observedAt: string;
@@ -93,6 +157,64 @@ interface CustomChangeEvent {
     value: string | Date;
   };
 }
+// ─── KPI helpers ────────────────────────────────────────────────────────────
+
+function computeKPIs(
+  values: (number | null)[],
+  labels: string[],
+  globalAvg?: number,
+  globalStdDev?: number
+) {
+  const valid = values.filter((v): v is number => v !== null && !isNaN(v));
+  if (!valid.length) return null;
+  const last = valid[valid.length - 1];
+  const min = Math.min(...valid);
+  const max = Math.max(...valid);
+  const avg = valid.reduce((s, v) => s + v, 0) / valid.length;
+  const variance = valid.reduce((s, v) => s + (v - avg) ** 2, 0) / valid.length;
+  const stdDev = Math.sqrt(variance);
+  const half = Math.floor(valid.length / 2);
+  const firstHalfAvg = half > 0 ? valid.slice(0, half).reduce((s, v) => s + v, 0) / half : avg;
+  const secondHalfAvg = half > 0 ? valid.slice(half).reduce((s, v) => s + v, 0) / (valid.length - half) : avg;
+  const trend: "up" | "down" | "stable" =
+    secondHalfAvg > firstHalfAvg * 1.005 ? "up" : secondHalfAvg < firstHalfAvg * 0.995 ? "down" : "stable";
+  // Use global baseline when provided so anomaly count stays consistent
+  // with the red dots even when zoomed into a narrow window
+  const baseAvg = globalAvg ?? avg;
+  const baseStdDev = globalStdDev ?? stdDev;
+  const anomalyCount = valid.filter((v) => Math.abs(v - baseAvg) > 2 * baseStdDev).length;
+  return { last, min, max, avg, stdDev, trend, anomalyCount };
+}
+
+function computeAnomalyColors(
+  values: (number | null)[],
+  avg: number,
+  stdDev: number
+): { pointBg: string[]; pointRadius: number[] } {
+  const pointBg: string[] = [];
+  const pointRadius: number[] = [];
+  values.forEach((v) => {
+    if (v !== null && Math.abs(v - avg) > 2 * stdDev) {
+      pointBg.push("rgba(239, 68, 68, 0.9)");
+      pointRadius.push(6);
+    } else {
+      pointBg.push("rgba(54, 162, 235, 0.8)");
+      pointRadius.push(2);
+    }
+  });
+  return { pointBg, pointRadius };
+}
+
+interface KPIStats {
+  last: number;
+  min: number;
+  max: number;
+  avg: number;
+  stdDev: number;
+  trend: "up" | "down" | "stable";
+  anomalyCount: number;
+}
+
 const CombineSensorChart: React.FC = () => {
   const [data, setChartData] = useState<ChartDataState>({
     labels: [],
@@ -120,8 +242,44 @@ const CombineSensorChart: React.FC = () => {
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [chartInstance, setChartInstance] = useState(null);
-  const { selectedAssetData } = useDashboard();
+  const { selectedAssetData, machineStateData } = useDashboard();
   const op = useRef<OverlayPanel>(null);
+  const thresholdOp = useRef<OverlayPanel>(null);
+
+  // ── New state: KPI, threshold, freshness, zoom tracking ──────────────────
+  const [kpiStats, setKpiStats] = useState<KPIStats | null>(null);
+  const [hasZoomed, setHasZoomed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const lastUpdateRef = useRef<number>(Date.now());
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  const [thresholdsByAttr, setThresholdsByAttr] = useState<Record<string, {
+    upperWarning: string; lowerWarning: string; upperAlarm: string; lowerAlarm: string;
+  }>>({});
+  const currentThresh = thresholdsByAttr[selectedAttribute] ?? {
+    upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "",
+  };
+  const upperWarning = currentThresh.upperWarning;
+  const lowerWarning = currentThresh.lowerWarning;
+  const upperAlarm = currentThresh.upperAlarm;
+  const lowerAlarm = currentThresh.lowerAlarm;
+  const updateThreshold = (field: "upperWarning" | "lowerWarning" | "upperAlarm" | "lowerAlarm", v: string) => {
+    if (v !== "" && !/^-?\d*\.?\d*$/.test(v)) return;
+    setThresholdsByAttr(prev => ({
+      ...prev,
+      [selectedAttribute]: {
+        ...(prev[selectedAttribute] ?? { upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "" }),
+        [field]: v,
+      },
+    }));
+  };
+  const resetThresholds = () => setThresholdsByAttr(prev => ({
+    ...prev,
+    [selectedAttribute]: { upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "" },
+  }));
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Incrementing this key forces the <Chart> to fully remount, resetting zoom to full data range
+  // resetKey removed — chart.resetZoom() is used instead (kept as no-op reference guard)
   const intervalButtons = [
     { label: t("dashboard:live"), interval: "live" },
     { label: `10 ${t("dashboard:min")}`, interval: "10min" },
@@ -153,6 +311,30 @@ const CombineSensorChart: React.FC = () => {
       borderColor: "rgb(153, 102, 255)",
     },
   ];
+
+  // ── Derive machine state bands from machineStateData ─────────────────────
+  const machineStateBands: Array<{ from: number; to: number; state: string }> =
+    React.useMemo(() => {
+      if (!machineStateData) return [];
+      const bands: Array<{ from: number; to: number; state: string }> = [];
+      Object.entries(machineStateData).forEach(([state, entries]: [string, any]) => {
+        if (!Array.isArray(entries)) return;
+        entries.forEach((entry: any) => {
+          const from = entry?.from ? new Date(entry.from).getTime() : null;
+          const to = entry?.to ? new Date(entry.to).getTime() : Date.now();
+          if (from) bands.push({ from, to, state });
+        });
+      });
+      return bands;
+    }, [machineStateData]);
+
+  // ── Freshness timer (updates every second) ───────────────────────────────
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSecondsSinceUpdate(Math.floor((Date.now() - lastUpdateRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const chartOptions: ChartOptions<"line"> = {
     animation: {
@@ -365,7 +547,7 @@ const CombineSensorChart: React.FC = () => {
           return false;
         })
         .map(([key]) => {
-          const lastPart = key.split("/").pop();
+          const lastPart = key.split("/").pop() ?? key;
           const formatted = lastPart
             .split("_")
             .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -672,6 +854,7 @@ const CombineSensorChart: React.FC = () => {
 
     socketRef.current.on("dataUpdate", (updatedData: []) => {
       console.log("WebSocket: Received update (", updatedData.length, "records)");
+      lastUpdateRef.current = Date.now();
       setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
     });
 
@@ -686,6 +869,15 @@ const CombineSensorChart: React.FC = () => {
     };
   }, []); // Fixed: empty dependency array to prevent reconnection on every data update
 
+  // Stable ref so memoized options callbacks always call the latest version
+  const recalcRef = useRef<(chart: any) => void>(() => {});
+  // Set to true during programmatic resetZoom so onZoomComplete skips setHasZoomed(true)
+  const isResettingRef = useRef(false);
+  // Full-dataset avg/stdDev — the single source of truth for anomaly thresholds.
+  // Only updated when new raw data arrives, never when zooming, so the baseline
+  // never drifts and the spike count always matches the red dots on the chart.
+  const globalStatsRef = useRef<{ avg: number; stdDev: number } | null>(null);
+
   const recalculateVisibleAverage = (chart: any) => {
     try {
       const xScale = chart.scales?.x;
@@ -695,7 +887,7 @@ const CombineSensorChart: React.FC = () => {
       const labels: string[] = chart.data?.labels;
       const datasets = chart.data?.datasets;
       if (!labels || !datasets) return;
-      const mainDataset = datasets.find((ds: any) => ds.label !== 'Average');
+      const mainDataset = datasets.find((ds: any) => ds.label !== 'Average' && !ds.label?.startsWith('__'));
       const avgDataset = datasets.find((ds: any) => ds.label === 'Average');
       if (!mainDataset || !avgDataset) return;
       const visibleValues = labels
@@ -706,6 +898,24 @@ const CombineSensorChart: React.FC = () => {
       const avg = visibleValues.reduce((sum, v) => sum + v, 0) / visibleValues.length;
       const rounded = parseFloat(avg.toFixed(4));
       avgDataset.data = labels.map(() => rounded);
+
+      // Update KPI stats with visible window
+      const visibleLabels = labels.filter((label: string) => {
+        const t = new Date(label).getTime();
+        return t >= xMin && t <= xMax;
+      });
+      const visibleData = visibleLabels.map((_: string, i: number) => {
+        const globalIdx = labels.indexOf(visibleLabels[i]);
+        return mainDataset.data[globalIdx] ?? null;
+      });
+      const newKpi = computeKPIs(
+        visibleData,
+        visibleLabels,
+        globalStatsRef.current?.avg,
+        globalStatsRef.current?.stdDev
+      );
+      if (newKpi) setTimeout(() => setKpiStats(newKpi), 0);
+
       requestAnimationFrame(() => {
         if (chart && !chart.destroyed && chart.canvas && chart.canvas.isConnected) {
           chart.update('none');
@@ -716,45 +926,226 @@ const CombineSensorChart: React.FC = () => {
     }
   };
 
-  const chartOptionsWithZoomPan = {
-    ...chartOptions,
-    plugins: {
-      ...chartOptions.plugins,
-      zoom: {
-        pan: {
-          enabled: selectedInterval !== 'live',
-          mode: "x" as const,
-          onPanComplete: ({ chart }: any) => recalculateVisibleAverage(chart),
-        },
+  // Keep recalcRef current on every render so the memoized callbacks below
+  // always call the latest recalculateVisibleAverage without needing it as a dep.
+  recalcRef.current = recalculateVisibleAverage;
+
+  // useMemo gives chartOptionsWithZoomPan a STABLE object reference.
+  // PrimeReact wraps <Chart> in React.memo and bails out when
+  // prevOptions === nextOptions, so unrelated re-renders (e.g. the 1-second
+  // freshness timer) no longer destroy + recreate the chart instance,
+  // which was resetting zoom state every second.
+  const chartOptionsWithZoomPan = useMemo(() => {
+    // Strip min / beginAtZero from the y-scale so the zoom plugin owns the bounds
+    const { min: _yMin, beginAtZero: _yBZ, ...yScaleRest } =
+      (chartOptions.scales?.y ?? {}) as any;
+    return {
+      ...chartOptions,
+      plugins: {
+        ...chartOptions.plugins,
         zoom: {
-          wheel: {
+          pan: {
             enabled: selectedInterval !== 'live',
+            mode: "xy" as const,
+            onPanComplete: ({ chart }: any) => {
+              setTimeout(() => recalcRef.current(chart), 0);
+            },
           },
-          pinch: {
-            enabled: selectedInterval !== 'live',
+          zoom: {
+            wheel: { enabled: selectedInterval !== 'live' },
+            pinch: { enabled: selectedInterval !== 'live' },
+            mode: "xy" as const,
+            onZoomComplete: ({ chart }: any) => {
+              setTimeout(() => {
+                if (!isResettingRef.current) setHasZoomed(true);
+                isResettingRef.current = false;
+                recalcRef.current(chart);
+              }, 0);
+            },
           },
-          mode: "x" as const,
-          onZoomComplete: ({ chart }: any) => recalculateVisibleAverage(chart),
+          limits: {
+            x: { minRange: 100 },
+            y: { minRange: 0.0001 },
+          },
         },
-        limits: {
-          x: { minRange: 100 },
-          y: { min: 0, minRange: 0.0001 },
-        },
+        machineStateBands: { bands: machineStateBands },
+        crosshair: {},
       },
-    },
-    scales: {
-      x: {
-        ...chartOptions.scales?.x,
-        min: zoomState.x.min,
-        max: zoomState.x.max,
+      scales: {
+        x: { ...chartOptions.scales?.x },
+        y: yScaleRest,
       },
-      y: {
-        ...chartOptions.scales?.y,
-        min: zoomState.y.min,
-        max: zoomState.y.max,
-      },
-    },
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedInterval, machineStateBands]);
+
+  // ── KPI recompute on fresh data ──────────────────────────────────────────
+  useEffect(() => {
+    if (!data.datasets?.length || !data.labels?.length) { setKpiStats(null); return; }
+    const mainDs = data.datasets.find((ds) => ds.label !== 'Average' && !ds.label?.startsWith('__'));
+    if (!mainDs) return;
+    const stats = computeKPIs(mainDs.data as (number | null)[], data.labels as string[]);
+    // Persist full-data baseline in a ref so zoom operations always compare
+    // against it — never against a drifting window-local avg/stdDev.
+    if (stats) globalStatsRef.current = { avg: stats.avg, stdDev: stats.stdDev };
+    setKpiStats(stats);
+    // Also reset zoom tracker when new data arrives
+    setHasZoomed(false);
+  }, [data]);
+
+  // ── Fullscreen toggle effect ─────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  // ── Crosshair canvas mouse tracking ─────────────────────────────────────
+  useEffect(() => {
+    const chartEl = (chartRef.current as any)?.getChart?.();
+    if (!chartEl) return;
+    const canvas = chartEl.canvas as HTMLCanvasElement;
+    if (!canvas) return;
+    const onMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      (crosshairPlugin as any)._x = e.clientX - rect.left;
+      chartEl.draw();
+    };
+    const onLeave = () => {
+      (crosshairPlugin as any)._x = null;
+      chartEl.draw();
+    };
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseleave", onLeave);
+    return () => {
+      canvas.removeEventListener("mousemove", onMove);
+      canvas.removeEventListener("mouseleave", onLeave);
+    };
+  });
+
+  // ── Build threshold datasets to inject into chart data ──────────────────
+  const thresholdDatasets = React.useMemo(() => {
+    if (!data.labels?.length) return [];
+    const extra: any[] = [];
+    const mkLine = (value: number, label: string, color: string, dash: number[]) => ({
+      label,
+      data: (data.labels as string[]).map(() => value),
+      fill: false,
+      borderColor: color,
+      backgroundColor: "transparent",
+      borderWidth: 1.5,
+      borderDash: dash,
+      tension: 0,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+    });
+    const uw = parseFloat(upperWarning);
+    const lw = parseFloat(lowerWarning);
+    const ua = parseFloat(upperAlarm);
+    const la = parseFloat(lowerAlarm);
+    if (!isNaN(uw)) extra.push(mkLine(uw, "__ Upper Warning", "rgba(250,173,20,0.9)", [6, 3]));
+    if (!isNaN(lw)) extra.push(mkLine(lw, "__ Lower Warning", "rgba(250,173,20,0.9)", [6, 3]));
+    if (!isNaN(ua)) extra.push(mkLine(ua, "__ Upper Alarm", "rgba(239,68,68,0.9)", [4, 2]));
+    if (!isNaN(la)) extra.push(mkLine(la, "__ Lower Alarm", "rgba(239,68,68,0.9)", [4, 2]));
+    return extra;
+  }, [data.labels, upperWarning, lowerWarning, upperAlarm, lowerAlarm]);
+
+  // ── Anomaly-coloured point styling ─────────────────────────────────────────
+  // Uses full-data stats (not kpiStats which tracks the zoom window) so this
+  // memo only invalidates when the raw data changes, keeping the Chart.js
+  // instance alive across zoom/pan operations.
+  const annotatedDatasets = React.useMemo(() => {
+    if (!data.datasets?.length) return data.datasets;
+    const mainDs = data.datasets.find((ds: any) => ds.label !== 'Average' && !ds.label?.startsWith('__'));
+    const fullStats = mainDs ? computeKPIs(mainDs.data as (number | null)[], []) : null;
+    return data.datasets.map((ds) => {
+      if (ds.label === 'Average' || ds.label?.startsWith('__')) return ds;
+      if (!fullStats) return ds;
+      const { pointBg, pointRadius } = computeAnomalyColors(
+        ds.data as (number | null)[],
+        fullStats.avg,
+        fullStats.stdDev
+      );
+      return { ...ds, pointBackgroundColor: pointBg, pointRadius };
+    });
+  }, [data.datasets]);
+
+  // ── Combined chart data — stable reference unless data/thresholds change ──
+  // Keeping this reference stable prevents PrimeReact Chart's React.memo from
+  // bailing and calling initChart() (destroy+recreate) on unrelated re-renders
+  // (timer ticks, kpiStats updates), so the Chart.js instance — and its zoom
+  // plugin state — survives across zoom interactions.
+  const chartData = React.useMemo(() => ({
+    labels: data.labels,
+    datasets: [
+      ...annotatedDatasets.filter(
+        (ds: any) => ds.label === selectedAttribute || ds.label === 'Average'
+      ),
+      ...thresholdDatasets,
+    ],
+  }), [data.labels, annotatedDatasets, thresholdDatasets, selectedAttribute]);
+
+  // ── Export handlers ───────────────────────────────────────────────────────
+  const handleExportPNG = () => {
+    const chartEl = (chartRef.current as any)?.getChart?.();
+    if (!chartEl) return;
+    const url = chartEl.toBase64Image("image/png", 1);
+    const a = document.createElement("a");
+    const assetName = (productName || selectedAssetData?.product_name || "asset")
+      .replace(/\s+/g, "_");
+    a.download = `${assetName}_${selectedAttribute}_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
+    a.href = url;
+    a.click();
   };
+
+  const handleExportCSV = () => {
+    if (!data.labels?.length || !data.datasets?.length) return;
+    const mainDs = data.datasets.find((ds) => ds.label !== 'Average' && !ds.label?.startsWith('__'));
+    if (!mainDs) return;
+    // Read the current visible x range from the live chart instance
+    const chartEl = (chartRef.current as any)?.getChart?.();
+    const xMin: number | undefined = chartEl?.scales?.x?.min;
+    const xMax: number | undefined = chartEl?.scales?.x?.max;
+    const allLabels = data.labels as string[];
+    const rows = allLabels
+      .map((label, i) => ({ label, value: mainDs.data[i] }))
+      .filter(({ label }) => {
+        if (xMin == null || xMax == null) return true; // no zoom — export all
+        const t = new Date(label).getTime();
+        return t >= xMin && t <= xMax;
+      })
+      .map(({ label, value }) => [`"${label}"`, value ?? ""].join(","));
+    const csv = ["timestamp,value", ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const assetName = (productName || selectedAssetData?.product_name || "asset")
+      .replace(/\s+/g, "_");
+    a.download = `${assetName}_${selectedAttribute}_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`;
+    a.href = url;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleResetZoom = () => {
+    const chartEl = (chartRef.current as any)?.getChart?.();
+    if (chartEl) {
+      // Flag tells onZoomComplete (which the plugin fires after resetZoom)
+      // to skip setHasZoomed(true) so the button stays hidden after reset.
+      isResettingRef.current = true;
+      chartEl.resetZoom();
+    }
+    setHasZoomed(false);
+  };
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      cardRef.current?.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
   const handleLoad = async () => {
     op.current?.hide();
     await fetchDataForAttribute(
@@ -796,21 +1187,37 @@ const CombineSensorChart: React.FC = () => {
   };
 
 
+  // ── Freshness indicator helpers ──────────────────────────────────────────
+  const freshnessClass =
+    selectedInterval !== "live"
+      ? ""
+      : secondsSinceUpdate > 60
+      ? "freshness-stale"
+      : secondsSinceUpdate > 30
+      ? "freshness-warn"
+      : "freshness-ok";
+
+  const freshnessLabel =
+    selectedInterval !== "live"
+      ? null
+      : secondsSinceUpdate < 5
+      ? "Just now"
+      : `${secondsSinceUpdate}s ago`;
+
   return (
-    <div className="data_viewer_card">
-      {/* <div className="custom-button-container">
-        <div className="custom-button">
-          <span className="button-text">
-            {formatAttributeName(selectedAttribute) ||
-              t("dashboard:selectAnAttribute")}
-          </span>
-        </div>
-      </div> */}
+    <div className="data_viewer_card" ref={cardRef}>
       <div className="grid p-fluid">
         <div className="col-12">
+
+          {/* ── Controls row ───────────────────────────────────────────── */}
           <div className="control-container">
             <div className="control_form_field">
-              <label htmlFor="attribute" className="dashboard_control_label">{t("dashboard:selectAttribute")}</label>
+              <label htmlFor="attribute" className="dashboard_control_label">
+                {t("dashboard:selectAttribute")}
+                {selectedInterval === "live" && (
+                  <span className={`live-pulse-dot ${freshnessClass}`} title={freshnessLabel ?? ""} />
+                )}
+              </label>
               <div className="global-button dropdown dashboard-dropdown">
                 <Dropdown
                   id="attribute"
@@ -824,9 +1231,13 @@ const CombineSensorChart: React.FC = () => {
                   appendTo="self"
                   panelClassName="global_dropdown_panel"
                 />
-                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
               </div>
+              {freshnessLabel && (
+                <span className={`freshness-label ${freshnessClass}`}>Live · {freshnessLabel}</span>
+              )}
             </div>
+
             <div className="control_form_field">
               <label htmlFor="intervall" className="dashboard_control_label">{t("dashboard:interval")}</label>
               <div className="global-button dropdown dashboard-dropdown">
@@ -841,131 +1252,247 @@ const CombineSensorChart: React.FC = () => {
                   placeholder={t("dashboard:select_interval")}
                   appendTo="self"
                   panelClassName="global_dropdown_panel"
-
                 />
-                <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
               </div>
             </div>
-            {selectedInterval === 'custom' && (
+
+            {selectedInterval === "custom" && (
               <div className="control_form_field">
                 <label htmlFor="" className="dashboard_control_label">{t("dashboard:pick_timeframe")}</label>
                 <Button className="timeframe_op_trigger" onClick={(e) => op.current?.toggle(e)}>
-                  <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt=""></Image>
+                  <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt="" />
                   <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : t("dashboard:pick_date")}</div>
-                  <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+                  <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
                 </Button>
-              </div>)
-            }
-
-            <OverlayPanel ref={op} className="timeframe_overlaypanel">
-              <div className="timetrame_form">
-                <div className="control_form_field">
-                  <label htmlFor="date_inputt" className="dashboard_control_label">{t("dashboard:selectDate")}</label>
-                  <Calendar
-                    inputId="date_inputt"
-                    value={selectedDate}
-                    onChange={(e) => handleDateChange(e as CustomChangeEvent)}
-                    showTime={false}
-                    dateFormat="yy-mm-dd"
-                    placeholder={t("placeholder:selectDate")}
-                    className="w-full sm:w-auto"
-                    minDate={minDate}
-                    maxDate={new Date()}
-                    disabled={selectedInterval !== "custom"}
-                    appendTo="self"
-
-                  />
-                </div>
-                <div className="control_form_field">
-                  <label htmlFor="startTime" className="dashboard_control_label">{t("dashboard:startTime")}</label>
-                  <InputText
-                    id="startTime"
-                    type="time"
-                    value={startTime ? format(startTime, "HH:mm") : ""}
-                    onChange={(e) => handleTimeInputChange(e, "start")}
-                    placeholder={t("dashboard:start_time")}
-                    className="w-full"
-                    disabled={selectedInterval !== "custom"}
-                  />
-                </div>
-                <div className="control_form_field">
-                  <label htmlFor="endTime" className="dashboard_control_label">{t("dashboard:endTime")}</label>
-                  <InputText
-                    id="endTime"
-                    type="time"
-                    value={endTime ? format(endTime, "HH:mm") : ""}
-                    onChange={(e) => handleTimeInputChange(e, "end")}
-                    placeholder={t("dashboard:end_time")}
-                    className="w-full "
-                    disabled={selectedInterval !== "custom"}
-                  />
-                </div>
               </div>
-              <Button
-                label={t("button:load")}
-                severity="info"
-                disabled={selectedInterval !== "custom"}
-                style={{ width: "100px" }}
-                className="global-button"
-                onClick={handleLoad} // Call the handleLoad function when the button is clicked
-              />
-            </OverlayPanel>
+            )}
           </div>
-          <div>
-            {!entityIdValue ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
+
+          {/* ── Toolbar row: thresholds + export + zoom reset + fullscreen ─ */}
+          <div className="chart-toolbar">
+            <div className="chart-toolbar-left">
+              <button className="chart-tool-btn chart-tool-btn-limits" onClick={(e) => thresholdOp.current?.toggle(e)} title="Set alert limit lines on the chart">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                Set Limits
+              </button>
+            </div>
+            <div className="chart-toolbar-right">
+              {hasZoomed && (
+                <button className="chart-tool-btn chart-tool-btn-accent" onClick={handleResetZoom} title="Reset zoom to full time range">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                  Reset View
+                </button>
+              )}
+              <button className="chart-tool-btn" onClick={handleExportCSV} title="Download data as CSV spreadsheet">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>
+                Export CSV
+              </button>
+              <button className="chart-tool-btn" onClick={handleExportPNG} title="Download chart as PNG image">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                Export PNG
+              </button>
+              <button className="chart-tool-btn" onClick={handleFullscreen} title={isFullscreen ? "Exit fullscreen" : "Expand to fullscreen"}>
+                {isFullscreen
+                  ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
+                  : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Threshold OverlayPanel ────────────────────────────────────── */}
+          <OverlayPanel ref={thresholdOp} className="timeframe_overlaypanel threshold-panel">
+            <div className="threshold-panel-header">
+              <div>
+                <div className="threshold-panel-title">Set Limit Lines</div>
+                <div className="threshold-panel-subtitle">Draw horizontal lines on the chart to mark safe operating ranges.</div>
+              </div>
+              <button className="threshold-panel-close" onClick={() => thresholdOp.current?.hide()} title="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="threshold-grid">
+              <div className="control_form_field">
+                <label className="dashboard_control_label threshold-label-alarm">Upper Alarm</label>
+                <InputText
+                  value={upperAlarm}
+                  onChange={(e) => updateThreshold("upperAlarm", e.target.value)}
+                  placeholder="e.g. 95"
+                  className="threshold-input"
+                  keyfilter="num"
+                />
+              </div>
+              <div className="control_form_field">
+                <label className="dashboard_control_label threshold-label-warn">Upper Warning</label>
+                <InputText
+                  value={upperWarning}
+                  onChange={(e) => updateThreshold("upperWarning", e.target.value)}
+                  placeholder="e.g. 80"
+                  className="threshold-input"
+                  keyfilter="num"
+                />
+              </div>
+              <div className="control_form_field">
+                <label className="dashboard_control_label threshold-label-warn">Lower Warning</label>
+                <InputText
+                  value={lowerWarning}
+                  onChange={(e) => updateThreshold("lowerWarning", e.target.value)}
+                  placeholder="e.g. 20"
+                  className="threshold-input"
+                  keyfilter="num"
+                />
+              </div>
+              <div className="control_form_field">
+                <label className="dashboard_control_label threshold-label-alarm">Lower Alarm</label>
+                <InputText
+                  value={lowerAlarm}
+                  onChange={(e) => updateThreshold("lowerAlarm", e.target.value)}
+                  placeholder="e.g. 5"
+                  className="threshold-input"
+                  keyfilter="num"
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "10px", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                className="chart-tool-btn"
+                onClick={resetThresholds}
+                title="Clear all limit lines for this attribute"
+                style={{ color: "var(--color-alert, #ef4444)" }}
               >
-                <p>
-                  <b>{t("dashboard:no_asset_selected")}</b>
-                </p>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Reset Limits
+              </button>
+            </div>
+          </OverlayPanel>
+
+          {/* ── Live stats strip ──────────────────────────────────────────── */}
+          {kpiStats && !loading && !noChartData && entityIdValue && (
+            <div className="kpi-strip">
+              <div className="kpi-tile kpi-tile-current">
+                <div className="kpi-tile-header">
+                  <span className="kpi-tile-label">Current Value</span>
+                  <span className={`kpi-trend kpi-trend-${kpiStats.trend}`} title={kpiStats.trend === "up" ? "Trending up" : kpiStats.trend === "down" ? "Trending down" : "Stable"}>
+                    {kpiStats.trend === "up" ? "↑" : kpiStats.trend === "down" ? "↓" : "→"}
+                  </span>
+                </div>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.last.toFixed(4))}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-low">
+                <span className="kpi-tile-label">Low</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.min.toFixed(4))}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-high">
+                <span className="kpi-tile-label">High</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.max.toFixed(4))}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-avg">
+                <span className="kpi-tile-label">Average</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.avg.toFixed(4))}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-var">
+                <span className="kpi-tile-label">Variation (σ)</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.stdDev.toFixed(4))}</span>
+              </div>
+              {kpiStats.anomalyCount > 0 && (
+                <div className="kpi-tile kpi-tile-anomaly">
+                  <span className="kpi-tile-label">⚠ Spikes</span>
+                  <span className="kpi-tile-value kpi-anomaly-count">{kpiStats.anomalyCount}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Timeframe overlay panel ───────────────────────────────────── */}
+          <OverlayPanel ref={op} className="timeframe_overlaypanel">
+            <div className="timetrame_form">
+              <div className="control_form_field">
+                <label htmlFor="date_inputt" className="dashboard_control_label">{t("dashboard:selectDate")}</label>
+                <Calendar
+                  inputId="date_inputt"
+                  value={selectedDate}
+                  onChange={(e) => handleDateChange(e as CustomChangeEvent)}
+                  showTime={false}
+                  dateFormat="yy-mm-dd"
+                  placeholder={t("placeholder:selectDate")}
+                  className="w-full sm:w-auto"
+                  minDate={minDate}
+                  maxDate={new Date()}
+                  disabled={selectedInterval !== "custom"}
+                  appendTo="self"
+                />
+              </div>
+              <div className="control_form_field">
+                <label htmlFor="startTime" className="dashboard_control_label">{t("dashboard:startTime")}</label>
+                <InputText
+                  id="startTime"
+                  type="time"
+                  value={startTime ? format(startTime, "HH:mm") : ""}
+                  onChange={(e) => handleTimeInputChange(e, "start")}
+                  placeholder={t("dashboard:start_time")}
+                  className="w-full"
+                  disabled={selectedInterval !== "custom"}
+                />
+              </div>
+              <div className="control_form_field">
+                <label htmlFor="endTime" className="dashboard_control_label">{t("dashboard:endTime")}</label>
+                <InputText
+                  id="endTime"
+                  type="time"
+                  value={endTime ? format(endTime, "HH:mm") : ""}
+                  onChange={(e) => handleTimeInputChange(e, "end")}
+                  placeholder={t("dashboard:end_time")}
+                  className="w-full"
+                  disabled={selectedInterval !== "custom"}
+                />
+              </div>
+            </div>
+            <Button
+              label={t("button:load")}
+              severity="info"
+              disabled={selectedInterval !== "custom"}
+              style={{ width: "100px" }}
+              className="global-button"
+              onClick={handleLoad}
+            />
+          </OverlayPanel>
+
+          {/* ── Chart area ────────────────────────────────────────────────── */}
+          <div style={{ position: "relative" }}>
+            {!entityIdValue ? (
+              <div className="chart-empty-state">
+                <p><b>{t("dashboard:no_asset_selected")}</b></p>
                 <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
               </div>
             ) : loading ? (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
-              >
+              <div className="chart-loading-state">
                 <ProgressSpinner />
               </div>
             ) : data.datasets && data.datasets.length > 0 && !noChartData ? (
               <Chart
-                key={selectedAttribute + '_' + selectedInterval}
+                key={selectedAttribute + "_" + selectedInterval}
+                ref={chartRef}
                 type="line"
-                data={{
-                  ...data,
-                  datasets: data.datasets.filter(
-                    (dataset) => dataset.label === selectedAttribute || dataset.label === 'Average'
-                  ),
-                }}
+                data={chartData}
                 options={chartOptionsWithZoomPan}
                 style={{ height: "60vh" }}
               />
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "60vh",
-                }}
-              >
+              <div className="chart-empty-state">
                 <p>{t("no_chart_data")}</p>
                 <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
               </div>
             )}
           </div>
+
+          {/* ── Machine state band legend ─────────────────────────────────── */}
+          {machineStateBands.length > 0 && !loading && entityIdValue && (
+            <div className="machine-state-legend">
+              <span className="ms-legend-item"><span className="ms-dot ms-dot-running" />{t("dashboard:running")}</span>
+              <span className="ms-legend-item"><span className="ms-dot ms-dot-idle" />{t("dashboard:online")}</span>
+              <span className="ms-legend-item"><span className="ms-dot ms-dot-offline" />{t("dashboard:offline")}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -973,3 +1500,4 @@ const CombineSensorChart: React.FC = () => {
 };
 
 export default CombineSensorChart;
+
