@@ -658,7 +658,8 @@ export const getAssetById = async(assetId: string) =>{
     const responseData = response.data;
     return responseData;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error fetching asset by id:", error);
+    return null;
   }
 }
 

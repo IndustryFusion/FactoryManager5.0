@@ -494,6 +494,7 @@ const CombineSensorChart: React.FC = () => {
   const fetchAsset = async () => {
     try {
       const scorpioData = await getAssetById(selectedAssetData.id);
+      if (!scorpioData) return;
       const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name"));
       const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date"));
       const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;

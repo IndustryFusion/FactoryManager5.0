@@ -25,6 +25,13 @@ interface AccessGroupData {
     company_ifric_id?: string;
 }
 
+export function getProxiedImageUrl(s3Url: string | null | undefined | string[]): string {
+  if (!s3Url) return "";
+  const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const fileName = Array.isArray(s3Url) ? s3Url[0].split("/").pop() : s3Url.split("/").pop();
+  return `${BACKEND_API_URL}/file/by-name/${fileName}`;
+};
+
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
 const DashboardPage: React.FC = () => {
@@ -161,7 +168,7 @@ const DashboardPage: React.FC = () => {
                             {userImage  ? (
                                 <img
                                     alt={userName}
-                                    src={userImage}
+                                    src={getProxiedImageUrl(userImage)}
                                     draggable="false"
                                 
                                     style={{ width: "50px", height: "40px", objectFit: "cover" }}
