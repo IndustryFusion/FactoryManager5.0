@@ -17,6 +17,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { extname } from 'path';
+import { lookup as lookupMime } from 'mime-types';
 
 @Injectable()
 export class FileService {
@@ -50,10 +51,54 @@ export class FileService {
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
-      } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+      } else if (err) {
+        throw new HttpException(err || err, HttpStatus.NOT_FOUND);
       } else {
-        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+        throw new HttpException(err, HttpStatus.NOT_FOUND);
+      }
+    }
+  }
+
+  private getContentType(fileName: string): string {
+    const type = (lookupMime(fileName) || '').toString().toLowerCase();
+    if (type.startsWith('image/') || type === 'application/pdf') return type;
+    return 'application/octet-stream';
+  }
+
+  async getFileByName(fileName: string): Promise<{ file: Buffer; contentType: string }> {
+    const s3 = new S3({
+      accessKeyId: process.env.S3_ACCESS_KEY,
+      secretAccessKey: process.env.S3_SECRET_KEY,
+      endpoint: process.env.S3_URL, 
+      correctClockSkew: true,
+    });
+
+    const bucketName = process.env.S3_BUCKET;
+
+    try {
+      const data = await s3.getObject({
+        Bucket: bucketName,
+        Key: fileName
+      }).promise();
+
+      if (!data.Body) {
+        throw new HttpException("File found but body is empty", HttpStatus.NOT_FOUND);
+      }
+
+      // Determine content type based on file extension
+      const contentType = this.getContentType(fileName);
+
+      return {
+        file: data.Body as Buffer,
+        contentType,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err) {
+        throw new HttpException(err || err, HttpStatus.NOT_FOUND);
+      } else {
+        throw new HttpException(err || err, HttpStatus.NOT_FOUND);
       }
     }
   }

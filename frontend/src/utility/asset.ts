@@ -146,6 +146,25 @@ export const getAssetById = async (assetId: string): Promise<Asset | null> => {
   }
 };
 
+export const getRawAssetById = async (assetId: string): Promise<any | null> => {
+  try {
+    const response = await api.get(`${BACKEND_API_URL}/asset/get-asset-by-id/${assetId}`, {
+      headers: {
+        "Content-Type": "application/ld+json",
+        Accept: "application/ld+json",
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 401) {
+      updatePopupVisible(true);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
 export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
   try {
     const access_group = await getAccessGroup();

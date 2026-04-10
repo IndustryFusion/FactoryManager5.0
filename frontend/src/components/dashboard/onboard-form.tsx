@@ -32,7 +32,7 @@ import { useTranslation } from "next-i18next";
 import { OnboardData } from "@/types/onboard-form";
 import { Asset } from "@/types/asset-types";
 import YAML from 'yaml';
-import { getAssetById } from "@/utility/asset";
+import { getAssetById, getRawAssetById } from "@/utility/asset";
 
 type OnboardDataKey = keyof OnboardData;
 
@@ -67,24 +67,89 @@ interface OnboardFormData {
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+const SEGMENT_KEY = "https://industry-fusion.org/base/v0.1/segment";
+const BINDING_POINT_KEY = "https://industry-fusion.org/base/v0.1/bindingPoint";
+
+const extractString = (item: any): string => {
+    if (item == null) return "";
+    if (typeof item === "string") return item;
+    // NGSI-LD typed value objects: { "@value": "..." } or { "value": "..." }
+    if (typeof item === "object") return item["@value"] ?? item.value ?? "";
+    return String(item);
+};
+
+const resolveBindingPoint = (rawValue: any): string => {
+    if (Array.isArray(rawValue)) return rawValue.map(extractString).filter(Boolean).join(";");
+    return rawValue != null ? String(rawValue) : "";
+};
+
+const buildOpcUaConfigTemplate = (rawAssetData: any): string => {
+    const specifications: Array<{ node_id: string; identifier: string; parameter: string }> = [];
+
+    Object.keys(rawAssetData).forEach((key) => {
+        const prop = rawAssetData[key];
+        if (
+            prop &&
+            typeof prop === "object" &&
+            prop.type === "Property" &&
+            prop[SEGMENT_KEY]?.value === "realtime"
+        ) {
+            const bindingPoint = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
+            const parts = bindingPoint ? bindingPoint.split(";") : [];
+            const node_id = parts[0] || "";
+            const identifier = parts.slice(1).join(";") || "";
+            specifications.push({ node_id, identifier, parameter: key });
+        }
+    });
+
+    if (specifications.length === 0) {
+        return `fusionopcuadataservice:\n  specification:\n    - node_id: "ns=4"\n      identifier: "i=39"\n      parameter: "https://industry-fusion.org/base/v0.1/machine_state"`;
+    }
+
+    const configObj = {
+        fusionopcuadataservice: {
+            specification: specifications
+        }
+    };
+    return YAML.stringify(configObj, { indent: 2 });
+};
+
+const buildMqttConfigTemplate = (rawAssetData: any): string => {
+    const specifications: Array<{ topic: string; key: never[]; parameter: string[] }> = [];
+
+    Object.keys(rawAssetData).forEach((key) => {
+        const prop = rawAssetData[key];
+        if (
+            prop &&
+            typeof prop === "object" &&
+            prop.type === "Property" &&
+            prop[SEGMENT_KEY]?.value === "realtime"
+        ) {
+            const topic = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
+            specifications.push({ topic, key: [], parameter: [key] });
+        }
+    });
+
+    if (specifications.length === 0) {
+        return `fusionmqttdataservice:\n  specification:\n    - topic: "airtracker-74145/relay1"\n      key: []\n      parameter:\n        - "https://industry-fusion.org/base/v0.1/machine_state"`;
+    }
+
+    const configObj = {
+        fusionmqttdataservice: {
+            specification: specifications
+        }
+    };
+    return YAML.stringify(configObj, { indent: 2 });
+};
+
 const OnboardForm: React.FC<OnboardFormProps> = ({
     showBlockerProp, setShowBlockerProp,
     asset, setBlocker,
     setOnboardAssetProp
 }) => {
     const [assetData, setAssetData] = useState<Asset | null>(null);
-    const mqttConfigTemplate = `fusionmqttdataservice:
-  specification:
-    - topic: "airtracker-74145/relay1"
-      key: []
-      parameter:
-        - "https://industry-fusion.org/base/v0.1/machine_state"`;
 
-    const opcConfigTemplate = `fusionopcuadataservice:
-  specification:
-    - node_id: "ns=4"
-      identifier: "i=39"
-      parameter: "https://industry-fusion.org/base/v0.1/machine_state"`;
+
 
 
     useEffect(() => {
@@ -95,6 +160,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     setAssetData(assetDataFromScorio);
                     const productName = assetDataFromScorio?.product_name === undefined && assetDataFromScorio?.asset_communication_protocol === undefined ? "" : `${assetDataFromScorio?.product_name}-${assetDataFromScorio?.asset_communication_protocol}`;
                     const podName = productName.toLowerCase().replace(/ /g, '');
+                    let appConfig = "";
+                    const protocol = assetDataFromScorio?.asset_communication_protocol;
+                    if (protocol === "opc-ua" || protocol === "mqtt") {
+                        const rawAssetData = await getRawAssetById(asset.id);
+                        if (rawAssetData) {
+                            appConfig = protocol === "opc-ua"
+                                ? buildOpcUaConfigTemplate(rawAssetData)
+                                : buildMqttConfigTemplate(rawAssetData);
+                        }
+                    }
+
                     setOnboardForm(prevForm => ({
                         ...prevForm,
                         dataservice_image_config: assetDataFromScorio?.asset_communication_protocol === "opc-ua" ? "docker.io/ibn40/fusionopcuadataservice:v0.0.1" : assetDataFromScorio?.asset_communication_protocol === "mqtt" ? "docker.io/ibn40/fusionmqttdataservice:v0.0.1" : "",
@@ -103,7 +179,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         pod_name: podName,
                         device_id: assetDataFromScorio?.id,
                         gateway_id: assetDataFromScorio?.id,
-                        app_config: assetDataFromScorio?.asset_communication_protocol === "mqtt" ? mqttConfigTemplate : assetDataFromScorio?.asset_communication_protocol === "opc-ua" ? opcConfigTemplate : ""
+                        app_config: appConfig
                     }));
                 } catch (error) {
                     console.error("Failed to fetch asset data:", error);
@@ -123,12 +199,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             protocol: "",
             app_config: "",
             pod_name: "",
-            pdt_mqtt_hostname: "",
-            pdt_mqtt_port: 0,
+            pdt_mqtt_hostname: "mqtt.local",
+            pdt_mqtt_port: 1883,
             secure_config: false,
             device_id: asset?.id,
             gateway_id: asset?.id,
-            keycloak_url: "",
+            keycloak_url: "http://keycloak.local/auth/realms",
             realm_password: "",
             username_config: "",
             password_config: "",
@@ -154,8 +230,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     const stepItems = [
         { label: 'Connection' },
         { label: 'Configuration' },
-        { label: 'Services' },
-        { label: 'MQTT Settings' },
+        { label: 'Images' },
+        { label: 'Server Settings' },
         { label: 'Authentication' }
     ];
 
@@ -385,9 +461,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-link"></i>
-                                Connection Details
+                                Machine Connection
                             </h4>
-                            <p className="step-description">Configure the device connection parameters</p>
+                            <p className="step-description">Enter the network address and protocol used to connect to the machine or asset</p>
                         </div>
 
                         <div className="field">
@@ -395,7 +471,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:ip_address")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Enter the device IP address or connection URL
+                                Machine or asset endpoint address (IP, hostname, or full connection URL)
                             </small>
                             <InputText
                                 id="ip_address"
@@ -406,7 +482,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 className={`w-full ${validateInput?.ip_address ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.ip_address && (
-                                <small className="p-error">IP address is required</small>
+                                <small className="p-error">Machine address is required</small>
                             )}
                         </div>
 
@@ -415,7 +491,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:protocol")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Communication protocol (e.g., mqtt, opc-ua)
+                                Data communication protocol the machine uses (auto-populated from asset)
                             </small>
                             <InputText
                                 id="protocol"
@@ -436,7 +512,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                     {t("dashboard:main_topic")}
                                 </label>
                                 <small className="block mb-2 text-gray-600">
-                                    MQTT main topic for data publishing
+                                    Root MQTT topic the machine publishes data to
                                 </small>
                                 <InputText
                                     id="main_topic"
@@ -454,7 +530,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:device_id")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Unique device identifier (auto-populated)
+                                Asset identifier used to register the machine in the system (auto-populated)
                             </small>
                             <InputText
                                 id="device_id"
@@ -469,7 +545,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:gateway_id")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Gateway identifier (auto-populated)
+                                Gateway through which the machine connects to the platform (auto-populated)
                             </small>
                             <InputText
                                 id="gateway_id"
@@ -487,9 +563,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-cog"></i>
-                                Application Configuration
+                                Data Mapping Configuration
                             </h4>
-                            <p className="step-description">Define the application configuration in YAML format</p>
+                            <p className="step-description">Define the pod name and specify how machine data (OPC-UA / MQTT) is read and mapped to the digital twin properties</p>
                         </div>
 
                         <div className="field">
@@ -497,7 +573,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:pod_name")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Kubernetes pod name for this service
+                                Kubernetes pod name for the data service that reads from the machine
                             </small>
                             <InputText
                                 id="pod_name"
@@ -513,7 +589,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:app_config")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                YAML configuration for data service specifications
+                                YAML configuration mapping machine data points (OPC-UA nodes or MQTT topics) to digital twin properties
                             </small>
                             <InputTextarea
                                 id="app_config"
@@ -598,17 +674,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-server"></i>
-                                MQTT Settings
+                                PDT Server Settings
                             </h4>
-                            <p className="step-description">Configure MQTT broker connection settings</p>
+                            <p className="step-description">Configure PDT server connection settings</p>
                         </div>
 
                         <div className="field">
                             <label htmlFor="pdt_mqtt_hostname" className="font-semibold">
-                                PDT MQTT {t("dashboard:hostname")} <span className="text-red-500">*</span>
+                                PDT {t("dashboard:hostname")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                MQTT broker hostname or IP address
+                                Server hostname or IP address
                             </small>
                             <InputText
                                 id="pdt_mqtt_hostname"
@@ -619,16 +695,16 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 className={`w-full ${validateInput?.pdt_mqtt_hostname ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.pdt_mqtt_hostname && (
-                                <small className="p-error">MQTT hostname is required</small>
+                                <small className="p-error">PDT hostname is required</small>
                             )}
                         </div>
 
                         <div className="field">
                             <label htmlFor="pdt_mqtt_port" className="font-semibold">
-                                PDT MQTT {t("dashboard:port")} <span className="text-red-500">*</span>
+                                PDT {t("dashboard:port")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                MQTT broker port number (typically 1883 or 8883 for SSL)
+                                PDT server port number (typically 1883 or 8883 for SSL)
                             </small>
                             <InputNumber
                                 id="pdt_mqtt_port"
@@ -639,7 +715,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 className={`w-full ${validateInput?.pdt_mqtt_port ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.pdt_mqtt_port && (
-                                <small className="p-error">MQTT port is required</small>
+                                <small className="p-error">PDT port is required</small>
                             )}
                         </div>
 
@@ -660,7 +736,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 </span>
                             </div>
                             <small className="block mt-2 text-gray-600">
-                                Enable SSL/TLS encryption for MQTT connection
+                                Enable SSL/TLS encryption for connection in case of cloud hosted PDT server
                             </small>
                         </div>
                     </div>

@@ -112,6 +112,8 @@ const Alerts = () => {
       }
     }
     fetchAllData();
+    const interval = setInterval(fetchAllData, 30000);
+    return () => clearInterval(interval);
   }, [])
 
 // CSS style for badge position and appearance

@@ -67,11 +67,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
     const [activeStep, setActiveStep] = useState(0);
 
-    const stepItems = [
+     const stepItems = [
         { label: 'Connection' },
         { label: 'Configuration' },
-        { label: 'Services' },
-        { label: 'MQTT Settings' },
+        { label: 'Images' },
+        { label: 'Server Settings' },
         { label: 'Authentication' }
     ];
 
@@ -365,9 +365,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-link"></i>
-                                Connection Details
+                                Machine Connection
                             </h4>
-                            <p className="step-description">Configure the device connection parameters</p>
+                            <p className="step-description">Network address and protocol used to connect to the machine or asset</p>
                         </div>
 
                         <div className="field">
@@ -375,7 +375,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:ip_address")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Enter the device IP address or connection URL
+                                Machine or asset endpoint address (IP, hostname, or full connection URL)
                             </small>
                             <InputText
                                 id="ip_address"
@@ -386,7 +386,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 className={`w-full ${validateInput?.ip_address ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.ip_address && (
-                                <small className="p-error">IP address is required</small>
+                                <small className="p-error">Machine address is required</small>
                             )}
                         </div>
 
@@ -395,7 +395,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:protocol")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Communication protocol (read-only)
+                                Data communication protocol the machine uses (read-only)
                             </small>
                             <InputText
                                 id="protocol"
@@ -406,13 +406,13 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                             />
                         </div>
 
-                        {onboard.protocol === "mqtt" ? (
+                        {onboard.protocol === "mqtt" && (
                             <div className="field">
                                 <label htmlFor="main_topic" className="font-semibold">
                                     {t("dashboard:main_topic")}
                                 </label>
                                 <small className="block mb-2 text-gray-600">
-                                    MQTT main topic for data publishing
+                                    Root MQTT topic the machine publishes data to
                                 </small>
                                 <InputText
                                     id="main_topic"
@@ -423,23 +423,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     className="w-full"
                                 />
                             </div>
-                        ) : (
-                            <div className="field">
-                                <label htmlFor="main_topic" className="font-semibold">
-                                    {t("dashboard:main_topic")}
-                                </label>
-                                <small className="block mb-2 text-gray-600">
-                                    MQTT main topic (not applicable for current protocol)
-                                </small>
-                                <InputText
-                                    id="main_topic"
-                                    value={onboard.main_topic}
-                                    type="text"
-                                    placeholder="ex: airtracker-74145/relay1"
-                                    disabled
-                                    className="w-full"
-                                />
-                            </div>
                         )}
 
                         <div className="field">
@@ -447,7 +430,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:device_id")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Unique device identifier (read-only)
+                                Asset identifier used to register the machine in the system (read-only)
                             </small>
                             <InputText
                                 id="device_id"
@@ -462,7 +445,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:gateway_id")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Gateway identifier (read-only)
+                                Gateway through which the machine connects to the platform (read-only)
                             </small>
                             <InputText
                                 id="gateway_id"
@@ -480,9 +463,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-cog"></i>
-                                Application Configuration
+                                Data Mapping Configuration
                             </h4>
-                            <p className="step-description">Define the application configuration in YAML format</p>
+                            <p className="step-description">Pod name and configuration defining how machine data (OPC-UA / MQTT) is read and mapped to the digital twin properties</p>
                         </div>
 
                         <div className="field">
@@ -490,7 +473,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:pod_name")}
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                Kubernetes pod name (read-only)
+                                Kubernetes pod name for the data service that reads from the machine (read-only)
                             </small>
                             <InputText
                                 id="pod_name"
@@ -506,7 +489,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 {t("dashboard:app_config")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                YAML configuration for data service specifications
+                                YAML configuration mapping machine data points (OPC-UA nodes or MQTT topics) to digital twin properties
                             </small>
                             <InputTextarea
                                 id="app_config"
@@ -591,17 +574,17 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                         <div className="step-header">
                             <h4 className="step-title">
                                 <i className="pi pi-server"></i>
-                                MQTT Settings
+                                PDT Server Settings
                             </h4>
-                            <p className="step-description">Configure MQTT broker connection settings</p>
+                            <p className="step-description">Configure PDT server connection settings</p>
                         </div>
 
                         <div className="field">
                             <label htmlFor="pdt_mqtt_hostname" className="font-semibold">
-                                PDT MQTT {t("dashboard:hostname")} <span className="text-red-500">*</span>
+                                PDT {t("dashboard:hostname")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                MQTT broker hostname or IP address
+                                PDT server hostname or IP address
                             </small>
                             <InputText
                                 id="pdt_mqtt_hostname"
@@ -612,16 +595,16 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 className={`w-full ${validateInput?.pdt_mqtt_hostname ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.pdt_mqtt_hostname && (
-                                <small className="p-error">MQTT hostname is required</small>
+                                <small className="p-error">PDT hostname is required</small>
                             )}
                         </div>
 
                         <div className="field">
                             <label htmlFor="pdt_mqtt_port" className="font-semibold">
-                                PDT MQTT {t("dashboard:port")} <span className="text-red-500">*</span>
+                                PDT {t("dashboard:port")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                MQTT broker port number (typically 1883 or 8883 for SSL)
+                                PDT server port number (typically 1883 or 8883 for SSL)
                             </small>
                             <InputNumber
                                 id="pdt_mqtt_port"
@@ -632,7 +615,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 className={`w-full ${validateInput?.pdt_mqtt_port ? 'p-invalid' : ''}`}
                             />
                             {validateInput?.pdt_mqtt_port && (
-                                <small className="p-error">MQTT port is required</small>
+                                <small className="p-error">PDT port is required</small>
                             )}
                         </div>
 
@@ -653,7 +636,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 </span>
                             </div>
                             <small className="block mt-2 text-gray-600">
-                                Enable SSL/TLS encryption for MQTT connection
+                                Enable SSL/TLS encryption for connection in case of cloud hosted PDT server
                             </small>
                         </div>
                     </div>

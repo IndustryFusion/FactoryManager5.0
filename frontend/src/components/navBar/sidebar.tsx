@@ -271,7 +271,7 @@ function Sidebar() {
 
               <div>
                 <Button
-                  className={`sidebar_navlink is_active`}
+                  className={`sidebar_navlink`}
                   onClick={() => { handleXanaRoute() }}
                   tooltip={!sidebarOpen ? "Xana AI" : t("sidebar.test_version")}
                   tooltipOptions={{ position: "right", event: "both" }}

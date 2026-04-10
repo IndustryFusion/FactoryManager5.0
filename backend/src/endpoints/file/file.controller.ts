@@ -14,48 +14,62 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors, Logger, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from './file.service';
 import { extname } from 'path';
+import { Response } from 'express';
 
 @Controller('file')
 export class FileController {
   private logger = new Logger(FileController.name);
-  constructor(private readonly fileService: FileService) {}
+  constructor(private readonly fileService: FileService) { }
 
-    @Post()
-    @UseInterceptors(
-      FileInterceptor('file', {
-        fileFilter: (req, file, cb) => {
-          const ext = extname(file.originalname);
-          if (
-            ext !== '.png' &&
-            ext !== '.jpg' &&
-            ext !== '.jpeg' &&
-            ext !== '.pdf'
-          ) {
-            return cb(
-              new Error(
-                'Only images (.png, .jpg, .jpeg) and .pdf files are allowed!',
-              ),
-              false,
-            );
-          }
-          cb(null, true);
-        },
-        limits: { fileSize: 1024 * 1024 * 10 },
-      }),
-    )
-    async fileUpload(@UploadedFile() file) {
-      try {
-        return await this.fileService.fileUpload({
-          ...file
-        }, 'image');
-      } catch(err) {
-        this.logger.error('Failed to Upload File ',err.stack);
-        throw err;
-      }
+  @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, cb) => {
+        const ext = extname(file.originalname);
+        if (
+          ext !== '.png' &&
+          ext !== '.jpg' &&
+          ext !== '.jpeg' &&
+          ext !== '.pdf'
+        ) {
+          return cb(
+            new Error(
+              'Only images (.png, .jpg, .jpeg) and .pdf files are allowed!',
+            ),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 1024 * 1024 * 10 },
+    }),
+  )
+  async fileUpload(@UploadedFile() file) {
+    try {
+      return await this.fileService.fileUpload({
+        ...file
+      }, 'image');
+    } catch (err) {
+      this.logger.error('Failed to Upload File ', err);
+      throw err;
     }
+  }
+
+  @Get('by-name/:fileName')
+  async getFileByName(@Param('fileName') fileName: string, @Res() res: Response) {
+    try {
+      const { file, contentType } = await this.fileService.getFileByName(fileName);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      res.send(file);
+    } catch (err) {
+      this.logger.error('Failed to Retrieve File by Name', err);
+      throw err;
+    }
+  }
 
 }

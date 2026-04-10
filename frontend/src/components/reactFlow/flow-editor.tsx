@@ -1698,6 +1698,13 @@ const FlowEditor: React.FC<
         setDialogVisible(true);
       }
 
+      if (node.type === "asset") {
+        const assetLabel = (node.data as any)?.label;
+        if (assetLabel) {
+          router.push(`/factory-site/dashboard?asset=${encodeURIComponent(assetLabel)}`);
+        }
+      }
+
       // if (node.type === "shopFloor") {
       //     if (hasChanges) {
       //         // Save or update changes before navigating if there are any changes

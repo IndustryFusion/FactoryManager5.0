@@ -158,12 +158,13 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
       setPrefixedAssetPropertyProp(prev => [...prev, { key, value: selectedAsset[key] }]);
     });
     dispatch(update(selectedAsset?.id));
-    setSelectedAssetData(asset);
+    setSelectedAssetData(asset ?? {});
 
     if (prefixedKeys.length > 0) {
       setShowBlocker(false);
     }
 
+    if (!asset) return;
     const machineStateKey = Object.keys(asset).find(key => key === "https://industry-fusion.org/base/v0.1/machine_state");
     if (machineStateKey && asset[machineStateKey]) {
       setMachineStateValue(asset[machineStateKey].value)

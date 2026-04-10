@@ -46,6 +46,14 @@ interface UserData {
     products: Product[];
 }
 
+export function getProxiedImageUrl(s3Url: string | null | undefined | string[]): string {
+  if (!s3Url) return "";
+  const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const fileName = Array.isArray(s3Url) ? s3Url[0].split("/").pop() : s3Url.split("/").pop();
+  return `${BACKEND_API_URL}/file/by-name/${fileName}`;
+};
+
+
 export default function ProfileMenu() {
     const [userData, setUserData] = useState<UserData | null>(null);
     const menuTrigger = useRef<any>(null);
@@ -131,7 +139,7 @@ export default function ProfileMenu() {
                                 >
                                     <img
                                         alt={userData?.user_name}
-                                        src={userData?.user_image}
+                                        src={getProxiedImageUrl(userData?.user_image)}
                                         draggable="false"
                                     />
                                 </div>
@@ -177,7 +185,7 @@ export default function ProfileMenu() {
                     <img
                     className="user_avatar_image_circle"
                     alt={userData?.user_name}
-                    src={userData?.user_image}
+                    src={getProxiedImageUrl(userData?.user_image)}
                     width={45}
                     height={45}
                     draggable="false"
