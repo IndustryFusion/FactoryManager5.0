@@ -60,6 +60,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     successToast: false
   })
   const [onboardAsset, setOnboardAsset] = useState(false)
+  const [isOnboarded, setIsOnboarded] = useState(false)
   const [selectedRow, setSelectedRow] = useState<Asset | null>(null);
   const [searchedAsset, setSearchedAsset] = useState("")
   const dataTableRef = useRef(null);
@@ -202,6 +203,16 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     }
   }, [router.isReady, editOnboardAsset.successToast])
 
+  useEffect(() => {
+    if (!selectedRow?.id) { setIsOnboarded(false); return; }
+    axios.get(`${API_URL}/onboarding-asset/${selectedRow.id}`, {
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      withCredentials: true,
+    })
+      .then(res => setIsOnboarded(!!(res.data && Object.keys(res.data).length)))
+      .catch(() => setIsOnboarded(false));
+  }, [selectedRow?.id])
+
 
   useEffect(() => {
     if (onboardAsset && showBlocker === false) {
@@ -302,7 +313,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                     </div>
                     <div className="selected_product_actions">
                       {selectedRow.id && (
-                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate}/>
+                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate} isOnboarded={isOnboarded}/>
                       )}
                       <div className="flex gap-3" style={{paddingRight: "70px", minWidth: "110px"}}>
                         <div className="flex align-items-center gap-2">

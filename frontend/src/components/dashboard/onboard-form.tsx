@@ -33,6 +33,7 @@ import { OnboardData } from "@/types/onboard-form";
 import { Asset } from "@/types/asset-types";
 import YAML from 'yaml';
 import { getAssetById, getRawAssetById } from "@/utility/asset";
+import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
 
 type OnboardDataKey = keyof OnboardData;
 
@@ -161,6 +162,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 }) => {
     const [assetData, setAssetData] = useState<Asset | null>(null);
     const [showSecondaryConfig, setShowSecondaryConfig] = useState(false);
+    const [specItems, setSpecItems] = useState<SpecItem[]>([]);
+    const [secondarySpecItems, setSecondarySpecItems] = useState<SpecItem[]>([]);
 
 
 
@@ -183,18 +186,14 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                             const mqttSpecs = extractMqttSpecs(rawAssetData);
 
                             if (protocol === "opc-ua") {
-                                // Primary: OPC-UA binding points (with placeholder if none)
-                                appConfig = buildOpcUaConfigTemplate(opcUaSpecs);
-                                // Secondary: any parameters using MQTT-style binding points
+                                setSpecItems(opcUaSpecs);
                                 if (mqttSpecs.length > 0) {
-                                    secondaryAppConfig = buildMqttConfigTemplate(mqttSpecs);
+                                    setSecondarySpecItems(mqttSpecs);
                                 }
                             } else {
-                                // Primary: MQTT binding points (with placeholder if none)
-                                appConfig = buildMqttConfigTemplate(mqttSpecs);
-                                // Secondary: any parameters using OPC-UA-style binding points
+                                setSpecItems(mqttSpecs);
                                 if (opcUaSpecs.length > 0) {
-                                    secondaryAppConfig = buildOpcUaConfigTemplate(opcUaSpecs);
+                                    setSecondarySpecItems(opcUaSpecs);
                                 }
                             }
                         }
@@ -212,8 +211,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         pod_name: podName,
                         device_id: assetDataFromScorio?.id,
                         gateway_id: assetDataFromScorio?.id,
-                        app_config: appConfig,
-                        secondary_app_config: secondaryAppConfig
                     }));
                 } catch (error) {
                     console.error("Failed to fetch asset data:", error);
@@ -343,10 +340,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 }
                 break;
             case 1: // Configuration
-                if (!onboardForm.app_config || !onboardForm.pod_name) {
+                if (specItems.length === 0 || !onboardForm.pod_name) {
                     setValidateInput(prev => ({
                         ...prev,
-                        app_config: !onboardForm.app_config
+                        app_config: specItems.length === 0
                     }));
                     isValid = false;
                 }
@@ -402,7 +399,6 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         const {
             ip_address,
             protocol,
-            app_config,
             pod_name,
             pdt_mqtt_hostname,
             pdt_mqtt_port,
@@ -425,7 +421,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
 
 
         if (ip_address === undefined || ip_address === "" ||
-            app_config === undefined || app_config === "" ||
+            specItems.length === 0 ||
             protocol === undefined || protocol === "" ||
             pdt_mqtt_hostname === undefined || pdt_mqtt_hostname === "" ||
             pdt_mqtt_port === undefined || pdt_mqtt_port === 0 ||
@@ -439,27 +435,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             showToast('error', "Error", "Please fill all required fields")
         } else {
 
-            // Check if app_config is not empty and is valid YAML
-            try {
-                parsedConfig = YAML.parse(onboardForm.app_config);
-            } catch (error) {
-                console.error("Invalid YAML in app_config");
-                showToast('error', 'Error', 'Invalid YAML in app_config');
-                setValidateInput(validate => ({ ...validate, app_config: true }))
-            }
+            // Build config objects from spec editor items
+            parsedConfig = onboardForm.protocol === "opc-ua"
+                ? { fusionopcuadataservice: { specification: specItems } }
+                : { fusionmqttdataservice: { specification: specItems } };
 
             let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
-            if (showSecondaryConfig && onboardForm.secondary_app_config) {
-                try {
-                    parsedSecondaryConfig = YAML.parse(onboardForm.secondary_app_config);
-                    if (typeof parsedSecondaryConfig !== "object") {
-                        parsedSecondaryConfig = undefined;
-                        showToast('error', 'Error', 'Invalid YAML in secondary configuration');
-                    }
-                } catch (error) {
-                    console.error("Invalid YAML in secondary_app_config");
-                    showToast('error', 'Error', 'Invalid YAML in secondary configuration');
-                }
+            if (showSecondaryConfig && secondarySpecItems.length > 0) {
+                const secondaryProtocol = onboardForm.protocol === "opc-ua" ? "mqtt" : "opc-ua";
+                parsedSecondaryConfig = secondaryProtocol === "opc-ua"
+                    ? { fusionopcuadataservice: { specification: secondarySpecItems } }
+                    : { fusionmqttdataservice: { specification: secondarySpecItems } };
             }
 
             if (typeof parsedConfig === "object") {
@@ -663,30 +649,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 {t("dashboard:app_config")} <span className="text-red-500">*</span>
                             </label>
                             <small className="block mb-2 text-gray-600">
-                                YAML configuration mapping machine data points (OPC-UA nodes or MQTT topics) to digital twin properties
+                                Define how machine data points ({onboardForm.protocol === "opc-ua" ? "OPC-UA nodes" : "MQTT topics"}) map to digital twin properties
                             </small>
-                            <InputTextarea
-                                id="app_config"
-                                value={onboardForm.app_config}
-                                rows={12}
-                                cols={30}
-                                onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-                                className={`w-full font-mono ${validateInput?.app_config ? 'p-invalid' : ''}`}
+                            <SpecEditor
+                                protocol={(onboardForm.protocol === "opc-ua" || onboardForm.protocol === "mqtt") ? onboardForm.protocol : "opc-ua"}
+                                items={specItems}
+                                onChange={setSpecItems}
+                                hasError={validateInput.app_config}
                             />
                             {validateInput?.app_config && (
-                                <small className="p-error">Valid YAML configuration is required</small>
+                                <small className="p-error">At least one data mapping is required</small>
                             )}
-                            <div className="mt-2">
-                                <Button
-                                    type="button"
-                                    label="Prettify YAML"
-                                    icon="pi pi-sparkles"
-                                    onClick={prettifyYAML}
-                                    size="small"
-                                    outlined
-                                    className="prettify-btn"
-                                />
-                            </div>
                         </div>
 
                         {!showSecondaryConfig ? (
@@ -717,7 +690,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                         icon="pi pi-times"
                                         onClick={() => {
                                             setShowSecondaryConfig(false);
-                                            setOnboardForm(prev => ({ ...prev, secondary_app_config: "", secondary_ip_address: "", secondary_dataservice_image_config: "" }));
+                                            setSecondarySpecItems([]);
+                                            setOnboardForm(prev => ({ ...prev, secondary_ip_address: "", secondary_dataservice_image_config: "" }));
                                         }}
                                         size="small"
                                         text
@@ -725,6 +699,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                         tooltip="Remove secondary configuration"
                                     />
                                 </div>
+                                <hr />
                                 <div className="field mb-3">
                                     <label htmlFor="secondary_ip_address" className="font-semibold">
                                         Secondary Connection URL
@@ -757,24 +732,15 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                         className="w-full"
                                     />
                                 </div>
-                                <InputTextarea
-                                    id="secondary_app_config"
-                                    rows={8}
-                                    cols={30}
-                                    onChange={(e) => handleInputTextAreaChange(e, "secondary_app_config")}
-                                    className="w-full font-mono"
+                                <label className="font-semibold block mb-1">Data Mappings</label>
+                                <small className="block mb-2 text-gray-600">
+                                    Define {onboardForm.protocol === "opc-ua" ? "MQTT" : "OPC-UA"} data mappings for the secondary configuration
+                                </small>
+                                <SpecEditor
+                                    protocol={onboardForm.protocol === "opc-ua" ? "mqtt" : "opc-ua"}
+                                    items={secondarySpecItems}
+                                    onChange={setSecondarySpecItems}
                                 />
-                                <div className="mt-2">
-                                    <Button
-                                        type="button"
-                                        label="Prettify YAML"
-                                        icon="pi pi-sparkles"
-                                        onClick={prettifySecondaryYAML}
-                                        size="small"
-                                        outlined
-                                        className="prettify-btn"
-                                    />
-                                </div>
                             </div>
                         )}
                     </div>

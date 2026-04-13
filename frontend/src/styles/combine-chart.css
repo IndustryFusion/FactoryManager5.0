@@ -382,6 +382,13 @@ font-size : 18px;
 .kpi-anomaly-count {
   color: #ef4444;
 }
+.kpi-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 3px;
+  vertical-align: baseline;
+}
 
 /* ── Threshold panel ──────────────────────────────────────────────────────── */
 .threshold-panel-header {

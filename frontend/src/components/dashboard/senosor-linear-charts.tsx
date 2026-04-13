@@ -277,6 +277,15 @@ const CombineSensorChart: React.FC = () => {
     ...prev,
     [selectedAttribute]: { upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "" },
   }));
+  // ── Unit display — per-attribute unit string ─────────────────────────────
+  // templateUnitCacheRef: maps assetType IRI → { shortAttributeKey: unitString }
+  // so the template endpoint is only called once per asset type, even when the
+  // user switches between attributes of the same asset.
+  const templateUnitCacheRef = useRef<Record<string, Record<string, string>>>({});
+  const [unitMap, setUnitMap] = useState<Record<string, string>>({});
+  // Derived — no extra state needed
+  const selectedAttributeUnit = unitMap[selectedAttribute] ?? "";
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   // Incrementing this key forces the <Chart> to fully remount, resetting zoom to full data range
   // resetKey removed — chart.resetZoom() is used instead (kept as no-op reference guard)
@@ -505,22 +514,66 @@ const CombineSensorChart: React.FC = () => {
       const productName = productKey ? (selectedAssetData[productKey]?.value || "Unknown Product") : undefined;
       setProductName(productName); // Set the product name in the state
 
-      // fetch templates from template sandbox
-      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAssetData.type)}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
+      // ── Step 1: extract units directly from asset/scorpio property objects ─
+      // Mirrors the same sub-property scan used for segment detection.
+      const assetUnitMap: Record<string, string> = {};
+      Object.entries(scorpioData).forEach(([key, val]) => {
+        if (typeof val !== "object" || val === null) return;
+        const shortKey = key.split("/").pop() ?? key;
+        // Sub-property key ending in "unit" (e.g. "https://.../unit") or NGSI-LD "unitCode"
+        const unitEntry = Object.entries(val as Record<string, any>).find(
+          ([innerKey]) => innerKey.endsWith("unit") || innerKey === "unitCode"
+        );
+        if (unitEntry) {
+          const unitVal = unitEntry[1];
+          const unitStr = typeof unitVal === "object" ? unitVal?.value : unitVal;
+          if (unitStr && typeof unitStr === "string") assetUnitMap[shortKey] = unitStr;
+        }
       });
 
-      const prefixedKeys = Object.keys(temp.data.properties)
-        .filter((key: string) => temp.data.properties[key].segment !== 'realtime');
+      // ── Step 2: template fetch with cache guard ────────────────────────────
+      // templateUnitCacheRef is keyed by asset type IRI so the template endpoint
+      // is called at most once per asset type across the lifetime of this component.
+      const assetType = selectedAssetData.type;
+      let templateUnitMap: Record<string, string> | undefined = templateUnitCacheRef.current[assetType];
 
-      const excluded = new Set(prefixedKeys);
+      if (templateUnitMap === undefined) {
+        let fetched: Record<string, string> = {};
+        try {
+          const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetType)}`, {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            withCredentials: true,
+          });
 
-      // helper to normalize keys the same way
-      const normalize = (k: string) => (k.includes('eclass:') ? k.split('eclass:').pop() || k : k);
+          if (temp.data?.properties) {
+            const prefixedKeys = Object.keys(temp.data.properties)
+              .filter((key: string) => temp.data.properties[key].segment !== 'realtime');
+            const excluded = new Set(prefixedKeys);
+            const normalize = (k: string) => (k.includes('eclass:') ? k.split('eclass:').pop() || k : k);
+
+            // Extract unit from each template property
+            Object.entries(temp.data.properties).forEach(([propKey, propVal]: [string, any]) => {
+              const shortKey = propKey.includes("eclass:")
+                ? propKey.split("eclass:").pop() ?? propKey
+                : propKey.split("/").pop() ?? propKey;
+              if (propVal?.unit && typeof propVal.unit === "string") {
+                fetched[shortKey] = propVal.unit;
+              }
+            });
+          }
+        } catch {
+          // Template fetch failed — proceed without template units
+        }
+        templateUnitCacheRef.current[assetType] = fetched;
+        templateUnitMap = fetched;
+      }
+
+      // ── Step 3: merge — asset-level unit wins over template fallback ───────
+      const mergedUnitMap: Record<string, string> = { ...templateUnitMap, ...assetUnitMap };
+      setUnitMap(mergedUnitMap);
 
       // 2) Collect allowed labels from selectedAssetData (unique, filtered)
       const attributeLabels: AttributeOption[] = Object.entries(scorpioData)
@@ -555,8 +608,6 @@ const CombineSensorChart: React.FC = () => {
             .join(" ");
           return { label: formatted, value: lastPart, selectedDatasetIndex: 1 };
         });
-
-
 
       setAttributes(attributeLabels);
       const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
@@ -815,6 +866,7 @@ const CombineSensorChart: React.FC = () => {
     // Reset attributes when entityIdValue changes
     setAttributes([]);
     setSelectedAttribute("");
+    setUnitMap({});
   }, [entityIdValue]);
 
   useEffect(() => {
@@ -944,6 +996,19 @@ const CombineSensorChart: React.FC = () => {
       ...chartOptions,
       plugins: {
         ...chartOptions.plugins,
+        tooltip: {
+          ...(chartOptions.plugins?.tooltip as any),
+          callbacks: {
+            ...((chartOptions.plugins?.tooltip as any)?.callbacks),
+            label: (context: TooltipItem<"line">) => {
+              const yVal = context.parsed.y;
+              const formatted = Number.isInteger(yVal) ? yVal.toString() : parseFloat(yVal.toFixed(4)).toString();
+              const isMainDataset = context.dataset.label !== 'Average' && !context.dataset.label?.startsWith('__');
+              const unitSuffix = isMainDataset && selectedAttributeUnit ? ` ${selectedAttributeUnit}` : "";
+              return `${context.dataset.label}: ${formatted}${unitSuffix}`;
+            },
+          },
+        },
         zoom: {
           pan: {
             enabled: selectedInterval !== 'live',
@@ -974,11 +1039,18 @@ const CombineSensorChart: React.FC = () => {
       },
       scales: {
         x: { ...chartOptions.scales?.x },
-        y: yScaleRest,
+        y: {
+          ...yScaleRest,
+          title: {
+            ...(yScaleRest.title ?? {}),
+            display: true,
+            text: selectedAttributeUnit ? `Value (${selectedAttributeUnit})` : "Value",
+          },
+        },
       },
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedInterval, machineStateBands]);
+  }, [selectedInterval, machineStateBands, selectedAttributeUnit]);
 
   // ── KPI recompute on fresh data ──────────────────────────────────────────
   useEffect(() => {
@@ -1377,19 +1449,19 @@ const CombineSensorChart: React.FC = () => {
                     {kpiStats.trend === "up" ? "↑" : kpiStats.trend === "down" ? "↓" : "→"}
                   </span>
                 </div>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.last.toFixed(4))}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.last.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
               </div>
               <div className="kpi-tile kpi-tile-low">
                 <span className="kpi-tile-label">Low</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.min.toFixed(4))}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.min.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
               </div>
               <div className="kpi-tile kpi-tile-high">
                 <span className="kpi-tile-label">High</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.max.toFixed(4))}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.max.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
               </div>
               <div className="kpi-tile kpi-tile-avg">
                 <span className="kpi-tile-label">Average</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.avg.toFixed(4))}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.avg.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
               </div>
               <div className="kpi-tile kpi-tile-var">
                 <span className="kpi-tile-label">Variation (σ)</span>

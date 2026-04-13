@@ -90,7 +90,7 @@
     "ip_address": "Connection String",
     "main_topic": "Main Topic",
     "protocol": "Protocol",
-    "app_config": "App Config",
+    "app_config": "Primary Application Configuration",
     "pod_name": "Pod Name",
     "hostname": "Hostname",
     "port": "Port",

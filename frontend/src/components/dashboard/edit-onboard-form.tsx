@@ -31,6 +31,7 @@ import { useTranslation } from "next-i18next";
 import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
 import YAML from 'yaml';
+import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
 
 type OnboardDataKey = keyof OnboardData;
 interface EditOnboardAssetProp {
@@ -52,6 +53,8 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
     const [showSecondaryConfig, setShowSecondaryConfig] = useState(false);
+    const [specItems, setSpecItems] = useState<SpecItem[]>([]);
+    const [secondarySpecItems, setSecondarySpecItems] = useState<SpecItem[]>([]);
     const toast = useRef<Toast>(null);
     const { t } = useTranslation(['button', 'dashboard']);
     const [validateInput, setValidateInput] = useState({
@@ -68,7 +71,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
     const [activeStep, setActiveStep] = useState(0);
 
-     const stepItems = [
+    const stepItems = [
         { label: 'Connection' },
         { label: 'Configuration' },
         { label: 'Images' },
@@ -94,18 +97,29 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 ...response.data,
                 pod_name: podName,
                 protocol: assetProtocol,
-                app_config: YAML.stringify(response.data.app_config),
-                secondary_app_config: response.data.secondary_app_config
-                    ? YAML.stringify(response.data.secondary_app_config)
-                    : ""
             }));
+
+            // Extract spec items from loaded app_config (already a parsed object from backend)
+            const primarySpec = response.data.app_config;
+            if (primarySpec) {
+                const specs: SpecItem[] =
+                    primarySpec?.fusionopcuadataservice?.specification ??
+                    primarySpec?.fusionmqttdataservice?.specification ?? [];
+                setSpecItems(specs);
+            }
+
             if (response.data.secondary_app_config) {
                 setShowSecondaryConfig(true);
+                const secSpec = response.data.secondary_app_config;
+                const secSpecs: SpecItem[] =
+                    secSpec?.fusionopcuadataservice?.specification ??
+                    secSpec?.fusionmqttdataservice?.specification ?? [];
+                setSecondarySpecItems(secSpecs);
             }
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('warn', 'Warn',  error.response?.data.message + ". \n\n Please onboard the asset first!");
+                showToast('warn', 'Warn', error.response?.data.message + ". \n\n Please onboard the asset first!");
             }
         }
     }
@@ -168,7 +182,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
     const validateCurrentStep = () => {
         let isValid = true;
-        
+
         switch (activeStep) {
             case 0: // Connection
                 if (!onboard.ip_address) {
@@ -180,10 +194,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 }
                 break;
             case 1: // Configuration
-                if (!onboard.app_config) {
+                if (specItems.length === 0) {
                     setValidateInput(prev => ({
                         ...prev,
-                        app_config: !onboard.app_config
+                        app_config: true
                     }));
                     isValid = false;
                 }
@@ -219,7 +233,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 }
                 break;
         }
-        
+
         return isValid;
     };
 
@@ -238,7 +252,6 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         const {
             ip_address,
             main_topic,
-            app_config,
             pdt_mqtt_hostname,
             pdt_mqtt_port,
             keycloak_url,
@@ -259,7 +272,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         }
 
         if (ip_address === undefined || ip_address === "" ||
-            app_config === undefined || app_config === "" ||
+            specItems.length === 0 ||
             pdt_mqtt_hostname === undefined || pdt_mqtt_hostname === "" ||
             pdt_mqtt_port === undefined || pdt_mqtt_port === 0 ||
             keycloak_url === undefined || keycloak_url === "" ||
@@ -269,27 +282,17 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         ) {
             showToast('error', "Error", "Please fill all required fields")
         } else {
-            // Check if app_config is not empty and is valid JSON
-            try {
-                parsedConfig = YAML.parse(onboard.app_config);
-            } catch (error) {
-                console.error("Invalid YAML in app_config");
-                showToast('error', 'Error', 'Invalid YAML in app_config');
-                setValidateInput(validate => ({ ...validate, app_config: true }))
-            }
+            // Build config objects from spec editor items
+            parsedConfig = onboard.protocol === "opc-ua"
+                ? { fusionopcuadataservice: { specification: specItems } }
+                : { fusionmqttdataservice: { specification: specItems } };
 
             let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
-            if (showSecondaryConfig && onboard.secondary_app_config) {
-                try {
-                    parsedSecondaryConfig = YAML.parse(onboard.secondary_app_config);
-                    if (typeof parsedSecondaryConfig !== "object") {
-                        parsedSecondaryConfig = undefined;
-                        showToast('error', 'Error', 'Invalid YAML in secondary configuration');
-                    }
-                } catch (error) {
-                    console.error("Invalid YAML in secondary_app_config");
-                    showToast('error', 'Error', 'Invalid YAML in secondary configuration');
-                }
+            if (showSecondaryConfig && secondarySpecItems.length > 0) {
+                const secondaryProtocol = onboard.protocol === "opc-ua" ? "mqtt" : "opc-ua";
+                parsedSecondaryConfig = secondaryProtocol === "opc-ua"
+                    ? { fusionopcuadataservice: { specification: secondarySpecItems } }
+                    : { fusionmqttdataservice: { specification: secondarySpecItems } };
             }
 
             if (typeof parsedConfig === "object") {
@@ -300,7 +303,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 if (parsedSecondaryConfig !== undefined) {
                     modifiedOnboard.secondary_app_config = parsedSecondaryConfig;
                 } else {
-                    delete modifiedOnboard.secondary_app_config;
+                    // Send null explicitly so the backend clears the field.
+                    // Using `delete` would omit the key from the PATCH body,
+                    // causing the backend to leave the old value unchanged.
+                    modifiedOnboard.secondary_app_config = null;
                 }
                 if (!showSecondaryConfig || !onboard.secondary_ip_address) {
                     delete modifiedOnboard.secondary_ip_address;
@@ -311,7 +317,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 const payload = YAML.stringify(modifiedOnboard);
                 const newpayload = YAML.parse(payload);
                 console.log("edit payload", newpayload);
-              
+
                 try {
                     const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
                         headers: {
@@ -347,9 +353,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         <div className="onboardform-header">
             <h3 className="text-2xl font-semibold mb-2">{t("dashboard:update_onboard_form")}</h3>
             <p className="text-gray-600 text-sm m-0 mb-3">Update the onboarding configuration for your device</p>
-            <Steps 
-                model={stepItems} 
-                activeIndex={activeStep} 
+            <Steps
+                model={stepItems}
+                activeIndex={activeStep}
                 onSelect={(e) => setActiveStep(e.index)}
                 readOnly={false}
                 className="onboard-steps mb-4"
@@ -534,28 +540,15 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                             <small className="block mb-2 text-gray-600">
                                 YAML configuration mapping machine data points (OPC-UA nodes or MQTT topics) to digital twin properties
                             </small>
-                            <InputTextarea
-                                id="app_config"
-                                value={onboard.app_config}
-                                rows={12}
-                                cols={30}
-                                onChange={(e) => handleInputTextAreaChange(e, "app_config")}
-                                className={`w-full font-mono ${validateInput?.app_config ? 'p-invalid' : ''}`}
+                            <SpecEditor
+                                protocol={(onboard.protocol === "opc-ua" || onboard.protocol === "mqtt") ? onboard.protocol : "opc-ua"}
+                                items={specItems}
+                                onChange={setSpecItems}
+                                hasError={validateInput.app_config}
                             />
                             {validateInput?.app_config && (
-                                <small className="p-error">Valid YAML configuration is required</small>
+                                <small className="p-error">At least one data mapping is required</small>
                             )}
-                            <div className="mt-2">
-                                <Button
-                                    type="button"
-                                    label="Prettify YAML"
-                                    icon="pi pi-sparkles"
-                                    onClick={prettifyYAML}
-                                    size="small"
-                                    outlined
-                                    className="prettify-btn"
-                                />
-                            </div>
                         </div>
 
                         {!showSecondaryConfig ? (
@@ -586,7 +579,8 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                         icon="pi pi-times"
                                         onClick={() => {
                                             setShowSecondaryConfig(false);
-                                            setOnboard(prev => ({ ...prev, secondary_app_config: "", secondary_ip_address: "", secondary_dataservice_image_config: "" }));
+                                            setSecondarySpecItems([]);
+                                            setOnboard(prev => ({ ...prev, secondary_ip_address: "", secondary_dataservice_image_config: "" }));
                                         }}
                                         size="small"
                                         text
@@ -594,6 +588,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                         tooltip="Remove secondary configuration"
                                     />
                                 </div>
+                                <hr />
                                 <div className="field mb-3">
                                     <label htmlFor="secondary_ip_address" className="font-semibold">
                                         Secondary Connection URL
@@ -626,24 +621,15 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                         className="w-full"
                                     />
                                 </div>
-                                <InputTextarea
-                                    id="secondary_app_config"
-                                    rows={8}
-                                    cols={30}
-                                    onChange={(e) => handleInputTextAreaChange(e, "secondary_app_config")}
-                                    className="w-full font-mono"
+                                <label className="font-semibold block mb-1">Data Mappings</label>
+                                <small className="block mb-2 text-gray-600">
+                                    Define {onboard.protocol === "opc-ua" ? "MQTT" : "OPC-UA"} data mappings for the secondary configuration
+                                </small>
+                                <SpecEditor
+                                    protocol={onboard.protocol === "opc-ua" ? "mqtt" : "opc-ua"}
+                                    items={secondarySpecItems}
+                                    onChange={setSecondarySpecItems}
                                 />
-                                <div className="mt-2">
-                                    <Button
-                                        type="button"
-                                        label="Prettify YAML"
-                                        icon="pi pi-sparkles"
-                                        onClick={prettifySecondaryYAML}
-                                        size="small"
-                                        outlined
-                                        className="prettify-btn"
-                                    />
-                                </div>
                             </div>
                         )}
                     </div>
@@ -761,9 +747,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 <label htmlFor="secure_config" className="font-semibold mb-0 cursor-pointer">
                                     {t("dashboard:secure_config")}
                                 </label>
-                                <span className="ml-auto px-3 py-1 rounded-full text-sm font-medium" 
-                                    style={{backgroundColor: onboard.secure_config ? '#22c55e20' : '#ef444420', 
-                                            color: onboard.secure_config ? '#16a34a' : '#dc2626'}}>
+                                <span className="ml-auto px-3 py-1 rounded-full text-sm font-medium"
+                                    style={{
+                                        backgroundColor: onboard.secure_config ? '#22c55e20' : '#ef444420',
+                                        color: onboard.secure_config ? '#16a34a' : '#dc2626'
+                                    }}>
                                     {onboard.secure_config ? "Enabled" : "Disabled"}
                                 </span>
                             </div>
@@ -867,11 +855,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         <>
             <Toast ref={toast} />
             <Dialog
-                visible={editOnboardAssetProp.showEditOnboard} 
+                visible={editOnboardAssetProp.showEditOnboard}
                 modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '60rem', maxWidth: '95vw' }} 
+                style={{ width: '60rem', maxWidth: '95vw' }}
                 onHide={() => {
                     setEditOnboardAssetProp({
                         ...editOnboardAssetProp,
@@ -879,7 +867,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     });
                     setActiveStep(0);
                 }}
-                draggable={false} 
+                draggable={false}
                 resizable={false}
                 blockScroll
             >
