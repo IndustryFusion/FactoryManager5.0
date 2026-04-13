@@ -51,6 +51,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
+    const [showSecondaryConfig, setShowSecondaryConfig] = useState(false);
     const toast = useRef<Toast>(null);
     const { t } = useTranslation(['button', 'dashboard']);
     const [validateInput, setValidateInput] = useState({
@@ -93,8 +94,14 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 ...response.data,
                 pod_name: podName,
                 protocol: assetProtocol,
-                app_config: YAML.stringify(response.data.app_config)
+                app_config: YAML.stringify(response.data.app_config),
+                secondary_app_config: response.data.secondary_app_config
+                    ? YAML.stringify(response.data.secondary_app_config)
+                    : ""
             }));
+            if (response.data.secondary_app_config) {
+                setShowSecondaryConfig(true);
+            }
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -130,6 +137,17 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             const parsed = YAML.parse(onboard.app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboard({ ...onboard, app_config: prettified });
+            showToast('success', 'Success', 'YAML formatted successfully');
+        } catch (error) {
+            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+        }
+    };
+
+    const prettifySecondaryYAML = () => {
+        try {
+            const parsed = YAML.parse(onboard.secondary_app_config);
+            const prettified = YAML.stringify(parsed, { indent: 2 });
+            setOnboard({ ...onboard, secondary_app_config: prettified });
             showToast('success', 'Success', 'YAML formatted successfully');
         } catch (error) {
             showToast('error', 'Error', 'Invalid YAML: Unable to format');
@@ -260,10 +278,35 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 setValidateInput(validate => ({ ...validate, app_config: true }))
             }
 
+            let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
+            if (showSecondaryConfig && onboard.secondary_app_config) {
+                try {
+                    parsedSecondaryConfig = YAML.parse(onboard.secondary_app_config);
+                    if (typeof parsedSecondaryConfig !== "object") {
+                        parsedSecondaryConfig = undefined;
+                        showToast('error', 'Error', 'Invalid YAML in secondary configuration');
+                    }
+                } catch (error) {
+                    console.error("Invalid YAML in secondary_app_config");
+                    showToast('error', 'Error', 'Invalid YAML in secondary configuration');
+                }
+            }
+
             if (typeof parsedConfig === "object") {
-                const modifiedOnboard = {
+                const modifiedOnboard: Record<string, any> = {
                     ...onboard,
                     app_config: parsedConfig
+                };
+                if (parsedSecondaryConfig !== undefined) {
+                    modifiedOnboard.secondary_app_config = parsedSecondaryConfig;
+                } else {
+                    delete modifiedOnboard.secondary_app_config;
+                }
+                if (!showSecondaryConfig || !onboard.secondary_ip_address) {
+                    delete modifiedOnboard.secondary_ip_address;
+                }
+                if (!showSecondaryConfig || !onboard.secondary_dataservice_image_config) {
+                    delete modifiedOnboard.secondary_dataservice_image_config;
                 }
                 const payload = YAML.stringify(modifiedOnboard);
                 const newpayload = YAML.parse(payload);
@@ -514,6 +557,95 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                         </div>
+
+                        {!showSecondaryConfig ? (
+                            <div className="mt-2">
+                                <Button
+                                    type="button"
+                                    label="Add Secondary Configuration"
+                                    icon="pi pi-plus"
+                                    onClick={() => setShowSecondaryConfig(true)}
+                                    size="small"
+                                    outlined
+                                    severity="secondary"
+                                />
+                            </div>
+                        ) : (
+                            <div className="field">
+                                <div className="flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <label htmlFor="secondary_app_config" className="font-semibold">
+                                            Secondary Configuration
+                                        </label>
+                                        <small className="block text-gray-600">
+                                            Optional secondary YAML configuration
+                                        </small>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        icon="pi pi-times"
+                                        onClick={() => {
+                                            setShowSecondaryConfig(false);
+                                            setOnboard(prev => ({ ...prev, secondary_app_config: "", secondary_ip_address: "", secondary_dataservice_image_config: "" }));
+                                        }}
+                                        size="small"
+                                        text
+                                        severity="danger"
+                                        tooltip="Remove secondary configuration"
+                                    />
+                                </div>
+                                <div className="field mb-3">
+                                    <label htmlFor="secondary_ip_address" className="font-semibold">
+                                        Secondary Connection URL
+                                    </label>
+                                    <small className="block mb-2 text-gray-600">
+                                        Connection endpoint for the secondary configuration (optional)
+                                    </small>
+                                    <InputText
+                                        id="secondary_ip_address"
+                                        value={onboard.secondary_ip_address || ""}
+                                        type="text"
+                                        placeholder="opc.tcp://192.168.49.xx:4840"
+                                        onChange={(e) => handleInputChange(e.target.value, "secondary_ip_address")}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <div className="field mb-3">
+                                    <label htmlFor="secondary_dataservice_image_config" className="font-semibold">
+                                        Secondary Data Service Image
+                                    </label>
+                                    <small className="block mb-2 text-gray-600">
+                                        Docker image for the secondary data service (optional)
+                                    </small>
+                                    <InputText
+                                        id="secondary_dataservice_image_config"
+                                        value={onboard.secondary_dataservice_image_config || ""}
+                                        type="text"
+                                        placeholder="ex: docker.io/ibn40/fusionopcuadataservice:v0.0.1"
+                                        onChange={(e) => handleInputChange(e.target.value, "secondary_dataservice_image_config")}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <InputTextarea
+                                    id="secondary_app_config"
+                                    rows={8}
+                                    cols={30}
+                                    onChange={(e) => handleInputTextAreaChange(e, "secondary_app_config")}
+                                    className="w-full font-mono"
+                                />
+                                <div className="mt-2">
+                                    <Button
+                                        type="button"
+                                        label="Prettify YAML"
+                                        icon="pi pi-sparkles"
+                                        onClick={prettifySecondaryYAML}
+                                        size="small"
+                                        outlined
+                                        className="prettify-btn"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
 
