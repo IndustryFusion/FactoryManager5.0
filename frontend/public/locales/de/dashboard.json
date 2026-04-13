@@ -90,7 +90,7 @@
     "ip_address": "Verbindungszeichenfolge",
     "main_topic": "Haupttopic",
     "protocol": "Protokoll",
-    "app_config": "App-Konfiguration",
+    "app_config": "Primäre Anwendungskonfiguration",
     "pod_name": "Pod-Name",
     "hostname": "Hostname",
     "port": "Port",

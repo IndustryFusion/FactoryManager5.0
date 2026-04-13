@@ -15,8 +15,9 @@ interface IfricIdBadgeProps{
     toast: RefObject<Toast>;
     setShowBlocker: React.Dispatch<React.SetStateAction<boolean>>;
     editOnboardBodyTemplate: () => void;
+    isOnboarded: boolean;
 }
-export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboardBodyTemplate }: IfricIdBadgeProps) {
+export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboardBodyTemplate, isOnboarded }: IfricIdBadgeProps) {
 
     const [showDropdown, setShowDropdown] = useState(false);
     const op = useRef<OverlayPanel>(null);
@@ -35,15 +36,45 @@ export default function IfricIdBadge({ ifricId, toast, setShowBlocker, editOnboa
     const menuModel = [
     {
       label: t("onboard"),
+      disabled: isOnboarded,
+      template: isOnboarded
+        ? (_item: any, options: any) => (
+            <div
+              className={options.className}
+              style={{ pointerEvents: "none", opacity: 0.55, cursor: "not-allowed", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}
+              title="This asset is already onboarded"
+            >
+              <span className={options.labelClassName}>{t("onboard")}</span>
+              <small style={{ fontSize: "11px", color: "#6b7280" }}>
+                Already onboarded
+              </small>
+            </div>
+          )
+        : undefined,
       command: () => {
         setShowBlocker(true);
       },
     },
     {
       label: t("edit_onboard"),
+      disabled: !isOnboarded,
+      template: !isOnboarded
+        ? (_item: any, options: any) => (
+            <div
+              className={options.className}
+              style={{ pointerEvents: "none", opacity: 0.55, cursor: "not-allowed", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}
+              title="Onboard this asset first"
+            >
+              <span className={options.labelClassName}>{t("edit_onboard")}</span>
+              <small style={{ fontSize: "11px", color: "#6b7280" }}>
+                Onboard first
+              </small>
+            </div>
+          )
+        : undefined,
       command: () => {
         editOnboardBodyTemplate();
-       },
+      },
     }
   ];
 
