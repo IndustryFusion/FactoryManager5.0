@@ -60,6 +60,9 @@ interface OnboardFormData {
     password_config: string;
     dataservice_image_config: string;
     agentservice_image_config: string;
+    secondary_app_config: string;
+    secondary_ip_address: string;
+    secondary_dataservice_image_config: string;
     [key: string]: string | number | boolean | null | undefined; // Adjusted index signature to exclude null
 }
 
@@ -83,9 +86,18 @@ const resolveBindingPoint = (rawValue: any): string => {
     return rawValue != null ? String(rawValue) : "";
 };
 
-const buildOpcUaConfigTemplate = (rawAssetData: any): string => {
-    const specifications: Array<{ node_id: string; identifier: string; parameter: string }> = [];
+// Returns true when a binding point string follows OPC-UA notation
+// (semicolon-separated segments where at least one looks like ns=X, i=X, s=X, etc.)
+const isOpcUaBindingPoint = (bindingPoint: string): boolean => {
+    if (!bindingPoint) return false;
+    const parts = bindingPoint.split(";");
+    if (parts.length < 2) return false;
+    return parts.some(part => /^(ns|i|s|g|b)=/i.test(part.trim()));
+};
 
+// Extract OPC-UA specs from realtime properties whose binding points look like OPC-UA
+const extractOpcUaSpecs = (rawAssetData: any): Array<{ node_id: string; identifier: string; parameter: string }> => {
+    const specifications: Array<{ node_id: string; identifier: string; parameter: string }> = [];
     Object.keys(rawAssetData).forEach((key) => {
         const prop = rawAssetData[key];
         if (
@@ -95,28 +107,20 @@ const buildOpcUaConfigTemplate = (rawAssetData: any): string => {
             prop[SEGMENT_KEY]?.value === "realtime"
         ) {
             const bindingPoint = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
-            const parts = bindingPoint ? bindingPoint.split(";") : [];
-            const node_id = parts[0] || "";
-            const identifier = parts.slice(1).join(";") || "";
-            specifications.push({ node_id, identifier, parameter: key });
+            if (isOpcUaBindingPoint(bindingPoint)) {
+                const parts = bindingPoint.split(";");
+                const node_id = parts[0] || "";
+                const identifier = parts.slice(1).join(";") || "";
+                specifications.push({ node_id, identifier, parameter: key });
+            }
         }
     });
-
-    if (specifications.length === 0) {
-        return `fusionopcuadataservice:\n  specification:\n    - node_id: "ns=4"\n      identifier: "i=39"\n      parameter: "https://industry-fusion.org/base/v0.1/machine_state"`;
-    }
-
-    const configObj = {
-        fusionopcuadataservice: {
-            specification: specifications
-        }
-    };
-    return YAML.stringify(configObj, { indent: 2 });
+    return specifications;
 };
 
-const buildMqttConfigTemplate = (rawAssetData: any): string => {
+// Extract MQTT specs from realtime properties whose binding points do NOT look like OPC-UA
+const extractMqttSpecs = (rawAssetData: any): Array<{ topic: string; key: never[]; parameter: string[] }> => {
     const specifications: Array<{ topic: string; key: never[]; parameter: string[] }> = [];
-
     Object.keys(rawAssetData).forEach((key) => {
         const prop = rawAssetData[key];
         if (
@@ -125,21 +129,29 @@ const buildMqttConfigTemplate = (rawAssetData: any): string => {
             prop.type === "Property" &&
             prop[SEGMENT_KEY]?.value === "realtime"
         ) {
-            const topic = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
-            specifications.push({ topic, key: [], parameter: [key] });
+            const bindingPoint = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
+            if (!isOpcUaBindingPoint(bindingPoint)) {
+                specifications.push({ topic: bindingPoint, key: [], parameter: [key] });
+            }
         }
     });
+    return specifications;
+};
 
-    if (specifications.length === 0) {
+// Build OPC-UA YAML template string from specs (shows placeholder when specs are empty)
+const buildOpcUaConfigTemplate = (specs: Array<{ node_id: string; identifier: string; parameter: string }>): string => {
+    if (specs.length === 0) {
+        return `fusionopcuadataservice:\n  specification:\n    - node_id: "ns=4"\n      identifier: "i=39"\n      parameter: "https://industry-fusion.org/base/v0.1/machine_state"`;
+    }
+    return YAML.stringify({ fusionopcuadataservice: { specification: specs } }, { indent: 2 });
+};
+
+// Build MQTT YAML template string from specs (shows placeholder when specs are empty)
+const buildMqttConfigTemplate = (specs: Array<{ topic: string; key: never[]; parameter: string[] }>): string => {
+    if (specs.length === 0) {
         return `fusionmqttdataservice:\n  specification:\n    - topic: "airtracker-74145/relay1"\n      key: []\n      parameter:\n        - "https://industry-fusion.org/base/v0.1/machine_state"`;
     }
-
-    const configObj = {
-        fusionmqttdataservice: {
-            specification: specifications
-        }
-    };
-    return YAML.stringify(configObj, { indent: 2 });
+    return YAML.stringify({ fusionmqttdataservice: { specification: specs } }, { indent: 2 });
 };
 
 const OnboardForm: React.FC<OnboardFormProps> = ({
@@ -148,6 +160,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
     setOnboardAssetProp
 }) => {
     const [assetData, setAssetData] = useState<Asset | null>(null);
+    const [showSecondaryConfig, setShowSecondaryConfig] = useState(false);
 
 
 
@@ -161,14 +174,34 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     const productName = assetDataFromScorio?.product_name === undefined && assetDataFromScorio?.asset_communication_protocol === undefined ? "" : `${assetDataFromScorio?.product_name}-${assetDataFromScorio?.asset_communication_protocol}`;
                     const podName = productName.toLowerCase().replace(/ /g, '');
                     let appConfig = "";
+                    let secondaryAppConfig = "";
                     const protocol = assetDataFromScorio?.asset_communication_protocol;
                     if (protocol === "opc-ua" || protocol === "mqtt") {
                         const rawAssetData = await getRawAssetById(asset.id);
                         if (rawAssetData) {
-                            appConfig = protocol === "opc-ua"
-                                ? buildOpcUaConfigTemplate(rawAssetData)
-                                : buildMqttConfigTemplate(rawAssetData);
+                            const opcUaSpecs = extractOpcUaSpecs(rawAssetData);
+                            const mqttSpecs = extractMqttSpecs(rawAssetData);
+
+                            if (protocol === "opc-ua") {
+                                // Primary: OPC-UA binding points (with placeholder if none)
+                                appConfig = buildOpcUaConfigTemplate(opcUaSpecs);
+                                // Secondary: any parameters using MQTT-style binding points
+                                if (mqttSpecs.length > 0) {
+                                    secondaryAppConfig = buildMqttConfigTemplate(mqttSpecs);
+                                }
+                            } else {
+                                // Primary: MQTT binding points (with placeholder if none)
+                                appConfig = buildMqttConfigTemplate(mqttSpecs);
+                                // Secondary: any parameters using OPC-UA-style binding points
+                                if (opcUaSpecs.length > 0) {
+                                    secondaryAppConfig = buildOpcUaConfigTemplate(opcUaSpecs);
+                                }
+                            }
                         }
+                    }
+
+                    if (secondaryAppConfig) {
+                        setShowSecondaryConfig(true);
                     }
 
                     setOnboardForm(prevForm => ({
@@ -179,7 +212,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         pod_name: podName,
                         device_id: assetDataFromScorio?.id,
                         gateway_id: assetDataFromScorio?.id,
-                        app_config: appConfig
+                        app_config: appConfig,
+                        secondary_app_config: secondaryAppConfig
                     }));
                 } catch (error) {
                     console.error("Failed to fetch asset data:", error);
@@ -209,7 +243,10 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             username_config: "",
             password_config: "",
             dataservice_image_config: "",
-            agentservice_image_config: ""
+            agentservice_image_config: "",
+            secondary_app_config: "",
+            secondary_ip_address: "",
+            secondary_dataservice_image_config: ""
         }
     );
 
@@ -262,6 +299,17 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             const parsed = YAML.parse(onboardForm.app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboardForm({ ...onboardForm, app_config: prettified });
+            showToast('success', 'Success', 'YAML formatted successfully');
+        } catch (error) {
+            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+        }
+    };
+
+    const prettifySecondaryYAML = () => {
+        try {
+            const parsed = YAML.parse(onboardForm.secondary_app_config);
+            const prettified = YAML.stringify(parsed, { indent: 2 });
+            setOnboardForm({ ...onboardForm, secondary_app_config: prettified });
             showToast('success', 'Success', 'YAML formatted successfully');
         } catch (error) {
             showToast('error', 'Error', 'Invalid YAML: Unable to format');
@@ -399,10 +447,36 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 showToast('error', 'Error', 'Invalid YAML in app_config');
                 setValidateInput(validate => ({ ...validate, app_config: true }))
             }
+
+            let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
+            if (showSecondaryConfig && onboardForm.secondary_app_config) {
+                try {
+                    parsedSecondaryConfig = YAML.parse(onboardForm.secondary_app_config);
+                    if (typeof parsedSecondaryConfig !== "object") {
+                        parsedSecondaryConfig = undefined;
+                        showToast('error', 'Error', 'Invalid YAML in secondary configuration');
+                    }
+                } catch (error) {
+                    console.error("Invalid YAML in secondary_app_config");
+                    showToast('error', 'Error', 'Invalid YAML in secondary configuration');
+                }
+            }
+
             if (typeof parsedConfig === "object") {
-                const obj = {
+                const obj: Record<string, any> = {
                     ...onboardForm,
                     app_config: parsedConfig
+                };
+                if (parsedSecondaryConfig !== undefined) {
+                    obj.secondary_app_config = parsedSecondaryConfig;
+                } else {
+                    delete obj.secondary_app_config;
+                }
+                if (!showSecondaryConfig || !onboardForm.secondary_ip_address) {
+                    delete obj.secondary_ip_address;
+                }
+                if (!showSecondaryConfig || !onboardForm.secondary_dataservice_image_config) {
+                    delete obj.secondary_dataservice_image_config;
                 }
                 const payload = YAML.stringify(obj);
                 const newpayload = JSON.stringify(YAML.parse(payload));
@@ -614,6 +688,95 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                                 />
                             </div>
                         </div>
+
+                        {!showSecondaryConfig ? (
+                            <div className="mt-2">
+                                <Button
+                                    type="button"
+                                    label="Add Secondary Configuration"
+                                    icon="pi pi-plus"
+                                    onClick={() => setShowSecondaryConfig(true)}
+                                    size="small"
+                                    outlined
+                                    severity="secondary"
+                                />
+                            </div>
+                        ) : (
+                            <div className="field">
+                                <div className="flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <label htmlFor="secondary_app_config" className="font-semibold">
+                                            Secondary Configuration
+                                        </label>
+                                        <small className="block text-gray-600">
+                                            Optional secondary YAML configuration
+                                        </small>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        icon="pi pi-times"
+                                        onClick={() => {
+                                            setShowSecondaryConfig(false);
+                                            setOnboardForm(prev => ({ ...prev, secondary_app_config: "", secondary_ip_address: "", secondary_dataservice_image_config: "" }));
+                                        }}
+                                        size="small"
+                                        text
+                                        severity="danger"
+                                        tooltip="Remove secondary configuration"
+                                    />
+                                </div>
+                                <div className="field mb-3">
+                                    <label htmlFor="secondary_ip_address" className="font-semibold">
+                                        Secondary Connection URL
+                                    </label>
+                                    <small className="block mb-2 text-gray-600">
+                                        Connection endpoint for the secondary configuration (optional)
+                                    </small>
+                                    <InputText
+                                        id="secondary_ip_address"
+                                        value={onboardForm.secondary_ip_address}
+                                        type="text"
+                                        placeholder="opc.tcp://192.168.49.xx:4840"
+                                        onChange={(e) => handleInputChange(e.target.value, "secondary_ip_address")}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <div className="field mb-3">
+                                    <label htmlFor="secondary_dataservice_image_config" className="font-semibold">
+                                        Secondary Data Service Image
+                                    </label>
+                                    <small className="block mb-2 text-gray-600">
+                                        Docker image for the secondary data service (optional)
+                                    </small>
+                                    <InputText
+                                        id="secondary_dataservice_image_config"
+                                        value={onboardForm.secondary_dataservice_image_config}
+                                        type="text"
+                                        placeholder="ex: docker.io/ibn40/fusionopcuadataservice:v0.0.1"
+                                        onChange={(e) => handleInputChange(e.target.value, "secondary_dataservice_image_config")}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <InputTextarea
+                                    id="secondary_app_config"
+                                    rows={8}
+                                    cols={30}
+                                    onChange={(e) => handleInputTextAreaChange(e, "secondary_app_config")}
+                                    className="w-full font-mono"
+                                />
+                                <div className="mt-2">
+                                    <Button
+                                        type="button"
+                                        label="Prettify YAML"
+                                        icon="pi pi-sparkles"
+                                        onClick={prettifySecondaryYAML}
+                                        size="small"
+                                        outlined
+                                        className="prettify-btn"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
 

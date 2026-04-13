@@ -34,6 +34,15 @@ export class Onboarding {
   @Prop({ type: Object, required: true })
   app_config: Record<string, any>;
 
+  @Prop({ type: Object })
+  secondary_app_config: Record<string, any>;
+
+  @Prop()
+  secondary_ip_address: string;
+
+  @Prop()
+  secondary_dataservice_image_config: string;
+
   @Prop({ required: true })
   pod_name: string;
 

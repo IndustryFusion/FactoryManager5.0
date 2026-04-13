@@ -31,6 +31,9 @@ export interface OnboardData {
     password_config?: string;
     dataservice_image_config?: string;
     agentservice_image_config?: string;
+    secondary_app_config?: string;
+    secondary_ip_address?: string;
+    secondary_dataservice_image_config?: string;
 }
 
 type OnboardDataKey = keyof OnboardData;
