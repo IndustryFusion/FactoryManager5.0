@@ -35,7 +35,29 @@ export class FactoryPdtCacheService {
   async updateFactoryAndShopFloor(data: Record<string, any>) {
     try {
       const shopFloors = Array.isArray(data.shop_floor) ? data.shop_floor : [data.shop_floor];
-      return await this.factoryPdtCacheModel.updateMany({id: { $in: data.assetIds }}, { factory_site: data.factory_site, isCacheUpdated: true, $addToSet: { shop_floor: { $each: shopFloors } } }, {new: true})
+      return await this.factoryPdtCacheModel.updateMany(
+        {id: { $in: data.assetIds }}, 
+        [
+          {
+            $set: {
+              factory_site: data.factory_site,
+              isCacheUpdated: true,
+              shop_floor: {
+                $cond: [
+                  { $isArray: "$shop_floor" },
+                  { $setUnion: ["$shop_floor", shopFloors] },
+                  { $cond: [
+                    { $or: [{ $eq: ["$shop_floor", ""] }, { $eq: ["$shop_floor", null] }] },
+                    shopFloors,
+                    { $setUnion: [["$shop_floor"], shopFloors] }
+                  ]}
+                ]
+              }
+            }
+          }
+        ],
+        {new: true}
+      )
     } catch(err) {
       if (err instanceof HttpException) {
         throw err;
