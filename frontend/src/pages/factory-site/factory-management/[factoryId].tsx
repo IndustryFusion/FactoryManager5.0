@@ -41,6 +41,8 @@ import "@/styles/react-flow-page.css"
 import { TabPanel, TabView } from "primereact/tabview";
 import { OverlayPanel } from "primereact/overlaypanel";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const ShopFloorManager: React.FC = () => {
   const { t } = useTranslation('reactflow');
   const [factoryDetails, setFactoryDetails] = useState<ShopFloor | null>(null);
@@ -64,7 +66,8 @@ const ShopFloorManager: React.FC = () => {
         const details = await getShopFloors(factoryId);
         setFactoryDetails(details);
       } catch (error) {
-        console.error("Failed to fetch factory details", error);
+        logHandledError("Failed to fetch factory details", error);
+        notifyError(t('toast:error'), error, t('toast:load_factory_details'));
       }
     };
 
@@ -173,7 +176,8 @@ export async function getServerSideProps({ locale }: { locale: string }) {
         'dashboard',
         'placeholder',
         'overview',
-        'navigation'
+        'navigation',
+        'toast',
       ])),
     },
   }

@@ -19,6 +19,7 @@ import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
 import { getAccessGroup } from "./indexed-db";
 
+import { notifyError } from "@/utility/global-toast";
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const getCompanyIfricId = (): string => {
@@ -189,6 +190,7 @@ export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
     return response.data;
   } catch (error: any) {
       console.error(error);
+    notifyError("Error", error, "Could not load owned assets.");
   }
 };
 

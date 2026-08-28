@@ -31,6 +31,8 @@ import { Dialog } from "primereact/dialog";
 import { useShopFloor } from "@/context/shopfloor-context";
 import { useTranslation } from "next-i18next";
 
+import { getErrorMessage } from "@/utility/error-message";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 
@@ -87,7 +89,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
        if (axios.isAxiosError(error)) {
         showError(t('reactflow:fetchingShopFloorTemplate'));
       }
-      console.error(" Fetching shopfloor template", error);
+      logHandledError(" Fetching shopfloor template", error);
     }
   };
 
@@ -120,7 +122,13 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         setUploading(false);
         setSubmitDisabled(false);
       } catch (error) {
-        console.error("Error uploading file:", error);
+        logHandledError("Error uploading file:", error);
+        toast.current?.show({
+          severity: "error",
+          summary: t('toast:upload_failed'),
+          detail: getErrorMessage(error, "Could not upload the file."),
+          life: 6000,
+        });
         setUploading(false);
       }
     }
@@ -204,7 +212,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
         if (axios.isAxiosError(error)) {
         showError(t('reactflow:errorSavingShopFloor'));
       }
-      console.error("Error saving shop floor", error);
+      logHandledError("Error saving shop floor", error);
     }
   };
 

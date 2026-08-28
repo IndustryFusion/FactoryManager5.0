@@ -26,6 +26,7 @@ import { FactorySiteService } from '../factory-site/factory-site.service';
 import { error } from 'console';
 import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class ReactFlowService {
   constructor(
@@ -55,7 +56,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -69,7 +70,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -84,7 +85,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -119,7 +120,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -133,7 +134,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -224,7 +225,7 @@ export class ReactFlowService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -308,7 +309,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
     if (err instanceof HttpException) {
       throw err;
     } else if (err.response) {
-      throw new HttpException(err.response.data.message, err.response.status);
+      throw new HttpException(upstreamMessage(err), err.response.status);
     } else {
       throw new HttpException(err.message, HttpStatus.NOT_FOUND);
     }

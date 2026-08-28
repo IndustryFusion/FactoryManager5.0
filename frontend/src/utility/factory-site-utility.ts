@@ -22,6 +22,8 @@ import html2canvas from "html2canvas";
 import { AllocatedAssets } from "@/types/asset-types";
 import { getAccessGroup } from "./indexed-db";
 import api from "./jwt";
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -94,7 +96,6 @@ export const handleUpload = async (file: File): Promise<string> => {
       throw new Error("Failed to upload file");
     }
   } catch (error) {
-    console.error("Error uploading file:", error);
     throw error;
   }
 };
@@ -116,7 +117,8 @@ export const fetchFactoriesAndAssets = async () => {
 
     return response;
   } catch (error) {
-    console.error("Error fetching factories and assets", error);
+    logHandledError("Error fetching factories and assets", error);
+    notifyError("Error", error, "Could not load factories and assets.");
     return null;
   }
 };
@@ -138,7 +140,6 @@ export async function fetchFactoryDetails(factoryId: string) {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching factory details:", error);
     throw error;
   }
 }
@@ -164,7 +165,6 @@ export async function updateFactoryData(
     });
   
   } catch (error) {
-    console.error("Error updating factory:", error);
     throw error; // Rethrow to handle in component
   }
 }
@@ -184,7 +184,8 @@ export const deleteFactory = async (factoryToDelete: Factory) => {
       withCredentials: true,
     });
   } catch (error) {
-    console.error("Error deleting factory", error);
+    logHandledError("Error deleting factory", error);
+    notifyError("Delete failed", error, "Could not delete the factory.");
   }
 };
 
@@ -304,6 +305,7 @@ export const getNonShopFloorAsset = async (factoryId: string) => {
     return response.data;
   } catch (error) {
      console.log("Error fetching non-shop-floor assets", error);
+    notifyError("Error", error, "Could not load unassigned assets.");
   }
 };
 
@@ -324,6 +326,7 @@ export const getNonShopFloorAssetByType = async (asset_category: string, ) => {
     return response.data;
   } catch (error) {
      console.log("Error fetching non-shop-floor assets by type", error);
+    notifyError("Error", error, "Could not load unassigned assets by type.");
   }
 };
 
@@ -339,7 +342,6 @@ export const getNonShopFloorAssetDetails = async (assetId: string) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching non-shop-floor assets", error);
 
     throw error;
   }
@@ -358,7 +360,8 @@ export const fetchAsset = async () => {
     const mappedData = mapBackendDataToAsset(responseData);
     return mappedData;
   } catch (error) {
-    console.error("Error:", error);
+    logHandledError("Error:", error);
+    notifyError("Error", error, "Could not load asset data.");
   }
 };
 const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
@@ -401,7 +404,8 @@ export const exportElementToJPEG = async (
     document.body.removeChild(link);
 
   } catch (error) {
-    console.error("Error exporting element to JPEG:", error);
+    logHandledError("Error exporting element to JPEG:", error);
+    notifyError("Export failed", error, "Could not export the image.");
   }
 };
 
@@ -437,7 +441,8 @@ export const fetchAndDetermineSaveState = async (
       setIsSaveDisabled(false);
     }
   } catch (error) {
-    console.error("Error fetching factory data:", error);
+    logHandledError("Error fetching factory data:", error);
+    notifyError("Error", error, "Could not load factory data.");
   }
 };
 
@@ -512,7 +517,8 @@ export async function getShopFloorAndAssetData(factoryId: string) {
 
     return { shopFloorId, assetIds, assetsData };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    logHandledError("Error fetching data:", error);
+    notifyError("Error", error, "Could not load shop floor data.");
     return null;
   }
 }
@@ -622,7 +628,6 @@ export const saveFlowchartData = async (
     });
     return response.data;
   } catch (error) {
-    console.error("Error saving flowchart:", error);
     throw error;
   }
 };
@@ -641,7 +646,8 @@ export const getAssetRelationById = async (assetId: string) => {
     const mappedData = extractHasRelations(responseData);
     return mappedData;
   } catch (error) {
-    console.error("Error:", error);
+    logHandledError("Error:", error);
+    notifyError("Error", error, "Could not load asset relations.");
   }
 };
 
@@ -658,7 +664,8 @@ export const getAssetById = async(assetId: string) =>{
     const responseData = response.data;
     return responseData;
   } catch (error) {
-    console.error("Error fetching asset by id:", error);
+    logHandledError("Error fetching asset by id:", error);
+    notifyError("Error", error, "Could not load the asset.");
     return null;
   }
 }
@@ -674,7 +681,6 @@ export const fetchAllocatedAssets = async (factoryId: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching allocated assets:", error);
     throw new Error("Failed to fetch allocated assets");
   }
 };
@@ -691,7 +697,6 @@ export const fetchAllAllocatedAssets = async () => {
     console.log("response allocated assets",response)
     return response.data;
   } catch (error) {
-    console.error("Error fetching all allocated assets:", error);
     throw new Error("Failed to fetch allocated assets");
   }
 
@@ -719,7 +724,8 @@ export const fetchAssetDetailById = async(assetId:string)=>{
     return mappedData;
   
   } catch (error) {
-    console.error("Error:", error);
+    logHandledError("Error:", error);
+    notifyError("Error", error, "Could not load asset details.");
   }
 }
 
@@ -778,7 +784,8 @@ export async function getShopFloorAssets(shopFloorId: string) {
 
     return { shopFloorId, assetIds, assetsData };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    logHandledError("Error fetching data:", error);
+    notifyError("Error", error, "Could not load shop floor assets.");
     return null;
   }
 }
@@ -887,7 +894,6 @@ export const fetchAllShopFloors = async (factoryId: string): Promise<Transformed
 
     return ok.map(transformShopFloorData);
   } catch (error) {
-    console.error('Error fetching shop floors:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch shop floors');
   }
 };

@@ -50,6 +50,7 @@ import { AllocatedAssetService } from './endpoints/allocated-asset/allocated-ass
 import { PowerConsumptionController } from './endpoints/power-consumption/power-consumption.controller';
 import { PowerConsumptionService } from './endpoints/power-consumption/power-consumption.service';
 import { CronService } from './endpoints/cron/cron.service';
+import { RealtimeModule } from './endpoints/realtime/realtime.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { CronController } from './endpoints/cron/cron.controller';
@@ -68,10 +69,7 @@ import { CertificateController } from './endpoints/certificate/certificate.contr
 import { CertificateService } from './endpoints/certificate/certificate.service';
 import { ContractController } from './endpoints/contract/contract.controller';
 import { ContractService } from './endpoints/contract/contract.service';
-import { BindingController } from './endpoints/binding/binding.controller';
-import { BindingService } from './endpoints/binding/binding.service';
 import { Onboarding, OnboardingSchema } from './endpoints/schemas/onboarding.schema';
-import { PersistantTaskSchema } from './endpoints/schemas/persistant-task.schema';
 import { FactoryPdtCache, FactoryPdtCacheSchema } from './endpoints/schemas/factory-pdt-cache.schema';
 import { FactoryPdtCacheController } from './endpoints/factory-pdt-cache/factory-pdt-cache.controller';
 import { FactoryPdtCacheService } from './endpoints/factory-pdt-cache/factory-pdt-cache.service';
@@ -95,7 +93,6 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     }),
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
-      { name: 'PersistantTask', schema: PersistantTaskSchema },
       { name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema },
       { name: FlinkJob.name, schema: FlinkJobSchema }
     ]),
@@ -105,6 +102,7 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     ScheduleModule.forRoot(),
     HttpModule,
     PgRestGatewayModule,
+    RealtimeModule,
     AssetModule,
     CameraModule,
   ],
@@ -130,7 +128,6 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongodbTemplatesController,
     CertificateController,
     ContractController,
-    BindingController,
     FactoryPdtCacheController,
     FlinkDeployController,
     CompanyController
@@ -161,7 +158,6 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongodbTemplatesService,
     CertificateService,
     ContractService,
-    BindingService,
     FactoryPdtCacheService,
     FlinkDeployService,
     CompanyService

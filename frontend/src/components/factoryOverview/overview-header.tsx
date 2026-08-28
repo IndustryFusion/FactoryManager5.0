@@ -4,6 +4,8 @@ import { TabPanel, TabView } from "primereact/tabview";
 import { useRef } from "react";
 import AssetManagementDialog from "../assetManagement/asset-management";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 type overviewHeaderProps = {
     factoryCount ?: number;
     setVisible:React.Dispatch<React.SetStateAction<boolean>>;
@@ -36,7 +38,8 @@ const OverviewHeader:React.FC<overviewHeaderProps> =({factoryCount, setVisible, 
               const json = JSON.parse(e.target?.result as string); // Parse the JSON string into an object
               createAssets(JSON.stringify(json)); // Call createAssets with the parsed JSON data
             } catch (error) {
-              console.error('Error parsing JSON:', error);
+              logHandledError('Error parsing JSON:', error);
+              notifyError(t('toast:import_failed'), error, t('toast:invalid_json_file'));
             }
           };
   

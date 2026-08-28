@@ -32,8 +32,11 @@ import { Tooltip } from "primereact/tooltip";
 import { ContextMenu } from "primereact/contextmenu";
 import dynamic from "next/dynamic";
 import { getAccessGroup } from '@/utility/indexed-db';
+import { getErrorMessage } from '@/utility/error-message';
 
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 // Assuming you're using PrimeReact
 
 const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
@@ -93,6 +96,13 @@ const FactoryOverview = () => {
   const fetchFactoryLists = async () => {
     try {
       const accessGroupData = await getAccessGroup();
+      // getAccessGroup resolves undefined when IndexedDB holds no session yet
+      // (direct navigation, or a login hand-off from IFX Suite that failed).
+      if (!accessGroupData?.company_ifric_id) {
+        setFactorySite([]);
+        showToast("warn", t('toast:not_signed_in'), t('toast:no_company_session'));
+        return;
+      }
       const response = await axios.get(API_URL + `/factory-site/company-specific/${accessGroupData.company_ifric_id}`, {
         headers: {
           "Content-Type": "application/json",
@@ -101,12 +111,12 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       const responseData = response.data;
-      const mappedData = mapBackendDataToFactoryLists(responseData);
-      setFactorySite(mappedData);
+      setFactorySite(Array.isArray(responseData) ? mapBackendDataToFactoryLists(responseData) : []);
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        showToast("error", "Error", "Getting factory lists")
-      }
+      // Previously only Axios errors produced a toast, so a TypeError here left
+      // the page blank with no explanation at all.
+      setFactorySite([]);
+      showToast("error", t('toast:error'), getErrorMessage(error, t('toast:load_factory_list_failed')));
     }
   };
 
@@ -153,12 +163,12 @@ const FactoryOverview = () => {
         withCredentials: true,
       });
       if (response.data?.status === 201 && response.data?.success === true) {
-        showToast("success", "success", "Asset imported successfully")
+        showToast("success", "success", t('toast:asset_imported'))
         setAssetManageDialog(true);
       }
     } catch (error) {
-      showToast("error", "Error", "Fetching imported asset")
-      console.error("Error:", error);
+      showToast("error", t('toast:error'), t('toast:fetch_imported_asset'))
+      logHandledError("Error:", error);
     }
   }
 
@@ -175,7 +185,8 @@ const FactoryOverview = () => {
             const json = JSON.parse(e.target?.result as string); // Parse the JSON string into an object
             createAssets(JSON.stringify(json)); // Call createAssets with the parsed JSON data
           } catch (error) {
-            console.error('Error parsing JSON:', error);
+            logHandledError('Error parsing JSON:', error);
+            notifyError(t('toast:import_failed'), error, t('toast:invalid_json_file'));
           }
         };
 
@@ -224,13 +235,13 @@ const FactoryOverview = () => {
       dispatch(reset());
       await fetchFactoryLists();
       setVisibleDelete(false);
-      showToast("success", "success", "Factory deleted successfully")
+      showToast("success", "success", t('toast:factory_deleted'))
 
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        showToast("error", "Error", " deleting factory")
+        showToast("error", t('toast:error'), t('toast:deleting_factory_lc'))
       }
-      console.error("Error deleting factory", error);
+      logHandledError("Error deleting factory", error);
     }
   };
 
@@ -465,7 +476,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'button',
         'navigation',
         'factory-overview',
-        "reactflow"
+        "reactflow",
+        'toast',
       ])),
     },
   }

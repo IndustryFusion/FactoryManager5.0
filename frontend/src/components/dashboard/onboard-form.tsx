@@ -35,6 +35,8 @@ import YAML from 'yaml';
 import { getAssetById, getRawAssetById } from "@/utility/asset";
 import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 type OnboardDataKey = keyof OnboardData;
 
 interface OnboardFormProps {
@@ -213,7 +215,8 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                         gateway_id: assetDataFromScorio?.id,
                     }));
                 } catch (error) {
-                    console.error("Failed to fetch asset data:", error);
+                    logHandledError("Failed to fetch asset data:", error);
+                  notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
                 }
             }
         };
@@ -296,9 +299,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             const parsed = YAML.parse(onboardForm.app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboardForm({ ...onboardForm, app_config: prettified });
-            showToast('success', 'Success', 'YAML formatted successfully');
+            showToast('success', t('toast:success'), t('toast:yaml_formatted'));
         } catch (error) {
-            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+            showToast('error', t('toast:error'), t('toast:invalid_yaml_format'));
         }
     };
 
@@ -307,9 +310,9 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             const parsed = YAML.parse(onboardForm.secondary_app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboardForm({ ...onboardForm, secondary_app_config: prettified });
-            showToast('success', 'Success', 'YAML formatted successfully');
+            showToast('success', t('toast:success'), t('toast:yaml_formatted'));
         } catch (error) {
-            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+            showToast('error', t('toast:error'), t('toast:invalid_yaml_format'));
         }
     };
 
@@ -387,7 +390,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
         if (validateCurrentStep()) {
             goToNextStep();
         } else {
-            showToast('warn', 'Validation', 'Please fill all required fields in this step');
+            showToast('warn', t('toast:validation'), t('toast:fill_required_step'));
         }
     };
 
@@ -432,7 +435,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
             pod_name === undefined || pod_name === ""
         ) {
 
-            showToast('error', "Error", "Please fill all required fields")
+            showToast('error', t('toast:error'), t('toast:fill_required'))
         } else {
 
             // Build config objects from spec editor items
@@ -485,12 +488,12 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                     }
                     else if (success === false && status === 409) {
                         console.error("Error response:", response?.data.message);
-                        showToast('error', 'Error', 'Device already onboarded, please use edit form.');
+                        showToast('error', t('toast:error'), t('toast:already_onboarded'));
                     }
                 } catch (error) {
                     if (axios.isAxiosError(error)) {
                         console.error("Error response:", error.response?.data.message);
-                        showToast('error', 'Error', 'Updating onboard form');
+                        showToast('error', t('toast:error'), t('toast:updating_onboard_form'));
                     }
                 }
             }

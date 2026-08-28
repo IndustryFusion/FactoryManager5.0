@@ -22,6 +22,7 @@ import "../../styles/relation-container.css"
 import { getAssetById } from "@/utility/asset";
 import { useTranslation } from "next-i18next";
 
+import { notifyError } from "@/utility/global-toast";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface RelationPopupProps {
@@ -67,6 +68,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
             return newArr;
         } catch (error) {
             console.error(error)
+          notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
         }
     }
 
@@ -89,7 +91,9 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
             const response = await axios.get(API_URL + "/asset/parent-ids", {
                 params: {
                     "asset-id": selectedAssetData?.id,
-                    "asset-category": selectedAssetData?.asset_category
+                    // selectedAssetData is the raw NGSI-LD entity: the category
+                    // lives under the fully-qualified key, not a short one.
+                    "asset-category": selectedAssetData?.["https://industry-fusion.org/base/v0.1/asset_category"]?.value
                 },
                 headers: {
                     "Content-Type": "application/json",
@@ -101,6 +105,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
             setParentRelations(response.data)
         } catch (error) {
             console.error(error)
+          notifyError(t('toast:error'), error, t('toast:load_relations_failed'));
         }
     }
 

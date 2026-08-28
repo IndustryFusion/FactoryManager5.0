@@ -167,8 +167,12 @@ const Thumbnail: React.FC<ThumbnailProps> = (
                 url="/file"
                 multiple={false}
                 customUpload={true}
-                accept="image/*"
-                maxFileSize={1000000}
+                // Must mirror the backend's allowed list (file.controller.ts):
+                // "image/*" let through formats the server rejects, e.g. AVIF/WEBP.
+                accept=".png,.jpg,.jpeg,.pdf"
+                // Matches the backend's limit (file.controller.ts: 1024 * 1024 * 10).
+                // Was 1 MB, so the client rejected files the server would have accepted.
+                maxFileSize={10 * 1024 * 1024}
                 uploadHandler={handleFileUploadProp}
                 headerTemplate={headerTemplate} itemTemplate={ itemTemplate}
                 emptyTemplate={!fileName && emptyTemplate}

@@ -22,6 +22,7 @@ import { FactorySite } from '../schemas/factory-site.schema';
 import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 interface FactoryData {
   nodes: any[]; 
   edges: any[]
@@ -137,7 +138,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -170,7 +171,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -210,7 +211,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -235,7 +236,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -283,7 +284,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -327,7 +328,7 @@ export class FactorySiteService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -355,7 +356,7 @@ export class FactorySiteService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

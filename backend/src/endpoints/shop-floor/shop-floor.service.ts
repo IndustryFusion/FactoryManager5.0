@@ -24,6 +24,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -75,13 +76,13 @@ export class ShopFloorService {
             if (response.status !== 201){
               throw new HttpException({
                 errorCode: `FS_${response.status}`,
-                message: response.data.message || response.data.title
+                message: upstreamMessage({ response })
               }, response.status);
             }
           } else if (error.response) {
             throw new HttpException({
               errorCode: `FS_${error.response.status}`,
-              message: error.response.data.message || error.response.data.title
+              message: upstreamMessage(error)
             }, error.response.status);
           } else {
             throw new HttpException({
@@ -161,7 +162,7 @@ export class ShopFloorService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -188,7 +189,7 @@ export class ShopFloorService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -227,7 +228,7 @@ export class ShopFloorService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -252,7 +253,7 @@ export class ShopFloorService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -313,7 +314,7 @@ export class ShopFloorService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -357,7 +358,7 @@ export class ShopFloorService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -385,7 +386,7 @@ export class ShopFloorService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -573,7 +574,7 @@ export class ShopFloorService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -627,7 +628,7 @@ export class ShopFloorService {
           } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -645,7 +646,7 @@ export class ShopFloorService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

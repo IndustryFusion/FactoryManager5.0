@@ -28,6 +28,7 @@ import { resetReduxState } from '../../redux/store';
 import router from "next/router";
 import { useTranslation } from 'next-i18next';
 
+import { logHandledError } from "@/utility/log";
 interface Product {
     _id: string;
     product_id: string;
@@ -85,8 +86,8 @@ export default function ProfileMenu() {
                 products: companyProducts?.data
             });
         } catch (error) {
-            console.error('Error fetching user data:', error);
-            showToast(toast, 'error', 'Error', 'Error fetching user data');
+            logHandledError('Error fetching user data:', error);
+            showToast(toast, 'error', t('toast:error'), t('toast:fetch_user_data_error'));
         }
     };
     const handleLogout = async () => {
@@ -94,7 +95,7 @@ export default function ProfileMenu() {
             const accessGroupData = await getAccessGroup();
             if (accessGroupData?.user_email) {
                 await clearIndexedDbOnLogout();
-                showToast(toast, 'success', 'Logout Successful', 'You have been logged out');
+                showToast(toast, 'success', t('toast:logout_successful'), t('toast:logged_out'));
                 setUserData(null);
 
                 // reset redux after successfull logout
@@ -103,11 +104,11 @@ export default function ProfileMenu() {
                     router.push(`${ifxSuiteUrl}/home`);
                 }, 500);
             } else {
-                showToast(toast, 'error', 'Logout Failed', 'User email not found');
+                showToast(toast, 'error', t('toast:logout_failed'), t('toast:user_email_not_found'));
             }
         } catch (error) {
-            console.error("Logout failed:", error);
-            showToast(toast, 'error', 'Logout Failed', 'An error occurred during logout');
+            logHandledError("Logout failed:", error);
+            showToast(toast, 'error', t('toast:logout_failed'), t('toast:logout_error'));
         } finally {
             setTimeout(() => {
                 router.push(`${ifxSuiteUrl}/home`);

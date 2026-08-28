@@ -29,6 +29,8 @@ import { Job } from "./job-service";
 import { ScrollPanel } from 'primereact/scrollpanel';
 
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
 
 const ALL_STATES: { label: string; value: AlertaState }[] = [
@@ -223,9 +225,10 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
         throw new Error(`Failed to fetch logs: ${response.status}`);
       }
     } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      logHandledError('Failed to fetch logs:', error);
       setLogs('Failed to load logs. Using SSE stream instead...\n');
       streamJobLogs(jobId);
+      notifyError(t('toast:error'), error, t('toast:load_job_logs_failed'));
     } finally {
       setIsLoadingLogs(false);
     }

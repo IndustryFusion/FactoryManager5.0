@@ -24,6 +24,7 @@ import { Toast } from "primereact/toast";
 import { showToast } from "@/utility/toast";
 import { updatePopupVisible } from "@/utility/update-popup";
 
+import { logHandledError } from "@/utility/log";
 const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
 
 export default function WelcomePage() {
@@ -51,7 +52,7 @@ export default function WelcomePage() {
           showToast(toast, "error", "Error", "Error during login");
         }
       } else {
-        console.error("Error:", error);
+        logHandledError("Error:", error);
         showToast(toast, "error", "Error", error);
       }
     }

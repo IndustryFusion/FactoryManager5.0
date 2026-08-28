@@ -53,7 +53,7 @@ const AllocatedAsset = () => {
   if (allocatedAssetsError) {
     toast.current?.show({
       severity: 'error',
-      summary: 'Error',
+      summary: t('toast:error'),
       detail: allocatedAssetsError,
       life: 5000
     });

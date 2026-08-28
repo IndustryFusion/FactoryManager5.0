@@ -19,6 +19,8 @@ import { Asset } from "../types/asset-types";
 import { getAccessGroup } from "./indexed-db";
 import api from "./jwt";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
@@ -50,7 +52,8 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
           return mappedData;
 
     }catch(error){
-        console.error("Error:", error)
+        logHandledError("Error:", error);
+      notifyError("Error", error, "Could not load asset data.");
     }
   }
 
@@ -86,6 +89,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     return response;
 
     }catch(error){
-        console.error("Error:", error)
+        logHandledError("Error:", error);
+      notifyError("Error", error, "Could not load allocated assets.");
     }
   }

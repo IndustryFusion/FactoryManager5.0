@@ -33,7 +33,8 @@
         "data_viewer": "Datenanzeige",
         "reports": "Berichte",
         "coming_soon": "Demnächst verfügbar",
-        "test_version": "Testversion"
+        "test_version": "Testversion",
+        "back_to_if": "Zurück zur IFX Suite"
     },
     "xana_fab": {
         "ask_xana": "Fragen Sie Xana KI"

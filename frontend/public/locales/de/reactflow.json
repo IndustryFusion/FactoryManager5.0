@@ -1,6 +1,5 @@
 {
     "switchView": "Ansicht wechseln",
-    "unAllocatedAsset": "verfügbar Gerät",
     "allocatedAsset": "Zugeteilt Gerät",
     "addFloorComponent": "Bodenkomponente hinzufügen",
     "areas": "Bereiche",
@@ -75,7 +74,7 @@
     "cancel": "Abbrechen",
     "factorySite": "Fabrikstandort",
     "addAreas": "Bereiche hinzufügen",
-    "addArea":"Bereich hinzufügen",
+    "addArea": "Bereich hinzufügen",
     "selectAreas": "Bereiche auswählen",
     "missingFactoryId": "Fabrik-ID fehlt",
     "noAreasAvailable": "Keine Bereiche verfügbar",

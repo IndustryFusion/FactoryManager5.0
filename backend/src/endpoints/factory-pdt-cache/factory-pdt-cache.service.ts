@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class FactoryPdtCacheService {
   constructor(
@@ -26,7 +27,7 @@ export class FactoryPdtCacheService {
       if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -62,7 +63,7 @@ export class FactoryPdtCacheService {
       if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -100,7 +101,7 @@ export class FactoryPdtCacheService {
       if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }

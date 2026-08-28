@@ -11,6 +11,7 @@ import { Message } from "primereact/message";
 import "../../styles/certificates.css";
 import { fetchCompanyCertificates, generateCompanyCertificate } from "@/utility/certificates";
 
+import { logHandledError } from "@/utility/log";
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_FLEET_MANAGER_BACKEND_URL;
 
 interface Certificate {
@@ -83,7 +84,6 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
       }));
       return data?.company_ifric_id;
     } catch (error) {
-      console.error("Failed to fetch access group:", error);
       setMessage({ severity: "error", text: "Failed to fetch company data" });
       throw error;
     }
@@ -96,7 +96,7 @@ const CompanyCertificates: React.FC<any> = ({isSidebarExpand}) => {
         await fetchCertificate(companyId);
       }
     } catch (error) {
-      console.error("Error in fetching data:", error);
+      logHandledError("Error in fetching data:", error);
       setMessage({ severity: "error", text: "Failed to fetch initial data" });
     }
   };

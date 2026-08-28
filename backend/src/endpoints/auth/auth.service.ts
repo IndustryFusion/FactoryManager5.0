@@ -23,6 +23,7 @@ import { CompactEncrypt } from 'jose';
 import { Request } from 'express';
 import { compactDecrypt } from 'jose';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 /**
  * Retrieves tokens from the keylock service.
  * Returns access and refresh tokens.
@@ -66,7 +67,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -110,7 +111,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -228,7 +229,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -248,7 +249,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -268,7 +269,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -288,7 +289,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -314,7 +315,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -334,7 +335,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -358,7 +359,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -378,7 +379,7 @@ export class AuthService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

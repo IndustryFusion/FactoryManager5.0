@@ -40,6 +40,8 @@ import { OverlayPanel } from "primereact/overlaypanel";
 import Image from "next/image";
 import { getAssetById } from "@/utility/factory-site-utility";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 // ─── Inline Chart.js Plugins ────────────────────────────────────────────────
 
 /** Draws a vertical crosshair line and timestamp label at the cursor position. */
@@ -719,9 +721,10 @@ const CombineSensorChart: React.FC = () => {
       setLoading(false);
       setNoChartData(false);
     } catch (error) {
-      console.error("Error fetching chart data:", error);
+      logHandledError("Error fetching chart data:", error);
       setNoChartData(true);
       setLoading(false);
+      notifyError(t('toast:error'), error, t('toast:load_chart_data_failed'));
     }
   }
 

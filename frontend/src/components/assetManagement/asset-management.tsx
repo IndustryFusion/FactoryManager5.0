@@ -32,6 +32,7 @@ import { Toast, ToastMessage } from "primereact/toast";
 import { useTranslation } from "next-i18next";
 import DeleteDialog from "../delete-dialog";
 import { fetchAssetManagement } from "@/utility/asset-utility";
+import { notifyError } from "@/utility/global-toast";
 import { ProgressSpinner } from "primereact/progressspinner"
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -75,6 +76,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
       }
     } catch (error) {
       console.error(error)
+      notifyError(t('toast:error'), error, t('toast:load_assets_failed'));
     }
   }
 
@@ -94,12 +96,13 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
         setAssetData(updateAssets)
       }
       if (response.data?.success === false) {
-        showToast("error", "Error", `Asset:  ${deleteAssetName}  not able to delete`);
+        showToast("error", t('toast:error'), `Asset:  ${deleteAssetName}  not able to delete`);
         const updateAssets = assetData.filter(asset => asset?.id !== deleteAssetId);
         setAssetData(updateAssets)
       }
     } catch (error) {
       console.error(error)
+      notifyError(t('toast:delete_failed'), error, t('toast:delete_asset_failed'));
     }
   }
 

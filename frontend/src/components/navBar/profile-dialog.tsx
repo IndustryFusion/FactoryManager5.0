@@ -25,6 +25,7 @@ import { showToast } from "@/utility/toast";
 import router from "next/router";
 import { Toast } from "primereact/toast";
 
+import { logHandledError } from "@/utility/log";
 interface ProfileDialogProps {
     profileDetailProp: boolean;
     setProfileDetailProp: Dispatch<SetStateAction<boolean>>;
@@ -60,7 +61,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ profileDetailProp,
                     });
                 }
             } catch (error) {
-                console.error("Failed to fetch user data:", error);
+                logHandledError("Failed to fetch user data:", error);
                 showToast(toast, 'error', 'Error', 'Failed to fetch user data');
             }
         };
@@ -87,7 +88,7 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({ profileDetailProp,
                 showToast(toast, 'error', 'Logout Failed', 'User email not found');
             }
         } catch (error) {
-            console.error("Logout failed:", error);
+            logHandledError("Logout failed:", error);
             showToast(toast, 'error', 'Logout Failed', 'An error occurred during logout');
         }
     };

@@ -33,6 +33,8 @@ import { create } from "@/redux/powerConsumption/powerConsumptionSlice";
 import { useTranslation } from "next-i18next";
 import Image from 'next/image';
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 ChartJS.register(ChartDataLabels);
@@ -137,10 +139,10 @@ const PowerCo2Chart = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error response:", error.response?.data.message);
-        showToast('warn', 'Warn', `Power consumption data: ${error.response?.data.message}`);
+        showToast('warn', t('toast:warn'), `Power consumption data: ${error.response?.data.message}`);
       } else {
         console.error("Error:", (error as Error).message);
-        showToast('error', 'Error', (error as Error).message);
+        showToast('error', t('toast:error'), (error as Error).message);
       }
     }
   }
@@ -258,7 +260,8 @@ const PowerCo2Chart = () => {
       }
 
     } catch (error) {
-      console.error("Error fetching asset data:", error);
+      logHandledError("Error fetching asset data:", error);
+      notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
     }
   };
 

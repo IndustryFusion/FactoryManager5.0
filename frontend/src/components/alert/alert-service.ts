@@ -16,6 +16,7 @@
 
 import axios from 'axios';
 
+import { notifyError } from "@/utility/global-toast";
 export const getAlerts = async () => {
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     try {
@@ -24,6 +25,7 @@ export const getAlerts = async () => {
         return response.data;
     } catch (err) {
         console.log('Error From @component/alert/alert-service.ts ',err);
+      notifyError("Error", err, "Could not load alerts.");
     }
 
 }
@@ -37,5 +39,6 @@ export const postStatusForAlert = async (id: string, data: any) => {
         return response.data;
     } catch (err) {
         console.log('Error From @component/alert/alert-service.ts ',err);
+      notifyError("Error", err, "Could not update the alert status.");
     }
 }

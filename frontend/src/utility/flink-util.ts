@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const uploadValidationFiles =async(files: any)=>{
@@ -21,6 +23,7 @@ export const uploadValidationFiles =async(files: any)=>{
     return response.data;
   }
   catch(error: any) {
-    console.error("Error uploading validation files:", error);
+    logHandledError("Error uploading validation files:", error);
+    notifyError("Upload failed", error, "Could not upload the validation files.");
   }
 }

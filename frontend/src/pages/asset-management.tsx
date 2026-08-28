@@ -20,6 +20,8 @@ import { OverlayPanel } from 'primereact/overlaypanel';
 import { getSyncPdtCount } from '@/utility/asset';
 import { Badge } from "primereact/badge";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
   const dispatch = useDispatch();
@@ -48,7 +50,8 @@ const AssetManagementPage = () => {
           ]);
           setDataInitialized(true);
         } catch (error) {
-          console.error('Failed to fetch data:', error);
+          logHandledError('Failed to fetch data:', error);
+          notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
         }
       }
     };
@@ -73,7 +76,8 @@ const AssetManagementPage = () => {
         const response = await getSyncPdtCount(data.company_ifric_id);
         setSyncPdtCount(response.assetsWithUpdates);
       } catch(error) {
-        console.error("Error fetching user data:", error);
+        logHandledError("Error fetching user data:", error);
+        notifyError(t('toast:error'), error, t('toast:load_user_data_failed'));
       }
     };
 
@@ -321,7 +325,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'placeholder',
         'dashboard',
         'button',
-        'navigation'
+        'navigation',
+        'toast',
       ])),
     },
   }

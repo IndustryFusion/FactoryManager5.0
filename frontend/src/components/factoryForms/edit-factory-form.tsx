@@ -42,6 +42,8 @@ import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
 import { Dropdown } from "primereact/dropdown";
 
+import { getErrorMessage } from "@/utility/error-message";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface FactoryEditProps {
@@ -301,7 +303,8 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
             setUploading(false);
             setSubmitDisabled(false)
         } catch (error) {
-            console.error("File upload failed", error);
+            logHandledError("File upload failed", error);
+            showToast("error", t('factory-overview:error'), getErrorMessage(error, t('toast:upload_file_failed')));
             setUploading(false);
         }
     };

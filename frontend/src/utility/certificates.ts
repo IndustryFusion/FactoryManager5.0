@@ -25,7 +25,6 @@ export const generateAssetCertificate = async (assetData: {
     
     return response.data;
   } catch (error:any) {
-    console.error("Error generating asset certificate:", error);
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
     } else {
@@ -50,7 +49,6 @@ export const fetchAssetCertificates = async (assetIfricId: string, companyIfricI
     
     return response.data;
   } catch (error:any) {
-    console.error("Error fetching asset certificates:", error);
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
     } else {
@@ -64,7 +62,6 @@ export const fetchCompanyCertificates = async (companyId: string) => {
   try {
     return await api.get(`${FACTORY_BACKEND_URL}/certificate/get-company-certificates/${companyId}`);
   } catch (error:any) {
-    console.error("Error fetching company certificates:", error);
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
     } else {
@@ -77,7 +74,6 @@ export const generateCompanyCertificate = async (generateCertificateData: Record
   try {
     return await api.post(`${FACTORY_BACKEND_URL}/certificate/create-company-certificate`, generateCertificateData);
   } catch (error:any) {
-    console.error("Error generating asset certificate:", error);
     if (error?.response && error?.response?.status === 401) {
       updatePopupVisible(true);
     } else {

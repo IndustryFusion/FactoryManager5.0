@@ -18,6 +18,8 @@ import axios from "axios";
 
 import { useRouter } from "next/router";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const fetchAsset = async () => {
@@ -32,7 +34,6 @@ export const fetchAsset = async () => {
 
     return response.data; // Return the fetched data
   } catch (error) {
-    console.error("Error:", error);
     throw error; // Re-throw the error to handle it in the caller
   }
 };
@@ -52,7 +53,6 @@ export const createNewAsset = async (templateId: string) => {
 
     return response.data; // Return the created asset data
   } catch (error) {
-    console.error("Error creating a new asset:", error);
     throw error; // Re-throw the error to handle it in the caller
   }
 };
@@ -100,6 +100,7 @@ export const handleEditClick = async (assetId: string) => {
 
     const assetDetails = response.data;
   } catch (error) {
-    console.error("Failed to fetch asset details:", error);
+    logHandledError("Failed to fetch asset details:", error);
+    notifyError("Error", error, "Could not load asset details.");
   }
 };

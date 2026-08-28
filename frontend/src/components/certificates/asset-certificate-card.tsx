@@ -5,6 +5,7 @@ import { getAssetById } from "@/utility/asset";
 import "../../styles/certificates.css";
 import { Tooltip } from "primereact/tooltip";
 
+import { logHandledError } from "@/utility/log";
 interface Certificate {
   asset_ifric_id: string;
   expiry_on: string;
@@ -32,7 +33,7 @@ const AssetCertificateCard: React.FC<{ certificate: Certificate | null }> = ({ c
           setProductName("N/A");
         }
       } catch (error) {
-        console.error("Error fetching asset details:", error);
+        logHandledError("Error fetching asset details:", error);
         setError("Failed to fetch product name");
         setProductName("Error");
       }

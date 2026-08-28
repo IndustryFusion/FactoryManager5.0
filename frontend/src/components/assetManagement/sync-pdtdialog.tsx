@@ -11,6 +11,8 @@ import { getSyncPdtData } from "@/utility/asset";
 import { getAccessGroup } from "@/utility/indexed-db";
 import LoadingCircle from "@/components/loader/dialog-loader";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 interface ImportResponseData {
   successCount: number;
   failureCount: number;
@@ -49,7 +51,8 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
       const response = await getSyncPdtData(data.company_ifric_id);
       setSelectedProducts(response);
     } catch(error) {
-      console.error("fetch Sync PDT failed:", error);
+      logHandledError("fetch Sync PDT failed:", error);
+      notifyError(t('toast:error'), error, t('toast:load_sync_products'));
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +116,8 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
         }
       }
     } catch (error) {
-      console.error("Sync PDT failed:", error);
+      logHandledError("Sync PDT failed:", error);
+      notifyError(t('toast:sync_failed'), error, t('toast:sync_pdt_failed'));
     }
   };
 

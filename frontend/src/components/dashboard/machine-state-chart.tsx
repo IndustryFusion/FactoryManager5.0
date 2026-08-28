@@ -33,6 +33,8 @@ import { create } from "@/redux/machineState/machineStateSlice";
 import { useTranslation } from "next-i18next";
 import Image from "next/image";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 export interface Datasets {
     label?: string;
     data: number[];
@@ -185,13 +187,13 @@ const MachineStateChart = () => {
           } catch (error) {
                 if (axios.isAxiosError(error)) {
                     console.error("Error response:", error.response?.data.message);
-                    showToast('error', 'Error', `Machine-state-data ${error.response?.data.message}`);
+                    showToast('error', t('toast:error'), `Machine-state-data ${error.response?.data.message}`);
                 } else if (error instanceof Error) {
                     console.error("Error:", error.message);
-                    showToast('error', 'Error', error.message);
+                    showToast('error', t('toast:error'), error.message);
                 } else {
-                    console.error("Unknown error:", error);
-                    showToast('error', 'Error', 'An unknown error occurred');
+                    logHandledError("Unknown error:", error);
+                    showToast('error', t('toast:error'), t('toast:unknown_error'));
                 }
             } finally {
                 setIsLoading(false);
@@ -220,7 +222,8 @@ const MachineStateChart = () => {
                 return attributeId;
             }
         } catch (error) {
-            console.error("Error fetching asset data:", error);
+            logHandledError("Error fetching asset data:", error);
+          notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
         }
     };
 

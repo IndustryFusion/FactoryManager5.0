@@ -7,6 +7,7 @@ import { Factory } from "@/types/factory-type";
 import L from "leaflet";
 import "../../styles/factory-card.css";
 
+import { logHandledError } from "@/utility/log";
 // Geocoding using OpenStreetMap
 const geocodeZip = async (zip: string, country: string): Promise<{ lat: number; lng: number } | null> => {
     try {
@@ -19,7 +20,7 @@ const geocodeZip = async (zip: string, country: string): Promise<{ lat: number; 
         }
         return null;
     } catch (err) {
-        console.error("Geocoding failed:", err);
+        logHandledError("Geocoding failed:", err);
         return null;
     }
 };

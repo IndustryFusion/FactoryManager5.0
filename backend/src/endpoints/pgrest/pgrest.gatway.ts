@@ -14,8 +14,10 @@
 // limitations under the License. 
 // 
 
-import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer } from '@nestjs/websockets';
+import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
 import { Server } from 'socket.io';
+import { RealtimePresenceService } from '../realtime/realtime-presence.service';
 import { Injectable } from '@nestjs/common';
 
 @WebSocketGateway({
@@ -26,9 +28,20 @@ import { Injectable } from '@nestjs/common';
   transports: ["websocket"]
 })
 @Injectable()
-export class PgRestGateway {
+export class PgRestGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  constructor(private readonly presence: RealtimePresenceService) {}
+
+  // Presence drives whether the realtime cron jobs exist at all.
+  handleConnection(client: Socket) {
+    this.presence.addClient(client.id);
+  }
+
+  handleDisconnect(client: Socket) {
+    this.presence.removeClient(client.id);
+  }
 
   sendUpdate(data: any) {
     this.server.emit('dataUpdate', data);

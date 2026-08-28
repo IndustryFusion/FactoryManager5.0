@@ -3,6 +3,7 @@ import axios, { Axios } from 'axios';
 import { CompactEncrypt } from 'jose';
 import { createHash } from 'crypto';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class CertificateService {
 
@@ -84,7 +85,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -104,7 +105,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -125,7 +126,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -172,7 +173,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -259,7 +260,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -289,7 +290,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -339,7 +340,7 @@ export class CertificateService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

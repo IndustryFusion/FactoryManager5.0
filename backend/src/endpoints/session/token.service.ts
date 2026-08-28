@@ -19,6 +19,7 @@ import { RedisService } from '../redis/redis.service';
 import { AuthService } from "../auth/auth.service";
 import * as jwt from 'jsonwebtoken';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class TokenService {
   constructor(
@@ -57,7 +58,7 @@ export class TokenService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `RD_${err.response.status}`,
-          message: err.response.data.message
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

@@ -17,6 +17,8 @@
 import { Asset } from "../types/asset-types";
 import axios from "axios";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const moment = require('moment');
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -99,7 +101,8 @@ export const fetchAssets = async (assetId: string) => {
       
       return attributeIds;
   } catch (error) {
-      console.error("Error fetching asset data:", error);
+      logHandledError("Error fetching asset data:", error);
+    notifyError("Error", error, "Could not load asset data.");
   }
 };
 

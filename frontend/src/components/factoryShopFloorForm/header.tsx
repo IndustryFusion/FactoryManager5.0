@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import "../../styles/factory-shopfloor.css"
 import { fetchFactoryDetails, getShopFloorAssets } from "@/utility/factory-site-utility";
 
+import { notifyError } from "@/utility/global-toast";
 const Header =()=>{
     const [switchView, setSwitchView] = useState(false);
     const [factoryName, setFactoryName] = useState("");
@@ -34,6 +35,7 @@ const Header =()=>{
             setFactoryName(factoryname)
         } catch (error) {
             console.error(error);
+          notifyError("Error", error, "Could not load factory details.");
         }
     }
 

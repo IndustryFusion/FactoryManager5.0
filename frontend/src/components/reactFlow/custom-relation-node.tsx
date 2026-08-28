@@ -104,7 +104,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
       } catch(err: any) {
         toast.current?.show({
           severity: "error",
-          summary: "Error",
+          summary: t('toast:error'),
           detail: err.response?.data?.message ?? err.message ?? "failed to fetch unallocated asset by product type",
           life: 3000,
         });

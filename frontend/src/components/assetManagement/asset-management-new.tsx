@@ -113,8 +113,8 @@ const AssetManagement: React.FC<Props> = ({ searchQuery, productTypeFilter, grou
         navigator.clipboard.writeText(value);
         toast.current?.show({
           severity: 'success',
-          summary: 'Copied',
-          detail: 'ID copied to clipboard',
+          summary: t('toast:copied'),
+          detail: t('toast:id_copied'),
           life: 2000
         });
       }

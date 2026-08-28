@@ -32,6 +32,8 @@ import { Dialog } from "primereact/dialog";
 import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
 
+import { getErrorMessage } from "@/utility/error-message";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface ShopFloorEditProps {
@@ -150,8 +152,8 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                 setUploading(false);
                 setSubmitDisabled(false);
             } catch (error) {
-                showToast("error", t('reactflow:error'), t('reactflow:errorUploadingFile'));
-                console.error("Error uploading file:", error);
+                showToast("error", t('reactflow:error'), getErrorMessage(error, t('reactflow:errorUploadingFile')));
+                logHandledError("Error uploading file:", error);
                 setUploading(false);
             }
         }

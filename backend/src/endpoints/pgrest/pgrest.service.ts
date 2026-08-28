@@ -20,6 +20,7 @@ import { RedisService } from '../redis/redis.service';
 import * as moment from 'moment';
 import { AssetService } from '../asset/asset.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class PgRestService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
@@ -46,7 +47,7 @@ export class PgRestService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -147,7 +148,7 @@ export class PgRestService {
         if (err.response) {
           throw new HttpException({
             errorCode: `PG_${err.response.status}`,
-            message: err.response.data.message || err.response.data.title
+            message: upstreamMessage(err)
           }, err.response.status);
         } else {
           throw new HttpException({
@@ -174,7 +175,7 @@ export class PgRestService {
       if (err.response) {
         throw new HttpException({
           errorCode: `PG_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -215,7 +216,7 @@ export class PgRestService {
       if (err.response) {
         throw new HttpException({
           errorCode: `PG_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

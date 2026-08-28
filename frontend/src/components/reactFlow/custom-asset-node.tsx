@@ -28,6 +28,8 @@ import { Dialog } from "primereact/dialog";
 import { getAccessGroup } from '@/utility/indexed-db';
 import { useTranslation } from "next-i18next";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 interface RelationOption {
   label: string;
   value: string;
@@ -93,6 +95,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       setTimeout(() => setCopied(false), 1200);
     } catch (err) {
    
+      notifyError(t('toast:copy_failed'), err, t('toast:copy_asset_id_failed'));
     }
   }
   const getInitial = (s?: string) =>
@@ -218,7 +221,8 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
         const data = await getAccessGroup();
         setAccessgroupIndexedDb(data);
       } catch(error) {
-        console.error("Error fetching user data:", error);
+        logHandledError("Error fetching user data:", error);
+        notifyError(t('toast:error'), error, t('toast:load_user_data_failed'));
       }
     };
 
@@ -234,7 +238,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     >
     <NodeToolbar isVisible={!!selected}  offset={10}>
     <Button
-      aria-label={t('reatflow:createSubFlow')}
+      aria-label={t('reactflow:createSubFlow')}
       className="global-button is-grey nodrag nopan sf-action-btn p-button-rounded p-button-icon-only"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
@@ -242,7 +246,7 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
       createSubflowFromAssetNode?.(id || data?.id);
       }}
       disabled={!accessgroupIndexDb?.access_group?.create} 
-      tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : t('reatflow:createSubFlow')}
+      tooltip={!accessgroupIndexDb?.access_group?.create ? t("overview:access_permission") : t('reactflow:createSubFlow')}
       tooltipOptions={{ position: "top", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
     >
       <img src="/factory-flow-buttons/hut.svg" alt="" />

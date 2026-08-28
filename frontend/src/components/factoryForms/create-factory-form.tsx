@@ -44,6 +44,9 @@ import { CountryOption } from "../../types/factory-form";
 import { Dropdown } from "primereact/dropdown";
 import { getAccessGroup } from '@/utility/indexed-db';
 
+import { getErrorMessage } from "@/utility/error-message";
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibleProp, setVisibleProp }) => {
@@ -125,7 +128,13 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
                 setUploading(false);
                 setSubmitDisabled(false)
             } catch (error) {
-                console.error("Error uploading file:", error);
+                logHandledError("Error uploading file:", error);
+                toast.current?.show({
+                    severity: "error",
+                    summary: t('toast:upload_failed'),
+                    detail: getErrorMessage(error, "Could not upload the file."),
+                    life: 6000,
+                });
                 setUploading(false);
             }
         }
@@ -187,6 +196,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             if (axios.isAxiosError(error)) {
                 showError("Please fill all required fields");
             }
+          notifyError(t('toast:save_failed'), error, t('toast:save_factory_failed'));
         }
     };
 
@@ -194,8 +204,8 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'success',
-                summary: 'Success',
-                detail: 'Factory created successfully',
+                summary: t('toast:success'),
+                detail: t('toast:factory_created'),
                 life: 2000
             });
         }
@@ -204,7 +214,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
         if (toast.current !== null) {
             toast.current.show({
                 severity: 'error',
-                summary: 'Error',
+                summary: t('toast:error'),
                 detail: message,
                 life: 2000
             });

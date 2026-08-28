@@ -32,6 +32,7 @@ import { create } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
 import { TabView, TabPanel } from 'primereact/tabview';
 import { useTranslation } from "next-i18next";
 
+import { notifyError } from "@/utility/global-toast";
 interface AssetListProps {
   factoryId: string;
   product_name: string;
@@ -109,6 +110,7 @@ const UnallocatedAndAllocatedAssets: React.FC<AssetListProps> = ({
 
       } catch (err) {
         console.log("Error : fetchNonShopFloorAssets  from @component/unallocated-asssets.tsx")
+        notifyError(t('toast:error'), err, t('toast:load_allocated_failed'));
         return [];
        
       }

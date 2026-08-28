@@ -29,6 +29,8 @@ import { AssetData } from "@/types/dashboard-cards";
 import { Asset } from "@/types/asset-types";
 import Image from "next/image";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
@@ -61,6 +63,7 @@ const DashboardCards: React.FC = () => {
             setNotificationData(filteredNotifications)
         } catch (error) {
             console.error(error)
+          notifyError(t('toast:error'), error, t('toast:load_alerts_failed'));
         }
     }
 
@@ -94,6 +97,7 @@ const DashboardCards: React.FC = () => {
         }
         catch (error) {
             console.log("Error From fetchData function from @components/dashboard/dashboard-cards.tsx",error);
+          notifyError(t('toast:error'), error, t('toast:load_dashboard_failed'));
         }
     }
 
@@ -116,7 +120,8 @@ const DashboardCards: React.FC = () => {
             });
             return attributeId;
         } catch (error) {
-            console.error("Error fetching asset data:", error);
+            logHandledError("Error fetching asset data:", error);
+          notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
         }
     };
 
@@ -181,7 +186,9 @@ const DashboardCards: React.FC = () => {
                 const response = await axios.get(API_URL + "/asset/parent-ids", {
                     params: {
                         "asset-id": selectedAssetData?.id,
-                        "asset-category": selectedAssetData?.asset_category
+                        // selectedAssetData is the raw NGSI-LD entity: the category
+                        // lives under the fully-qualified key, not a short one.
+                        "asset-category": selectedAssetData?.["https://industry-fusion.org/base/v0.1/asset_category"]?.value
                     },
                     headers: {
                         "Content-Type": "application/json",
@@ -197,6 +204,7 @@ const DashboardCards: React.FC = () => {
             }
         } catch (error) {
             console.error(error)
+          notifyError(t('toast:error'), error, t('toast:load_relations_failed'));
         }
     }
 

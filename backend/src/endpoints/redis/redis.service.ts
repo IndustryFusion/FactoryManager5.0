@@ -19,6 +19,7 @@ import Redis from 'ioredis';
 import {isEqual} from 'lodash'
 import { Cluster } from 'ioredis';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class RedisService {
   private redisClient: Redis;
@@ -63,7 +64,7 @@ export class RedisService {
       } else if (error.response) {
         throw new HttpException({
           errorCode: `RD_${error.response.status}`,
-          message: error.response.data.message
+          message: upstreamMessage(error)
         }, error.response.status);
       } else {
         throw new HttpException({

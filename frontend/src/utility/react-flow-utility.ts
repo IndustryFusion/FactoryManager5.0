@@ -32,7 +32,6 @@ export const fetchFlowData = async (factoryId: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching flowchart data:", error);
     throw error;
   }
 };
@@ -48,7 +47,6 @@ export const saveFlowData = async (payload: any) => {
     });
     return response.status;
   } catch (error) {
-    console.error("Error saving flowchart:", error);
     throw error;
   }
 };
@@ -68,7 +66,6 @@ export const updateFlowData = async (factoryId: string, payload: any) => {
     );
     return response.status;
   } catch (error) {
-    console.error("Error updating flowchart:", error);
     throw error;
   }
 };

@@ -40,6 +40,8 @@ import IfricIdBadge from "./ifric-id-badge";
 import { Skeleton } from "primereact/skeleton";
 import { getAssetById } from "@/utility/factory-site-utility";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 interface PrefixedAssetProperty {
   key: string;
   value: string;
@@ -126,7 +128,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
         dispatch(fetchAssets());
       }
     } catch (error) {
-      console.error("Fetched assets:", error)
+      logHandledError("Fetched assets:", error);
+      notifyError(t('toast:error'), error, t('toast:load_assets_failed'));
     }
   }
 
@@ -134,7 +137,8 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     try {
       dispatch(fetchAssets());
     } catch (error) {
-      console.error("Fetched assets:", error)
+      logHandledError("Fetched assets:", error);
+      notifyError(t('toast:refresh_failed'), error, t('toast:refresh_assets_failed'));
     }
   };
 
@@ -198,7 +202,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     if (router.isReady) {
         handleAsset();
         if (editOnboardAsset.successToast) {
-          showToast("success", "success", "onboard updated successfully")
+          showToast("success", "success", t('toast:onboard_updated'))
         }
     }
   }, [router.isReady, editOnboardAsset.successToast])
@@ -216,7 +220,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   useEffect(() => {
     if (onboardAsset && showBlocker === false) {
-      showToast("warn", "warning", "file already exists")
+      showToast("warn", "warning", t('toast:file_exists'))
     }
   }, [onboardAsset, showBlocker])
 

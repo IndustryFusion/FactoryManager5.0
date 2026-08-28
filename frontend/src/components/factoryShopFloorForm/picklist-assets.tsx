@@ -30,6 +30,7 @@ import { fetchFormAllocatedAsset } from "@/utility/asset-utility";
 import { InputText } from "primereact/inputtext";
 
 
+import { notifyError } from "@/utility/global-toast";
 interface AssetProperty {
     type: "Property";
     value: string;
@@ -90,6 +91,7 @@ const PicklistAssets = () => {
             }
         } catch (error) {
             console.error(error)
+          notifyError("Error", error, "Could not load shop floor assets.");
         }
     }
 
@@ -117,6 +119,7 @@ const PicklistAssets = () => {
             const categories = Array.from(new Set([...unAllocatedAssetData].map(asset => asset.asset_category))).filter(Boolean);
         } catch (err) {
             console.error(err)
+          notifyError("Error", err, "Could not load unassigned assets.");
         }
     };
 
@@ -200,6 +203,7 @@ const PicklistAssets = () => {
 
         } catch (error) {
             console.log("Error updating React Flow in /factoryShopFloorForm/picklist-asset.tsx", error);
+          notifyError("Save failed", error, "Could not update the shop floor layout.");
         }
     }
 

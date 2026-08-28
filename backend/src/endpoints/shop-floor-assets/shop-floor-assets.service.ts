@@ -18,6 +18,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { AssetService } from '../asset/asset.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class ShopFloorAssetsService {
   constructor(private readonly assetService: AssetService, private readonly shopFloorService: ShopFloorService) {}
@@ -44,7 +45,7 @@ export class ShopFloorAssetsService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

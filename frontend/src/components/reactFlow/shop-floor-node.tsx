@@ -16,6 +16,8 @@ import DeleteDialog from "../delete-dialog";
 import { getAccessGroup } from '@/utility/indexed-db';
 import { useTranslation } from "next-i18next";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 type ShopFloorNodeData = {
   label: string;
   type: "shopFloor";
@@ -173,7 +175,7 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         life: 2200,
       });
     } catch (err) {
-      console.error("Delete shop floor failed:", err);
+      logHandledError("Delete shop floor failed:", err);
       toast.current?.show({
         severity: "error",
         summary: t('reactflow:deleteFailed'),
@@ -252,7 +254,8 @@ const CustomShopFloorNode: React.FC<NodeProps<ShopFloorNodeData>> = ({
         const data = await getAccessGroup();
         setAccessgroupIndexedDb(data);
       } catch(error) {
-        console.error("Error fetching user data:", error);
+        logHandledError("Error fetching user data:", error);
+        notifyError(t('toast:error'), error, t('toast:load_user_data_failed'));
       }
     };
 

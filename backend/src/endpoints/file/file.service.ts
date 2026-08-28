@@ -51,11 +51,11 @@ export class FileService {
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
-      } else if (err) {
-        throw new HttpException(err || err, HttpStatus.NOT_FOUND);
-      } else {
-        throw new HttpException(err, HttpStatus.NOT_FOUND);
       }
+      throw new HttpException(
+        err?.message || 'Failed to upload the file to storage.',
+        HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 

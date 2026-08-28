@@ -14,8 +14,10 @@
 // limitations under the License. 
 // 
 
-import { Injectable , Logger, OnModuleInit} from '@nestjs/common';
-import { Cron,CronExpression  } from '@nestjs/schedule';
+import { Injectable , Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
+import { RealtimePresenceService } from '../realtime/realtime-presence.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { ShopFloorService } from '../shop-floor/shop-floor.service';
@@ -32,7 +34,7 @@ import { TokenService } from '../session/token.service';
 
 @Injectable()
 
-export class CronService  {
+export class CronService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CronService.name);
   constructor(
     private readonly httpService: HttpService,
@@ -45,14 +47,63 @@ export class CronService  {
     private readonly pgrestGatway : PgRestGateway,
     private readonly valueChangeStateService : ValueChangeStateService,
     private readonly valueChangeStateGateway : ValueChangeStateGateway,
-    private readonly tokenService: TokenService
+    private readonly tokenService: TokenService,
+    private readonly presence: RealtimePresenceService,
+    private readonly schedulerRegistry: SchedulerRegistry
   ) {}
+
+  /**
+   * The two realtime jobs below only produce WebSocket pushes, so they are
+   * created when the first frontend connects and destroyed after the last one
+   * disconnects. Their schedules and bodies are unchanged — previously they ran
+   * every 5s / every minute forever (~18,700 executions a day) and bailed out
+   * early, after two Redis reads per tick.
+   */
+  private static readonly REALTIME_JOBS = [
+    { name: 'live-data-refresh', expression: CronExpression.EVERY_5_SECONDS, run: 'handleFindAllEverySecond' },
+    { name: 'machine-state-refresh', expression: '* * * * *', run: 'handleMachineStateRefresh' },
+  ] as const;
+
+  onModuleInit() {
+    this.presence.onActiveChange((active) =>
+      active ? this.startRealtimeJobs() : this.stopRealtimeJobs(),
+    );
+  }
+
+  onModuleDestroy() {
+    this.stopRealtimeJobs();
+  }
+
+  private startRealtimeJobs() {
+    for (const job of CronService.REALTIME_JOBS) {
+      if (this.schedulerRegistry.doesExist('cron', job.name)) continue;
+      const handler = this[job.run].bind(this);
+      const cronJob = new CronJob(job.expression, () => {
+        // A rejection escaping a scheduled job is an unhandled rejection, which
+        // terminates the process. Neither job body guards all of its awaits.
+        Promise.resolve(handler()).catch((err) =>
+          this.logger.error(`${job.name} failed: ${err?.message}`, err?.stack),
+        );
+      });
+      this.schedulerRegistry.addCronJob(job.name, cronJob as any);
+      cronJob.start();
+      this.logger.log(`Started ${job.name} (${job.expression})`);
+    }
+  }
+
+  private stopRealtimeJobs() {
+    for (const job of CronService.REALTIME_JOBS) {
+      if (!this.schedulerRegistry.doesExist('cron', job.name)) continue;
+      this.schedulerRegistry.deleteCronJob(job.name);
+      this.logger.log(`Stopped ${job.name}`);
+    }
+  }
 
   private emitDataChangeToClient(data: any) {
     this.pgrestGatway.sendUpdate(data);
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  // Scheduled dynamically by startRealtimeJobs() — see REALTIME_JOBS.
   async handleFindAllEverySecond() {
     // Retrieve stored data and query parameters from Redis
     let storedData = await this.redisService.getData('storedData');
@@ -90,7 +141,7 @@ export class CronService  {
     }
   }
 
-  @Cron('* * * * *')
+  // Scheduled dynamically by startRealtimeJobs() — see REALTIME_JOBS.
   async handleMachineStateRefresh(){
     let machineStateParams = await this.redisService.getData('machine-state-params');
     if(machineStateParams && machineStateParams.type == 'days' && machineStateParams.attributeId){

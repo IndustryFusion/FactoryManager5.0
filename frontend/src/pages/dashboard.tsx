@@ -51,7 +51,7 @@ const DashboardPage: React.FC = () => {
             try {
                 const data: AccessGroupData | undefined = await getAccessGroup();
                 if (!data) {
-                    showToast(toast, "error", "Error", "No user data found");
+                    showToast(toast, "error", t('toast:error'), t('toast:no_user_data'));
                     return;
                 }
 
@@ -68,9 +68,9 @@ const DashboardPage: React.FC = () => {
                 if (name) setCompanyName(name);
             } catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response?.data?.message) {
-                    showToast(toast, "error", "Error", error.response.data.message);
+                    showToast(toast, "error", t('toast:error'), error.response.data.message);
                 } else {
-                    showToast(toast, "error", "Error", "Error fetching user data");
+                    showToast(toast, "error", t('toast:error'), t('toast:fetch_user_data_error'));
                 }
             }
         };
@@ -123,7 +123,7 @@ const DashboardPage: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(companyId);
-                                            showToast(toast, "success", "Copied", "Company ID copied to clipboard");
+                                            showToast(toast, "success", t('toast:copied'), t('toast:company_id_copied'));
                                         }}
                                         style={{
                                             border: "none",
@@ -331,8 +331,9 @@ export async function getStaticProps({ locale }: { locale: string }) {
                 'placeholder',
                 'dashboard',
                 'button',
-                'navigation'
-            ])),
+                'navigation',
+                'toast',
+              ])),
         },
     }
 }

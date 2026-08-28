@@ -30,6 +30,7 @@ import { useFactoryShopFloor } from "@/context/factory-shopfloor-context";
 import { useTranslation } from "next-i18next";
 import { Dialog } from 'primereact/dialog';
 import DeleteDialog from "../delete-dialog";
+import { logHandledError } from "@/utility/log";
 interface ShopfloorListProps {
   factoryId?: string | undefined;
   onShopFloorDeleted?: (shopFloorId: string) => void;
@@ -215,7 +216,7 @@ const ShopFloorList: React.FC<ShopfloorListProps> = ({
         });
       }
     } catch (error) {
-      console.error("Error deleting shop floor:", error);
+      logHandledError("Error deleting shop floor:", error);
       toast.current?.show({
         severity: "error",
         summary: t('reactflow:error'),

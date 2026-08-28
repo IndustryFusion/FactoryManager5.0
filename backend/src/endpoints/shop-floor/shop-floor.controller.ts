@@ -22,6 +22,7 @@ import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
 import axios from 'axios';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Controller('shop-floor')
 export class ShopFloorController {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -83,7 +84,7 @@ export class ShopFloorController {
           } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -99,7 +100,7 @@ export class ShopFloorController {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -248,7 +249,7 @@ export class ShopFloorController {
           } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -262,7 +263,7 @@ export class ShopFloorController {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

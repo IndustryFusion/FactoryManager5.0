@@ -22,7 +22,6 @@ export const getJobs = async (): Promise<{ jobs: Job[] }> => {
     });
     return { jobs: response.data };
   } catch (error) {
-    console.error("Error fetching jobs:", error);
     throw error;
   }
 };
@@ -38,7 +37,6 @@ export const getJobById = async (jobId: string): Promise<Job> => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching job:", error);
     throw error;
   }
 };

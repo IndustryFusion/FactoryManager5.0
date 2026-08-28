@@ -98,7 +98,7 @@ const FactoryOverview1 = () => {
       setFactoryCount(mappedData.length);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        showToast("error", "Error", "Getting factory lists");
+        showToast("error", t('toast:error'), t('toast:getting_factory_lists'));
       }
     }
   };
@@ -125,10 +125,10 @@ const FactoryOverview1 = () => {
       dispatch(reset());
       await fetchFactoryLists();
       setVisibleDelete(false);
-      showToast("success", "Success", "Factory deleted successfully");
+      showToast("success", t('toast:success'), t('toast:factory_deleted_ok'));
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        showToast("error", "Error", "Deleting factory");
+        showToast("error", t('toast:error'), t('toast:deleting_factory'));
       }
     }
   };
@@ -229,6 +229,7 @@ export async function getStaticProps({ locale }: { locale: string }) {
         "placeholder",
         "dashboard",
         "button",
+        'toast',
       ])),
     },
   };

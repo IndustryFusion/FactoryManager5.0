@@ -187,7 +187,8 @@ export async function getStaticProps({ locale }: { locale: string }) {
         'button',
         'placeholder',
         'dashboard',
-        'navigation'
+        'navigation',
+        'toast',
       ])),
     },
   }

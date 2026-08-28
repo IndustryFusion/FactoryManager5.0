@@ -13,6 +13,7 @@ import {
 import { getAccessGroup } from "@/utility/indexed-db";
 import "../../styles/certificates.css";
 
+import { logHandledError } from "@/utility/log";
 interface Certificate {
   id: string;
   asset_ifric_id: string;
@@ -52,7 +53,7 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
         );
       }
     } catch (error) {
-      console.error("Failed to fetch initial data:", error);
+      logHandledError("Failed to fetch initial data:", error);
       setErrorMessage("Failed to fetch initial data");
     }
   };
@@ -100,7 +101,7 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
         setCertificateData([]);
       }
     } catch (error) {
-      console.error("Error fetching certificates:", error);
+      logHandledError("Error fetching certificates:", error);
       setErrorMessage("Failed to fetch certificates");
       setCertificateData([]);
     }
@@ -145,7 +146,7 @@ const AssetsTab: React.FC<{ assetIfricId?: string | null }> = ({
         setErrorMessage(response.message || "Failed to generate certificate");
       }
     } catch (error) {
-      console.error("Error generating certificate:", error);
+      logHandledError("Error generating certificate:", error);
       setErrorMessage("Failed to generate certificate");
     } finally {
       setIsGenerating(false);

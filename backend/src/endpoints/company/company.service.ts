@@ -6,6 +6,7 @@ import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 import axios from 'axios';
 import { Response, Request } from 'express';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class CompanyService {
   constructor(
@@ -29,12 +30,12 @@ export class CompanyService {
       // return array of asset_serial_number strings
       return Object.keys(result);
     } catch(err) {
-      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || upstreamMessage(err).includes("network") || err.message.includes("network")) {
         return [];
       } else if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -57,7 +58,7 @@ export class CompanyService {
         assetsWithUpdates: Object.keys(result).length
       }
     } catch(err) {
-      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || upstreamMessage(err).includes("network") || err.message.includes("network")) {
         return {
           success: true,
           status: 200,
@@ -66,7 +67,7 @@ export class CompanyService {
       } else if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -197,7 +198,7 @@ export class CompanyService {
       if (err instanceof HttpException) {
         throw err;
       } else if(err.response) {
-        throw new HttpException(err.response.data?.title || err.response.data?.message || "Failed to sync pdt", err.response.status);
+        throw new HttpException(upstreamMessage(err, "Failed to sync pdt"), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

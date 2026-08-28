@@ -24,6 +24,8 @@ import AlertDetails from "./alert-details";
 import { Asset } from "@/types/asset-types";
 import Image from "next/image";
 import { useTranslation } from "next-i18next";
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 interface Alerts {
   text: string;
   resource: string;
@@ -69,7 +71,8 @@ const Alerts = () => {
       })
       return mapBackendDataToAssetState(response.data);
     } catch (error) {
-      console.error("Error fetching asset data", error)
+      logHandledError("Error fetching asset data", error);
+      notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
     }
   }
 
@@ -82,7 +85,8 @@ const Alerts = () => {
         setAlerts(response.alerts);
       }
     } catch (error) {
-      console.error("Error acknowledging alert:", error);
+      logHandledError("Error acknowledging alert:", error);
+      notifyError(t('toast:action_failed'), error, t('toast:acknowledge_alert_failed'));
     }
   };
 
@@ -109,6 +113,7 @@ const Alerts = () => {
         setAssetData(assetsData);
       } catch (error) {
         console.log("Error from @components/alert/alert.tsx",error)
+        notifyError(t('toast:error'), error, t('toast:load_alert_data_failed'));
       }
     }
     fetchAllData();

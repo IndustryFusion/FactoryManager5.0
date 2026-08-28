@@ -19,6 +19,7 @@ import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class AllocatedAssetService {
   constructor(
@@ -75,7 +76,7 @@ export class AllocatedAssetService {
           } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -94,7 +95,7 @@ export class AllocatedAssetService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -156,7 +157,7 @@ async createGlobal(token: string) {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -169,7 +170,7 @@ async createGlobal(token: string) {
     if (err instanceof HttpException) {
       throw err;
     } else if (err.response) {
-      throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      throw new HttpException(upstreamMessage(err), err.response.status);
     } else {
       throw new HttpException(err.message, HttpStatus.NOT_FOUND);
     }
@@ -228,7 +229,7 @@ async createGlobal(token: string) {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -258,7 +259,7 @@ async createGlobal(token: string) {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -301,7 +302,7 @@ async createGlobal(token: string) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -347,7 +348,7 @@ async createGlobal(token: string) {
       await this.createGlobal(token);
       return await this.getGlobalAllocatedAssets(token);
     } else if (err.response) {
-      throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+      throw new HttpException(upstreamMessage(err), err.response.status);
     } else {
       throw new HttpException(err.message, HttpStatus.NOT_FOUND);
     }
@@ -372,7 +373,7 @@ async createGlobal(token: string) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -433,7 +434,7 @@ async createGlobal(token: string) {
           } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -467,7 +468,7 @@ async createGlobal(token: string) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -491,7 +492,7 @@ async createGlobal(token: string) {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

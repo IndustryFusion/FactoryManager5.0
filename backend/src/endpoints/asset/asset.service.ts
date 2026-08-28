@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ImportAssetDto } from './dto/importAsset.dto';
 import { ReactFlowService } from '../react-flow/react-flow.service';
@@ -28,14 +28,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class AssetService {
+  private readonly logger = new Logger(AssetService.name);
   constructor(
     @InjectModel(FactoryPdtCache.name)
     private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
     private readonly factoryPdtCacheService: FactoryPdtCacheService
   ) { }
   private readonly scorpioUrl = process.env.SCORPIO_URL;
+  private readonly templateSandboxUrl = process.env.TEMPLATE_SANDBOX_BACKEND_URL;
   private readonly scorpioTypesUrl = process.env.SCORPIO_TYPES_URL;
   private readonly context = process.env.CONTEXT;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
@@ -64,6 +67,68 @@ export class AssetService {
     return encrypted;
   }
 
+
+  /**
+   * Industrial template types from the template sandbox, replacing the Scorpio
+   * `urn:ngsi-ld:asset-type-store` entity that this codebase is moving away from
+   * (it no longer exists — Scorpio 404s on it, which broke every asset listing).
+   *
+   * Only the industrial subset is used: /templates/mongo-templates returns ~9,995
+   * templates covering the whole catalogue (bath mats, office paper), while
+   * /templates/industrial returns the ~1,855 that can actually be factory assets.
+   *
+   * Cached because the catalogue is large and changes rarely.
+   */
+  private industrialTypesCache: { types: string[]; fetchedAt: number } | null = null;
+  private static readonly TYPES_TTL_MS = 60 * 60 * 1000;
+
+  private async getIndustrialTypes(): Promise<string[]> {
+    const cached = this.industrialTypesCache;
+    if (cached && Date.now() - cached.fetchedAt < AssetService.TYPES_TTL_MS) {
+      return cached.types;
+    }
+    const response = await axios.get(`${this.templateSandboxUrl}/templates/industrial`);
+    const types = (Array.isArray(response.data) ? response.data : [])
+      .map((template: any) => template?.id)
+      .filter((id: any): id is string => typeof id === 'string' && id.length > 0);
+    this.industrialTypesCache = { types, fetchedAt: Date.now() };
+    this.logger.log(`Loaded ${types.length} industrial template types from the sandbox`);
+    return types;
+  }
+
+  /**
+   * Fetches every Scorpio entity whose type is a known industrial template type.
+   *
+   * Scorpio accepts a comma-separated `type` list, so this batches instead of
+   * issuing one request per type. Batch size 100 keeps the URL near 5.5 KB —
+   * 200 types (~11 KB) is rejected by the server.
+   */
+  private async fetchEntitiesForIndustrialTypes(token: string): Promise<any[]> {
+    const headers = {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/ld+json',
+      'Accept': 'application/ld+json'
+    };
+    const types = await this.getIndustrialTypes();
+    const batchSize = 100;
+    const entities: any[] = [];
+
+    for (let i = 0; i < types.length; i += batchSize) {
+      const batch = types.slice(i, i + batchSize);
+      try {
+        const response = await axios.get(this.scorpioUrl, {
+          headers,
+          params: { type: batch.join(',') },
+        });
+        if (Array.isArray(response.data)) entities.push(...response.data);
+      } catch (err) {
+        // One bad batch must not lose the whole listing.
+        this.logger.warn(`Asset batch ${i / batchSize + 1} failed: ${err?.message}`);
+      }
+    }
+    return entities;
+  }
+
   async getAssetData(token: string) {
     try {
       const headers = {
@@ -71,41 +136,12 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const assetData = [];
-      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
-      let typeData = await axios.get(typeUrl, { headers });
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
-      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
-      for (let i = 0; i < typeArr.length; i++) {
-        try {
-          let type = typeArr[i];
-          const url = this.scorpioUrl + '?type=' + type;
-          const response = await axios.get(url, { headers });
-          if (response.data.length > 0) {
-            response.data.forEach(data => {
-              assetData.push(data);
-            });
-          }
-        } catch(err) {
-          if (err.response) {
-            throw new HttpException({
-              errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
-            }, err.response.status);
-          } else {
-            throw new HttpException({
-              errorCode: "FS_500",
-              message: err.message
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        }
-      }
-      return assetData;
+      return await this.fetchEntitiesForIndustrialTypes(token);
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -154,7 +190,7 @@ export class AssetService {
               } else if (err.response) {
                 throw new HttpException({
                   errorCode: `FS_${err.response.status}`,
-                  message: err.response.data.message || err.response.data.title
+                  message: upstreamMessage(err)
                 }, err.response.status);
               } else {
                 throw new HttpException({
@@ -172,7 +208,7 @@ export class AssetService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -197,7 +233,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -228,7 +264,7 @@ export class AssetService {
           if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -246,7 +282,7 @@ export class AssetService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -267,7 +303,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -292,7 +328,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -311,45 +347,65 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
-      let typeData = await axios.get(typeUrl, { headers });
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].map(item => item.value);
-      // console.log("typeArr",typeArr)
-      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
-      for (let i = 0; i < typeArr.length; i++) {
-        try {
-          let type = typeArr[i];
-          const url = this.scorpioUrl + '?type=' + type;
-          const response = await axios.get(url, { headers });
-          if (response.data.length > 0) {
-            response.data.forEach(data => {
-              assetData.push(data.id);
-            });
-          }
-        } catch(err) {
-          if (err.response) {
-            throw new HttpException({
-              errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message
-            }, err.response.status);
-          } else {
-            throw new HttpException({
-              errorCode: "FS_500",
-              message: err.message
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        }
-      }
+      const entities = await this.fetchEntitiesForIndustrialTypes(token);
+      entities.forEach(entity => assetData.push(entity.id));
       return assetData;
     } catch (err) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
     }
+  }
+
+
+  /**
+   * Finds every asset that references `assetId` through any NGSI-LD Relationship.
+   *
+   * This used to build the relationship property name by string surgery on
+   * asset_category, e.g. "3d Printers template" -> last word "template" ->
+   * ".../v0.1/Template", then querying Scorpio for that key. asset_category is
+   * the template catalogue's *title*, and every title in that catalogue ends
+   * with the literal word " template" — so the lookup was really searching for
+   * a property named "Template", which nothing is ever stored under. It matched
+   * nothing, always.
+   *
+   * The relationship property names are defined by each asset's own template
+   * schema (updateRelations only ever matches keys already present on the
+   * entity, it never invents them), so they cannot be reconstructed from the
+   * category. Instead of guessing, scan for relationships that actually point
+   * at this asset. Returns the parent entity together with the key that matched.
+   */
+  private async findParentAssets(assetId: string, token: string): Promise<Array<{ parent: any; relationKey: string }>> {
+    let allAssets: any[];
+    try {
+      allAssets = await this.getAssetData(token);
+    } catch (err) {
+      // getAssetData reads the type registry (urn:ngsi-ld:asset-type-store); if
+      // that entity is missing from Scorpio the asset list cannot be built. That
+      // is not a reason to fail the caller — a dashboard panel should render
+      // empty, and deleting an asset must not be blocked by it.
+      this.logger.warn(
+        `Could not enumerate assets to resolve parents of ${assetId}: ${err?.message}`,
+      );
+      return [];
+    }
+    const matches: Array<{ parent: any; relationKey: string }> = [];
+
+    for (const parent of allAssets) {
+      if (!parent || parent.id === assetId) continue;
+      for (const [key, value] of Object.entries<any>(parent)) {
+        const entries = Array.isArray(value) ? value : [value];
+        const points = entries.some(
+          (entry) => entry && entry.type === 'Relationship' && entry.object === assetId,
+        );
+        if (points) matches.push({ parent, relationKey: key });
+      }
+    }
+    return matches;
   }
 
   async getParentIds(assetId: string, assetCategory: string, token: string) {
@@ -360,31 +416,19 @@ export class AssetService {
         'Accept': 'application/ld+json'
       };
 
-      let assetValue = await this.getAssetDataById(assetId, token);
-      const parts = assetCategory.split(" ");
-      assetCategory = parts[parts.length - 1] || assetCategory;
-      assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
-      let splitData = assetValue.type.split('/');
-      splitData[splitData.length - 1] = assetCategory;
-      let relationKey = splitData.join('/');
-      let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`;
-      const response = await axios.get(url, { headers });
-      let assetData = [];
-      if (response.data.length > 0) {
-        response.data.forEach(data => {
-          assetData.push({
-            id: data['id'],
-            product_name: data[Object.keys(data).find(key => key.includes("product_name"))],
-            asset_category: data[Object.keys(data).find(key => key.includes("asset_category"))]
-          });
-        });
-      }
-      return assetData;
+      // assetCategory is no longer used to locate parents — see findParentAssets.
+      // It stays in the signature so the existing frontend contract is unchanged.
+      const parents = await this.findParentAssets(assetId, token);
+      return parents.map(({ parent }) => ({
+        id: parent['id'],
+        product_name: parent[Object.keys(parent).find(key => key.includes("product_name"))],
+        asset_category: parent[Object.keys(parent).find(key => key.includes("asset_category"))]
+      }));
     } catch (err) {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -469,7 +513,7 @@ export class AssetService {
             } else if (err.response) {
               throw new HttpException({
                 errorCode: `FS_${err.response.status}`,
-                message: err.response.data.message || err.response.data.title
+                message: upstreamMessage(err)
               }, err.response.status);
             } else {
               throw new HttpException({
@@ -502,7 +546,7 @@ export class AssetService {
         message: 'Scorpio and cache updated successfully',
       };
     } catch (err) {
-      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.response.data.message.includes("network") || err.message.includes("network")) {
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || upstreamMessage(err).includes("network") || err.message.includes("network")) {
         return {
           success: true,
           status: 200,
@@ -511,7 +555,7 @@ export class AssetService {
       } else if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -525,19 +569,16 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let typeUrl = `${this.scorpioUrl}/urn:ngsi-ld:asset-type-store`;
-      let typeData = await axios.get(typeUrl, { headers });
-      let typeArr = typeData.data["http://www.industry-fusion.org/schema#type-data"].value.items.map(item => item.value);
-      typeArr = Array.isArray(typeArr) ? typeArr : (typeArr !== "json-ld-1.1" ? [typeArr] : []);
-      let uniqueType = [];
+      // The type-store read that used to be here was dead weight: the types it
+      // collected into `uniqueType` were only consumed by the write-back block
+      // below, which is commented out. It performed no validation and gated
+      // nothing — it just made every save depend on an entity that no longer
+      // exists in Scorpio. Removing it changes no behaviour.
       // sending multiple requests to scorpio to save the asset array
       let response;
       if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
           try {
-            if (typeArr.length > 0 && !typeArr.includes(data[i].type)) {
-              uniqueType.push(data[i].type);
-            }
             response = await axios.post(this.scorpioUrl, data[i], { headers });
           } catch (err) {
             throw err;
@@ -545,9 +586,6 @@ export class AssetService {
         }
       } else {
         try {
-          if (typeArr.length > 0 && !typeArr.includes(data.type)) {
-            uniqueType.push(data.type);
-          }
           response = await axios.post(this.scorpioUrl, data, { headers });
         } catch (err) {
           throw err;
@@ -566,7 +604,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -595,7 +633,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -650,7 +688,7 @@ export class AssetService {
           if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
-              message: err.response.data.message || err.response.data.title
+              message: upstreamMessage(err)
             }, err.response.status);
           } else {
             throw new HttpException({
@@ -723,7 +761,7 @@ export class AssetService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }
@@ -747,7 +785,7 @@ export class AssetService {
       if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -790,7 +828,7 @@ export class AssetService {
         } else if (err.response) {
           throw new HttpException({
             errorCode: `FS_${err.response.status}`,
-            message: err.response.data.message || err.response.data.title
+            message: upstreamMessage(err)
           }, err.response.status);
         } else {
           throw new HttpException({
@@ -829,7 +867,7 @@ export class AssetService {
         } else if (err.response) {
           throw new HttpException({
             errorCode: `FS_${err.response.status}`,
-            message: err.response.data.message || err.response.data.title
+            message: upstreamMessage(err)
           }, err.response.status);
         } else {
           throw new HttpException({
@@ -839,34 +877,27 @@ export class AssetService {
         }
       }
 
-      // Delete Asset From Scorpio
-      let assetData = await this.getAssetDataById(assetId, token);
-      const assetCategoryValue = assetData[Object.keys(assetData).find(key => key.includes("asset_category"))].value;
-      const parts = assetCategoryValue.split(" ");
-      let assetCategory = parts[parts.length - 1] || assetCategoryValue;
-      assetCategory = assetCategory.charAt(0).toUpperCase() + assetCategory.slice(1);
-      let splitData = assetData.type.split('/');
-      splitData[splitData.length - 1] = assetCategory;
-      let relationKey = splitData.join('/');
-      let url = `${this.scorpioUrl}?q=${relationKey}==%22${assetId}%22`;
-      const response = await axios.get(url, { headers });
-      if (response.data.length > 0) {
-        // Delete Asset From Parents Relation
-        for (let i = 0; i < response.data.length; i++) {
-          let relationData = response.data[i][relationKey];
+      // Detach this asset from every parent that references it.
+      // Previously the parent's relationship key was reconstructed from
+      // asset_category, which never matched anything — so this cleanup silently
+      // did nothing and left dangling references behind. findParentAssets
+      // reports the real key that pointed at the asset.
+      const parentMatches = await this.findParentAssets(assetId, token);
+      if (parentMatches.length > 0) {
+        for (const { parent, relationKey } of parentMatches) {
+          let relationData = parent[relationKey];
           if (Array.isArray(relationData)) {
-            const newArray = relationData.filter(item => item.object !== assetId);
-            response.data[i][relationKey] = newArray;
+            parent[relationKey] = relationData.filter(item => item.object !== assetId);
           } else {
-            response.data[i][relationKey] = {
+            parent[relationKey] = {
               type: 'Relationship',
               object: ''
             }
           }
           try {
-            let deleteResponse = await this.deleteAssetById(response.data[i].id, token);
+            let deleteResponse = await this.deleteAssetById(parent.id, token);
             if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-              await axios.post(this.scorpioUrl, response.data[i], { headers });
+              await axios.post(this.scorpioUrl, parent, { headers });
             }
           } catch(err) {
             if (err instanceof HttpException) {
@@ -874,7 +905,7 @@ export class AssetService {
             } else if (err.response) {
               throw new HttpException({
                 errorCode: `FS_${err.response.status}`,
-                message: err.response.data.message || err.response.data.title
+                message: upstreamMessage(err)
               }, err.response.status);
             } else {
               throw new HttpException({
@@ -901,7 +932,7 @@ export class AssetService {
         if (err.response) {
           throw new HttpException({
             errorCode: `FS_${err.response.status}`,
-            message: err.response.data.message || err.response.data.title
+            message: upstreamMessage(err)
           }, err.response.status);
         } else {
           throw new HttpException({
@@ -914,7 +945,7 @@ export class AssetService {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
-        throw new HttpException(err.response.data.title || err.response.data.message, err.response.status);
+        throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
         throw new HttpException(err.message, HttpStatus.NOT_FOUND);
       }

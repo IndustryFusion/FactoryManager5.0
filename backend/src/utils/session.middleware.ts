@@ -19,6 +19,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../endpoints/auth/auth.service'
 import { RedisService } from '../endpoints/redis/redis.service';
 
+import { upstreamMessage } from './upstream-error';
 @Injectable()
 export class SessionMiddleware implements NestMiddleware {
   constructor(
@@ -53,7 +54,7 @@ export class SessionMiddleware implements NestMiddleware {
       } else if (error.response) {
         throw new HttpException({
           errorCode: `RD_${error.response.status}`,
-          message: error.response.data.message
+          message: upstreamMessage(error)
         }, error.response.status);
       } else {
         throw new HttpException({

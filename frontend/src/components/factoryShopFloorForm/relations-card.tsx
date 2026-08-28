@@ -28,6 +28,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { create, reset } from '@/redux/relations/relationsSlice';
 import { useTranslation } from "next-i18next";
+import { notifyError } from "@/utility/global-toast";
 interface RelationObject {
     type: string;
     object: {};
@@ -143,6 +144,7 @@ const Relations = () => {
             }
         } catch (error) {
             console.error(error);
+          notifyError(t('toast:error'), error, t('toast:load_relations_only'));
         }
     }
 
@@ -177,12 +179,13 @@ const Relations = () => {
 
         } catch (error) {
             console.log("Error updating React Flow in relation card component", error);
+          notifyError(t('toast:save_failed'), error, t('toast:update_relation_failed'));
         }
     }
 
     const handleReset = () => {
         setInputValue([]);
-        showToast("success", "success", "Relations reseted successfully")
+        showToast("success", "success", t('toast:relations_reset'))
     }
 
     const handleUpdateRelations = async (payload: Payload) => {
@@ -199,16 +202,16 @@ const Relations = () => {
             if (response.data?.status === 204 && response.data?.success === true) {
                 if (deleteRelation) {
 
-                    showToast("success", "success", "Relation deleted successfully");
+                    showToast("success", "success", t('toast:relation_deleted'));
                 } else {
-                    showToast("success", "success", "Relations saved successfully");
+                    showToast("success", "success", t('toast:relations_saved'));
                 }
 
             }
         }catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
-               showToast('error', 'Error', "Updating relations");
+               showToast('error', t('toast:error'), t('toast:updating_relations'));
             } 
         }
     }

@@ -19,6 +19,7 @@ import axios from 'axios';
 import * as moment from 'moment';
 import { RedisService } from '../redis/redis.service'; 
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class ValueChangeStateService {
   constructor(
@@ -54,7 +55,7 @@ export class ValueChangeStateService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `TS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -131,7 +132,7 @@ export class ValueChangeStateService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `TS_${err.response.status}`,
-          message: err.response.data.message || err.response.data.title
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

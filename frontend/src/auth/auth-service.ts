@@ -66,7 +66,6 @@ const login = async (username: string, password: string): Promise<LoginResponse>
                 console.error('Error', error.message);
             }
         } else {
-            console.error('Error', error);
         }
         throw error;
     }

@@ -75,8 +75,9 @@ export async function getServerSideProps({ locale }: { locale: string }) {
                 'header',
                 'button',
                 'placeholder',
-                'dashboard'
-            ])),
+                'dashboard',
+                'toast',
+              ])),
         },
     }
 }

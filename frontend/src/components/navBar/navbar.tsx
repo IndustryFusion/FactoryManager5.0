@@ -19,6 +19,8 @@ import ProfileMenu from "./profile-menu";
 
 import { ReactNode } from "react";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 type NavbarProps = {
   navHeader?: string | ReactNode;
   previousRoute?: {
@@ -86,12 +88,13 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
           setUserData((prevState) => ({
             ...prevState!,
             company_name: companyDetails.company_name,
-            user_image: response?.data[0].user_image ? response?.data[0].user_image : ""
+            user_image: response?.data?.[0]?.user_image ?? ""
           }));
         }
       }
     } catch (error) {
-      console.error("Failed to fetch user data:", error);
+      logHandledError("Failed to fetch user data:", error);
+      notifyError(t('toast:error'), error, t('toast:load_user_data_failed'));
     }
   };
 
@@ -103,7 +106,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       }
       return {};
     } catch (error) {
-      console.error("Failed to fetch company details:", error);
+      logHandledError("Failed to fetch company details:", error);
       return {};
     }
   };

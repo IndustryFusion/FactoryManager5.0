@@ -22,6 +22,7 @@ import { getAccessGroup } from '@/utility/indexed-db';
 import { updatePopupVisible } from '@/utility/update-popup';
 import { authenticateToken } from '@/utility/auth';
 
+import { logHandledError } from "@/utility/log";
 interface DecodedToken {
   exp: number; 
 }
@@ -42,14 +43,14 @@ const withAuth = (WrappedComponent: NextComponentType<NextPageContext>) => {
                 updatePopupVisible(true);
               }
             } catch (error) {
-              console.error('Failed to decode token:', error);
+              logHandledError('Failed to decode token:', error);
               updatePopupVisible(true);
             }
           } else {
             updatePopupVisible(true);
           }
         } catch (error) {
-          console.error('Failed to retrieve login data:', error);
+          logHandledError('Failed to retrieve login data:', error);
           updatePopupVisible(true);
         }
       };

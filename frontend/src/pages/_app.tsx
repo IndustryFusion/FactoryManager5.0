@@ -32,6 +32,7 @@ import { getAccessGroupData } from "@/utility/auth";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { updatePopupVisible } from "@/utility/update-popup";
+import { GlobalToast } from "@/utility/global-toast";
 
 function MyApp({ Component, pageProps, router }: AppProps) {
   const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
@@ -95,6 +96,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         </>
         )}
         <UnauthorizedPopup/>
+        <GlobalToast />
       </PrimeReactProvider>
     </Provider>
   );

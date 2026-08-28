@@ -19,6 +19,7 @@ import axios from 'axios';
 import { AlertStatusDto } from './dto/alerta-status.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
+import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
 export class AlertsService {
 
@@ -56,7 +57,7 @@ export class AlertsService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `PG_${err.response.status}`,
-          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -83,7 +84,7 @@ export class AlertsService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `PG_${err.response.status}`,
-          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({
@@ -110,7 +111,7 @@ export class AlertsService {
       } else if (err.response) {
         throw new HttpException({
           errorCode: `PG_${err.response.status}`,
-          message: typeof err.response.data === "object" ? err.response.data.message : err.response.data
+          message: upstreamMessage(err)
         }, err.response.status);
       } else {
         throw new HttpException({

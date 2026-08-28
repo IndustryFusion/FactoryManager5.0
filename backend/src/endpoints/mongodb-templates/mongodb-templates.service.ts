@@ -17,6 +17,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import { upstreamMessage } from '../../utils/upstream-error';
 dotenv.config();
 const templateSandboxUrl = process.env.TEMPLATE_SANDBOX_BACKEND_URL;
 
@@ -32,7 +33,7 @@ export class MongodbTemplatesService {
       if (error instanceof HttpException) {
         throw error;
       } else if (error.response) {
-        throw new HttpException(error.response.data.message, error.response.status);
+        throw new HttpException(upstreamMessage(error), error.response.status);
       } else {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
@@ -47,7 +48,7 @@ export class MongodbTemplatesService {
       if (error instanceof HttpException) {
         throw error;
       } else if (error.response) {
-        throw new HttpException(error.response.data.message, error.response.status);
+        throw new HttpException(upstreamMessage(error), error.response.status);
       } else {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
@@ -62,7 +63,7 @@ export class MongodbTemplatesService {
       if (error instanceof HttpException) {
         throw error;
       } else if (error.response) {
-        throw new HttpException(error.response.data.message, error.response.status);
+        throw new HttpException(upstreamMessage(error), error.response.status);
       } else {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
@@ -77,7 +78,7 @@ export class MongodbTemplatesService {
       if (error instanceof HttpException) {
         throw error;
       } else if (error.response) {
-        throw new HttpException(error.response.data.message, error.response.status);
+        throw new HttpException(upstreamMessage(error), error.response.status);
       } else {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }

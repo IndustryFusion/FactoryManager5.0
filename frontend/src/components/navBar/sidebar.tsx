@@ -5,12 +5,15 @@ import Image from "next/image";
 import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { encryptRoute, generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
+import { getErrorMessage } from "@/utility/error-message";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
 import { Coming_Soon } from "next/font/google";
 import { useTranslation } from "next-i18next";
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
 function Sidebar() {
@@ -31,7 +34,7 @@ function Sidebar() {
         setLoading(true);
         const data = await getAccessGroup();
         if (!data) {
-          showToast(toast, "error", "Error", "No user data found");
+          showToast(toast, "error", t('toast:error'), t('toast:no_user_data'));
           return;
         }
         const fullName = data.user_name || "User";
@@ -52,11 +55,7 @@ function Sidebar() {
         if (name) setCompanyName(name);
       } catch (error: unknown) {
         setLoading(false);
-        if (axios.isAxiosError(error) && error.response?.data?.message) {
-          showToast(toast, "error", "Error", error.response.data.message);
-        } else {
-          showToast(toast, "error", "Error", "Error fetching user data");
-        }
+        showToast(toast, "error", t('toast:error'), getErrorMessage(error, t('toast:fetch_user_data_error')));
       }
       setLoading(false);
     };
@@ -86,7 +85,8 @@ function Sidebar() {
         console.error("Failed to generate encrypted route path");
       }
     } catch (error) {
-      console.error("Error generating encrypted route:", error);
+      logHandledError("Error generating encrypted route:", error);
+      notifyError(t('toast:navigation_failed'), error, t('toast:open_product_failed'));
     }
   }
 

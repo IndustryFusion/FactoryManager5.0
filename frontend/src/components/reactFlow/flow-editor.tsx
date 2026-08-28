@@ -85,6 +85,8 @@ import GroupNode from "./group-node";
 import { uploadValidationFiles } from "@/utility/flink-util";
 import { getAccessGroup } from '@/utility/indexed-db';
 
+import { notifyError } from "@/utility/global-toast";
+import { logHandledError } from "@/utility/log";
 interface RelationPayload {
   [key: string]: {
     [relationKey: string]: string[];
@@ -505,7 +507,8 @@ const FlowEditor: React.FC<
         const data = await getAccessGroup();
         setAccessgroupIndexedDb(data);
       } catch(error) {
-        console.error("Error fetching user data:", error);
+        logHandledError("Error fetching user data:", error);
+        notifyError(t('toast:error'), error, t('toast:load_user_data_failed'));
       }
     };
 
@@ -721,7 +724,7 @@ const FlowEditor: React.FC<
           setRelationCounts(updatedRelationCounts);
         }
       } catch (error) {
-        console.error("Error fetching flowchart data:", error);
+        logHandledError("Error fetching flowchart data:", error);
         toast.current?.show({
           severity: "error",
           summary: t('reactflow:errorLoadingFlowchart'),
@@ -843,7 +846,7 @@ const FlowEditor: React.FC<
       }
       dispatch(reset());
     } catch (error) {
-      console.error("Error saving flowchart:", error);
+      logHandledError("Error saving flowchart:", error);
       toast.current?.show({
         severity: "error",
         summary: t('reactflow:errorInServer'),
@@ -948,12 +951,12 @@ const FlowEditor: React.FC<
       } else {
         toast.current?.show({
           severity: "warn",
-          summary: "Scorpio Not Updated",
+          summary: t('toast:scorpio_not_updated'),
           life: 3000,
         });
       }
     } catch (error) {
-      console.error("Error saving flowchart:", error);
+      logHandledError("Error saving flowchart:", error);
       toast.current?.show({
         severity: "error",
         summary: t('reactflow:serverErrorNotSaved'),
@@ -1074,7 +1077,7 @@ const FlowEditor: React.FC<
 
       await getMongoDataFlowEditor();
     } catch (error) {
-      console.error("Failed to update flowchart:", error);
+      logHandledError("Failed to update flowchart:", error);
       toast.current?.show({
         severity: "error",
         summary: t('reactflow:failedToRefreshFlowchart'),
@@ -1258,7 +1261,7 @@ const FlowEditor: React.FC<
           } else {
             toast.current?.show({
               severity: "warn",
-              summary: "Scorpio Not Updated",
+              summary: t('toast:scorpio_not_updated'),
               life: 3000,
             });
           }
@@ -1296,7 +1299,7 @@ const FlowEditor: React.FC<
             summary: t('reactflow:saveFailed'),
             detail: t('reactflow:failedToSaveChanges'),
           });
-          console.error("Failed to save changes:", error);
+          logHandledError("Failed to save changes:", error);
         } finally {
           isRouteChangeAllowed = true; // Reset the navigation flag
         }
@@ -1807,7 +1810,8 @@ const FlowEditor: React.FC<
             console.error("Unknown type:", type);
         }
       } catch (error) {
-        console.error("Failed to parse dragged data", error);
+        logHandledError("Failed to parse dragged data", error);
+        notifyError(t('toast:error'), error, t('toast:read_dragged_failed'));
       }
     },
     [reactFlowInstance, nodes, setNodes, onNodeDoubleClick]

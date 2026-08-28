@@ -119,7 +119,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                showToast('warn', 'Warn', error.response?.data.message + ". \n\n Please onboard the asset first!");
+                showToast('warn', t('toast:warn'), error.response?.data.message + ". \n\n " + t('toast:onboard_first'));
             }
         }
     }
@@ -151,9 +151,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             const parsed = YAML.parse(onboard.app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboard({ ...onboard, app_config: prettified });
-            showToast('success', 'Success', 'YAML formatted successfully');
+            showToast('success', t('toast:success'), t('toast:yaml_formatted'));
         } catch (error) {
-            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+            showToast('error', t('toast:error'), t('toast:invalid_yaml_format'));
         }
     };
 
@@ -162,9 +162,9 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             const parsed = YAML.parse(onboard.secondary_app_config);
             const prettified = YAML.stringify(parsed, { indent: 2 });
             setOnboard({ ...onboard, secondary_app_config: prettified });
-            showToast('success', 'Success', 'YAML formatted successfully');
+            showToast('success', t('toast:success'), t('toast:yaml_formatted'));
         } catch (error) {
-            showToast('error', 'Error', 'Invalid YAML: Unable to format');
+            showToast('error', t('toast:error'), t('toast:invalid_yaml_format'));
         }
     };
 
@@ -241,7 +241,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         if (validateCurrentStep()) {
             goToNextStep();
         } else {
-            showToast('warn', 'Validation', 'Please fill all required fields in this step');
+            showToast('warn', t('toast:validation'), t('toast:fill_required_step'));
         }
     };
 
@@ -280,7 +280,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             dataservice_image_config === undefined || dataservice_image_config === "" ||
             agentservice_image_config === undefined || agentservice_image_config === ""
         ) {
-            showToast('error', "Error", "Please fill all required fields")
+            showToast('error', t('toast:error'), t('toast:fill_required'))
         } else {
             // Build config objects from spec editor items
             parsedConfig = onboard.protocol === "opc-ua"
@@ -336,13 +336,13 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 successToast: true
                             }
                         )
-                        showToast('success', 'Success', 'onboard form updated successfully');
+                        showToast('success', t('toast:success'), t('toast:onboard_form_updated'));
                     }
 
                 } catch (error) {
                     if (axios.isAxiosError(error)) {
                         console.error("Error response:", error.response?.data.message);
-                        showToast('error', 'Error', 'Updating onboard form');
+                        showToast('error', t('toast:error'), t('toast:updating_onboard_form'));
                     }
                 }
             }

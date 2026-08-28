@@ -22,7 +22,7 @@ const BlockTimer: React.FC<BlockTimerProps> =({setBlockerProp, blockerProp})=>{
         let timerId:any;
       
         if (blockerProp) {
-          showToast('success', "Success", "Added To onboarding configurations successfully");
+          showToast('success', t('toast:success'), t('toast:added_to_onboarding'));
     
           timerId = setInterval(() => {
             setCountDown(prevCountDown => {

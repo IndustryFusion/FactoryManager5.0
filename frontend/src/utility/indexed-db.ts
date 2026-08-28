@@ -1,4 +1,5 @@
-// Copyright (c) 2024 IB Systems GmbH
+
+import { logHandledError } from "@/utility/log";// Copyright (c) 2024 IB Systems GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -201,6 +202,6 @@ export const clearIndexedDbOnLogout = async () => {
         await objectStore.clear();
         db.close();
     } catch (error) {
-        console.error("Error clearing IndexedDB:", error);
+        logHandledError("Error clearing IndexedDB:", error);
     }
 };

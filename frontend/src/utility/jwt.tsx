@@ -24,6 +24,7 @@ import popupEventEmitter from './popupEventEmitter';
 import "../styles/factory-overview.css";
 import { clearIndexedDbOnLogout } from "@/utility/indexed-db";
 
+import { logHandledError } from "@/utility/log";
 const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
 
 const api = axios.create({});
@@ -35,7 +36,7 @@ api.interceptors.request.use(
               config.headers["Authorization"] = `Bearer ${accessGroup.ifricdi}`;
             }
         } catch (error) {
-            console.error("Error fetching JWT token from IndexedDB:", error);
+            logHandledError("Error fetching JWT token from IndexedDB:", error);
         }
         return config;
     },
