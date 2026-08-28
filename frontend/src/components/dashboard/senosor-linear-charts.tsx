@@ -19,8 +19,7 @@ import { ChartData, ChartOptions, TooltipItem } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
 import { Asset } from "@/types/asset-types";
-import { Dropdown } from "primereact/dropdown";
-import { ProgressSpinner } from "primereact/progressspinner";
+import { Skeleton } from "primereact/skeleton";
 import socketIOClient, { Socket } from "socket.io-client";
 import { useRouter } from "next/router";
 import "../../styles/combine-chart.css";
@@ -1277,98 +1276,139 @@ const CombineSensorChart: React.FC = () => {
     selectedInterval !== "live"
       ? null
       : secondsSinceUpdate < 5
-      ? "Just now"
-      : `${secondsSinceUpdate}s ago`;
+      ? t("dashboard:updated_just_now")
+      : `${secondsSinceUpdate}s ${t("dashboard:ago")}`;
 
   return (
     <div className="data_viewer_card" ref={cardRef}>
       <div className="grid p-fluid">
         <div className="col-12">
 
-          {/* ── Controls row ───────────────────────────────────────────── */}
-          <div className="control-container">
-            <div className="control_form_field">
-              <label htmlFor="attribute" className="dashboard_control_label">
-                {t("dashboard:selectAttribute")}
-                {selectedInterval === "live" && (
-                  <span className={`live-pulse-dot ${freshnessClass}`} title={freshnessLabel ?? ""} />
-                )}
-              </label>
-              <div className="global-button dropdown dashboard-dropdown">
-                <Dropdown
-                  id="attribute"
-                  inputId="attribute"
-                  name="attribute"
-                  value={selectedAttribute || t("dashboard:selectAnAttribute")}
-                  options={attributes}
-                  onChange={(e) => handleAttributeChange(e.value)}
-                  placeholder={t("placeholder:selectAttribute")}
-                  style={{ width: "100%" }}
-                  appendTo="self"
-                  panelClassName="global_dropdown_panel"
-                />
-                <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
+          {/* ── Sensor rail ─────────────────────────────────────────────────
+              Every attribute the machine publishes, visible without opening
+              anything. Replaces the attribute Dropdown; same handler. */}
+          {attributes.length > 0 && (
+            <div className="sensor-rail-wrapper">
+              <span className="sensor-rail-label">{t("dashboard:sensors")}</span>
+              <div className="sensor-rail" role="tablist" aria-label={t("dashboard:selectAttribute")}>
+                {attributes.map((attr) => (
+                  <button
+                    key={attr.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedAttribute === attr.value}
+                    className={`sensor-rail-item ${selectedAttribute === attr.value ? "active" : ""}`}
+                    onClick={() => handleAttributeChange(attr.value)}
+                    title={attr.label}
+                  >
+                    <span className="sensor-rail-name">{attr.label}</span>
+                    {unitMap[attr.value] && (
+                      <span className="sensor-rail-unit">{unitMap[attr.value]}</span>
+                    )}
+                  </button>
+                ))}
               </div>
-              {freshnessLabel && (
-                <span className={`freshness-label ${freshnessClass}`}>Live · {freshnessLabel}</span>
+            </div>
+          )}
+
+          {/* ── Live stats strip ────────────────────────────────────────────
+              Promoted above the toolbar: this is the answer to "how is my
+              machine doing", not chart metadata. */}
+          {kpiStats && !loading && !noChartData && entityIdValue && (
+            <div className="kpi-strip">
+              <div className="kpi-tile kpi-tile-current">
+                <div className="kpi-tile-header">
+                  <span className="kpi-tile-label">{t("dashboard:kpi_current")}</span>
+                  <span className={`kpi-trend kpi-trend-${kpiStats.trend}`} title={kpiStats.trend === "up" ? "Trending up" : kpiStats.trend === "down" ? "Trending down" : "Stable"}>
+                    {kpiStats.trend === "up" ? "↑" : kpiStats.trend === "down" ? "↓" : "→"}
+                  </span>
+                </div>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.last.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-low">
+                <span className="kpi-tile-label">{t("dashboard:kpi_min")}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.min.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-high">
+                <span className="kpi-tile-label">{t("dashboard:kpi_max")}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.max.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-avg">
+                <span className="kpi-tile-label">{t("dashboard:kpi_avg")}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.avg.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
+              </div>
+              <div className="kpi-tile kpi-tile-var">
+                <span className="kpi-tile-label">{t("dashboard:kpi_stddev")}</span>
+                <span className="kpi-tile-value">{parseFloat(kpiStats.stdDev.toFixed(4))}</span>
+              </div>
+              {kpiStats.anomalyCount > 0 && (
+                <div className="kpi-tile kpi-tile-anomaly">
+                  <span className="kpi-tile-label">⚠ {t("dashboard:kpi_anomalies")}</span>
+                  <span className="kpi-tile-value kpi-anomaly-count">{kpiStats.anomalyCount}</span>
+                </div>
               )}
             </div>
+          )}
 
-            <div className="control_form_field">
-              <label htmlFor="intervall" className="dashboard_control_label">{t("dashboard:interval")}</label>
-              <div className="global-button dropdown dashboard-dropdown">
-                <Dropdown
-                  inputId="intervall"
-                  value={selectedInterval}
-                  options={intervalButtons.map(({ label, interval }) => ({
-                    label,
-                    value: interval,
-                  }))}
-                  onChange={(e) => handleIntervalChange(e as CustomChangeEvent)}
-                  placeholder={t("dashboard:select_interval")}
-                  appendTo="self"
-                  panelClassName="global_dropdown_panel"
-                />
-                <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
+          {/* ── One toolbar: time range on the left, actions on the right ─── */}
+          <div className="chart-toolbar">
+            <div className="chart-toolbar-left">
+              <div className="global-segmented" role="group" aria-label={t("dashboard:interval")}>
+                {intervalButtons.map(({ label, interval }) => (
+                  <button
+                    key={interval}
+                    type="button"
+                    className={`global-segmented-item ${selectedInterval === interval ? "active" : ""}`}
+                    aria-pressed={selectedInterval === interval}
+                    onClick={() =>
+                      handleIntervalChange({
+                        originalEvent: null as unknown as React.SyntheticEvent,
+                        value: interval,
+                        target: { name: "interval", id: "intervall", value: interval },
+                      })
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-            </div>
 
-            {selectedInterval === "custom" && (
-              <div className="control_form_field">
-                <label htmlFor="" className="dashboard_control_label">{t("dashboard:pick_timeframe")}</label>
+              {selectedInterval === "custom" && (
                 <Button className="timeframe_op_trigger" onClick={(e) => op.current?.toggle(e)}>
                   <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt="" />
                   <div>{selectedDate ? formatDateWithTimeRange(selectedDate, startTime, endTime) : t("dashboard:pick_date")}</div>
                   <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
                 </Button>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* ── Toolbar row: thresholds + export + zoom reset + fullscreen ─ */}
-          <div className="chart-toolbar">
-            <div className="chart-toolbar-left">
-              <button className="chart-tool-btn chart-tool-btn-limits" onClick={(e) => thresholdOp.current?.toggle(e)} title="Set alert limit lines on the chart">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-                Set Limits
-              </button>
+              {freshnessLabel && (
+                <span className={`freshness-chip ${freshnessClass}`} title={freshnessLabel}>
+                  <span className={`live-pulse-dot ${freshnessClass}`} />
+                  {freshnessLabel}
+                </span>
+              )}
             </div>
+
             <div className="chart-toolbar-right">
+              <button className="chart-tool-btn chart-tool-btn-limits" onClick={(e) => thresholdOp.current?.toggle(e)} title={t("dashboard:limits_hint")}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                {t("dashboard:set_limits")}
+              </button>
               {hasZoomed && (
-                <button className="chart-tool-btn chart-tool-btn-accent" onClick={handleResetZoom} title="Reset zoom to full time range">
+                <button className="chart-tool-btn chart-tool-btn-accent" onClick={handleResetZoom} title={t("dashboard:reset_zoom")}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-                  Reset View
+                  {t("dashboard:reset_zoom")}
                 </button>
               )}
-              <button className="chart-tool-btn" onClick={handleExportCSV} title="Download data as CSV spreadsheet">
+              <button className="chart-tool-btn" onClick={handleExportCSV} title={t("dashboard:export_csv")}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12l7 7 7-7"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>
-                Export CSV
+                {t("dashboard:export_csv")}
               </button>
-              <button className="chart-tool-btn" onClick={handleExportPNG} title="Download chart as PNG image">
+              <button className="chart-tool-btn" onClick={handleExportPNG} title={t("dashboard:export_png")}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                Export PNG
+                {t("dashboard:export_png")}
               </button>
-              <button className="chart-tool-btn" onClick={handleFullscreen} title={isFullscreen ? "Exit fullscreen" : "Expand to fullscreen"}>
+              <button className="chart-tool-btn chart-tool-btn-icon" onClick={handleFullscreen} title={t("dashboard:fullscreen")} aria-label={t("dashboard:fullscreen")}>
                 {isFullscreen
                   ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
                   : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>}
@@ -1380,50 +1420,50 @@ const CombineSensorChart: React.FC = () => {
           <OverlayPanel ref={thresholdOp} className="timeframe_overlaypanel threshold-panel">
             <div className="threshold-panel-header">
               <div>
-                <div className="threshold-panel-title">Set Limit Lines</div>
-                <div className="threshold-panel-subtitle">Draw horizontal lines on the chart to mark safe operating ranges.</div>
+                <div className="threshold-panel-title">{t("dashboard:set_limits")}</div>
+                <div className="threshold-panel-subtitle">{t("dashboard:limits_hint")}</div>
               </div>
-              <button className="threshold-panel-close" onClick={() => thresholdOp.current?.hide()} title="Close">
+              <button className="threshold-panel-close" onClick={() => thresholdOp.current?.hide()} title={t("button:cancel")}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <div className="threshold-grid">
               <div className="control_form_field">
-                <label className="dashboard_control_label threshold-label-alarm">Upper Alarm</label>
+                <label className="dashboard_control_label threshold-label-alarm">{t("dashboard:upper_alarm")}</label>
                 <InputText
                   value={upperAlarm}
                   onChange={(e) => updateThreshold("upperAlarm", e.target.value)}
-                  placeholder="e.g. 95"
+                  placeholder="95"
                   className="threshold-input"
                   keyfilter="num"
                 />
               </div>
               <div className="control_form_field">
-                <label className="dashboard_control_label threshold-label-warn">Upper Warning</label>
+                <label className="dashboard_control_label threshold-label-warn">{t("dashboard:upper_warning")}</label>
                 <InputText
                   value={upperWarning}
                   onChange={(e) => updateThreshold("upperWarning", e.target.value)}
-                  placeholder="e.g. 80"
+                  placeholder="80"
                   className="threshold-input"
                   keyfilter="num"
                 />
               </div>
               <div className="control_form_field">
-                <label className="dashboard_control_label threshold-label-warn">Lower Warning</label>
+                <label className="dashboard_control_label threshold-label-warn">{t("dashboard:lower_warning")}</label>
                 <InputText
                   value={lowerWarning}
                   onChange={(e) => updateThreshold("lowerWarning", e.target.value)}
-                  placeholder="e.g. 20"
+                  placeholder="20"
                   className="threshold-input"
                   keyfilter="num"
                 />
               </div>
               <div className="control_form_field">
-                <label className="dashboard_control_label threshold-label-alarm">Lower Alarm</label>
+                <label className="dashboard_control_label threshold-label-alarm">{t("dashboard:lower_alarm")}</label>
                 <InputText
                   value={lowerAlarm}
                   onChange={(e) => updateThreshold("lowerAlarm", e.target.value)}
-                  placeholder="e.g. 5"
+                  placeholder="5"
                   className="threshold-input"
                   keyfilter="num"
                 />
@@ -1433,51 +1473,14 @@ const CombineSensorChart: React.FC = () => {
               <button
                 className="chart-tool-btn"
                 onClick={resetThresholds}
-                title="Clear all limit lines for this attribute"
-                style={{ color: "var(--color-alert, #ef4444)" }}
+                title={t("dashboard:reset_limits")}
+                style={{ color: "var(--red)" }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                Reset Limits
+                {t("dashboard:reset_limits")}
               </button>
             </div>
           </OverlayPanel>
-
-          {/* ── Live stats strip ──────────────────────────────────────────── */}
-          {kpiStats && !loading && !noChartData && entityIdValue && (
-            <div className="kpi-strip">
-              <div className="kpi-tile kpi-tile-current">
-                <div className="kpi-tile-header">
-                  <span className="kpi-tile-label">Current Value</span>
-                  <span className={`kpi-trend kpi-trend-${kpiStats.trend}`} title={kpiStats.trend === "up" ? "Trending up" : kpiStats.trend === "down" ? "Trending down" : "Stable"}>
-                    {kpiStats.trend === "up" ? "↑" : kpiStats.trend === "down" ? "↓" : "→"}
-                  </span>
-                </div>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.last.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
-              </div>
-              <div className="kpi-tile kpi-tile-low">
-                <span className="kpi-tile-label">Low</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.min.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
-              </div>
-              <div className="kpi-tile kpi-tile-high">
-                <span className="kpi-tile-label">High</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.max.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
-              </div>
-              <div className="kpi-tile kpi-tile-avg">
-                <span className="kpi-tile-label">Average</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.avg.toFixed(4))}{selectedAttributeUnit && <span className="kpi-unit">{selectedAttributeUnit}</span>}</span>
-              </div>
-              <div className="kpi-tile kpi-tile-var">
-                <span className="kpi-tile-label">Variation (σ)</span>
-                <span className="kpi-tile-value">{parseFloat(kpiStats.stdDev.toFixed(4))}</span>
-              </div>
-              {kpiStats.anomalyCount > 0 && (
-                <div className="kpi-tile kpi-tile-anomaly">
-                  <span className="kpi-tile-label">⚠ Spikes</span>
-                  <span className="kpi-tile-value kpi-anomaly-count">{kpiStats.anomalyCount}</span>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* ── Timeframe overlay panel ───────────────────────────────────── */}
           <OverlayPanel ref={op} className="timeframe_overlaypanel">
@@ -1536,13 +1539,19 @@ const CombineSensorChart: React.FC = () => {
           {/* ── Chart area ────────────────────────────────────────────────── */}
           <div style={{ position: "relative" }}>
             {!entityIdValue ? (
-              <div className="chart-empty-state">
-                <p><b>{t("dashboard:no_asset_selected")}</b></p>
-                <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
+              <div className="dv_empty_state">
+                <div className="dv_empty_state_icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 15l5-5 4 4 3-3 6 6" />
+                  </svg>
+                </div>
+                <p className="dv_empty_state_title">{t("dashboard:no_asset_selected")}</p>
+                <p className="dv_empty_state_sub">{t("dashboard:no_asset_selected_hint")}</p>
               </div>
             ) : loading ? (
               <div className="chart-loading-state">
-                <ProgressSpinner />
+                <Skeleton height="40px" borderRadius="8px"></Skeleton>
+                <Skeleton height="320px" borderRadius="10px"></Skeleton>
               </div>
             ) : data.datasets && data.datasets.length > 0 && !noChartData ? (
               <Chart
@@ -1551,17 +1560,22 @@ const CombineSensorChart: React.FC = () => {
                 type="line"
                 data={chartData}
                 options={chartOptionsWithZoomPan}
-                style={{ height: "60vh" }}
+                style={{ height: "clamp(320px, 48vh, 560px)" }}
               />
             ) : (
-              <div className="chart-empty-state">
-                <p>{t("no_chart_data")}</p>
-                <img src="/no-chart-data.png" alt="" width="5%" height="15%" />
+              <div className="dv_empty_state">
+                <div className="dv_empty_state_icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 15l5-5 4 4 3-3 6 6" /><line x1="3" y1="3" x2="21" y2="21" />
+                  </svg>
+                </div>
+                <p className="dv_empty_state_title">{t("dashboard:no_chart_data")}</p>
+                <p className="dv_empty_state_sub">{t("dashboard:no_chart_data_hint")}</p>
               </div>
             )}
           </div>
 
-          {/* ── Machine state band legend ─────────────────────────────────── */}
+          {/* ── Machine state band legend — kept beside the bands it explains ─ */}
           {machineStateBands.length > 0 && !loading && entityIdValue && (
             <div className="machine-state-legend">
               <span className="ms-legend-item"><span className="ms-dot ms-dot-running" />{t("dashboard:running")}</span>

@@ -366,10 +366,11 @@ border-radius: 12px;
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;              /* opens to 8px on hover, so collapsed stays a true circle */
   color: white;
-  border: 1px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
-  background: var(--ifx-tint-blue-900-primary, #3CA0C9);
+  /* XANA brand surface: dark, matching the logo tile (#03070D) */
+  border: 1px solid #03070D;
+  background: #03070D;
   border-radius: 60px;
   padding: 16px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -382,7 +383,9 @@ border-radius: 12px;
   width: 32px;  /* bigger icon */
   height: 32px;
   flex-shrink: 0;
-  padding-left: 5px;
+  /* No left padding: while collapsed the FAB is a circle and this pushed the
+     mark off-centre. Spacing before the label is handled by the gap below,
+     which only opens up on hover. */
 }
 
 .xana-label {
@@ -396,9 +399,54 @@ border-radius: 12px;
 
 .xana-fab:hover {
   padding: 16px 22px;
+  gap: 8px;
 }
 
 .xana-fab:hover .xana-label {
   max-width: 200px;
   opacity: 1;
+}
+
+/* ── Segmented control ─────────────────────────────────────────────────────
+   Shared primitive for "pick one of a few" controls (time intervals, modes).
+   Same visual recipe as .tab-buttons in styles/dashboard-page.css, promoted
+   here so pages other than the home dashboard can reuse it. Use for 2-7
+   options; beyond that a Dropdown is still the right control. */
+.global-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  background-color: var(--common-text-grey-100);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.global-segmented-item {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  color: var(--common-text-grey-600, #475467);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.global-segmented-item:hover:not(.active) {
+  color: var(--black);
+}
+
+.global-segmented-item.active {
+  background-color: var(--white);
+  color: var(--black);
+  font-weight: 500;
+  box-shadow: 0px 1px 3px 0px rgba(16, 24, 43, 0.08);
+}
+
+.global-segmented-item:focus-visible {
+  outline: 2px solid var(--fusion-blue);
+  outline-offset: -1px;
 }

@@ -12,6 +12,11 @@ import { useRouter } from "next/router";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 
+import { useAlerts, useTodaysAlerts } from "@/context/alerts-context";
+import AlertDetails from "@/components/alert/alert-details";
+import type { AlertaState } from "@/components/alert/alert-details";
+import { postStatusForAlert } from "@/components/alert/alert-service";
+import { notifyError } from "@/utility/global-toast";
 interface CompanyDetails {
     data?: Array<{
         company_name?: string;
@@ -34,6 +39,26 @@ export function getProxiedImageUrl(s3Url: string | null | undefined | string[]):
 
 const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
+
+/** Alerta severities mapped to the dot colours already used in alert-details.tsx. */
+const severityColor = (severity?: string): string => {
+    switch ((severity || "").toLowerCase()) {
+        case "ok":             return "#04c904";
+        case "warning":        return "#ffc107";
+        case "machine-danger":
+        case "machine-error":  return "#ff0000";
+        default:               return "#98A2B3";
+    }
+};
+
+/** Alerta timestamps are ISO; the card shows local HH:mm:ss like the original design. */
+const formatAlertTime = (iso?: string): string => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+};
+
 const DashboardPage: React.FC = () => {
     const [userName, setUserName] = useState<string>("User");
     const [companyName, setCompanyName] = useState<string>("Company");
@@ -45,6 +70,19 @@ const DashboardPage: React.FC = () => {
     const [userImage, setUserImage] = useState("")
     const avatarLetter =  (userName ?? "").trim().charAt(0).toUpperCase() || "";
     const [activityInterval, setActivityInterval] = useState<string>("10-days");
+    // Same data the navbar bell shows — one shared poller, so the two never disagree.
+    const { alerts, jobs, assetData, alertsCount, jobsCount, loading: alertsLoading, error: alertsError, refresh: refreshAlerts } = useAlerts();
+    const todaysAlerts = useTodaysAlerts();
+    const [alertsDialogVisible, setAlertsDialogVisible] = useState<boolean>(false);
+
+    const handleAcknowledgeAlert = async (id: string, status: AlertaState) => {
+        try {
+            const response = await postStatusForAlert(id, { status, text: 'Manual change.' });
+            if (response?.status === 'ok') await refreshAlerts();
+        } catch (error) {
+            notifyError(t('toast:action_failed'), error, t('toast:acknowledge_alert_failed'));
+        }
+    };
 
     useEffect(() => {
         const fetchUserData = async (): Promise<void> => {
@@ -109,6 +147,18 @@ const DashboardPage: React.FC = () => {
             <div className="main_content_wrapper">
                 {/* ✅ Toast must be rendered in JSX */}
                 <Toast ref={toast} />
+            {alertsDialogVisible && (
+                <AlertDetails
+                    alertsCount={alertsCount}
+                    jobsCount={jobsCount}
+                    alerts={alerts}
+                    jobs={jobs}
+                    visible={alertsDialogVisible}
+                    setVisible={setAlertsDialogVisible}
+                    assetData={assetData}
+                    handleAcknowledge={handleAcknowledgeAlert}
+                />
+            )}
 
                 <div className="navbar_wrapper">
                     <Navbar
@@ -202,45 +252,48 @@ const DashboardPage: React.FC = () => {
                             <div className="notification-card">
                                 <div className="card-header">
                                     <span className="card-title">{t("todays_notification")}</span>
-                                    <a href="#" className="view-all">{t("all_notifications")}{" "}→</a>
+                                    <button type="button" className="view-all" onClick={() => setAlertsDialogVisible(true)}>{t("all_notifications")}{" "}→</button>
                                 </div>
                                 <ul className="notification-list">
-                                    {/* Notification Items */}
-                                    <li className="notification-item">
-                                        <div className="notification-left">
-                                            <img src="/dot-blue.svg" alt="status" className="dot" />
-                                            <span className="notification-text">‘Laser Cutter 1’ error</span>
-                                        </div>
-                                        <span className="notification-time">12:21:34</span>
-                                    </li>
-                                    <li className="notification-item">
-                                        <div className="notification-left">
-                                            <img src="/dot-blue.svg" alt="status" className="dot" />
-                                            <span className="notification-text">Injection mold reached critical temperature</span>
-                                        </div>
-                                        <span className="notification-time">10:38:14</span>
-                                    </li>
-                                    <li className="notification-item">
-                                        <div className="notification-left">
-                                            <img src="/dot-blue.svg" alt="status" className="dot" />
-                                            <span className="notification-text">OEE of production line ‘Welding 1’ 24% lower</span>
-                                        </div>
-                                        <span className="notification-time">09:01:12</span>
-                                    </li>
-                                    <li className="notification-item notification-alert">
-                                        <div className="notification-left">
-                                            <img src="/grey-dot.svg" alt="status" className="dot" />
-                                            <span className="notification-text-blue">OEE of production line ‘Cutting 2’ 11% lower</span>
-                                        </div>
-                                        <span className="notification-time">09:01:08</span>
-                                    </li>
-                                    <li className="notification-item notification-li">
-                                        <div className="notification-left">
-                                            <img src="/grey-dot.svg" alt="status" className="dot" />
-                                            <span className="notification-text-gray">Finish setup of new Asset ‘Powdercoating Cabin’</span>
-                                        </div>
-                                        <span className="notification-time">06:48:30</span>
-                                    </li>
+                                    {alertsLoading && todaysAlerts.length === 0 && (
+                                        <li className="notification-item">
+                                            <div className="notification-left">
+                                                <span className="notification-text-gray">{t("notifications_loading")}</span>
+                                            </div>
+                                        </li>
+                                    )}
+                                    {!alertsLoading && alertsError !== null && todaysAlerts.length === 0 && (
+                                        <li className="notification-item">
+                                            <div className="notification-left">
+                                                <span className="notification-text-gray">{t("notifications_error")}</span>
+                                            </div>
+                                        </li>
+                                    )}
+                                    {!alertsLoading && alertsError === null && todaysAlerts.length === 0 && (
+                                        <li className="notification-item">
+                                            <div className="notification-left">
+                                                <span className="notification-text-gray">{t("no_notifications_today")}</span>
+                                            </div>
+                                        </li>
+                                    )}
+                                    {todaysAlerts.slice(0, 5).map((alert, index) => (
+                                        <li
+                                            key={alert.id ?? `${alert.resource}-${index}`}
+                                            className={`notification-item${index >= 3 ? " notification-li" : ""}`}
+                                        >
+                                            <div className="notification-left">
+                                                <span
+                                                    className="dot notification-severity-dot"
+                                                    style={{ backgroundColor: severityColor(alert.severity) }}
+                                                    aria-hidden="true"
+                                                />
+                                                <span className={index >= 3 ? "notification-text-gray" : "notification-text"}>
+                                                    {alert.text || alert.event || alert.resource}
+                                                </span>
+                                            </div>
+                                            <span className="notification-time">{formatAlertTime(alert.lastReceiveTime)}</span>
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
                         </div>
@@ -297,7 +350,7 @@ const DashboardPage: React.FC = () => {
                         {/* Xana Section */}
                         <div className="xana-container">
                             <div className="xana-content">
-                                <img src="/ai-magic.svg" width={60} height={60} alt="AI Magic Icon" />
+                                <img src="/xana-dark.png" width={60} height={60} alt="XANA AI" />
                                 <div>
                                     <h1 className="xana-heading">{t("xana_banner.title")}</h1>
                                     <p className="xana-subheading">{t("xana_banner.sub")}</p>
@@ -312,7 +365,7 @@ const DashboardPage: React.FC = () => {
                                     onClick={handleXanaOpen}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    <span><img style={{ width: "24px", height: "24px", paddingTop: "3px" }} src="/ai-audio.svg" /></span>{t("xana_banner.cta")}
+                                    <span><img style={{ width: "24px", height: "24px", paddingTop: "3px" }} src="/xana-mark.png" alt="" /></span>{t("xana_banner.cta")}
                                 </button>
                             </div>
                         </div>

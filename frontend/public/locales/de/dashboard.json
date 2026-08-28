@@ -63,7 +63,7 @@
     "severity": "Schweregrad",
     "previous_severity": "Vorheriger Schweregrad",
     "empty_text": "Wenn Sie Benachrichtigungen haben, werden sie hier angezeigt",
-    "no_asset_selected": "Keine Anlage ausgewählt! Bitte wählen Sie eine Anlage aus …",
+    "no_asset_selected": "Keine Anlage ausgewählt",
     "select_interval": "Intervall auswählen",
     "pick_timeframe": "Zeitraum auswählen",
     "pick_date": "Datum auswählen",
@@ -121,5 +121,14 @@
     "fullscreen": "Vollbild",
     "updated_just_now": "Gerade aktualisiert",
     "updated": "Aktualisiert",
-    "ago": "vor"
+    "ago": "vor",
+    "no_notifications_today": "Heute keine Benachrichtigungen",
+    "notifications_loading": "Benachrichtigungen werden geladen…",
+    "notifications_error": "Benachrichtigungen konnten nicht geladen werden",
+    "sensors": "Sensoren",
+    "set_limits": "Grenzwerte setzen",
+    "limits_hint": "Horizontale Linien im Diagramm markieren den sicheren Betriebsbereich.",
+    "reset_limits": "Grenzwerte zurücksetzen",
+    "no_asset_selected_hint": "Wählen Sie oben eine Maschine aus, um ihre Live-Daten zu sehen.",
+    "no_chart_data_hint": "Dieser Sensor hat im gewählten Zeitraum keine Werte gemeldet."
 }

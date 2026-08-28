@@ -20,7 +20,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import ChartJS from 'chart.js/auto';
 import { Toast, ToastMessage } from 'primereact/toast';
-import { ProgressSpinner } from "primereact/progressspinner";
+import { Skeleton } from "primereact/skeleton";
+import { OverlayPanel } from "primereact/overlaypanel";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Dropdown } from "primereact/dropdown";
 import { Asset } from "@/types/asset-types";
@@ -63,6 +64,7 @@ const PowerCo2Chart = () => {
   const [chartData, setChartData] = useState<PowerConsumptionData | null>(null);
   const entityIdValue = useSelector((state: RootState) => state.entityId.id);
   const [chartOptions, setChartOptions] = useState({});
+  const rangeOp = useRef<OverlayPanel>(null);
   const [selectedInterval, setSelectedInterval] = useState<string>("days");
   const [selectedWeekSubInterval, setSelectedWeekSubInterval] = useState<string>("months");
   const [selectedMonthSubInterval, setSelectedMonthSubInterval] = useState<string>("all");
@@ -322,38 +324,40 @@ const PowerCo2Chart = () => {
   return (
     <div className="data_viewer_card">
       <Toast ref={toast} />
-      <h3 className='dashboard_card_title'>
-        {t("dashboard:co2_chart_title")}
-      </h3>
-      <div className="interval-filter-container">
-        <p style={{ fontSize: "19px" }}>{t("dashboard:filterInterval")}</p>
-      </div>
-      <div className="flex align-items-end gap-2 p-0">
-        <div
-          className="flex flex-column align-items-start"
-          style={{
-            margin: '0px',
-            maxWidth: '150px',
-          }}
-        >
-          <p style={{marginBottom: '6px'}}>{t("dashboard:type")}</p>
-          <div
-            className="global-button dropdown dashboard-dropdown w-full"
-          >
-            <Dropdown
-              value={selectedInterval}
-              options={intervalButtons.map(({ label, interval }) => ({
-                label,
-                value: interval,
-              }))}
-              onChange={(e) => setSelectedInterval(e.value)}
-              placeholder={t("dashboard:select_interval")}
-              appendTo="self"
-              panelClassName='global_dropdown_panel'
-            />
-            <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
+      {/* Same card-header shape as the other cards: title left, controls right.
+          Replaces the centred "Filter Interval" heading, which matched nothing
+          else on the screen. */}
+      <div className="dv_card_header">
+        <h3 className='dashboard_card_title'>
+          {t("dashboard:co2_chart_title")}
+        </h3>
+        <div className="dv_card_header_controls">
+          <div className="global-segmented" role="group" aria-label={t("dashboard:type")}>
+            {intervalButtons.map(({ label, interval }) => (
+              <button
+                key={interval}
+                type="button"
+                className={`global-segmented-item ${selectedInterval === interval ? "active" : ""}`}
+                aria-pressed={selectedInterval === interval}
+                onClick={() => setSelectedInterval(interval)}
+                style={{ textTransform: "capitalize" }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
+          {/* Date pickers live behind one trigger, mirroring the sensor chart's
+              existing "Pick Timeframe" overlay panel. */}
+          <Button className="timeframe_op_trigger" onClick={(e) => rangeOp.current?.toggle(e)}>
+            <Image src="/dashboard-collapse/calendar_icon.svg" width={16} height={16} alt="" />
+            <div>{t("dashboard:pick_timeframe")}</div>
+            <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
+          </Button>
         </div>
+      </div>
+
+      <OverlayPanel ref={rangeOp} className="timeframe_overlaypanel">
+        <div className="timetrame_form">
         {selectedInterval == "days" ? (
           <div className='flex align-items-end gap-2 w-full'>
             <div
@@ -561,6 +565,7 @@ const PowerCo2Chart = () => {
                   }
                   view="year"
                   dateFormat="yy"
+                  appendTo="self"
                   className='w-full'
                 />
               </div>
@@ -584,6 +589,7 @@ const PowerCo2Chart = () => {
                       minimumDate ? moment(minimumDate).toDate() : undefined
                     }
                     maxDate={moment().toDate()}
+                    appendTo="self"
                     className='w-full'
                   />
                 </div>
@@ -604,6 +610,7 @@ const PowerCo2Chart = () => {
                     }
                     minDate={moment(startDate).toDate()}
                     maxDate={moment().toDate()}
+                    appendTo="self"
                     className='w-full'
                   />
                 </div>
@@ -611,6 +618,7 @@ const PowerCo2Chart = () => {
             )}
           </>
         )}
+        </div>
         <Button
           label={t("button:submit")}
           severity="info"
@@ -618,25 +626,20 @@ const PowerCo2Chart = () => {
           className='global-button'
           style={{ minWidth: '75px', minHeight: '35px' }}
         />
-      </div>
+      </OverlayPanel>
       {noChartData ? (
-        <div
-          className="flex flex-column justify-content-center align-items-center"
-          style={{ marginTop: "5rem" }}
-        >
-          <p>{t("dashboard:nochartData")}</p>
-          <img src="/no-chart-data.png" alt="" width="5%" height="5%" />
+        <div className="dv_empty_state">
+          <div className="dv_empty_state_icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 17V10M12 17V7M16 17v-4" />
+            </svg>
+          </div>
+          <p className="dv_empty_state_title">{t("dashboard:nochartData")}</p>
         </div>
       ) : isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "60vh",
-          }}
-        >
-          <ProgressSpinner />
+        <div className="dv_chart_skeleton">
+          <Skeleton height="32px" borderRadius="8px"></Skeleton>
+          <Skeleton height="280px" borderRadius="10px"></Skeleton>
         </div>
       ) : (
         <div

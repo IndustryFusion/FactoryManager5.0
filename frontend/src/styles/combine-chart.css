@@ -268,14 +268,23 @@ font-size : 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-  gap: 8px;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .chart-toolbar-left,
 .chart-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chart-toolbar-right {
+  margin-left: auto;
+}
+/* Custom-range trigger sits inline with the segmented control */
+.chart-toolbar-left .timeframe_op_trigger {
+  margin: 0;
 }
 .chart-tool-btn {
   all: unset;
@@ -295,6 +304,15 @@ font-size : 18px;
 .chart-tool-btn:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+}
+/* `all: unset` above strips the focus ring, leaving keyboard users with no
+   visible position. Restore the house focus style from globals.css. */
+.chart-tool-btn:focus-visible {
+  outline: 2px solid var(--fusion-blue);
+  outline-offset: 1px;
+}
+.chart-tool-btn-icon {
+  padding: 5px 7px;
 }
 .chart-tool-btn svg {
   flex-shrink: 0;
@@ -342,7 +360,17 @@ font-size : 18px;
 .kpi-tile:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
 }
-.kpi-tile-current { border-left-color: #3b82f6; }
+.kpi-tile-current {
+  border-left-color: #3b82f6;
+  min-width: 160px;
+  padding-right: 22px;
+}
+.kpi-tile-current .kpi-tile-value {
+  font-size: 26px;
+}
+.kpi-tile-current .kpi-tile-label {
+  font-size: 11px;
+}
 .kpi-tile-low     { border-left-color: #22c55e; }
 .kpi-tile-high    { border-left-color: #f59e0b; }
 .kpi-tile-avg     { border-left-color: #8b5cf6; }
@@ -464,14 +492,135 @@ font-size : 18px;
 .ms-dot-offline { background: rgba(130, 130, 130, 0.4); border: 1px solid rgba(130, 130, 130, 0.6); }
 
 /* ── Empty / loading states ───────────────────────────────────────────────── */
-.chart-empty-state,
-.chart-loading-state {
+.chart-empty-state {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 60vh;
 }
+
+/* Skeletons sized to the content they stand in for, so the layout does not
+   jump when the series arrives. */
 .chart-loading-state {
-  flex-direction: row;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: clamp(320px, 48vh, 560px);
+}
+
+/* ── Sensor rail ────────────────────────────────────────────────────────────
+   Replaces the attribute Dropdown. Every sensor the machine publishes is
+   visible without opening anything, and switching costs one click instead of
+   dropdown → scroll → click. Scrolls horizontally when an asset has many. */
+.sensor-rail-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.sensor-rail-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--grey-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.sensor-rail {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  min-width: 0;
+}
+
+.sensor-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.sensor-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--dividers);
+  background-color: var(--white);
+  color: var(--grey-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.sensor-rail-item:hover {
+  border-color: var(--common-text-grey-400);
+  color: var(--black);
+}
+
+.sensor-rail-item.active {
+  border-color: var(--ifx-blue);
+  background-color: rgba(60, 160, 201, 0.08);
+  color: var(--ifx-blue);
+}
+
+.sensor-rail-item:focus-visible {
+  outline: 2px solid var(--fusion-blue);
+  outline-offset: 1px;
+}
+
+.sensor-rail-name {
+  line-height: 1.2;
+}
+
+.sensor-rail-unit {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--grey-secondary);
+  line-height: 1.2;
+}
+
+.sensor-rail-item.active .sensor-rail-unit {
+  color: var(--ifx-blue);
+  opacity: 0.75;
+}
+
+/* ── Freshness chip ─────────────────────────────────────────────────────────
+   Was an 8px dot beside a form label. Now a readable chip sitting next to the
+   interval control, where the owner is already looking. */
+.freshness-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--grey-box);
+  color: var(--grey-primary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.freshness-chip .live-pulse-dot {
+  margin-left: 0;
+}
+
+.freshness-chip.freshness-warn { color: #f59e0b; }
+.freshness-chip.freshness-stale { color: #ef4444; }
+
+@media screen and (max-width: 1200px) {
+  .sensor-rail-label {
+    display: none;
+  }
 }

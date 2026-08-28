@@ -239,118 +239,61 @@ const DashboardCards: React.FC = () => {
         fetchAllAlerts();
     }, [entityIdValue])
 
-    return (
-        <>
-            <div className="dashboard-card-container">
-                <div className="dashboard-card">
-                    <div className="card mb-0">
-                        {/* <div className="flex justify-content-between mb-3">
-                            <div>
-                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('machineState')}</span>
-                                <div className="text-900 font-medium text-xl">{machineStateValue == "2" ? "Online" : "Offline"}</div>
+    // Same condition the header and cards have always used — unchanged.
+    const isRunning = machineStateValue !== "0" && machineStateValue !== "NULL";
 
-                            </div>
-                            <div className={`flex align-items-center justify-content-center border-round  ${machineStateValue === "2" ? 'active-state' : 'inactive-state'}`}
-                                style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className={` ${machineStateValue === "2" ? 'pi pi-sync text-green-500 text-l' : 'pi pi-exclamation-circle text-red-500 text-xl'}`}></i>
-                            </div>
-                        </div>
-                        <span className="text-green-500 font-medium">{assetCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500">{t('registered')}</span> */}
-                        <div className="dashboard_card_image_wrapper">
-                        <Image src="/dashboard-collapse/card-1.svg" width={24} height={24} alt=""></Image>
-                        </div>
-                        <div className="flex flex-column gap-1">
-                            <div className="dashboard-card-text">{t('machineState')}</div>
-                            <div className="dashboard-card-value">{machineStateValue !== "0" && machineStateValue !== "NULL" ? t("online") : t("offline")}</div>
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard-card" suppressHydrationWarning>
-                    <div className="card mb-0 d">
-                        {/* <div className="flex justify-content-between mb-3">
-                            <div>
-                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('runningSince')}</span>                              
-                                <div className="text-900 font-medium text-xl">{difference}</div>
-                            </div>
-                            <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className="pi pi-stopwatch text-orange-500 " style={{fontSize:"23px"}}/>
-                            </div>
-                        </div>
-                        <span className="text-green-500 font-medium">%{onlineAverage} </span>
-                        <span className="text-500">{t('sinceLastWeek')}</span> */}
-                        <div className="dashboard_card_image_wrapper">
-                        <Image src="/dashboard-collapse/card-2.svg" width={24} height={24} alt=""></Image>
-                        </div>
-                        <div className="flex flex-column gap-1">
-                            <div className="dashboard-card-text">{t('runningSince')}</div>
-                            <div className="dashboard-card-value">{difference}</div>
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard-card" >
-                    <div className="card mb-0 " onClick={() => setRelations(true)}>
-                        {/* <div className="flex justify-content-between mb-3">
-                            <div>
-                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('relations')}</span>
-                                <div className="flex gap-1">
-                                    <div className=" m-0 text-900 font-medium text-xl">{childCount.toString().padStart(3, '0')}</div>
-                                    <span className="text-900 font-medium text-xl"
-                                    >Child </span>
-                                </div>
-                            </div>
-                            <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className="pi pi-inbox text-cyan-500 text-xl" />
-                            </div>
-                        </div>
-                        <span className="text-green-500 font-medium">{relationsCount.toString().padStart(2, '0')} </span>
-                        <span className="text-500">{t('machinesConnected')}</span> */}
-                        <div className="dashboard_card_image_wrapper">
-                        <Image src="/dashboard-collapse/card-3.svg" width={24} height={24} alt=""></Image>
-                        </div>
-                        <div className="flex flex-column gap-1">
-                            <div className="dashboard-card-text">{t('relations')}</div>
-                            <div className="dashboard-card-value">{childCount.toString().padStart(3, '0')} <span>{t("child")}</span></div>
-                        </div>
-                    </div>
-                    {relations &&
-                        <RelationDialog
-                            relationsProp={relations}
-                            setRelationsProp={setRelations}
-                            selectedAssetData={selectedAssetData}
-                        />
-                    }
-                </div>
-                <div className="dashboard-card">
-                    <div className="card mb-0" onClick={() => setNotification(true)}>
-                        {/* <div className="flex justify-content-between mb-3">
-                            <div>
-                                <span className="block text-500 font-medium mb-3 dashboard-card-text">{t('notifications')}</span>
-                                <div className="text-900 font-medium text-xl">{notificationData?.length} Unread</div>
-                            </div>
-                            <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                                <i className="pi pi-comment text-purple-500 text-xl" />
-                            </div>
-                        </div>
-                        <span className="text-green-500 font-medium">00 </span>
-                        <span className="text-500">{t('responded')}</span> */}
-                        <div className="dashboard_card_image_wrapper">
-                        <Image src="/dashboard-collapse/card-4.svg" width={24} height={24} alt=""></Image>
-                        </div>
-                        <div className="flex flex-column gap-1">
-                            <div className="dashboard-card-text">{t('notifications')}</div>
-                            <div className="dashboard-card-value">{notificationData?.length} <span>{t("unread")}</span></div>
-                        </div>
-                    </div>
-                    {notification &&
-                        <NotificationDialog
-                            notificationProp={notification}
-                            setNotificationProp={setNotification}
-                        />
-                    }
-                </div>
+    return (
+        <div className="dv_status_row">
+            {/* Machine state and uptime are one fact about the machine, so they
+                read as one pill instead of two cards saying half of it each. */}
+            <div className={`dv_state_pill ${isRunning ? "" : "is-offline"}`}>
+                <span className="dv_state_dot" />
+                <span className="dv_state_pill_label">{isRunning ? t("running") : t("offline")}</span>
+                {isRunning && (
+                    <span className="dv_state_pill_time" suppressHydrationWarning>{difference}</span>
+                )}
             </div>
-        </>
+
+            <button
+                type="button"
+                className="dv_status_chip is-interactive"
+                onClick={() => setRelations(true)}
+                title={t("relations")}
+            >
+                <span className="dv_status_chip_icon">
+                    <Image src="/dashboard-collapse/card-3.svg" width={16} height={16} alt="" />
+                </span>
+                <span className="dv_status_chip_value">{childCount.toString().padStart(3, '0')}</span>
+                <span>{t("child")}</span>
+            </button>
+
+            <button
+                type="button"
+                className="dv_status_chip is-interactive"
+                onClick={() => setNotification(true)}
+                title={t("notifications")}
+            >
+                <span className="dv_status_chip_icon">
+                    <Image src="/dashboard-collapse/card-4.svg" width={16} height={16} alt="" />
+                </span>
+                <span className="dv_status_chip_value">{notificationData?.length}</span>
+                <span>{t("unread")}</span>
+            </button>
+
+            {relations &&
+                <RelationDialog
+                    relationsProp={relations}
+                    setRelationsProp={setRelations}
+                    selectedAssetData={selectedAssetData}
+                />
+            }
+            {notification &&
+                <NotificationDialog
+                    notificationProp={notification}
+                    setNotificationProp={setNotification}
+                />
+            }
+        </div>
     )
 }
 

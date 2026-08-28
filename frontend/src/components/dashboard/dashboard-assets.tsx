@@ -276,34 +276,23 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
             loadingSkeleton()
           ):(
             <div className="data_viewer_card asset_details_main_header">
-            <div style={{display: `${showSelector ? "block" : "none"}`}}>
-              <div className=" flex justify-content-between">
-                <label className="select_asset_heading" htmlFor="asset_selector">{t("dashboard:select_asset")}</label>
-                {/* <img src="/refresh.png" alt="table-icon" width="30px" height="30px" /> */}
-              </div>
-              <div className="product_selector_wrapper">
-                <AssetSelector
-                  assets={assetData}
-                  selectedAsset={selectedRow}
-                  setSelectedAsset={setSelectedRow}
-                  loading={loading}
-                  handleClick={handleClick}
-                />
-              </div>
-            </div>
-                {selectedRow && (
-                  <div className="selected_product_header">
-                    <div className="selected_product_details">
+              {/* One identity row. The selector keeps a fixed position in the tree
+                  so it is never remounted as the selection changes, and it stays
+                  reachable even when the page was opened with ?asset= */}
+              <div className="dv_identity_row">
+                <div className="dv_identity_left">
+                  {selectedRow ? (
+                    <>
                       <div className="selected_product_image_wrapper">
                         {selectedRow.product_image !== 'NULL' ? (
                           <img src={selectedRow.product_image} alt={selectedRow.product_name} className="selected_product_image" />
                         ) : (
-                          <div className="product-no-img" style={{ width: '60px', height: '60px' }}>
-                            <Image src="/no-image-icon.svg" width={20} height={20} alt="Missing image"></Image>
+                          <div className="product-no-img" style={{ width: '44px', height: '44px' }}>
+                            <Image src="/no-image-icon.svg" width={18} height={18} alt="Missing image"></Image>
                           </div>
                         )}
-                        
-                        {machineStateValue !== "0" && machineStateValue !== "NULL"  ? (
+
+                        {machineStateValue !== "0" && machineStateValue !== "NULL" ? (
                           <div className="selected_product_status"></div>
                         ) : (
                           <div className=""></div>
@@ -312,26 +301,28 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                       <div className="flex flex-column gap-1">
                         <div className="selected_product_title">{selectedRow.product_name}</div>
                         <div className="selected_product_room_name">{getProductType(selectedRow.type)}</div>
-                        <div className="selected_product_status_text">{machineStateValue !== "0" && machineStateValue !== "NULL" ? t("dashboard:running") : t("dashboard:offline")}</div>
                       </div>
-                    </div>
-                    <div className="selected_product_actions">
-                      {selectedRow.id && (
-                        <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate} isOnboarded={isOnboarded}/>
-                      )}
-                      <div className="flex gap-3" style={{paddingRight: "70px", minWidth: "110px"}}>
-                        <div className="flex align-items-center gap-2">
-                          <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
-                          <p>{`${notificationData.length} ${t("dashboard:notifications")}`}</p>
-                        </div>
-                        <div className="flex align-items-center gap-2">
-                          <Image src="/warning-grey.svg" width={18} height={18} alt="warning"></Image>
-                          <p>{`${relationsCount} ${t("dashboard:connections")}`}</p>
-                        </div>
-                      </div>
-                    </div>
+                    </>
+                  ) : (
+                    <label className="select_asset_heading" htmlFor="asset_selector">{t("dashboard:select_asset")}</label>
+                  )}
+                </div>
+
+                <div className="dv_identity_right">
+                  <div className="dv_selector_slot">
+                    <AssetSelector
+                      assets={assetData}
+                      selectedAsset={selectedRow}
+                      setSelectedAsset={setSelectedRow}
+                      loading={loading}
+                      handleClick={handleClick}
+                    />
                   </div>
-                )}
+                  {selectedRow?.id && (
+                    <IfricIdBadge ifricId={selectedRow.id} toast={toast} setShowBlocker={setShowBlocker} editOnboardBodyTemplate={editOnboardBodyTemplate} isOnboarded={isOnboarded}/>
+                  )}
+                </div>
+              </div>
           </div>
           )}
         </div>

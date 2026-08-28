@@ -916,8 +916,8 @@ textarea {
 
 .selected_product_image {
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 44px;
+    height: 44px;
     object-fit: cover;
 }
 
@@ -927,15 +927,16 @@ textarea {
     position: absolute;
     left: 0px;
     bottom: 0px;
-    width: 24px;
-    height: 24px;
+    width: 14px;
+    height: 14px;
     background-color: var(--ifx-blue);
 }
 
 .selected_product_title {
     font-weight: 700;
     color: var(--black);
-    font-size: 24px;
+    font-size: 20px;
+    line-height: 1.2;
 }
 
 .selected_product_room_name {
@@ -1345,3 +1346,241 @@ margin-bottom: 24px
 .spec-save-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; background: #3b82f6; border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; box-shadow: 0 1px 3px rgba(59,130,246,0.4); }
 .spec-save-btn:hover { background: #2563eb; transform: translateY(-1px); }
 .spec-save-btn:active { transform: translateY(0); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DATA VIEWER — asset bar, status chips, shared empty state
+   Presentation only. Colours come from app/globals.css tokens; the badge and
+   empty-state recipes mirror the camera feed block above so the whole screen
+   reads as one design language.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sticky asset bar ──────────────────────────────────────────────────────
+   Keeps machine identity + health pinned while the owner scrolls down to the
+   charts and camera. */
+.dv_asset_bar {
+    position: sticky;
+    /* 0 = flush with the scrollport (padding-box) top, so the whole bar stays
+       visible once pinned. The wrapper's 24px top padding scrolls away under it. */
+    top: 0;
+    z-index: 90;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--common-text-grey-200);
+    margin-inline: -32px;
+    margin-bottom: 24px;
+    padding: 20px 32px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* position:sticky makes this a containing block, which would trap the
+   full-page loading skeleton (.factory_dashboard_loader is inset:0 absolute
+   and must resolve against .data_viewer_wrapper). Stand down while it shows.
+   Same :has() guard style as .data_viewer_wrapper:has(.factory_dashboard_loader). */
+.dv_asset_bar:has(.factory_dashboard_loader) {
+    position: static;
+}
+
+/* Row 1 — identity (avatar + name + type) left, selector + ID + menu right */
+.dv_identity_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.dv_identity_left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: capitalize;
+    min-width: 0;
+}
+
+.dv_identity_right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Compact selector living inline in the bar */
+.dv_selector_slot {
+    min-width: 240px;
+    max-width: 320px;
+}
+
+/* ── Status chip row ───────────────────────────────────────────────────────
+   Replaces the four full-width stat cards. Same values, same click targets,
+   a quarter of the vertical space. */
+.dv_status_row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dv_status_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: var(--grey-box);
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--grey-primary);
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+/* Cards today carry onClick with no cursor affordance — nothing tells the
+   owner they open anything. Chips that open a dialog say so. */
+.dv_status_chip.is-interactive {
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.dv_status_chip.is-interactive:hover {
+    background-color: var(--common-text-grey-100);
+    border-color: var(--dividers);
+}
+
+.dv_status_chip.is-interactive:focus-visible {
+    outline: 2px solid var(--fusion-blue);
+    outline-offset: 1px;
+}
+
+.dv_status_chip_value {
+    font-weight: 600;
+    color: var(--black);
+    font-variant-numeric: tabular-nums;
+}
+
+.dv_status_chip_icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+/* The one signal the owner came for: is it running, and for how long.
+   Same rgba(--ifx-blue) treatment as .camera_status_live. */
+.dv_state_pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    background-color: rgba(60, 160, 201, 0.14);
+    color: var(--ifx-blue);
+    border: 1px solid rgba(60, 160, 201, 0.3);
+}
+
+.dv_state_pill.is-offline {
+    background-color: var(--grey-box);
+    color: var(--grey-secondary);
+    border-color: var(--dividers);
+}
+
+.dv_state_pill_label {
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.dv_state_pill_time {
+    font-variant-numeric: tabular-nums;
+    color: var(--grey-primary);
+}
+
+.dv_state_pill.is-offline .dv_state_pill_time {
+    color: var(--grey-secondary);
+}
+
+.dv_state_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--ifx-blue);
+    flex-shrink: 0;
+}
+
+.dv_state_pill.is-offline .dv_state_dot {
+    background-color: var(--grey-secondary);
+}
+
+/* ── Shared empty state ────────────────────────────────────────────────────
+   One silhouette for every "nothing to show" on the screen, replacing an
+   inline <p><b>, a 5%-wide png and three ad-hoc layouts. */
+.dv_empty_state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 0;
+    min-height: 240px;
+    color: var(--grey-secondary);
+}
+
+.dv_empty_state_icon {
+    color: var(--common-text-grey-200);
+    flex-shrink: 0;
+}
+
+.dv_empty_state_title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--grey-primary);
+    margin: 0;
+}
+
+.dv_empty_state_sub {
+    font-size: 13px;
+    color: var(--grey-secondary);
+    margin: 0;
+    text-align: center;
+    max-width: 320px;
+}
+
+@media screen and (max-width: 900px) {
+    .dv_selector_slot {
+        min-width: 100%;
+        max-width: none;
+    }
+}
+
+/* ── Card header ───────────────────────────────────────────────────────────
+   One header shape for every card on the screen: title left, controls right.
+   Lifted from .camera_feed_block_header, which already did it correctly. */
+.dv_card_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.dv_card_header .dashboard_card_title {
+    margin: 0;
+}
+
+.dv_card_header_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Skeletons sized to the chart they stand in for, so nothing jumps on load. */
+.dv_chart_skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 320px;
+}

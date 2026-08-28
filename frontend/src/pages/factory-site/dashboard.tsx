@@ -93,10 +93,14 @@ const Dashboard = () => {
             <Navbar navHeader={t("dashboard:data_viewer")} />
           </div>
           <div className="data_viewer_wrapper" style={{position: 'relative'}}>
-          <DashboardAssets 
-          setBlockerProp={setBlocker}
-          setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
-          />
+          {/* Machine identity + health, pinned while the rest of the page scrolls */}
+          <div className="dv_asset_bar">
+            <DashboardAssets
+              setBlockerProp={setBlocker}
+              setPrefixedAssetPropertyProp={setPrefixedAssetProperty}
+            />
+            <DashboardCards />
+          </div>
           <div className="model_details_tab">
                 {/* <div className="model_details_tab_header">
                   <button className={`global-button is-link model_details_tab_trigger product-tab-ui ${currentTab === "performance" ? "active" : ""}`} onClick={() => { handleTabChange("performance") }}>Performance</button>
@@ -110,7 +114,6 @@ const Dashboard = () => {
                 <div className="model_details_tab_content">
                   {currentTab === "data-viewer" && (
                     <div className="model_details_tab_panel">
-                      <DashboardCards />
                       <CombineSensorChart />
                       <div className='dashboard_submap_wrapper'>
                         <PowerCo2Chart />

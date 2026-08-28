@@ -14,75 +14,29 @@
 // limitations under the License. 
 // 
 
-import { useEffect, useState } from "react";
-import { getAlerts, postStatusForAlert } from "./alert-service";
-import { getJobs, Job } from "./job-service";
-import axios from "axios";
+import { useState } from "react";
+import { postStatusForAlert } from "./alert-service";
 import { Badge } from "primereact/badge";
 import { Button } from "primereact/button";
 import AlertDetails from "./alert-details";
-import { Asset } from "@/types/asset-types";
 import Image from "next/image";
 import { useTranslation } from "next-i18next";
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
-interface Alerts {
-  text: string;
-  resource: string;
-  severity: string;
-}
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
+import { useAlerts } from "@/context/alerts-context";
 const Alerts = () => {
-// State hooks for alerts, alert count, alert visibility, and asset data
-  const [alerts, setAlerts] = useState([]);
-  const [alertsCount, setAlertsCount] = useState<number>(0);
+  // Alerts/jobs come from the shared provider so the bell badge and the
+  // dashboard's notification card always show the same data.
+  const { alerts, jobs, assetData, alertsCount, jobsCount, refresh } = useAlerts();
   const [isAlert, setIsAlert] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
-  const [assetData, setAssetData] = useState<any>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [jobsCount, setJobsCount] = useState<number>(0);
   const { t } = useTranslation(["navigation"]);
-
-  // Function to map backend data to asset state
-  const mapBackendDataToAssetState = (backendData: Asset) => {
-    const modifiedObject:any = {};
-    // Iterate over the properties of the object
-    Object.keys(backendData).forEach((key) => {
-      if (key.includes("/")) {
-        const newKey = key.split('/').pop() || '';
-        modifiedObject[newKey] = backendData[key].type === "Property" ? backendData[key].value : backendData[key];
-      } else {
-        modifiedObject[key] = backendData[key];
-      }
-    });
-    return modifiedObject;
-  };
-
-  // Function to fetch asset data by asset ID
-  const fetchAssetData = async (assetId: string) => {
-    try {
-      const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      })
-      return mapBackendDataToAssetState(response.data);
-    } catch (error) {
-      logHandledError("Error fetching asset data", error);
-      notifyError(t('toast:error'), error, t('toast:load_asset_data_failed'));
-    }
-  }
 
   const handleAcknowledge = async (id: string, status: string) => {
     try {
       const response = await postStatusForAlert(id, { status, text: 'Manual change.' });
       if (response.status === 'ok') {
-        // Optionally, you can update the local state to reflect the acknowledged status
-        const response = await getAlerts();
-        setAlerts(response.alerts);
+        await refresh();   // re-pull shared state so bell and dashboard both update
       }
     } catch (error) {
       logHandledError("Error acknowledging alert:", error);
@@ -90,36 +44,6 @@ const Alerts = () => {
     }
   };
 
- // useEffect hook to fetch all alerts, jobs and their associated asset data
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        // Fetch jobs
-        const jobResponse = await getJobs();
-        setJobs(jobResponse.jobs || []);
-        setJobsCount(jobResponse.jobs?.length || 0);
-
-        const alertResponse = await getAlerts();
-        
-        setAlerts(alertResponse.alerts || []);
-        setAlertsCount(alertResponse.alerts?.length || 0);
-        
-        // Fetch asset data for alerts
-        const assetsData = [];
-        for (const alert of alertResponse.alerts) {
-          const response = await fetchAssetData(alert.resource);
-          assetsData.push(response)
-        }
-        setAssetData(assetsData);
-      } catch (error) {
-        console.log("Error from @components/alert/alert.tsx",error)
-        notifyError(t('toast:error'), error, t('toast:load_alert_data_failed'));
-      }
-    }
-    fetchAllData();
-    const interval = setInterval(fetchAllData, 30000);
-    return () => clearInterval(interval);
-  }, [])
 
 // CSS style for badge position and appearance
   const badgeStyle: React.CSSProperties = {

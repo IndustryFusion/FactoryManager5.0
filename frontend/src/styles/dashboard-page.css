@@ -325,8 +325,9 @@ body {
     align-items: center;
     gap: 6px;
     border-radius: 8px;
-    border: 1px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
-    background: var(--ifx-tint-blue-900-primary, #3CA0C9);
+    /* XANA brand surface: dark, matching the logo tile (#03070D) */
+    border: 1px solid #03070D;
+    background: #03070D;
     color: #FFF;
     font-family: "League Spartan";
     font-size: 16px;
@@ -343,6 +344,26 @@ body {
     font-style: normal;
     font-weight: 500;
     line-height: normal;
+    /* This is a <button> (it opens the alerts dialog) but must read as the
+       text link it replaced, so the user-agent button chrome is stripped. */
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+.view-all:focus-visible {
+    outline: 2px solid var(--ifx-tint-blue-900-primary, #3CA0C9);
+    outline-offset: 2px;
+    border-radius: 2px;
 }
 /* bar chart styles */
 
@@ -425,4 +446,14 @@ div:has(>.machine_uptime_chart_tooltip) {
     font-size: 14px;
     font-weight: 500;
     line-height: 10px;
+}
+
+/* Severity dot for the notification card. Replaces the hardcoded dot-blue.svg /
+   grey-dot.svg images: the colour now comes from the alert's Alerta severity. */
+.notification-severity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
 }

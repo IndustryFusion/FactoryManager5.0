@@ -24,14 +24,12 @@ import { convertToSecondsTime } from "@/utility/chartUtility";
 import moment from 'moment';
 import { useDashboard } from "@/context/dashboard-context";
 import { Toast, ToastMessage } from "primereact/toast";
-import { ProgressSpinner } from "primereact/progressspinner";
-import { Dropdown } from "primereact/dropdown";
+import { Skeleton } from "primereact/skeleton";
 import socketIOClient from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { create } from "@/redux/machineState/machineStateSlice";
 import { useTranslation } from "next-i18next";
-import Image from "next/image";
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
@@ -847,52 +845,41 @@ const MachineStateChart = () => {
     return (
         <div className="data_viewer_card">
             <Toast ref={toast} />
-            <h3 className="dashboard_card_title">{t("machine_chart_title")}</h3>
-            <div className="interval-filter-container">
-                <p className="mb-2">{t('filterInterval')}</p>
-                <div className="flex flex-column align-items-start w-full">
-                    <p style={{ marginBottom: '6px' }}>{t("dashboard:interval")}</p>
-                    <div className="global-button dropdown dashboard-dropdown"
-                        style={{ minWidth: '150px' }}>
-                        <Dropdown
-                            value={selectedInterval}
-                            options={intervalButtons.map(({ label, interval }) => ({
-                                label,
-                                value: interval,
-                            }))}
-                            onChange={(e) => setSelectedInterval(e.value)}
-                            placeholder={t("select_interval")}
-                            panelClassName="global_dropdown_panel"
-                            appendTo="self"
-                            style={{ textTransform: 'capitalize' }}
-                        />
-                        <Image src="/dropdown-icon.svg" width={8} height={14} alt=""></Image>
-                    </div>
+            <div className="dv_card_header">
+                <h3 className="dashboard_card_title">{t("machine_chart_title")}</h3>
+                <div className="global-segmented" role="group" aria-label={t("dashboard:interval")}>
+                    {intervalButtons.map(({ label, interval }) => (
+                        <button
+                            key={interval}
+                            type="button"
+                            className={`global-segmented-item ${selectedInterval === interval ? "active" : ""}`}
+                            aria-pressed={selectedInterval === interval}
+                            onClick={() => setSelectedInterval(interval)}
+                            style={{ textTransform: "capitalize" }}
+                        >
+                            {label}
+                        </button>
+                    ))}
                 </div>
             </div>
             {
-                 noChartData ?
-                    <div className="flex flex-column justify-content-center align-items-center"
-                        style={{ marginTop: "9rem" }}
-                    >
-                        <p>{t('nochartData')}</p>
-                        <img src="/no-chart-data.png" alt="" width="8%" height="8%" />
-                    </div>
-                    :
-                    isLoading ? (
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                height: "60vh",
-                            }}
-                        >
-                            <ProgressSpinner />
+                noChartData ? (
+                    <div className="dv_empty_state">
+                        <div className="dv_empty_state_icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 8h10M7 12h6M7 16h8" />
+                            </svg>
                         </div>
-                    ) : (
-                        <Chart type="bar" data={chartData} options={chartOptions} />
-                    )
+                        <p className="dv_empty_state_title">{t('nochartData')}</p>
+                    </div>
+                ) : isLoading ? (
+                    <div className="dv_chart_skeleton">
+                        <Skeleton height="32px" borderRadius="8px"></Skeleton>
+                        <Skeleton height="280px" borderRadius="10px"></Skeleton>
+                    </div>
+                ) : (
+                    <Chart type="bar" data={chartData} options={chartOptions} />
+                )
             }
         </div>
     )

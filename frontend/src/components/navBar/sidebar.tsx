@@ -276,7 +276,7 @@ function Sidebar() {
                   tooltip={!sidebarOpen ? "Xana AI" : t("sidebar.test_version")}
                   tooltipOptions={{ position: "right", event: "both" }}
                 >
-                  <Image src="/xana.svg" width={18} height={18} alt="xana_icon" />
+                  <Image src="/xana-mark.png" width={18} height={18} alt="XANA AI" />
                   <div className={`sidebar_navlink_text ${!sidebarOpen ? "sidebar_collapse_fade" : ""}`}>
                     Xana AI
                   </div>

@@ -81,7 +81,7 @@ export default function FloatingXanaButton() {
           );
         }}
       >
-        <img src="/ai-audio.svg" alt="Xana" width={22} height={22} />
+        <img src="/xana-mark-lg.png" alt="XANA AI" width={32} height={32} />
         <span className="xana-label">{t("xana_fab.ask_xana")}</span>
       </motion.button>
     </>

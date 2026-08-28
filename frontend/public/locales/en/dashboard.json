@@ -40,7 +40,7 @@
     "card_title_3": "Factory Sites",
     "card_title_4": "Reports",
     "card_sub_2": "View",
-    "xana_banner":{
+    "xana_banner": {
         "title": "What’s going on in your factory? Ask Xana.",
         "sub": "Your intelligent assistant for smarter decisions.",
         "description": "Why is my cutting line underperforming?, How can I reduce idle time on Station 4? Xana helps you get answers.",
@@ -63,7 +63,7 @@
     "severity": "Severity",
     "previous_severity": "Previous Severity",
     "empty_text": "When you have notification , you'll see them here",
-    "no_asset_selected": "No Asset Selected !! Please Select an asset ...",
+    "no_asset_selected": "No asset selected",
     "select_interval": "Select an Interval",
     "pick_timeframe": "Pick Timeframe",
     "pick_date": "Pick a date",
@@ -121,5 +121,14 @@
     "fullscreen": "Fullscreen",
     "updated_just_now": "Updated just now",
     "updated": "Updated",
-    "ago": "ago"
+    "ago": "ago",
+    "no_notifications_today": "No notifications today",
+    "notifications_loading": "Loading notifications…",
+    "notifications_error": "Could not load notifications",
+    "sensors": "Sensors",
+    "set_limits": "Set Limits",
+    "limits_hint": "Draw horizontal lines on the chart to mark safe operating ranges.",
+    "reset_limits": "Reset Limits",
+    "no_asset_selected_hint": "Choose a machine above to see its live data.",
+    "no_chart_data_hint": "This sensor has not reported any values in the selected time range."
 }

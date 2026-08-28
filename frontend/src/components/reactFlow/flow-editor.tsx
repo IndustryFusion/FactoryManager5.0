@@ -2690,7 +2690,7 @@ const FlowEditor: React.FC<
                   tooltip={t("overview:access_permission")}
                   tooltipOptions={{ position: "bottom", showOnDisabled: true, disabled: accessgroupIndexDb?.access_group.create === true }}
                 >
-                  <img src="/factory-flow-buttons/file-icon.svg" alt="" />
+                  <img src="/factory-flow-buttons/upload-icon.svg" alt="" />
                 </Button>
               </span>
             </div>

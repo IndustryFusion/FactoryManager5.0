@@ -31,7 +31,7 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
-type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
+export type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
 
 const ALL_STATES: { label: string; value: AlertaState }[] = [
   { label: "Open", value: "open" },
@@ -60,8 +60,9 @@ interface AlertDetailsProps {
   handleAcknowledge: (id: string, status: AlertaState) => void;
 }
 
-interface Alerts {
+export interface Alerts {
   id: string;
+  event?: string;
   lastReceiveTime: string;
   previousSeverity: string;
   resource: string;

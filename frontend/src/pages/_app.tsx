@@ -33,6 +33,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { updatePopupVisible } from "@/utility/update-popup";
 import { GlobalToast } from "@/utility/global-toast";
+import { AlertsProvider } from "@/context/alerts-context";
 
 function MyApp({ Component, pageProps, router }: AppProps) {
   const ifxSuiteUrl = process.env.NEXT_PUBLIC_IFX_SUITE_FRONTEND_URL;
@@ -85,6 +86,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
   return (
     <Provider store={store}>
       <PrimeReactProvider>
+        <AlertsProvider>
         <Head>
           <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         </Head>
@@ -97,6 +99,7 @@ function MyApp({ Component, pageProps, router }: AppProps) {
         )}
         <UnauthorizedPopup/>
         <GlobalToast />
+        </AlertsProvider>
       </PrimeReactProvider>
     </Provider>
   );
