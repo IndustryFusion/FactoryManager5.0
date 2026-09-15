@@ -27,6 +27,15 @@ export class AuthController {
     private readonly authService: AuthService
   ){}
 
+  // Deliberately not behind AuthGuard. This is the endpoint a client calls
+  // *because* its access token has expired, so requiring one would make it
+  // unreachable exactly when it is needed. The ifricdr in the body is the
+  // credential.
+  @Post('refresh')
+  refreshSession(@Body('ifricdr') ifricdr: string) {
+    return this.authService.refreshSession(ifricdr);
+  }
+
   @Post('login')
   async getSession(@Session() session: Record<string, any>) {
     try {
@@ -56,6 +65,14 @@ export class AuthController {
     } catch (err) {
       throw err;
     }
+  }
+
+  // Server-to-server, from IFX Suite, immediately before it sends a user here
+  // over SSO. Unguarded because the signed route token in the body is the
+  // credential — see AuthService.receiveRouteHandoff.
+  @Post('receive-route-handoff')
+  receiveRouteHandoff(@Body() body: { routeToken: string; ifricdr: string }) {
+    return this.authService.receiveRouteHandoff(body);
   }
 
   @Post('decrypt-route')
