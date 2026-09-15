@@ -22,9 +22,11 @@ dotenv.config();
 //interface for token
 
 interface LoginResponse {
-  success: string;
-  status: string;
-  message: string;
+  status: number | string;
+  message?: string;
+  // The session, as the registry returns it through this app's backend: the
+  // masked ifricdi / ifricdr pair plus the user's company and access group.
+  data?: Record<string, any>;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -32,27 +34,16 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 //on sucessfull login , we store access_token and refresh_token in cookies
 const login = async (username: string, password: string): Promise<LoginResponse> => {
 
-    const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    };
-
+    // Signs in through the IFRIC Registry, like the other apps.
     const data = {
-        'username': username,
-        'password': password,
+        email: username,
+        password: password,
+        product_name: 'Factory Manager',
     };
     
     const loginUrl = API_URL + '/auth/login';
     try {
-        const response: AxiosResponse<LoginResponse> = await axios.post(loginUrl as string, data, { headers });
-        if (response.data.success) 
-        {
-            //Testing for 15 seconds
-            // const expires = new Date(new Date().getTime() + 15 * 1000); 
-
-
-            //for 24 hours
-            const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); 
-        }
+        const response: AxiosResponse<LoginResponse> = await axios.post(loginUrl as string, data);
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {

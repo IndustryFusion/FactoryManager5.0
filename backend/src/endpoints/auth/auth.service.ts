@@ -14,11 +14,11 @@
 // limitations under the License. 
 // 
 
-import { HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
-import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto } from './dto/token.dto';
+import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto, LoginDto } from './dto/token.dto';
 import * as jwt from 'jsonwebtoken';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { CompactEncrypt } from 'jose';
 import { Request } from 'express';
 import { compactDecrypt } from 'jose';
@@ -36,6 +36,51 @@ import { RouteHandoffService } from './route-handoff.service';
 @Injectable()
 export class AuthService {
   constructor(private readonly routeHandoffService: RouteHandoffService) {}
+
+  private readonly logger = new Logger(AuthService.name);
+
+  /**
+   * A user's sign-in, through the IFRIC Registry — the same flow as the other
+   * apps. The registry's tokens are wrapped exactly like the ones decrypt-route
+   * and refresh return, so every later request, the refresh and the handoff to
+   * other apps work the same whichever way the user arrived.
+   *
+   * Unrelated to `login(username, password)` below, which obtains the backend's
+   * own IFF service token for TokenService.
+   */
+  async logIn(data: LoginDto) {
+    try {
+      const registryResponse = await axios.post(
+        `${this.registryUrl}/auth/login`,
+        {
+          email: data.email,
+          password: data.password,
+          product_name: data.product_name ?? 'Factory Manager',
+        },
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+      const body = registryResponse.data;
+      if (body?.status != 200 || !body?.data?.jwt_token) {
+        throw new HttpException(body?.message ?? 'Login failed', HttpStatus.UNAUTHORIZED);
+      }
+      body.data.ifricdi = this.mask(await this.encryptData(body.data.jwt_token), this.MASK_SECRET);
+      delete body.data.jwt_token;
+      delete body.data.access_token;
+      if (body.data.refresh_token) {
+        body.data.ifricdr = this.mask(await this.encryptData(body.data.refresh_token), this.MASK_SECRET);
+        delete body.data.refresh_token;
+      }
+      return body;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
+        throw new HttpException(upstreamMessage(err), err.response.status);
+      } else {
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
 
     private readonly API_URL = process.env.API_URL;
     private readonly CLIENT_ID = process.env.CLIENT_ID;
@@ -99,12 +144,22 @@ export class AuthService {
       // encrypt the token with 30s expiry
       const otp = new Date().toISOString();     
       const maskedJwt = data.token;
-      
+
+      // The refresh token goes to the target app server-to-server, keyed by a
+      // one-time handoff id carried in the route token (`h`), exactly as IFX
+      // Suite does. Without it the session opened in the target app cannot
+      // refresh and ends with the 5-minute access token.
+      const handoffId = data.refresh_token ? randomBytes(24).toString('hex') : undefined;
+
       const routeToken = jwt.sign(
-        { m: maskedJwt, product: data.product_name, otp },
+        { m: maskedJwt, product: data.product_name, otp, ...(handoffId ? { h: handoffId } : {}) },
         this.SECRET_KEY,
         { expiresIn: '30s' },
       );
+
+      if (handoffId) {
+        await this.pushRefreshHandoff(data.product_name, routeToken, data.refresh_token);
+      }
       
       // return the route with excrypted token
       const url = new URL(data.route);
@@ -120,6 +175,49 @@ export class AuthService {
       }
     }
   }
+  /**
+   * Hands the refresh token to the target app before the browser is sent
+   * there. Never fatal: if the push fails the redirect still works, the
+   * session there just cannot refresh.
+   */
+  private async pushRefreshHandoff(productName: string, routeToken: string, ifricdr: string) {
+    const targetBackend = this.getProductBackendUrl(productName);
+    if (!targetBackend) {
+      this.logger.warn(`No backend URL configured for ${productName}: its session will not refresh.`);
+      return;
+    }
+    try {
+      await axios.post(
+        `${targetBackend}/auth/receive-route-handoff`,
+        { routeToken, ifricdr },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 3000 },
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Could not hand the refresh token to ${productName}: ${err.message}. ` +
+          `The session will work but will not refresh.`,
+      );
+    }
+  }
+
+  /** Backend of a target app, for the handoff. Same variable names as IFX Suite. */
+  private getProductBackendUrl(productName: string): string | undefined {
+    switch (productName) {
+      case 'IFX Platform':
+        return process.env.IFX_PLATFORM_BACKEND_URL;
+      case 'DPP Creator':
+        return process.env.FUSION_PASS_BACKEND_URL;
+      case 'DPP Viewer':
+        return process.env.DPP_BACKEND_URL;
+      case 'Contract Manager':
+        return process.env.CONTRACT_BACKEND_URL;
+      case 'Fleet Manager':
+        return process.env.FLEET_BACKEND_URL;
+      default:
+        return undefined;
+    }
+  }
+
   /**
    * Records a refresh token that IFX Suite is pushing ahead of an SSO
    * redirect, so `decryptRoute` can hand it on when the user arrives.
@@ -339,7 +437,10 @@ export class AuthService {
   }
   async encryptData(data: string) {
     const encoder = new TextEncoder();
-    const encryptionKey = await this.deriveKey(process.env.JWT_SECRET_KEY);
+    // JWT_SECRET, the secret every decrypt in this app uses (guard, refresh,
+    // decrypt-route). Encrypting with a different one produced tokens this app
+    // could not read back.
+    const encryptionKey = await this.deriveKey(process.env.JWT_SECRET);
 
     const encrypted = await new CompactEncrypt(encoder.encode(data))
     .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
@@ -347,15 +448,24 @@ export class AuthService {
     return encrypted;
   }
 
-  generateToken(data: any) {
+  async generateToken(data: any) {
     const otp = new Date().toISOString();  
     const makedToken = this.mask(data.token, this.MASK_SECRET);
 
+    // Hand the refresh token to the target app, as encrypt-route does, when
+    // the caller names one. Without a product there is no target to send to.
+    const handoffId =
+      data.refresh_token && data.product_name ? randomBytes(24).toString('hex') : undefined;
+
     const token = jwt.sign(
-      { m: makedToken, product: data.product_name, otp },
+      { m: makedToken, product: data.product_name, otp, ...(handoffId ? { h: handoffId } : {}) },
       this.SECRET_KEY,
       { expiresIn: '1d' },
     );
+
+    if (handoffId) {
+      await this.pushRefreshHandoff(data.product_name, token, data.refresh_token);
+    }
     
     return {token}
   }

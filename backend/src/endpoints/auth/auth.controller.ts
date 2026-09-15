@@ -14,16 +14,14 @@
 // limitations under the License. 
 // 
 
-import { Controller, Post, Delete, Session, Req, Body, UseGuards, Get, Param, Query, Patch } from '@nestjs/common';
-import { TokenService } from '../session/token.service';
-import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto } from './dto/token.dto';
+import { Controller, Post, Delete, Req, Body, UseGuards, Get, Param, Query, Patch } from '@nestjs/common';
+import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto, LoginDto } from './dto/token.dto';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { AuthGuard } from './auth.guard';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly tokenService: TokenService,
     private readonly authService: AuthService
   ){}
 
@@ -36,25 +34,15 @@ export class AuthController {
     return this.authService.refreshSession(ifricdr);
   }
 
+  // A user signs in through the IFRIC Registry, like every other app: the
+  // response carries the masked `ifricdi` / `ifricdr` pair the frontend stores
+  // and refreshes. This used to log in to the IFF platform's Keycloak and keep
+  // one server-wide token in Redis; that token is the backend's own service
+  // credential and TokenService still obtains it by itself from USERNAME and
+  // PASSWORD, so no user login is needed for it.
   @Post('login')
-  async getSession(@Session() session: Record<string, any>) {
-    try {
-        const tokenData = await this.tokenService.getToken();
-        if(tokenData && tokenData.length > 0){
-          return {
-            success: true,
-            status: '201',
-            message: 'Logged In successfully'
-          }
-        }
-        const token = {
-          access_token: session.accessToken,
-          refresh_token: session.refreshToken
-        };
-        return Promise.resolve(token);
-    } catch (err) {
-      throw err;
-    }
+  userLogin(@Body() data: LoginDto) {
+    return this.authService.logIn(data);
   }
 
   @UseGuards(AuthGuard)

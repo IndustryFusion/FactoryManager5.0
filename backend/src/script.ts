@@ -4,8 +4,7 @@ import { Logger } from '@nestjs/common';
 import { FactorySiteService } from './endpoints/factory-site/factory-site.service';
 import { ShopFloorService } from './endpoints/shop-floor/shop-floor.service';
 import { AssetService } from './endpoints/asset/asset.service';
-import { RedisService } from './endpoints/redis/redis.service';
-import { AuthService } from './endpoints/auth/auth.service';
+import { TokenService } from './endpoints/session/token.service';
 import axios from 'axios';
 
 async function clearRelation() {
@@ -16,17 +15,10 @@ async function clearRelation() {
         const factoryService = app.get(FactorySiteService);
         const shopFloorService = app.get(ShopFloorService);
         const assetService = app.get(AssetService);
-        const redisService = app.get(RedisService);
-        const authService = app.get(AuthService);
 
-        let token = '';
-        let tokenData = await redisService.getData('token-storage');
-        if(Object(tokenData).length > 0){
-            token = tokenData['accessToken'];
-        } else {
-            const response = await authService.login("factory_admin@industry-fusion.com", "@zN8k51@ORJg"); 
-            token = response['accessToken'];
-        }
+        // The IFF service account from USERNAME / PASSWORD, cached in Redis and
+        // renewed when expired, the same token the app itself uses.
+        const token = await app.get(TokenService).getToken();
         const headers = {
             Authorization: 'Bearer ' + token,
             'Content-Type': 'application/ld+json',
