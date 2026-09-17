@@ -20,6 +20,7 @@ import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { Toast } from "primereact/toast";
 import authService from "@/auth/auth-service";
+import { storeAccessGroup } from "@/utility/indexed-db";
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "primeflex/primeflex.css";
 import { Password } from 'primereact/password';
@@ -32,9 +33,9 @@ import { RootState } from "@/redux/store";
 
 //interface for token
 interface LoginResponse {
-  success: string;
-  status: string;
-  message: string;
+  status: number | string;
+  message?: string;
+  data?: Record<string, any>;
 }
 
 const Login: React.FC = () => {
@@ -93,15 +94,24 @@ const Login: React.FC = () => {
     } else {
       try {
         const data: LoginResponse = await authService.login(username, password);
-      
-        dispatch(login(username));
-        dispatch(startTimer());
-        if(data.success){
+
+        // Store the session the same way a token login does, so the session
+        // check, refresh and links to other apps all find it.
+        if (Number(data?.status) === 200 && data?.data?.ifricdi) {
+          await storeAccessGroup(data.data as any);
+          dispatch(login(username));
+          dispatch(startTimer());
           router.push('/factory-site/factory-overview');
           toast.current?.show({
             severity: "success",
             summary: "Login Successful",
             detail: "Welcome!",
+          });
+        } else {
+          toast.current?.show({
+            severity: "error",
+            summary: "Login Error",
+            detail: data?.message || "Failed to login",
           });
         }
       } catch (err) {

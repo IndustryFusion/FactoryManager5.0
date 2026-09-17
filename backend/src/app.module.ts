@@ -20,7 +20,6 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthService } from './endpoints/auth/auth.service';
-import { SessionMiddleware } from './utils/session.middleware';
 import { AuthController } from './endpoints/auth/auth.controller';
 import { AlertsService } from './endpoints/alerts/alerts.service';
 import { AlertsController } from './endpoints/alerts/alerts.controller';
@@ -167,7 +166,6 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(SessionMiddleware).forRoutes('/auth/login');
     consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

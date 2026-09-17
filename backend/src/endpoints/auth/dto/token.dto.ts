@@ -26,9 +26,18 @@ export interface FindIndexedDbAuthDto {
 
 export interface EncryptRouteDto {
   token: string;
+  // The masked refresh token (ifricdr). Optional: without it the target app
+  // gets a session that cannot refresh, as before.
+  refresh_token?: string;
   product_name: string;
   company_ifric_id: string;
   route: string;
+}
+
+export interface LoginDto {
+  email: string;
+  password: string;
+  product_name?: string;
 }
 
 export interface CompanyTwinDto {

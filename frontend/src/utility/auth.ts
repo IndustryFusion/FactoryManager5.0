@@ -17,7 +17,7 @@
 
 
 
-import api from "./jwt";
+import api, { sharedRefresh } from "./jwt";
 import axios from "axios";
 import { updatePopupVisible } from './update-popup';
 import { jwtDecode, JwtPayload } from "jwt-decode";
@@ -188,7 +188,13 @@ export const fetchCompanyProduct = async (dataCompanyIfricId: string) => {
 
 export const generateToken = async (data: Record<string, string>) => {
     try {
-        return await axios.post(`${BACKEND_URL}/auth/generate-token`, data);
+        // The refresh token rides along so the backend can hand it to the
+        // target app (server-to-server), letting that session refresh.
+        const stored = await getAccessGroup().catch(() => null);
+        return await axios.post(`${BACKEND_URL}/auth/generate-token`, {
+            ...data,
+            ...(stored?.ifricdr ? { refresh_token: stored.ifricdr } : {}),
+        });
     } catch (error: any) {
         console.log('err from generating token ',error);
         if (error?.response && error?.response?.status === 401) {
@@ -199,11 +205,31 @@ export const generateToken = async (data: Record<string, string>) => {
     }
 };
 
-export const authenticateToken = async (token: string) => {
-  try {
-    const response = await api.get(`${BACKEND_URL}/auth/authenticate-token/${token}`);
+/**
+ * Whether the stored session is still valid — and resumes it if it can be.
+ *
+ * The endpoint takes the token in its path, so it cannot go through `api`: the
+ * 401 interceptor refreshes and replays the *same URL*, which still carries the
+ * expired token and fails again. That signed users out whenever the tab had
+ * been closed longer than the access token lives (5 minutes), although the
+ * refresh token was still valid. So: validate the token stored now; on a 401,
+ * refresh once and validate again with the token stored after the refresh.
+ */
+export const authenticateToken = async () => {
+  const validate = async () => {
+    const stored = await getAccessGroup();
+    if (!stored?.ifricdi) {
+      return false;
+    }
+    const response = await axios.get(`${BACKEND_URL}/auth/authenticate-token/${stored.ifricdi}`);
     return response.data;
-  } catch(error: any) {
+  };
+  try {
+    return await validate();
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response?.status === 401 && (await sharedRefresh())) {
+      return await validate();
+    }
     throw error;
   }
 }
@@ -236,6 +262,10 @@ export const encryptRoute = async (data: {
       }
         const requestData = {
             token,
+            // Pushed server-to-server to the target app, never put in the URL,
+            // so the session there can refresh instead of ending with the
+            // access token.
+            refresh_token: accessGroupData.ifricdr,
             product_name: data.product_name,
             company_ifric_id,
             route
