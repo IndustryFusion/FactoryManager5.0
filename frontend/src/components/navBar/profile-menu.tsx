@@ -14,6 +14,7 @@
 // limitations under the License. 
 // 
 
+import { endSession } from "@/utility/end-session";
 import { clearIndexedDbOnLogout, getAccessGroup } from '@/utility/indexed-db'
 import '../../styles/profile-menu.css'
 import { useEffect, useRef, useState } from 'react';
@@ -94,7 +95,7 @@ export default function ProfileMenu() {
         try {
             const accessGroupData = await getAccessGroup();
             if (accessGroupData?.user_email) {
-                await clearIndexedDbOnLogout();
+                await endSession();
                 showToast(toast, 'success', t('toast:logout_successful'), t('toast:logged_out'));
                 setUserData(null);
 

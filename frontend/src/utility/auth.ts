@@ -283,7 +283,7 @@ export const encryptRoute = async (data: {
         return response.data;
     } catch (error: any) {
         console.log('err from encrypt route ', error);
-        if (error?.response && (error?.response?.status === 401 || error?.response?.status === 403)) {
+        if (error?.response && (error?.response?.status === 401)) {
             updatePopupVisible(true);
         } else {
             throw error;

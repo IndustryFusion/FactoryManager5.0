@@ -21,6 +21,7 @@ import { Card } from "primereact/card";
 import { Toast } from "primereact/toast";
 import authService from "@/auth/auth-service";
 import { storeAccessGroup } from "@/utility/indexed-db";
+import { updatePopupVisible } from "@/utility/update-popup";
 import "primereact/resources/themes/bootstrap4-light-blue/theme.css";
 import "primeflex/primeflex.css";
 import { Password } from 'primereact/password';
@@ -98,6 +99,9 @@ const Login: React.FC = () => {
         // Store the session the same way a token login does, so the session
         // check, refresh and links to other apps all find it.
         if (Number(data?.status) === 200 && data?.data?.ifricdi) {
+          // Clear any session-expired popup the previous session left set,
+          // or it renders again after the redirect.
+          updatePopupVisible(false);
           await storeAccessGroup(data.data as any);
           dispatch(login(username));
           dispatch(startTimer());
