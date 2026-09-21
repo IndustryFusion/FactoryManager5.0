@@ -25,10 +25,6 @@ import { appWithTranslation } from "next-i18next";
 import withAuth from "@/app/withAuth";
 import Head from "next/head";
 import "@/app/globals.css";
-// The glossy layer: presentation only, loaded after the theme so it settles
-// on top of PrimeReact. See styles/fm-global.css.
-import "@/styles/fm-global.css";
-import "@/styles/factory-theme.css";
 import { UnauthorizedPopup } from '../utility/jwt';
 import FloatingXanaButton from "@/components/floating-xana-button";
 import { PrimeReactProvider } from 'primereact/api';

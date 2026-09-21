@@ -92,7 +92,7 @@ const Dashboard = () => {
           <div className="navbar_wrapper">
             <Navbar navHeader={t("dashboard:data_viewer")} />
           </div>
-          <div className="data_viewer_wrapper fm_surface" style={{position: 'relative'}}>
+          <div className="data_viewer_wrapper" style={{position: 'relative'}}>
           {/* Machine identity + health, pinned while the rest of the page scrolls */}
           <div className="dv_asset_bar">
             <DashboardAssets

@@ -44,7 +44,7 @@ const FactoryShopFloor = () => {
             </div>
             
             <FactoryShopFloorProvider>
-                <div className="factory-shopfloor-container fm_surface fm_flush">
+                <div className="factory-shopfloor-container">
                 <ShopFloorProvider>
                     <div className="shopfloor-list-container">
                     <ShopFloorList formViewPage={formViewPage} />
