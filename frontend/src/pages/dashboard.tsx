@@ -193,7 +193,7 @@ const DashboardPage: React.FC = () => {
                     />
                 </div>
 
-                <div className="dashboardpage-container fm_surface">
+                <div className="dashboardpage-container">
                     <main>
                         <div className="header">
                             <div style={{ display: "flex", flexDirection: "column", padding: "16px" }}>

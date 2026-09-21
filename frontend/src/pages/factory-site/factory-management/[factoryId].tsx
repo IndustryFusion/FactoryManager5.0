@@ -130,7 +130,7 @@ const ShopFloorManager: React.FC = () => {
           <div className="navbar_wrapper">
             <Navbar navHeader={t('factoryFlow')} />
           </div>
-          <div className="main-content bg-gray-100 fm_surface fm_flush">
+          <div className="main-content bg-gray-100">
             <ShopFloorProvider>
                 <OverlayPanel
                   ref={opRef}

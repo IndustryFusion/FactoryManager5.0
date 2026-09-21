@@ -43,7 +43,7 @@ const CertificatesPage: React.FC = () => {
         </div>
        
         <div className="overflow_y_auto">
-        <div className="dashboard-container fm_surface">
+        <div className="dashboard-container ">
           <div className={`certificates-container ${assetIfricId ? "" : ""}`}>
             <div className="certificates-content-wrapper">
               <TabView
