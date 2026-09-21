@@ -568,3 +568,73 @@ line-height: normal;
   width: 27px;
   height: 27px;
 }
+/* --------------------------------------------------------------------------
+   Shell polish — same visual language as the factory screens.
+
+   Presentation only: the active item now says which one it is (it shared the
+   hover colour and was impossible to pick out at a glance), and the rail and
+   bar carry the same hairline and depth as the cards they sit beside.
+   -------------------------------------------------------------------------- */
+
+.sidebar_wrapper .sidebar_navlink {
+  position: relative;
+  transition:
+    background-color 160ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    color 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.sidebar_wrapper .sidebar_navlink img,
+.sidebar_wrapper .sidebar_navlink svg {
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.sidebar_wrapper .sidebar_navlink:hover img,
+.sidebar_wrapper .sidebar_navlink:hover svg {
+  transform: scale(1.06);
+}
+
+/* The current screen: a tinted ground and a rail marker, so it reads as
+   "you are here" rather than "the pointer is here". */
+.sidebar_wrapper .sidebar_navlink.is_active {
+  background-color: rgba(60, 160, 201, 0.1);
+  color: #10182b;
+  font-weight: 600;
+}
+
+.sidebar_wrapper .sidebar_navlink.is_active::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 999px;
+  background-color: var(--ifx-blue, #3ca0c9);
+}
+
+.sidebar_wrapper {
+  box-shadow: 1px 0 0 rgba(16, 24, 43, 0.04);
+}
+
+/* The bar the pages scroll under: a hairline and a little blur, so content
+   passing beneath it stays legible. */
+.navbar_wrapper {
+  background-color: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  border-bottom-color: #e4e7ec;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar_wrapper .sidebar_navlink,
+  .sidebar_wrapper .sidebar_navlink img,
+  .sidebar_wrapper .sidebar_navlink svg {
+    transition-duration: 1ms;
+  }
+
+  .sidebar_wrapper .sidebar_navlink:hover img,
+  .sidebar_wrapper .sidebar_navlink:hover svg {
+    transform: none;
+  }
+}

@@ -113,7 +113,7 @@ const AssetManagementPage = () => {
         </div>
 
         <div className="dashboard-container">
-          <div className="grid py-1 px-2 factory-overview">
+          <div className="grid py-1 px-2 factory-overview fm_surface">
             <div className="col-12">
               <div className="asset-header flex justify-content-between align-items-center">
                 <div className="flex align-items-center gap-4">

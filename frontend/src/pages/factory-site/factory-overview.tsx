@@ -378,7 +378,7 @@ const FactoryOverview = () => {
         </div>
         <div className="dashboard-container">
           <Toast ref={toast} />
-          <div className="grid py-1 px-2 factory-overview">
+          <div className="grid py-1 px-2 factory-overview fm_surface">
             <div className="col-12">
 
               <div className="asset-header flex justify-content-between align-items-center">
@@ -419,7 +419,15 @@ const FactoryOverview = () => {
 
               </div>
               <div>
-                <div>
+                {/* The map leads the page: it is the one thing here that says
+                    these factories are real places. */}
+                <div className="fm_map_panel">
+                  <div className="fm_map_head">
+                    <p className="fm_map_title">{t("factory-overview:factory_site")}</p>
+                    <span className="fm_map_hint">
+                      {factorySite.length} {t("factory-overview:factory_site")}
+                    </span>
+                  </div>
                   <FactoryMap factories={factorySite ?? []} />
                 </div>
 
