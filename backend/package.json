@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "script": "ts-node src/script.ts"
+    "script": "ts-node src/script.ts",
+    "migrate:ngsi-ld": "ts-node src/migrate-ngsi-ld.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.2",

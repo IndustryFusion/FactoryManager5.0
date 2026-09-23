@@ -25,6 +25,7 @@ import { Model } from 'mongoose';
 import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { linkTargets, prepareForScorpio, replaceEntity, toLinks } from '../../utils/ngsi-ld';
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -72,7 +73,7 @@ export class ShopFloorService {
                   "value": "urn:ngsi-ld:shopFloors:2:000"
               }
             }
-            const response = await axios.post(this.scorpioUrl, shopStore, {headers});
+            const response = await axios.post(this.scorpioUrl, prepareForScorpio(shopStore), {headers});
             if (response.status !== 201){
               throw new HttpException({
                 errorCode: `FS_${response.status}`,
@@ -123,11 +124,8 @@ export class ShopFloorService {
         for (let key in data.properties) {
           let resultKey = 'http://www.industry-fusion.org/schema#' + key;
           if (key.includes('hasAsset')) {
-            let obj = {
-              type: 'Relationship',
-              object: data.properties[key],
-            };
-            result[resultKey] = obj;
+            const links = toLinks(linkTargets({ type: 'Relationship', object: data.properties[key] }));
+            if (links) result[resultKey] = links;
           } else {
             result[resultKey] = {
               type: "Property",
@@ -135,13 +133,16 @@ export class ShopFloorService {
             };
           }
         }
+        // Check the shop floor before taking its id, so a refused write
+        // does not use up a number.
+        const shopFloor = prepareForScorpio(result, { label: `shop floor ${result.id}` });
         //update the last urn with the current urn in scorpio
         lastUrn[lastUrnKey].value = `urn:ngsi-ld:shopFloors:2:${newUrn}`;
         const updateLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store/attrs`;
-        await axios.patch(updateLastUrnUrl, lastUrn, { headers });
+        await axios.patch(updateLastUrnUrl, prepareForScorpio(lastUrn, { requireId: false }), { headers });
 
         //store the template data to scorpio
-        const response = await axios.post(this.scorpioUrl, result, { headers });
+        const response = await axios.post(this.scorpioUrl, shopFloor, { headers });
         return {
           status: response.status,
           statusText: response.statusText,
@@ -180,13 +181,15 @@ export class ShopFloorService {
         'Content-Type': 'application/ld+json',
         Accept: 'application/ld+json',
       };
-      const response = await axios.post(this.scorpioUrl, data, { headers });
+      const response = await axios.post(this.scorpioUrl, prepareForScorpio(data, { label: `shop floor ${data?.id}` }), { headers });
       return {
         status: response.status,
         statusText: response.statusText,
       }
     }catch(err){
-      if (err.response) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
           message: upstreamMessage(err)
@@ -204,20 +207,9 @@ export class ShopFloorService {
     try {
       const factoryData = await this.factorySiteService.findOne(id, token);
       
-      const shopFloorIds = factoryData['http://www.industry-fusion.org/schema#hasShopFloor'];
       const shopFloorData = [];
-      if (Array.isArray(shopFloorIds) && shopFloorIds.length > 0) {
-        for (let i = 0; i < shopFloorIds.length; i++) {
-          let id = shopFloorIds[i].object;
-          if (id.includes('urn')) {
-            let data = await this.findOne(id, token);
-            if (data) {
-              shopFloorData.push(data);
-            }
-          }
-        }
-      } else if (shopFloorIds.object.includes('urn')) {
-        let data = await this.findOne(shopFloorIds.object, token);
+      for (const id of linkTargets(factoryData['http://www.industry-fusion.org/schema#hasShopFloor'])) {
+        let data = await this.findOne(id, token);
         if (data) {
           shopFloorData.push(data);
         }
@@ -276,25 +268,12 @@ export class ShopFloorService {
         const shopFloorData = await this.findOne(key, token);
         let assetIds = data[key];
         let assetKey = 'http://www.industry-fusion.org/schema#hasAsset';
-        if(assetIds.length > 0){
-          shopFloorData[assetKey] = [];
-          for(let i=0; i < assetIds.length; i++) {
-            shopFloorData[assetKey].push({
-              type: 'Relationship',
-              object: assetIds[i]
-            })
-          }
-        }else{
-          shopFloorData[assetKey] = {
-            type: 'Relationship',
-            object: ''
-          }
-        }
-        const deleteResponse = await this.remove(key, token);
-        if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-          const response = await axios.post(this.scorpioUrl, shopFloorData, { headers });
-          responses.push(response);
-        } 
+        const links = toLinks(assetIds);
+        if (links) shopFloorData[assetKey] = links;
+        else delete shopFloorData[assetKey];
+        // One replace instead of delete-then-create of the shop floor.
+        const response = await replaceEntity(this.scorpioUrl, shopFloorData, headers);
+        responses.push(response);
       }
 
       if (responses.length === Object.keys(data).length) {
@@ -342,7 +321,7 @@ export class ShopFloorService {
       }
       if(flag) {
         const url = this.scorpioUrl + '/' + id + '/attrs';
-        const response = await axios.post(url, data, { headers });
+        const response = await axios.post(url, prepareForScorpio(data, { requireId: false, label: `update for ${id}` }), { headers });
         return {
           status: response.status,
           data: response.data,
@@ -402,9 +381,18 @@ export class ShopFloorService {
       let shopFloorobj = {}, assetObj = {}, factoryId = "";
       for(let i = 0; i < node.length; i++){
         let id = node[i].source;
-        if(node[i].source.includes('factories')){
+        // React Flow node ids are `<kind>_<entity id>`. Match the node kind by
+        // its prefix, never by text inside the entity id: this used to test
+        // `includes('factories')`, which only worked while factory ids were
+        // literally `urn:ngsi-ld:factories:2:NNN`. A differently-shaped id made
+        // this branch silently false, so relation cleanup stopped running on
+        // every flow edit with no error anywhere. The frontend already matches
+        // by prefix (flow-editor.tsx), and this now agrees with it.
+        if(node[i].source.startsWith('factory_')){
           let check = false;
-          factoryId = node[i].source.split("_")[1];
+          // Strip the prefix rather than splitting on "_": an id containing an
+          // underscore would otherwise be truncated at the first one.
+          factoryId = node[i].source.replace(/^factory_/, "");
           for(let j = i+1; j < node.length; j++) {
             if(node[j].source.includes(node[i].target)){
               check = true;
@@ -603,21 +591,16 @@ export class ShopFloorService {
           if(id.includes('asset')){
             let assetData = await this.assetService.getAssetDataById(id.split('_')[1], token);
             if(Object.keys(assetData).length > 0){
+              // Clear the product's component links: NGSI-LD has no empty link,
+              // so the link attributes are removed (the template still lists the slots).
               for (const key in assetData){
-                if (key.includes('has')){
-                  assetData[key] = {
-                    type: 'Relationship',
-                    object: ''
-                  }
+                const first = Array.isArray(assetData[key]) ? assetData[key][0] : assetData[key];
+                if (key.includes('has') && first?.type === 'Relationship'){
+                  delete assetData[key];
                 }
               }
-              const deleteResponse = await this.assetService.deleteAssetById(id.split('_')[1], token);
-              if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-                await axios.post(this.scorpioUrl, assetData, { headers });
-                continue;
-              }else{
-                return deleteResponse;
-              }
+              await replaceEntity(this.scorpioUrl, assetData, headers);
+              continue;
             }else{
               continue;
             }

@@ -21,9 +21,14 @@ describe('FactorySiteService', () => {
   let service: FactorySiteService;
 
   beforeEach(async () => {
+    // The injected Mongoose model is auto-mocked: this spec only checks that
+    // the provider resolves. Without it the module never compiled and the
+    // test failed before it ran.
     const module: TestingModule = await Test.createTestingModule({
       providers: [FactorySiteService],
-    }).compile();
+    })
+      .useMocker(() => ({}))
+      .compile();
 
     service = module.get<FactorySiteService>(FactorySiteService);
   });

@@ -173,10 +173,23 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       },
     });
      
+    // The factory id is whatever follows these routes, not a particular URN
+    // shape. Matching `urn:ngsi-ld:factories:` made the breadcrumbs vanish
+    // silently for any id minted differently.
+    const FACTORY_ROUTES = [
+      '/factory-site/factory-shopfloor/',
+      '/factory-site/factory-management/',
+    ];
+
     const getUrnId = (path: string) => {
-      const match = path.match(/urn:ngsi-ld:factories:[^/]+/);
-      return match ? match[0] : '';
+      const route = FACTORY_ROUTES.find((prefix) => path.startsWith(prefix));
+      if (!route) return '';
+      // Only the id segment — a trailing sub-path is not part of it.
+      return path.slice(route.length).split('/')[0];
     };
+
+    const isFactoryRoute = (path: string, route: string) =>
+      path.startsWith(route) && path.slice(route.length).length > 0;
 
     const currentUrnId = getUrnId(fullPath);
     if (
@@ -194,7 +207,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
     }
 
     // Route-specific breadcrumbs with dynamic URN handling
-    if (fullPath.startsWith('/factory-site/factory-shopfloor/urn:ngsi-ld:factories')) {
+    if (isFactoryRoute(fullPath, '/factory-site/factory-shopfloor/')) {
       return [
         { 
           label: t("navbar.breadcrumb.factory_flow"), 
@@ -233,7 +246,7 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
         ]
       }
 
-    if (fullPath.startsWith("/factory-site/factory-management/urn:ngsi-ld:factories")) {
+    if (isFactoryRoute(fullPath, '/factory-site/factory-management/')) {
       return [
         {
           label: t("navbar.breadcrumb.factory_site"),
@@ -254,9 +267,6 @@ const Navbar: React.FC<NavbarProps> = ({ navHeader, previousRoute }) => {
       "/factory-site/factory-overview": [
         { label: t("navbar.breadcrumb.factory_site"), url: "/factory-overview" }
       ], // No breadcrumb for this route
-      "/factory-site/factory-management/urn:ngsi-ld:factories": [
-        { label: t("navbar.breadcrumb.factory_flow"), url: "#" }
-      ],
       "/factory-site/dashboard": [
         { label: t("navbar.breadcrumb.data_viewer"), }
       ],

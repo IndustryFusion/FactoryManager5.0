@@ -29,6 +29,7 @@ import { Model } from 'mongoose';
 import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { assertCompliant, linkTargets, prepareForScorpio, replaceEntity, templateCache, toLinks, toNgsiLd } from '../../utils/ngsi-ld';
 @Injectable()
 export class AssetService {
   private readonly logger = new Logger(AssetService.name);
@@ -399,9 +400,7 @@ export class AssetService {
       if (!parent || parent.id === assetId) continue;
       for (const [key, value] of Object.entries<any>(parent)) {
         const entries = Array.isArray(value) ? value : [value];
-        const points = entries.some(
-          (entry) => entry && entry.type === 'Relationship' && entry.object === assetId,
-        );
+        const points = entries.some((entry) => entry && entry.type === 'Relationship') && linkTargets(value).includes(assetId);
         if (points) matches.push({ parent, relationKey: key });
       }
     }
@@ -440,40 +439,6 @@ export class AssetService {
   }
 
 
-  flattenTranslation(obj) {
-    for (const key in obj) {
-      if (typeof obj[key] === "object" && obj[key] !== null) {
-
-        // Case 1: Single translation object
-        if (key === "https://industry-fusion.org/base/v0.1/translation" &&
-          obj[key].value && typeof obj[key].value === "object") {
-
-          const val = obj[key].value;
-
-          // Case 2: Array of translation objects
-          if (Array.isArray(val)) {
-            // Find default one or fallback to first
-            const defaultItem = val.find(
-              (t) => t["https://industry-fusion.org/base/v0.1/default"] === true
-            ) || val[0];
-
-            if (defaultItem && "value" in defaultItem) {
-              obj[key].value = defaultItem.value;
-            }
-          }
-          // Single nested translation object
-          else if ("value" in val) {
-            obj[key].value = val.value;
-          }
-        } else {
-          // Recurse into nested objects
-          this.flattenTranslation(obj[key]);
-        }
-      }
-    }
-    return obj;
-  }
-
   async setFactoryOwnerAssets(company_ifric_id: string, token: string, req: Request) {
     try {
       const headers = {
@@ -488,28 +453,60 @@ export class AssetService {
         'Authorization': req.headers['authorization']
       };
 
+      const tag = `[asset-copy ${company_ifric_id}]`;
+      this.logger.log(`${tag} start: asking IFX for the company's owned products`);
+
       const [scorpioDataResponseRaw, cacheDataResponse] = await Promise.all([
         axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`, { headers: ifxHeaders }),
         axios.get(`${this.ifxurl}/company/get-asset-and-purchaced-pdt-cache/${company_ifric_id}`, { headers: ifxHeaders })
       ]);
 
-      const scorpioDataResponse = Array.isArray(scorpioDataResponseRaw.data)
-        ? scorpioDataResponseRaw.data.map((item) => this.flattenTranslation(item))
-        : this.flattenTranslation(scorpioDataResponseRaw.data);
-      
+      // IFX puts null in the list for an owned product it could not load.
+      const ownedRaw = Array.isArray(scorpioDataResponseRaw.data) ? scorpioDataResponseRaw.data : [scorpioDataResponseRaw.data];
+      const scorpioDataResponse = ownedRaw.filter((asset) => asset && typeof asset.id === 'string');
+      const ifxCacheRows = cacheDataResponse.data ?? {};
+      this.logger.log(
+        `${tag} IFX returned ${scorpioDataResponse.length} owned product(s)` +
+        (ownedRaw.length !== scorpioDataResponse.length ? ` (${ownedRaw.length - scorpioDataResponse.length} owned but not loadable from IFX's Scorpio)` : '') +
+        ` and ${Object.keys(ifxCacheRows).length} product-list row(s)` +
+        (scorpioDataResponse.length ? `: ${scorpioDataResponse.map((a) => a.id).join(', ')}` : '') +
+        (scorpioDataResponse.length === 0 ? ' - nothing to copy; the registry lists no products owned by this company (a product is owned after Generate PDT / Create Product)' : '')
+      );
+
+      // IFX products are free-form JSON-LD; FactoryManager's Scorpio holds only
+      // compliant NGSI-LD, so each new product goes through the adapter first.
+      const templateFor = templateCache();
+
       const batchSize = 50;
       const scorpioUpdatedAssetIds = [], cacheUpdatedAssetIds = [];
+      // One line per product: what came from IFX and what was saved locally.
+      const outcomes: { id: string; product_name?: string; scorpio: string; cache: string }[] = [];
 
       for (let i = 0; i < scorpioDataResponse.length; i += batchSize) {
         const batch = scorpioDataResponse.slice(i, i + batchSize);
         const promises = batch.map(async (asset: any) => {
           const assetId = asset.id;
+          const outcome = { id: assetId, product_name: ifxCacheRows[assetId]?.product_name, scorpio: '', cache: '' };
+          outcomes.push(outcome);
+          // Only give a product a cache row once its Scorpio copy exists, so a
+          // refused conversion never shows up as a product without data.
+          let inScorpio = false;
           try {
             await axios.get(`${this.scorpioUrl}/${assetId}`, { headers });
+            inScorpio = true;
+            outcome.scorpio = 'already in local Scorpio (left unchanged; Sync updates it)';
           } catch (err) {
             if (err.response?.status === 404) {
-              await axios.post(this.scorpioUrl, asset, { headers });
+              const template = await templateFor(asset.type, company_ifric_id, ifxCacheRows[assetId]?.product_name);
+              const { entity, dropped, warnings, inferred } = toNgsiLd(asset, template);
+              warnings.forEach((warning) => this.logger.warn(`${tag} ${assetId}: ${warning}`));
+              assertCompliant(entity, { label: `product ${assetId}` });
+              await axios.post(this.scorpioUrl, entity, { headers });
+              inScorpio = true;
               scorpioUpdatedAssetIds.push(assetId);
+              outcome.scorpio =
+                `copied: ${Object.keys(asset).length} attribute(s) from IFX -> ${Object.keys(entity).length} saved` +
+                ` (${dropped.length} empty removed${inferred.length ? `, ${inferred.length} custom field(s) typed by inference` : ''})`;
             } else if (err.response) {
               throw new HttpException({
                 errorCode: `FS_${err.response.status}`,
@@ -523,16 +520,38 @@ export class AssetService {
             }
           } finally {
             const exists = await this.factoryPdtCacheModel.exists({ id: assetId, company_ifric_id });
-            if (!exists && cacheDataResponse.data[assetId]) {
-              const { _id, ...newCacheData } = cacheDataResponse.data[assetId];
+            if (exists) {
+              outcome.cache = 'row already present';
+            } else if (!inScorpio) {
+              outcome.cache = 'not created: the product is not in local Scorpio';
+            } else if (!ifxCacheRows[assetId]) {
+              outcome.cache = "not created: IFX has no product-list row for it under this company (the Assets table will not show it)";
+            } else {
+              const { _id, ...newCacheData } = ifxCacheRows[assetId];
               await this.factoryPdtCacheModel.create(newCacheData);
               cacheUpdatedAssetIds.push(assetId);
+              outcome.cache = 'row created (shows in the Assets table)';
             }
           }
         });
 
-        await Promise.allSettled(promises);
+        const results = await Promise.allSettled(promises);
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            const reason = result.reason?.getResponse?.() ?? result.reason?.message;
+            const outcome = outcomes.find((o) => o.id === batch[index]?.id);
+            if (outcome && !outcome.scorpio) outcome.scorpio = `FAILED: ${JSON.stringify(reason)}`;
+            this.logger.error(`${tag} ${batch[index]?.id} not copied into FactoryManager: ${JSON.stringify(reason)}`);
+          }
+        });
       }
+
+      outcomes.forEach((o) => this.logger.log(`${tag} ${o.id}${o.product_name ? ` "${o.product_name}"` : ''}: Scorpio ${o.scorpio || 'unknown'}; cache ${o.cache || 'unknown'}`));
+      this.logger.log(
+        `${tag} done: ${scorpioUpdatedAssetIds.length} copied into local Scorpio, ` +
+        `${outcomes.filter((o) => o.scorpio.startsWith('already')).length} already there, ` +
+        `${outcomes.filter((o) => o.scorpio.startsWith('FAILED')).length} failed; ${cacheUpdatedAssetIds.length} Assets-table row(s) created`
+      );
 
       // Patch updates isScorpioUpdated and isCacheUpdated in ifx together at end
       await Promise.all([
@@ -544,15 +563,21 @@ export class AssetService {
         success: true,
         status: 201,
         message: 'Scorpio and cache updated successfully',
+        // The same per-product report, so it shows in the browser console too.
+        report: { ifxOwnedProducts: scorpioDataResponse.length, copied: scorpioUpdatedAssetIds.length, cacheRowsCreated: cacheUpdatedAssetIds.length, products: outcomes },
       };
     } catch (err) {
       if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || upstreamMessage(err).includes("network") || err.message.includes("network")) {
+        // Deliberately not an error for the page, but it must not be silent.
+        this.logger.warn(`[asset-copy ${company_ifric_id}] skipped: IFX or Scorpio unreachable (${err.code ?? err.message})`);
         return {
           success: true,
           status: 200,
           message: "IFX fetch and scorpio update skipped due to network issues."
         };
-      } else if (err instanceof HttpException) {
+      }
+      this.logger.error(`[asset-copy ${company_ifric_id}] failed: ${err.response?.status ?? ''} ${upstreamMessage(err)}`);
+      if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
         throw new HttpException(upstreamMessage(err), err.response.status);
@@ -579,14 +604,14 @@ export class AssetService {
       if (Array.isArray(data)) {
         for (let i = 0; i < data.length; i++) {
           try {
-            response = await axios.post(this.scorpioUrl, data[i], { headers });
+            response = await axios.post(this.scorpioUrl, prepareForScorpio(data[i]), { headers });
           } catch (err) {
             throw err;
           }
         }
       } else {
         try {
-          response = await axios.post(this.scorpioUrl, data, { headers });
+          response = await axios.post(this.scorpioUrl, prepareForScorpio(data), { headers });
         } catch (err) {
           throw err;
         }
@@ -624,13 +649,15 @@ export class AssetService {
         'Accept': 'application/ld+json'
       };
       const url = this.scorpioUrl + '/' + id + '/attrs';
-      const response = await axios.post(url, data, { headers });
+      const response = await axios.post(url, prepareForScorpio(data, { requireId: false, label: `update for ${id}` }), { headers });
       return {
         status: response.status,
         data: response.data
       }
     } catch (err) {
-      if (err.response) {
+      if (err instanceof HttpException) {
+        throw err;
+      } else if (err.response) {
         throw new HttpException({
           errorCode: `FS_${err.response.status}`,
           message: upstreamMessage(err)
@@ -659,33 +686,24 @@ export class AssetService {
           let finalKey = Object.keys(assetData).find(key => key.includes(relationKey))
           let relationArray = relationData[relationKey];
           assetIds.push(...relationArray);
-          const assetRelationData = assetData[finalKey];
-          if (relationArray.length > 0) {
-            assetData[finalKey] = [];
-            for (let i = 0; i < relationArray.length; i++) {
-              assetData[finalKey].push({
-                ...assetRelationData,
-                type: 'Relationship',
-                object: relationArray[i],
-              });
-            }
-          } else {
-            assetData[finalKey] = {
-              ...assetRelationData,
-              type: 'Relationship',
-              object: ''
-            }
-          }
+          // The slot's settings (class, relationship_type, ...) from whichever link
+          // instance exists; the targets are the new wiring.
+          const current = Array.isArray(assetData[finalKey]) ? assetData[finalKey][0] : assetData[finalKey];
+          const { type, object, datasetId, ...settings } = current ?? {};
+          const links = toLinks(relationArray, settings);
+          if (links) assetData[finalKey] = links;
+          else delete assetData[finalKey];
         }
 
         try {
-          const deleteResponse = await this.deleteAssetById(key, token);
-          if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-            const response = await axios.post(this.scorpioUrl, assetData, { headers });
-            responses.push(response);
-          }
+          // One replace instead of delete-then-create, which lost the product
+          // whenever the create failed.
+          const response = await replaceEntity(this.scorpioUrl, assetData, headers);
+          responses.push(response);
         } catch(err) {
-          if (err.response) {
+          if (err instanceof HttpException) {
+            throw err;
+          } else if (err.response) {
             throw new HttpException({
               errorCode: `FS_${err.response.status}`,
               message: upstreamMessage(err)
@@ -805,23 +823,10 @@ export class AssetService {
       };
       let factoryId = '';
       try {
-        // Delete AssetId From Factory Specific Allocated Asset
-        let factoryAssetsUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23last-data==%22${assetId}%22`;
-        const factoryAssetsResponse = await axios.get(factoryAssetsUrl, { headers });
-        if (factoryAssetsResponse.data.length > 0) {
-          factoryId = factoryAssetsResponse.data[0].id.split(':allocated-assets')[0];
-          let lastData = factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object;
-          if (Array.isArray(lastData)) {
-            const newArray = lastData.filter(item => item.id !== assetId);
-            factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = newArray;
-          } else {
-            factoryAssetsResponse.data[0]["http://www.industry-fusion.org/schema#last-data"].object = '';
-          }
-          let deleteFactoryResponse = await this.deleteAssetById(factoryAssetsResponse.data[0].id, token);
-          if (deleteFactoryResponse['status'] == 200 || deleteFactoryResponse['status'] == 204) {
-            await axios.post(this.scorpioUrl, factoryAssetsResponse.data[0], { headers });
-          }
-        }
+        // Delete AssetId From Factory Specific Allocated Asset. The store keeps
+        // its asset list as structured data, which a q-query cannot look into,
+        // so scan the stores (the old q-query never matched anything).
+        factoryId = await allocatedAssetService.removeAssetFromStores(assetId, token);
       } catch(err) {
         if (err instanceof HttpException) {
           throw err;
@@ -846,20 +851,12 @@ export class AssetService {
         let shopFloorUrl = `${this.scorpioUrl}?q=http://www.industry-fusion.org/schema%23hasAsset==%22${assetId}%22`;
         const shopFloorResponse = await axios.get(shopFloorUrl, { headers });
         if (shopFloorResponse.data.length > 0) {
-          let hasAssetData = shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"];
-          if (Array.isArray(hasAssetData)) {
-            const newArray = hasAssetData.filter(item => item.object !== assetId);
-            shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = newArray;
-          } else {
-            shopFloorResponse.data[0]["http://www.industry-fusion.org/schema#hasAsset"] = {
-              type: 'Relationship',
-              object: ''
-            }
-          }
-          let deleteResponse = await this.deleteAssetById(shopFloorResponse.data[0].id, token);
-          if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-            await axios.post(this.scorpioUrl, shopFloorResponse.data[0], { headers });
-          }
+          const shopFloor = shopFloorResponse.data[0];
+          const hasAssetKey = "http://www.industry-fusion.org/schema#hasAsset";
+          const links = toLinks(linkTargets(shopFloor[hasAssetKey]).filter((id) => id !== assetId));
+          if (links) shopFloor[hasAssetKey] = links;
+          else delete shopFloor[hasAssetKey];
+          await replaceEntity(this.scorpioUrl, shopFloor, headers);
         }
       } catch(err) {
         if (err instanceof HttpException) {
@@ -885,20 +882,14 @@ export class AssetService {
       const parentMatches = await this.findParentAssets(assetId, token);
       if (parentMatches.length > 0) {
         for (const { parent, relationKey } of parentMatches) {
-          let relationData = parent[relationKey];
-          if (Array.isArray(relationData)) {
-            parent[relationKey] = relationData.filter(item => item.object !== assetId);
-          } else {
-            parent[relationKey] = {
-              type: 'Relationship',
-              object: ''
-            }
-          }
+          const relationData = parent[relationKey];
+          const first = Array.isArray(relationData) ? relationData[0] : relationData;
+          const { type, object, datasetId, ...settings } = first ?? {};
+          const links = toLinks(linkTargets(relationData).filter((id) => id !== assetId), settings);
+          if (links) parent[relationKey] = links;
+          else delete parent[relationKey];
           try {
-            let deleteResponse = await this.deleteAssetById(parent.id, token);
-            if (deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-              await axios.post(this.scorpioUrl, parent, { headers });
-            }
+            await replaceEntity(this.scorpioUrl, parent, headers);
           } catch(err) {
             if (err instanceof HttpException) {
               throw err;

@@ -7,25 +7,13 @@ The Factory Manager 5.0 IFF application is responsible for managing the linked a
 
 For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running on the central IFF factory server with machines connected it using individual gateways. For detailed information on setup of the factory server and gateways to deploy PDT and data agents is described [here](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md). Once the PDT is setup in the factory, the Factory Manager can be deployed on the same network to interact with the PDT semantic model and data. The Factory Manager can only manage and link the assets, the creation must be always done in Fleet Manager.
 
-The PDT is also used in Factory Manager to create and handle Factory and ShopFloor objects. In order to enable the creation of these assets, some predefined ID store objects must be created before deploying Factory Manager. 
+The PDT is also used in Factory Manager to create and handle Factory and ShopFloor objects. In order to enable the creation of these assets, some predefined ID store objects must be created before deploying Factory Manager.
 
-Create these below assets. Note: In value, urn:ngsi-ld:factories:2:XXX, the XXX range is your choice. The IDs will then start from XXX+1. Also, replace the PDT URL accordingly. 
+Factories are no longer among them: a factory's identifier is now minted by the IFRIC registry when the factory is created, which is what makes it unique across deployments rather than only within one PDT. Set `IFRIC_REGISTRY_BACKEND_URL` instead.
+
+Create these below assets. Note: In value, urn:ngsi-ld:shopFloors:2:XXX, the XXX range is your choice. The IDs will then start from XXX+1. Also, replace the PDT URL accordingly. 
 
 ```bash
-
-curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
---header 'Content-Type: application/ld+json' \
---header 'Accept: application/ld+json' \
---data-raw '{
-    "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-    "id": "urn:ngsi-ld:factory-id-store",
-    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-    "http://www.industry-fusion.org/schema#last-urn": {
-        "type": "Property",
-        "value": "urn:ngsi-ld:factories:2:000"
-    }
-}'
-
 
 curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
 --header 'Content-Type: application/ld+json' \

@@ -1,0 +1,380 @@
+{
+  "id": "urn:ifric:ifx-eur-nld-ast-e21c51fd-7055-5ca2-addc-679fd5ded545",
+  "type": "https://industry-fusion.org/base/v0.1/laserCutter",
+  "@context": [
+    "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.9.jsonld"
+  ],
+  "https://industry-fusion.org/base/v0.1/active_current": {
+    "type": "Property",
+    "value": "NULL",
+    "https://industry-fusion.org/base/v0.1/accuracy": {
+      "type": "Property",
+      "value": 0
+    },
+    "https://industry-fusion.org/base/v0.1/bindingPoint": {
+      "type": "Property",
+      "value": ""
+    },
+    "https://industry-fusion.org/base/v0.1/customConfig": {
+      "type": "Property",
+      "value": ""
+    },
+    "https://industry-fusion.org/base/v0.1/dataType": {
+      "type": "Property",
+      "value": ""
+    },
+    "https://industry-fusion.org/base/v0.1/functionTopic": {
+      "type": "Property",
+      "value": [
+        "Production Sharing",
+        "Predictive Maintenance"
+      ]
+    },
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": false
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "application"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "realtime"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": "A"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/machine_state": {
+    "type": "Property",
+    "value": "NULL",
+    "https://industry-fusion.org/base/v0.1/accuracy": {
+      "type": "Property",
+      "value": 0
+    },
+    "https://industry-fusion.org/base/v0.1/bindingPoint": {
+      "type": "Property",
+      "value": [
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Online_Idle"
+        },
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Run"
+        },
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Online_Error"
+        },
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Online_Maintenance"
+        },
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Setup"
+        },
+        {
+          "https://industry-fusion.org/base/v0.1/map": "null",
+          "https://industry-fusion.org/base/v0.1/path": "ns=2;i=Model.MachineInfo.Fusion.MachineState",
+          "https://industry-fusion.org/base/v0.1/state": "Testing"
+        }
+      ]
+    },
+    "https://industry-fusion.org/base/v0.1/customConfig": {
+      "type": "Property",
+      "value": "<div class=\"ql-code-block-container\" spellcheck=\"false\"><div class=\"ql-code-block\" data-language=\"true\">1=run</div><div class=\"ql-code-block\" data-language=\"true\">2=online_maintainance</div><div class=\"ql-code-block\" data-language=\"true\">3=online_idle</div></div>"
+    },
+    "https://industry-fusion.org/base/v0.1/dataType": {
+      "type": "Property",
+      "value": "literal"
+    },
+    "https://industry-fusion.org/base/v0.1/functionTopic": {
+      "type": "Property",
+      "value": [
+        "Eqaas",
+        "Production Sharing",
+        "Predictive Maintenance"
+      ]
+    },
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": false
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "application"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "realtime"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": ""
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/ambient_operating_temperature_max": {
+    "type": "Property",
+    "value": "20.0",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "parameter"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": "°C"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/net_weight": {
+    "type": "Property",
+    "value": 0,
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "packaging"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": [
+        "kg",
+        "g"
+      ]
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/weight_percentage_of_total": {
+    "type": "Property",
+    "value": 0,
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "sub_main"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": [
+        "%",
+        "kg",
+        "g"
+      ]
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/adjusted_total_co2": {
+    "type": "Property",
+    "value": 0,
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "environment"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": "kgCO₂"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/adjusted_source": {
+    "type": "Property",
+    "value": "NULL",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "environment"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/article_number": {
+    "type": "Property",
+    "value": "390650",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "identification"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/animal_origin": {
+    "type": "Property",
+    "value": "NULL",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "sub_properties"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/manufacturer_product_description": {
+    "type": "Property",
+    "value": "TEST DATASHARING",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "model"
+    },
+    "https://industry-fusion.org/base/v0.1/translation": {
+      "type": "Property",
+      "value": {
+        "https://industry-fusion.org/base/v0.1/default": true,
+        "https://industry-fusion.org/base/v0.1/language": "English",
+        "value": "TEST DATASHARING"
+      }
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/hasController": {
+    "type": "Relationship",
+    "object": "NULL",
+    "https://industry-fusion.org/base/v0.1/class": {
+      "type": "Property",
+      "value": "machine"
+    },
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": false
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "application"
+    },
+    "https://industry-fusion.org/base/v0.1/relationship": {
+      "type": "Property",
+      "value": "https://industry-fusion.org/base/v0.1/gasController"
+    },
+    "https://industry-fusion.org/base/v0.1/relationship_type": {
+      "type": "Property",
+      "value": "peer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "component"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/creation_date": {
+    "type": "Property",
+    "value": "19.11.2025 12:16:44",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": false
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "application"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "application"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/user_manuals": {
+    "type": "Property",
+    "value": "https://iff-dev.s3-eu-central-1.ionoscloud.com/file-1760703653157-308128744.pdf",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "instruction"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/voltage_type": {
+    "type": "Property",
+    "value": "3-phase AC",
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": true
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "parameter"
+    }
+  },
+  "https://industry-fusion.org/base/v0.1/items_per_batch": {
+    "type": "Property",
+    "value": 0,
+    "https://industry-fusion.org/base/v0.1/model": {
+      "type": "Property",
+      "value": false
+    },
+    "https://industry-fusion.org/base/v0.1/owner_ref": {
+      "type": "Property",
+      "value": "manufacturer"
+    },
+    "https://industry-fusion.org/base/v0.1/segment": {
+      "type": "Property",
+      "value": "identification"
+    },
+    "https://industry-fusion.org/base/v0.1/unit": {
+      "type": "Property",
+      "value": "units"
+    }
+  }
+}

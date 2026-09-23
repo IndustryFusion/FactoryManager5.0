@@ -18,6 +18,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { HydratedDocument } from 'mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
+import { toImageList } from '../../utils/image-list';
 
 export type FactoryPdtCacheDocument = HydratedDocument<FactoryPdtCache>;
 
@@ -33,8 +34,8 @@ export class FactoryPdtCache extends Document {
     @Prop({ required: true })
     product_name: string;
 
-    @Prop({ type: String, default: 'NULL' })
-    product_image: string;
+    @Prop({ type: [String], default: [], set: toImageList })
+    product_image: string[];
 
     @Prop({ required: true })
     type: string;

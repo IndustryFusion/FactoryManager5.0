@@ -20,7 +20,8 @@ import { getAccessGroup } from "./indexed-db";
 import api from "./jwt";
 
 import { notifyError } from "@/utility/global-toast";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { flatValue } from "@/utility/ngsi-links";
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
@@ -29,7 +30,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
       Object.keys(item).forEach((key) => {
         if (key.includes("/")) {
           const newKey = key.split('/').pop() || '';
-          newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
+          newItem[newKey] = flatValue(item[key]);
         } else {
           newItem[key] = item[key];
         }

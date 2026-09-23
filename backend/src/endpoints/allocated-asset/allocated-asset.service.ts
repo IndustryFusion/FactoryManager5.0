@@ -20,6 +20,46 @@ import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { upstreamMessage } from '../../utils/upstream-error';
+import { attrValue, prepareForScorpio, replaceEntity } from '../../utils/ngsi-ld';
+
+/**
+ * The suffix every per-factory allocated-assets store id ends with.
+ *
+ * Kept as one constant because the id is both built (`${factoryId}${SUFFIX}`)
+ * and taken apart again (`split(SUFFIX)[0]`) in several places, and the two
+ * must never drift.
+ */
+export const ALLOCATED_ASSETS_SUFFIX = ':allocated-assets';
+
+/** Any id ending in that suffix, whatever scheme the factory id uses. */
+const ALLOCATED_ASSETS_ID_PATTERN = '.*:allocated-assets$';
+
+/** Scorpio's idPattern is a regex, so ids interpolated into one are escaped. */
+const escapeForIdPattern = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const LAST_DATA = 'http://www.industry-fusion.org/schema#last-data';
+const ITEMS = 'https://industry-fusion.org/base/v0.1/items';
+
+// The {id} items of an allocated-assets store. Reads the compliant JsonProperty
+// form (kept verbatim, so `items` may be unexpanded) and the old Property form,
+// whose object value Scorpio expanded to full IRIs.
+const allocatedItems = (store: Record<string, any> | undefined): { id: string }[] => {
+  const payload = attrValue(store?.[LAST_DATA]);
+  const items = payload?.[ITEMS] ?? payload?.items;
+  const list = Array.isArray(items) ? items : items?.id ? [items] : [];
+  return list.filter((item) => typeof item?.id === 'string');
+};
+
+// An allocated-assets store in the compliant form: the item list is structured
+// data, so it is a JsonProperty (a Property with an object value is dropped by
+// the platform's Debezium bridge).
+const allocatedStore = (id: string, items: { id: string }[]) => ({
+  "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
+  id,
+  type: "urn-holder",
+  [LAST_DATA]: { type: 'JsonProperty', json: { [ITEMS]: items } },
+});
 @Injectable()
 export class AllocatedAssetService {
   constructor(
@@ -54,16 +94,7 @@ export class AllocatedAssetService {
             'Accept': 'application/ld+json'
           };
           let id = `${factoryId}:allocated-assets`;
-          const data = {
-            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-            "id": id,
-            "type": "urn-holder",
-            "http://www.industry-fusion.org/schema#last-data": {
-              value: {
-                items: formattedAssetArr
-              }
-            }
-          };
+          const data = prepareForScorpio(allocatedStore(id, formattedAssetArr), { label: `allocated assets ${id}` });
           let response = await axios.post(this.scorpioUrl, data, {headers});
           await this.updateGlobal(token)
           return {
@@ -108,19 +139,8 @@ async createGlobal(token: string) {
     console.log("allocatedAssetData createGlobal",allocatedAssetData)
     let assetArr = [];
     
-    for(let i = 0; i < allocatedAssetData.length; i++) {    
-      const lastData = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"];
-      
-      // Only process if it's a Property type with items
-      if (lastData.type === "Property" && 
-          lastData.value && 
-          lastData.value["https://industry-fusion.org/base/v0.1/items"]) {
-        
-        const items = lastData.value["https://industry-fusion.org/base/v0.1/items"];
-        if (Array.isArray(items)) {
-          assetArr = [...assetArr, ...items];
-        }
-      }
+    for(let i = 0; i < allocatedAssetData.length; i++) {
+      assetArr = [...assetArr, ...allocatedItems(allocatedAssetData[i])];
     }
 
     // Remove duplicates while preserving object structure
@@ -135,19 +155,9 @@ async createGlobal(token: string) {
     };
    
     try {
-      const data = {
-        "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-        "id": "urn:ngsi-ld:global-allocated-assets-store",
-        "type": "urn-holder",
-        "http://www.industry-fusion.org/schema#last-data": {
-          type: "Property",
-          value: {
-            items: assetArr
-          }
-        }
-      };
-
-      let response = await axios.post(this.scorpioUrl, data, {headers});
+      // Replace in one request: creates the store if it is missing, and never
+      // leaves it deleted when the write fails.
+      let response = await replaceEntity(this.scorpioUrl, allocatedStore("urn:ngsi-ld:global-allocated-assets-store", assetArr), headers);
       return {
         status: response.status,
         statusText: response.statusText,
@@ -191,13 +201,10 @@ async createGlobal(token: string) {
         headers
       });
 
-      let assetIds = response.data["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
-  
+      let assetIds = allocatedItems(response.data);
+
       let finalArray = [];
-      if (!Array.isArray(assetIds) && assetIds?.id) {
-        assetIds = [assetIds];
-      }
-      if (Array.isArray(assetIds) && assetIds.length > 0 ) {
+      if (assetIds.length > 0) {
         for (let i = 0; i < assetIds.length; i++) {
           let id = assetIds[i].id;
           try {
@@ -213,14 +220,6 @@ async createGlobal(token: string) {
           }
           
         }
-      } else if(assetIds && assetIds.includes('urn')){
-        const assetData = await this.assetService.getAssetDataById(assetIds, token);
-        const finalData = {
-          id: assetIds,
-          product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value,
-          asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
-        };
-        finalArray.push(finalData);
       }
       return finalArray;
     } catch(err) {
@@ -248,7 +247,12 @@ async createGlobal(token: string) {
         'Accept': 'application/ld+json'
       };
       //fetch the allocated assets from scorpio
-      const fetchUrl = `${this.scorpioUrl}/?idPattern=urn:ngsi-ld:.*.:allocated-assets&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+      // Matched on the suffix alone. This used to be anchored to
+      // `urn:ngsi-ld:.*`, which silently returned an empty list — not an
+      // error — for any store whose factory id used a different scheme, and
+      // that emptiness then propagated into asset deletion and the global
+      // store rebuild. The type filter is what actually narrows the query.
+      const fetchUrl = `${this.scorpioUrl}/?idPattern=${ALLOCATED_ASSETS_ID_PATTERN}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
 
       let response = await axios.get(fetchUrl, {
         headers
@@ -279,18 +283,10 @@ async createGlobal(token: string) {
         factoryId = factoryId.split(':allocated-assets')[0];
         let factoryData = await this.factorySiteService.findOne(factoryId, token);
         let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
-        const factorySpecificAssets = allocatedAssetData[i]["http://www.industry-fusion.org/schema#last-data"].value["https://industry-fusion.org/base/v0.1/items"];
+        const factorySpecificAssets = allocatedItems(allocatedAssetData[i]);
         finalData[factoryName] = [];
-        if(Array.isArray(factorySpecificAssets)){
-          for(let i = 0; i < factorySpecificAssets.length; i++){
-            let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i].id, token);
-            const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
-            if (productNameKey && assetData[productNameKey].value) {
-              finalData[factoryName].push(assetData[productNameKey].value);
-            }
-          }
-        } else if(factorySpecificAssets !== "json-ld-1.1") {
-          let assetData = await this.assetService.getAssetDataById(factorySpecificAssets.id, token);
+        for(let i = 0; i < factorySpecificAssets.length; i++){
+          let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i].id, token);
           const productNameKey = Object.keys(assetData).find(key => key.toLowerCase().includes('product_name'));
           if (productNameKey && assetData[productNameKey].value) {
             finalData[factoryName].push(assetData[productNameKey].value);
@@ -324,21 +320,7 @@ async createGlobal(token: string) {
      if (response.data) {
       console.log("global assets", response.data);
       
-      // Extract the items array from the nested structure
-      const lastData = response.data["http://www.industry-fusion.org/schema#last-data"];
-      if (lastData?.value?.["https://industry-fusion.org/base/v0.1/items"]) {
-        const items = lastData.value["https://industry-fusion.org/base/v0.1/items"];
-        if (items?.id) {
-          return [items.id];
-        }
-        // Return array of asset IDs
-        if (Array.isArray(items)) {
-          return items.map(item => item.id).filter(Boolean);
-        }
-      }
-      
-      // Return empty array if no items found
-      return [];
+      return allocatedItems(response.data).map(item => item.id);
     }
     
     return [];
@@ -393,7 +375,9 @@ async createGlobal(token: string) {
           // Convert incoming asset IDs to the required format
           let finalAssetData = data[key].map(assetId => ({ id: assetId }));
           
-          let checkUrl = `${this.scorpioUrl}/?idPattern=${id}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
+          // The id goes into a regex, so it is escaped: an unescaped `.`,
+          // `+` or `(` in a minted id would match the wrong store, or none.
+          let checkUrl = `${this.scorpioUrl}/?idPattern=^${escapeForIdPattern(id)}$&type=https://industry-fusion.org/base/v0.1/urn-holder`;
           let response = await axios.get(checkUrl, {
             headers
           });
@@ -401,33 +385,14 @@ async createGlobal(token: string) {
           if (response.data.length > 0) {
             let assetData = response.data[0];
             
-            // Extract existing assets from the new data structure
-            let getAllocatedAssets = assetData["http://www.industry-fusion.org/schema#last-data"]?.value?.["https://industry-fusion.org/base/v0.1/items"] || [];
-            
-            if (Array.isArray(getAllocatedAssets)) {
-              finalAssetData = [...finalAssetData, ...getAllocatedAssets];
-            } else if (getAllocatedAssets.id) {
-              finalAssetData = [...finalAssetData, getAllocatedAssets];
-            }
-            
-            await this.remove(id, token);
+            finalAssetData = [...finalAssetData, ...allocatedItems(assetData)];
           }
 
           // Remove duplicates based on asset ID
           finalAssetData = [...new Map(finalAssetData.map(item => [item.id, item])).values()];
 
-          const finalData = {
-            "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-            "id": id,
-            "type": "urn-holder",
-            "http://www.industry-fusion.org/schema#last-data": {
-              type: 'Property',
-              value: {
-                "https://industry-fusion.org/base/v0.1/items": finalAssetData
-              }
-            }
-          };
-          await axios.post(this.scorpioUrl, finalData, {headers});
+          // One replace instead of delete-then-create.
+          await replaceEntity(this.scorpioUrl, allocatedStore(id, finalAssetData), headers);
         } catch(err) {
           if (err instanceof HttpException) {
             throw err;
@@ -454,16 +419,32 @@ async createGlobal(token: string) {
     }
   }
 
+  // Removes an asset from every factory's allocated-assets store. Returns the id
+  // of the (last) factory that had it, or '' when none did.
+  async removeAssetFromStores(assetId: string, token: string) {
+    const headers = {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/ld+json',
+      'Accept': 'application/ld+json'
+    };
+    let factoryId = '';
+    for (const store of await this.findAll(token)) {
+      const items = allocatedItems(store);
+      if (!items.some((item) => item.id === assetId)) continue;
+      factoryId = store.id.split(':allocated-assets')[0];
+      await replaceEntity(this.scorpioUrl, allocatedStore(store.id, items.filter((item) => item.id !== assetId)), headers);
+    }
+    return factoryId;
+  }
+
   async updateGlobal(token: string) {
     try{
-      let deleteResponse = await this.remove("urn:ngsi-ld:global-allocated-assets-store",token);
-      if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-        let response =  await this.createGlobal(token);
-        return {
-          status: response.status,
-          data: response.data,
-        };
-      }
+      // createGlobal replaces the store in one request, so no delete first.
+      let response =  await this.createGlobal(token);
+      return {
+        status: response.status,
+        data: response.data,
+      };
     } catch(err) {
       if (err instanceof HttpException) {
         throw err;

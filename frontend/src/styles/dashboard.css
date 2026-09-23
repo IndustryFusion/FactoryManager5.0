@@ -878,7 +878,10 @@ textarea {
 
 /* data viewer styles */
 .data_viewer_wrapper {
-    padding: 24px 32px;
+    /* No top padding: it would be a transparent band above the pinned
+       .dv_asset_bar, through which the scrolling chart shows. The bar carries
+       that 24px as its own padding instead. */
+    padding: 0 32px 24px;
     height: calc(100vh - 72px);
     overflow-y: auto;
 }
@@ -1360,14 +1363,16 @@ margin-bottom: 24px
 .dv_asset_bar {
     position: sticky;
     /* 0 = flush with the scrollport (padding-box) top, so the whole bar stays
-       visible once pinned. The wrapper's 24px top padding scrolls away under it. */
+       visible once pinned, and covers the full width of the scrollport. */
     top: 0;
     z-index: 90;
     background-color: var(--white);
     border-bottom: 1px solid var(--common-text-grey-200);
     margin-inline: -32px;
     margin-bottom: 24px;
-    padding: 20px 32px 14px;
+    /* Top padding is the wrapper's former 24px, so the bar covers the top of
+       the scrollport and nothing scrolls through above it. */
+    padding: 24px 32px 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;

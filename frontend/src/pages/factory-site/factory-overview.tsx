@@ -36,7 +36,8 @@ import { getErrorMessage } from '@/utility/error-message';
 
 
 import { notifyError } from "@/utility/global-toast";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { flatValue } from "@/utility/ngsi-links";
+
 // Assuming you're using PrimeReact
 
 const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
@@ -44,6 +45,20 @@ const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap
 });
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+/**
+ * A short, human-readable tail of a factory id, for the card badge.
+ *
+ * Takes the last colon-separated segment, which is the meaningful part of
+ * both the old counter ids (`urn:ngsi-ld:factories:2:001` -> `001`) and a
+ * minted one (`urn:ifric:ifx-eur-loc-fac-<uuid>` -> the uuid, trimmed).
+ */
+const shortFactoryId = (id: unknown): string => {
+  const text = String(id ?? '').trim();
+  if (!text) return '—';
+  const tail = text.split(':').pop() ?? text;
+  return tail.length > 8 ? `…${tail.slice(-8)}` : tail;
+};
 
 const FactoryOverview = () => {
   const router = useRouter();
@@ -84,7 +99,7 @@ const FactoryOverview = () => {
             ""
           );
           newItem[newKey] =
-            item[key].type === "Property" ? item[key].value : item[key];
+            flatValue(item[key]);
         } else {
           newItem[key] = item[key];
         }
@@ -322,8 +337,11 @@ const FactoryOverview = () => {
             </div>
 
             <div className="card-header-right" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-              <span className="factory-id">
-                ID-...{(data.id ?? 0).toString().padStart(3, '0').slice(-3)}
+              {/* The last segment of the id, not its last three characters:
+                  the old slice only read as an id because ids ended in a
+                  zero-padded counter. The full id is in the tooltip. */}
+              <span className="factory-id" title={String(data.id ?? '')}>
+                ID-{shortFactoryId(data.id)}
               </span>
               <div className="card-header-actions">
                 <FiMoreHorizontal

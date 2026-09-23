@@ -42,6 +42,8 @@ import { getAssetById } from "@/utility/factory-site-utility";
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
+import { firstImage } from "@/utility/image";
+import { isMachineRunning } from "@/utility/machine-state";
 interface PrefixedAssetProperty {
   key: string;
   value: string;
@@ -83,10 +85,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
     return <>{assetType}</>;
   };
   const productIconTemplate = (rowData: Asset): React.ReactNode => {
-    if (rowData && rowData.product_image && rowData.product_image !== 'NULL') {
+    const image = firstImage(rowData?.product_image);
+    if (image) {
       return (
         <img
-          src={rowData.product_image}
+          src={image}
           style={{ width: "70px", height: "auto" }}
         />
       );
@@ -284,15 +287,16 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
                   {selectedRow ? (
                     <>
                       <div className="selected_product_image_wrapper">
-                        {selectedRow.product_image !== 'NULL' ? (
-                          <img src={selectedRow.product_image} alt={selectedRow.product_name} className="selected_product_image" />
+                        {firstImage(selectedRow.product_image) ? (
+                          <img src={firstImage(selectedRow.product_image)} alt={selectedRow.product_name} className="selected_product_image" />
                         ) : (
                           <div className="product-no-img" style={{ width: '44px', height: '44px' }}>
                             <Image src="/no-image-icon.svg" width={18} height={18} alt="Missing image"></Image>
                           </div>
                         )}
 
-                        {machineStateValue !== "0" && machineStateValue !== "NULL" ? (
+                        {/* The blue dot means "running", so it needs a real reading. */}
+                        {isMachineRunning(machineStateValue) ? (
                           <div className="selected_product_status"></div>
                         ) : (
                           <div className=""></div>

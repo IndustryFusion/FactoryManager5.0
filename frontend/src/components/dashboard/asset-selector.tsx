@@ -5,6 +5,7 @@ import { Asset } from '@/types/asset-types';
 
 import "../../styles/asset-selector.css"
 import Image from 'next/image';
+import { firstImage } from '@/utility/image';
 import { Dropdown } from 'primereact/dropdown';
 import { useTranslation } from 'next-i18next';
 
@@ -70,8 +71,8 @@ const AssetSelector = ({ assets, selectedAsset, setSelectedAsset, loading, handl
   const assetItemTemplate = (asset: Asset) => {
     return (
       <div className="flex align-items-center gap-2">
-        {asset.product_image !== 'NULL' ? (
-          <img src={asset.product_image} alt={asset.product_name} className='asset_search_result_image' />
+        {firstImage(asset.product_image) ? (
+          <img src={firstImage(asset.product_image)} alt={asset.product_name} className='asset_search_result_image' />
         ) : (
           <div className="product-no-img" style={{ width: '35px', height: '35px' }}>
             <Image src="/no-image-icon.svg" width={16} height={16} alt="Missing image"></Image>

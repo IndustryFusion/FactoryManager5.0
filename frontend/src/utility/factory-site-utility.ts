@@ -23,7 +23,8 @@ import { AllocatedAssets } from "@/types/asset-types";
 import { getAccessGroup } from "./indexed-db";
 import api from "./jwt";
 import { notifyError } from "@/utility/global-toast";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { flatValue, linkTargets } from "@/utility/ngsi-links";
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 /**
@@ -251,7 +252,7 @@ const flattenData = (data: any): any => {
       const newKey = key.replace("http://www.industry-fusion.org/schema#", "");
 
       newItem[newKey] =
-        data[key].type === "Property" ? data[key].value : data[key];
+        flatValue(data[key]);
     } else if (!key.startsWith("http") && !key.startsWith("@")) {
       newItem[key] = data[key];
     }
@@ -370,7 +371,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
     Object.keys(item).forEach((key) => {
       if (key.includes("/")) {
         const newKey = key.split('/').pop() || '';
-        newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
+        newItem[newKey] = flatValue(item[key]);
       } else {
         newItem[key] = item[key];
       }
@@ -480,7 +481,7 @@ export async function getShopFloorAndAssetData(factoryId: string) {
     );
     const factoryData = factoryDataResponse.data;
     const shopFloorId =
-      factoryData["http://www.industry-fusion.org/schema#hasShopFloor"]?.object;
+      linkTargets(factoryData["http://www.industry-fusion.org/schema#hasShopFloor"])[0];
 
     const shopFloorDataResponse = await axios.get(
       `${API_URL}/shop-floor/${shopFloorId}`,
@@ -495,9 +496,7 @@ export async function getShopFloorAndAssetData(factoryId: string) {
     const shopFloorData = shopFloorDataResponse.data;
 
     // Normalize the assetId to always be an array
-    let assetIds =
-      shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]?.object;
-    assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
+    let assetIds = linkTargets(shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]);
 
     let assetsData = [];
     if (assetIds && assetIds.length > 0) {
@@ -554,59 +553,60 @@ export const relationToAssetCategory = (relationName: string) => {
   return `${title}`;
 };
 
-export function extractHasRelations(assetData: { [key: string]: any }): ExtractedRelations {
-  const entity = (assetData && (assetData as any).data) || assetData; 
+// The component slots of a product and what each links to. The slots come from
+// the product's template: FactoryManager's Scorpio holds only real links, so an
+// empty slot is not on the entity. Without a template, only the slots that
+// have a link (or old-style empty entries) are known.
+export function extractHasRelations(
+  assetData: { [key: string]: any },
+  templateProperties?: { [name: string]: any }
+): ExtractedRelations {
+  const entity = (assetData && (assetData as any).data) || assetData;
   const out: ExtractedRelations = {};
+
+  const slotSettings = (settings: {
+    relationship?: string;
+    class?: string;
+    relationship_type?: string;
+  }) => ({
+    ...(settings.relationship ? { product_type: humanizeIRI(settings.relationship) } : {}),
+    ...(settings.class ? { class: settings.class } : {}),
+    ...(settings.relationship_type ? { relationship_type: settings.relationship_type } : {}),
+  });
+
+  for (const [name, field] of Object.entries(templateProperties ?? {})) {
+    if (String(field?.segment || "").toLowerCase() !== "component") continue;
+    out[name] = {
+      type: "Relationship",
+      segment: "component",
+      ...slotSettings({ relationship: field.relationship, class: field.class, relationship_type: field.relationship_type }),
+    };
+  }
 
   for (const [key, value] of Object.entries(entity)) {
     if (!key.includes("/") || !value || typeof value !== "object") continue;
-
+    const first = Array.isArray(value) ? value[0] : value;
+    if (!first || typeof first !== "object") continue;
 
     // segment === "component"
-    const segment = segVal((value as any)[SEGMENT_IRI]);
+    const segment = segVal((first as any)[SEGMENT_IRI]);
     if (String(segment || "").toLowerCase() !== "component") continue;
 
     const cleanedKey = key.split("/").pop() || key;
+    const objects = linkTargets(value);
+    const settingOf = (iri: string) => {
+      const v = segVal((first as any)[iri]);
+      return typeof v === "string" ? v : undefined;
+    };
 
-
-    const rawObj = (value as any).object;
-
-    let objects: string[] | undefined;
-
-    if (Array.isArray(rawObj)) {
-      objects = rawObj
-        .map((o) => (typeof o === "string" ? o : o?.id ?? o?.object ?? undefined))
-        .filter((v): v is string => !!v && v !== "NULL");
-    } else if (typeof rawObj === "string" && rawObj !== "NULL") {
-      objects = [rawObj];
-    }
-
-    let product_type: string | undefined;
-    const pt = (value as any)[PRODUCT_TYPE_IRI];
-    if (pt && typeof pt === "object") {
-      const rawPT = segVal(pt) || (typeof pt.value === "string" ? pt.value : undefined);
-      product_type = humanizeIRI(rawPT);
-    }
-    
-    let relationship_type: string | undefined;
-    const pt1 = (value as any)[RELATIONSHIP_TYPE_IRI];
-    if (pt1 && typeof pt1 === "object") {
-      const rawPT = segVal(pt1) || (typeof pt1.value === "string" ? pt1.value : undefined);
-      relationship_type = rawPT;
-    }
-
-    let relation_class: string | undefined;
-    const cls = (value as any)[CLASS_TYPE_IRI];
-    if (cls && typeof cls === "object" && typeof cls.value === "string") {
-      relation_class = cls.value;
-    }
     out[cleanedKey] = {
-      type: "Relationship",
-      segment: "component",
-      ...(product_type ? { product_type } : {}),
-      ...(relation_class ? { class: relation_class } : {}),
-      ...(objects && objects.length ? { objects } : {}),
-      ...(relationship_type ? { relationship_type } : {}),
+      ...(out[cleanedKey] ?? { type: "Relationship", segment: "component" }),
+      ...slotSettings({
+        relationship: settingOf(PRODUCT_TYPE_IRI),
+        class: settingOf(CLASS_TYPE_IRI),
+        relationship_type: settingOf(RELATIONSHIP_TYPE_IRI),
+      }),
+      ...(objects.length ? { objects } : {}),
     };
   }
 
@@ -642,8 +642,25 @@ export const getAssetRelationById = async (assetId: string) => {
       withCredentials: true,
     });
     const responseData = response.data;
+    const entity = (responseData && responseData.data) || responseData;
 
-    const mappedData = extractHasRelations(responseData);
+    // The slots come from the template; if it cannot be loaded, fall back to
+    // the slots the product itself shows.
+    let templateProperties;
+    try {
+      const template = await axios.get(API_URL + `/mongodb-templates/type/${btoa(entity.type)}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+      templateProperties = (Array.isArray(template.data) ? template.data[0] : template.data)?.properties;
+    } catch (error) {
+      logHandledError("Could not load the template for component slots:", error);
+    }
+
+    const mappedData = extractHasRelations(responseData, templateProperties);
     return mappedData;
   } catch (error) {
     logHandledError("Error:", error);
@@ -744,13 +761,7 @@ export async function getShopFloorAssets(shopFloorId: string) {
     const shopFloorData = shopFloorDataResponse.data;
 
     // Normalize the assetId to always be an array
-    const hasAsset = shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]
-    let assetIds =
-    Array.isArray(hasAsset)?
-      hasAsset.map((elem:{type:string, object:string})=> elem?.object) :
-      hasAsset?.object ;
-    assetIds = Array.isArray(assetIds) ? assetIds : [assetIds]; // Ensure assetIds is always an array
-    assetIds = assetIds.filter((id:string) => id !== "json-ld-1.1");
+    let assetIds = linkTargets(shopFloorData["http://www.industry-fusion.org/schema#hasAsset"]);
    
     let assetsData:{} = [];
     if (assetIds && assetIds.length > 0) {
@@ -861,30 +872,14 @@ export const fetchAllShopFloors = async (factoryId: string): Promise<Transformed
       params: { id: factoryId },
     });
 
-    const hasShopFloor = factoryResponse.data["http://www.industry-fusion.org/schema#hasShopFloor"];
-
-    // Check for json-ld-1.1 or empty relationships
-    if (!hasShopFloor || 
-        (Array.isArray(hasShopFloor) && hasShopFloor.length === 0) ||
-        (!Array.isArray(hasShopFloor) && hasShopFloor.object === "json-ld-1.1")) {
-      return [];
-    }
-
-    // Normalize to array
-    const shopFloorRelationships = Array.isArray(hasShopFloor) ? hasShopFloor : [hasShopFloor];
-
-    // Filter out json-ld-1.1 entries
-    const validShopFloorRelationships = shopFloorRelationships.filter(
-      relationship => relationship.object && relationship.object !== "json-ld-1.1"
-    );
-
-    if (validShopFloorRelationships.length === 0) {
+    const shopFloorIds = linkTargets(factoryResponse.data["http://www.industry-fusion.org/schema#hasShopFloor"]);
+    if (shopFloorIds.length === 0) {
       return [];
     }
 
     // Fetch all shop floor details in parallel
     const settled = await Promise.allSettled(
-      validShopFloorRelationships.map((r) => fetchSingleShopFloor(r.object))
+      shopFloorIds.map((id) => fetchSingleShopFloor(id))
     );
 
     const ok = settled

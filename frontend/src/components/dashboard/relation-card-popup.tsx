@@ -22,7 +22,8 @@ import "../../styles/relation-container.css"
 import { getAssetById } from "@/utility/asset";
 import { useTranslation } from "next-i18next";
 
-import { notifyError } from "@/utility/global-toast";
+import { notifyError } from "@/utility/global-toast";import { linkTargets } from "@/utility/ngsi-links";
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface RelationPopupProps {
@@ -49,18 +50,8 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
     const getAssetData = async (relationData:ParentRelationData  ) => {
         try {
             let newArr = [];
-            if (Array.isArray(relationData) && relationData.length > 0) {
-                for (let item of relationData) {
-                    const response = await getAssetById(item?.object);  
-                    const productKey = Object.keys(response).find(key => key === "product_name");
-                    let product_name = productKey ? response[productKey] : undefined;
-                    newArr.push(product_name);
-                }
-            }
-             else if (relationData.object && relationData.object !== "json-ld-1.1") {
-                
-                const response = await getAssetById(relationData?.object);
-
+            for (const target of linkTargets(relationData)) {
+                const response = await getAssetById(target);
                 const productKey = Object.keys(response).find(key => key === "product_name");
                 let product_name = productKey ? response[productKey] : undefined;
                 newArr.push(product_name);

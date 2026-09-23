@@ -19,7 +19,8 @@ import api from "./jwt";
 import { updatePopupVisible } from "./update-popup";
 import { getAccessGroup } from "./indexed-db";
 
-import { notifyError } from "@/utility/global-toast";
+import { notifyError } from "@/utility/global-toast";import { attrValue, isLink, linkTargets } from "@/utility/ngsi-links";
+
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const getCompanyIfricId = (): string => {
@@ -58,10 +59,12 @@ export const mapBackendDataOfAsset = (backendData: any[]) => {
     Object.keys(item).forEach((key) => {
       if (key.includes("/")) {
         const newKey = key.split("/").pop() || "";
-        if (item[key].type === "Property") {
-          newItem[newKey] = item[key].value;
-        } else if (item[key].type === "Relationship") {
-          newItem[newKey] = item[key].object;
+        if (isLink(item[key])) {
+          // one target stays a string, as before; several become a list
+          const targets = linkTargets(item[key]);
+          if (targets.length) newItem[newKey] = targets.length === 1 ? targets[0] : targets;
+        } else if (["Property", "ListProperty", "JsonProperty"].includes(item[key]?.type)) {
+          newItem[newKey] = attrValue(item[key]);
         }
       } else {
         if (key == "type" || key == "id") {
