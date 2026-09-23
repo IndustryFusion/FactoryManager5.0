@@ -31,6 +31,7 @@ import { PgRestGateway } from '../pgrest/pgrest.gatway';
 import { ValueChangeStateService } from '../value-change-state/value-change-state.service';
 import { ValueChangeStateGateway } from '../value-change-state/value-change-state.gateway';
 import { TokenService } from '../session/token.service';
+import { linkTargets } from '../../utils/ngsi-ld';
 
 @Injectable()
 
@@ -181,38 +182,10 @@ export class CronService implements OnModuleInit, OnModuleDestroy {
         let reactData = await this.reactFlowService.findOne(factoryId);
         if(reactData && reactData.factoryData) {
           let edges = reactData.factoryData['edges'];
-          let shopFloorIds = factoryData[i]['http://www.industry-fusion.org/schema#hasShopFloor'];
           let assetData = [];
-          if(shopFloorIds && Array.isArray(shopFloorIds) && shopFloorIds.length > 0){
-            for (let i = 0; i < shopFloorIds.length; i++) {
-              let id = shopFloorIds[i].object;
-              if (id.includes('urn')) {
-                let shopFloorData = await this.shopFloorService.findOne(id, token);
-                let hasAsset = shopFloorData['http://www.industry-fusion.org/schema#hasAsset'];
-                if (hasAsset && Array.isArray(hasAsset) && hasAsset.length > 0) {
-                  for(let j=0; j < hasAsset.length; j++){
-                    let assetId = hasAsset[j].object;
-                    let response = await this.assetService.getAssetDataById(assetId, token);
-                    assetData.push(response);
-                  }
-                } else if (hasAsset && hasAsset.object.includes('urn')) {
-                  let assetId = hasAsset.object;
-                  let response = await this.assetService.getAssetDataById(assetId, token);
-                  assetData.push(response);
-                }
-              }
-            }
-          } else if(shopFloorIds && shopFloorIds.object.includes('urn')) {
-            let shopFloorData = await this.shopFloorService.findOne(shopFloorIds.object, token);
-            let hasAsset = shopFloorData['http://www.industry-fusion.org/schema#hasAsset'];
-            if (hasAsset && Array.isArray(hasAsset) && hasAsset.length > 0) {
-              for(let j=0; j < hasAsset.length; j++){
-                let assetId = hasAsset[j].object;
-                let response = await this.assetService.getAssetDataById(assetId, token);
-                assetData.push(response);
-              }
-            } else if (hasAsset && hasAsset.object.includes('urn')) {
-              let assetId = hasAsset.object;
+          for (const shopFloorId of linkTargets(factoryData[i]['http://www.industry-fusion.org/schema#hasShopFloor'])) {
+            let shopFloorData = await this.shopFloorService.findOne(shopFloorId, token);
+            for (const assetId of linkTargets(shopFloorData['http://www.industry-fusion.org/schema#hasAsset'])) {
               let response = await this.assetService.getAssetDataById(assetId, token);
               assetData.push(response);
             }
@@ -222,33 +195,14 @@ export class CronService implements OnModuleInit, OnModuleDestroy {
             for(let j = 0; j < assetData.length; j++){
               for(let key in assetData[j]) {
                 if(key.includes('has')){
-                  if(Array.isArray(assetData[j][key]) ){
-                    let materialArr = assetData[j][key];
-                    let count = 0;
-                    for(let idx = 0; idx < materialArr.length; idx++){
-                      let target = materialArr[idx].object;
-                      for(let k = 0; k < edges.length; k++){
-                        if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
-                          count++;
-                        }
-                      }
-                    }
-                    if(materialArr.length !== count){
-                      let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
-                      return response;
-                    }
-                  } else if(assetData[j][key].object !== 'json-ld-1.1' && assetData[j][key].object.includes('urn')){
-                    let flag = false;
-                    let target = assetData[j][key].object;
-                    for(let k = 0; k < edges.length; k++){
-                      if(edges[k].source.includes(assetData[j].id) && edges[k].target.includes(target)){
-                        flag = true;
-                      }
-                    }
-                    if(!flag){
-                      let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
-                      return response;
-                    }
+                  // Every link target of the product must still have its edge in
+                  // the factory layout; otherwise rebuild the layout.
+                  const targets = linkTargets(assetData[j][key]);
+                  const drawn = targets.filter((target) =>
+                    edges.some((edge) => edge.source.includes(assetData[j].id) && edge.target.includes(target)));
+                  if(drawn.length !== targets.length){
+                    let response = await this.reactFlowService.findFactoryAndShopFloors(factoryId, token);
+                    return response;
                   }
                 }
               }

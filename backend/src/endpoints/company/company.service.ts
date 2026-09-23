@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -7,8 +7,10 @@ import axios from 'axios';
 import { Response, Request } from 'express';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { assertCompliant, mergeForSync, templateCache, toNgsiLd } from '../../utils/ngsi-ld';
 @Injectable()
 export class CompanyService {
+  private readonly logger = new Logger(CompanyService.name);
   constructor(
     @InjectModel(FactoryPdtCache.name)
     private readonly factoryPdtCache: Model<FactoryPdtCache>
@@ -106,6 +108,7 @@ export class CompanyService {
       await this.factoryPdtCache.updateMany({company_ifric_id}, {isCacheUpdated : false});
 
       let total = ifxCacheData.data.length, processed = 0, updatedAssetIds = [];
+      const templateFor = templateCache();
       const batchSize = 50;
       for(let i = 0; i < ifxCacheData.data.length; i += batchSize) {
         const batch = ifxCacheData.data.slice(i, i + batchSize);
@@ -113,37 +116,34 @@ export class CompanyService {
         await Promise.all(
           batch.map(async (asset) => {
             try {
-              let updatedData = {};
               if(!logDetails[asset.product_name]) {
                 logDetails[asset.product_name] = {};
               }
               const [ifxResponse, factoryScorpioResponse] = await Promise.all([
                 axios.get(`${this.ifxPlatformUrl}/asset/${asset.id}`, { headers }),
-                await axios.get(`${this.scorpioUrl}/${asset.id}`, {headers: scorpioHeaders})
+                axios.get(`${this.scorpioUrl}/${asset.id}`, {headers: scorpioHeaders})
               ])
               const ifxScorpioData = ifxResponse.data;
               const factoryScorpioData = factoryScorpioResponse.data;
-              
-              Object.keys(ifxScorpioData).forEach(key => {
-                if(typeof ifxScorpioData[key] === "object") {
-                  // check for relation present in factory scoprio to update 
-                  if(key.includes("has") && factoryScorpioData[key]) {
-                    // if relation key has single relation then update other fields else update for fields in array.
-                    if(typeof factoryScorpioData[key] === 'object' && !Array.isArray(factoryScorpioData[key])) {
-                      updatedData[key] = { ...ifxScorpioData[key], object: factoryScorpioData[key].object };
-                    } else {
-                      updatedData[key] = factoryScorpioData[key].map((data) => ({ ...ifxScorpioData[key], object: data.object }));
-                    }
-                  } else {
-                    updatedData[key] = ifxScorpioData[key];
-                  }
-                }
-              })
+
+              // Convert IFX's free-form product to compliant NGSI-LD, then merge:
+              // IFX's attributes win, FactoryManager keeps its link targets and live values.
+              const template = await templateFor(ifxScorpioData.type, company_ifric_id, asset.product_name);
+              const { entity, dropped, warnings } = toNgsiLd(ifxScorpioData, template);
+              warnings.forEach((warning) => this.logger.warn(`${asset.id}: ${warning}`));
+              const { attrs, remove } = mergeForSync(entity, dropped, factoryScorpioData, template);
+              assertCompliant(attrs, { requireId: false, label: `update for ${asset.id}` });
 
               // update factory scorpio
-              updatedData['@context'] = this.context;
               const url = this.scorpioUrl + '/' + asset.id + '/attrs';
-              await axios.post(url, updatedData, { headers: scorpioHeaders }); 
+              await axios.post(url, { ...attrs, '@context': this.context }, { headers: scorpioHeaders });
+
+              // IFX cleared these values: remove the stale FactoryManager copies.
+              for (const key of remove) {
+                await axios.delete(`${url}/${encodeURIComponent(key)}`, { headers: scorpioHeaders }).catch((err) => {
+                  if (err.response?.status !== 404) throw err;
+                });
+              }
 
               // update factory cache
               delete asset.factory_site;
@@ -158,7 +158,8 @@ export class CompanyService {
               return { status: "success", message: `${asset.asset_serial_number} Product Synced Successfully.` };
             } catch (err) {
               failureCount++;
-              logDetails[asset.product_name][asset.asset_serial_number] =  err.response?.message || err.response?.data?.title || err.response?.data?.message || "Product Sync Failed";
+              logDetails[asset.product_name] ??= {};
+              logDetails[asset.product_name][asset.asset_serial_number] =  (err.response?.errors ? `${err.response.message}: ${err.response.errors.slice(0, 5).join('; ')}` : undefined) || err.response?.message || err.response?.data?.title || err.response?.data?.message || "Product Sync Failed";
             } finally {
               processed++;
               res.write(

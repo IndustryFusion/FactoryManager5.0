@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateFactoryPdtCacheDto, UpdateFactoryPdtCacheDto } from './dto/create-factory-pdt-cache.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
@@ -9,12 +9,35 @@ import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
-export class FactoryPdtCacheService {
+export class FactoryPdtCacheService implements OnModuleInit {
+  private readonly logger = new Logger(FactoryPdtCacheService.name);
   constructor(
     @InjectModel(FactoryPdtCache.name)
     private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
   ){}
   private readonly ifxPlatformUrl = process.env.IFX_PLATFORM_BACKEND_URL;
+
+  async onModuleInit() {
+    try {
+      // Backfill product_image for rows cached while it was a single string. IFX now sends
+      // a list, so "NULL"/"" become [] and any other string s becomes [s].
+      const result = await this.factoryPdtCacheModel.updateMany(
+        { product_image: { $type: 'string' } },
+        [{
+          $set: {
+            product_image: {
+              $cond: [{ $in: ["$product_image", ["NULL", ""]] }, [], ["$product_image"]]
+            }
+          }
+        }]
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`Migration: converted 'product_image' to a list on ${result.modifiedCount} cached product(s)`);
+      }
+    } catch (error) {
+      console.error('Error during factory-pdt-cache product_image migration:', error);
+    }
+  }
 
   create(createFactoryPdtCacheDto: CreateFactoryPdtCacheDto) {
     return 'This action adds a new factoryPdtCache';
@@ -22,7 +45,10 @@ export class FactoryPdtCacheService {
 
   async findAll(company_ifric_id: string) {
     try {
-      return await this.factoryPdtCacheModel.find({company_ifric_id}).sort({_id: -1, "meta_data.created_at": -1});
+      const rows = await this.factoryPdtCacheModel.find({company_ifric_id}).sort({_id: -1, "meta_data.created_at": -1});
+      // What the Assets table shows: FactoryManager's copy of IFX's product list.
+      this.logger.log(`[assets-table ${company_ifric_id}] ${rows.length} product row(s)`);
+      return rows;
     } catch(err) {
       if (err instanceof HttpException) {
         throw err;

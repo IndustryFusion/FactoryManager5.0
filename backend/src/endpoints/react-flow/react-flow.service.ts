@@ -27,6 +27,7 @@ import { error } from 'console';
 import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { linkTargets } from '../../utils/ngsi-ld';
 @Injectable()
 export class ReactFlowService {
   constructor(
@@ -272,8 +273,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
         if (key.includes("has")) {
 
       
-            let relationValues = Array.isArray(value) ? value : [value];
-            relationValues = relationValues.filter(rv => rv.object && rv.object.startsWith("urn:"));
+            const relationValues = linkTargets(value).filter((target) => target.startsWith("urn:"));
 
             for (let i = 0; i < relationValues.length; i++) {
                 const relationType = key.split("/").pop();
@@ -297,8 +297,7 @@ async processAsset(asset, token, result, parentNodeId = null, depth = 0, sibling
                 };
                 result.edges.push(edgeToRelation);
 
-                const rv = relationValues[i];
-                const relatedAsset = { id: rv.object }
+                const relatedAsset = { id: relationValues[i] }
                 await this.processAsset(relatedAsset, token, result, relationId, depth + 1.5, xPos+ relationXPos, yPos + 2 * verticalSpacing);
                 relationXPos += horizontalSpacing ;
             

@@ -235,6 +235,16 @@ font-size : 18px;
   box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
   animation: pulse-red 2s infinite;
 }
+/* Nothing has arrived yet: quiet and still, not an alarm. A hollow dot says
+   "no signal" where the filled, pulsing ones say "data, and how fresh". */
+.live-pulse-dot.freshness-none {
+  background-color: transparent;
+  border: 1.5px solid var(--common-text-grey-400, #98a2b3);
+  box-shadow: none;
+  animation: none;
+  width: 7px;
+  height: 7px;
+}
 @keyframes pulse-green {
   0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
   70%  { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
@@ -618,6 +628,12 @@ font-size : 18px;
 
 .freshness-chip.freshness-warn { color: #f59e0b; }
 .freshness-chip.freshness-stale { color: #ef4444; }
+.freshness-chip.freshness-none {
+  background-color: transparent;
+  border: 1px solid var(--common-text-grey-200, #e4e7ec);
+  color: var(--common-text-grey-400, #98a2b3);
+  font-weight: 400;
+}
 
 @media screen and (max-width: 1200px) {
   .sensor-rail-label {

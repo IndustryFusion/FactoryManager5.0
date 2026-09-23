@@ -24,6 +24,7 @@ import { FiCopy, FiEdit3 } from "react-icons/fi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { IoEyeOutline } from "react-icons/io5";
 import dynamic from "next/dynamic";
+import { flatValue } from "@/utility/ngsi-links";
 
 const FactoryMap = dynamic(() => import("@/components/factoryOverview/factoryMap"), {
   ssr: false,
@@ -109,7 +110,7 @@ const FactoryOverview1 = () => {
       for (const key in item) {
         if (key.includes("http://www.industry-fusion.org/schema#")) {
           const newKey = key.replace("http://www.industry-fusion.org/schema#", "");
-          newItem[newKey] = item[key].type === "Property" ? item[key].value : item[key];
+          newItem[newKey] = flatValue(item[key]);
         } else {
           newItem[key] = item[key];
         }

@@ -171,13 +171,15 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
         try {
             const accessGroupData = await getAccessGroup();
-            if(payload?.properties) {
-                payload.properties.company_ifric_id = accessGroupData.company_ifric_id;
-            }
+            // The owning company is no longer sent: the backend takes it from
+            // this token, so a factory cannot be filed under a company the
+            // signed-in user does not belong to. The token is also what the
+            // registry needs in order to mint the factory's identifier.
             const response = await axios.post(API_URL + "/factory-site/", payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
+                    Authorization: `Bearer ${accessGroupData.ifricdi}`,
                 },
                 withCredentials: true,
             });

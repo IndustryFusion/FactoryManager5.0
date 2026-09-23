@@ -18,6 +18,7 @@ import { Asset } from "@/types/asset-types";
 import type { Alerts as Alert } from "@/components/alert/alert-details";
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
+import { flatValue } from "@/utility/ngsi-links";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 const POLL_MS = 30_000;
@@ -45,7 +46,7 @@ const mapBackendDataToAssetState = (backendData: Asset) => {
     if (key.includes("/")) {
       const newKey = key.split("/").pop() || "";
       modifiedObject[newKey] =
-        backendData[key].type === "Property" ? backendData[key].value : backendData[key];
+        flatValue(backendData[key]);
     } else {
       modifiedObject[key] = backendData[key];
     }

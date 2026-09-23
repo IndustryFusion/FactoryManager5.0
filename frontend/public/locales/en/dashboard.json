@@ -122,6 +122,7 @@
     "updated_just_now": "Updated just now",
     "updated": "Updated",
     "ago": "ago",
+    "no_live_data": "No live data",
     "no_notifications_today": "No notifications today",
     "notifications_loading": "Loading notifications…",
     "notifications_error": "Could not load notifications",

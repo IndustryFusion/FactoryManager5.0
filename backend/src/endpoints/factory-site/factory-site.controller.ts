@@ -14,7 +14,10 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Session, NotFoundException, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
+import { AuthGuard } from '../auth/auth.guard';
 import { FactorySiteService } from './factory-site.service';
 import * as jsonData from './factory-schema.json';
 import { TokenService } from '../session/token.service';
@@ -31,11 +34,25 @@ export class FactorySiteController {
     private readonly tokenService: TokenService
     ) {}
 
+  /**
+   * Guarded, unlike most of this controller: creating a factory now records
+   * it in the IFRIC registry against the caller's company, and the registry
+   * decides which company that is from this token. The owner used to be
+   * whatever the browser put in the request body.
+   */
+  @UseGuards(AuthGuard)
   @Post()
-  async create(@Body() data) {
+  async create(@Body() data, @Req() req: Request) {
     try {
+      const callerAuthorization = req.headers['authorization'] as string;
+      const companyIfricId = this.companyOf(callerAuthorization);
       const token = await this.tokenService.getToken();
-      const response = await this.factorySiteService.create(data, token);
+      const response = await this.factorySiteService.create(
+        data,
+        token,
+        callerAuthorization,
+        companyIfricId,
+      );
       if(response['status'] == 200 || response['status'] == 201) {
         return {
           success: true,
@@ -128,4 +145,25 @@ export class FactorySiteController {
       throw err;
     }
   }
+
+  /**
+   * The caller's company, from the token the guard resolved.
+   *
+   * Read here rather than trusted from the request body: the company decides
+   * which registry record the factory is filed under, and a request could
+   * otherwise name any company.
+   */
+  private companyOf(authorization: string | undefined): string {
+    const token = authorization?.split(' ')[1];
+    const claims = token
+      ? (jwt.decode(token) as { company_ifric_id?: string } | null)
+      : null;
+    if (!claims?.company_ifric_id) {
+      throw new UnauthorizedException(
+        'The session carries no company, so a factory cannot be registered.',
+      );
+    }
+    return claims.company_ifric_id;
+  }
+
 }

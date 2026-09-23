@@ -20,9 +20,9 @@ import * as jsonData from './shop-floor-schema.json';
 import { TokenService } from '../session/token.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { AllocatedAssetService } from '../allocated-asset/allocated-asset.service';
-import axios from 'axios';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { linkTargets, replaceEntity, toLinks } from '../../utils/ngsi-ld';
 @Controller('shop-floor')
 export class ShopFloorController {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -47,35 +47,16 @@ export class ShopFloorController {
           };
           const data = await this.factorySiteService.findOne(factoryId, token);
           
-          let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
-          let obj = {
-            type: 'Relationship',
-            object: createResponse.id
-          }
-          console.log("object ",obj)
-          if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
-            shopFloorData = [...shopFloorData, obj];
-          } else if(shopFloorData.object.includes('urn')) {
-            shopFloorData = [shopFloorData, obj]
-          } else {
-            shopFloorData = [obj];
-          
-          }
-          console.log("shopFloorData",shopFloorData)
-          data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
-          console.log("data delete",data)
-          const deleteResponse = await this.factorySiteService.removeScript(factoryId, token);
-          if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-            const response = await axios.post(this.scorpioUrl, data, { headers });
-            if(response['status'] == 200 || response['status'] == 201) {
-              return {
-                success: true,
-                status: response['status'],
-                message: 'shop-floor created and added in factory-site successfully',
-                id: createResponse['id'],
-                floorName: createResponse['floorName']
-              }
-            } 
+          const hasShopFloorKey = "http://www.industry-fusion.org/schema#hasShopFloor";
+          data[hasShopFloorKey] = toLinks([...linkTargets(data[hasShopFloorKey]), createResponse.id]);
+          // One replace instead of delete-then-create of the factory site.
+          const response = await replaceEntity(this.scorpioUrl, data, headers);
+          return {
+            success: true,
+            status: response['status'],
+            message: 'shop-floor created and added in factory-site successfully',
+            id: createResponse['id'],
+            floorName: createResponse['floorName']
           }
         }
         catch(err){
@@ -223,24 +204,17 @@ export class ShopFloorController {
           };
           const data = await this.factorySiteService.findOne(factoryId, token);
           if(data) {
-            let shopFloorData = data["http://www.industry-fusion.org/schema#hasShopFloor"];
-            if(Array.isArray(shopFloorData) && shopFloorData.length > 0) {
-              shopFloorData = shopFloorData.filter(item => item.object !== id); 
-            } else if(shopFloorData.object == id) {
-              shopFloorData.object = "";
-            }
-            data["http://www.industry-fusion.org/schema#hasShopFloor"] = shopFloorData
-            const deleteResponse = await this.factorySiteService.removeScript(factoryId, token);
-            if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-              const response = await axios.post(this.scorpioUrl, data, { headers });
-              if(response['status'] == 200 || response['status'] == 201) {
-                return {
-                  success: true,
-                  status: response['status'],
-                  message: 'Deleted shop-floor and Updated factory site successfully',
-                  id: response['id']
-                }
-              } 
+            const hasShopFloorKey = "http://www.industry-fusion.org/schema#hasShopFloor";
+            const links = toLinks(linkTargets(data[hasShopFloorKey]).filter((target) => target !== id));
+            if (links) data[hasShopFloorKey] = links;
+            else delete data[hasShopFloorKey];
+            // One replace instead of delete-then-create of the factory site.
+            const response = await replaceEntity(this.scorpioUrl, data, headers);
+            return {
+              success: true,
+              status: response['status'],
+              message: 'Deleted shop-floor and Updated factory site successfully',
+              id: data.id
             }
           }
         } catch(err) {

@@ -5,7 +5,7 @@ import { FactorySiteService } from './endpoints/factory-site/factory-site.servic
 import { ShopFloorService } from './endpoints/shop-floor/shop-floor.service';
 import { AssetService } from './endpoints/asset/asset.service';
 import { TokenService } from './endpoints/session/token.service';
-import axios from 'axios';
+import { replaceEntity } from './utils/ngsi-ld';
 
 async function clearRelation() {
     const logger = new Logger('clearRelation');
@@ -30,19 +30,18 @@ async function clearRelation() {
         console.log('factoryData ',factoryData);
         for(let i = 0; i < factoryData.length; i++) {
             let eachFactory = factoryData[i];
+            // NGSI-LD has no empty link: clearing a link removes the attribute.
             let hasShopFloorKey = Object.keys(eachFactory).find(key => key.includes("has"));
-            eachFactory[hasShopFloorKey].object = "";
-            await factoryService.removeScript(eachFactory.id, token);
-            await axios.post(scorpioUrl, eachFactory, {headers});
+            if (hasShopFloorKey) delete eachFactory[hasShopFloorKey];
+            await replaceEntity(scorpioUrl, eachFactory, headers);
 
             // Clear Asset Relation to ShopFloor For Each Factory
             const shopFloorData = await shopFloorService.findAll(eachFactory.id, token);
             for(let i = 0; i < shopFloorData.length; i++) {
                 let eachShopFloor = shopFloorData[i];
                 let hasAssetKey = Object.keys(eachShopFloor).find(key => key.includes("has"));
-                eachShopFloor[hasAssetKey].object = "";
-                await shopFloorService.remove(eachShopFloor.id, token);
-                await axios.post(scorpioUrl, eachShopFloor, {headers});
+                if (hasAssetKey) delete eachShopFloor[hasAssetKey];
+                await replaceEntity(scorpioUrl, eachShopFloor, headers);
             }
         }
         logger.log('Factory And ShopFloor Relations Deleted Successfully');
@@ -52,13 +51,13 @@ async function clearRelation() {
         console.log('assetData ',assetData);
         for(let i = 0; i < assetData.length; i++) {
             let eachAsset = assetData[i];
-            Object.keys(eachAsset).map(key => {
-                if(key.includes("has")) {
-                    eachAsset[key].object = "";
+            Object.keys(eachAsset).forEach(key => {
+                const first = Array.isArray(eachAsset[key]) ? eachAsset[key][0] : eachAsset[key];
+                if(key.includes("has") && first?.type === 'Relationship') {
+                    delete eachAsset[key];
                 }
             })
-            await assetService.deleteAssetById(eachAsset.id, token);
-            await axios.post(scorpioUrl, eachAsset, {headers});
+            await replaceEntity(scorpioUrl, eachAsset, headers);
         }
         logger.log('Asset Relations Deleted Successfully');
         logger.log('Function Ran Successfully');

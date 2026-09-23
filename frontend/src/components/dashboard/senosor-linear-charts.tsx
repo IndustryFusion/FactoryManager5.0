@@ -254,6 +254,9 @@ const CombineSensorChart: React.FC = () => {
   const cardRef = useRef<HTMLDivElement>(null);
   const lastUpdateRef = useRef<number>(Date.now());
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  // Has a live reading arrived at all? Without this the chip counted seconds
+  // since the page opened, which reads as fresh data for a machine that sends none.
+  const [hasLiveReading, setHasLiveReading] = useState(false);
   const [thresholdsByAttr, setThresholdsByAttr] = useState<Record<string, {
     upperWarning: string; lowerWarning: string; upperAlarm: string; lowerAlarm: string;
   }>>({});
@@ -522,9 +525,11 @@ const CombineSensorChart: React.FC = () => {
         if (typeof val !== "object" || val === null) return;
         const shortKey = key.split("/").pop() ?? key;
         // Sub-property key ending in "unit" (e.g. "https://.../unit") or NGSI-LD "unitCode"
-        const unitEntry = Object.entries(val as Record<string, any>).find(
-          ([innerKey]) => innerKey.endsWith("unit") || innerKey === "unitCode"
-        );
+        // Prefer the unit symbol ("°C"); the UN/CEFACT unitCode ("CEL") is the fallback.
+        const entries = Object.entries(val as Record<string, any>);
+        const unitEntry =
+          entries.find(([innerKey]) => innerKey.endsWith("unit")) ??
+          entries.find(([innerKey]) => innerKey === "unitCode");
         if (unitEntry) {
           const unitVal = unitEntry[1];
           const unitStr = typeof unitVal === "object" ? unitVal?.value : unitVal;
@@ -910,6 +915,7 @@ const CombineSensorChart: React.FC = () => {
     socketRef.current.on("dataUpdate", (updatedData: []) => {
       console.log("WebSocket: Received update (", updatedData.length, "records)");
       lastUpdateRef.current = Date.now();
+      if (updatedData.length > 0) setHasLiveReading(true);
       setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
     });
 
@@ -1266,6 +1272,8 @@ const CombineSensorChart: React.FC = () => {
   const freshnessClass =
     selectedInterval !== "live"
       ? ""
+      : !hasLiveReading
+      ? "freshness-none"
       : secondsSinceUpdate > 60
       ? "freshness-stale"
       : secondsSinceUpdate > 30
@@ -1275,6 +1283,8 @@ const CombineSensorChart: React.FC = () => {
   const freshnessLabel =
     selectedInterval !== "live"
       ? null
+      : !hasLiveReading
+      ? t("dashboard:no_live_data")
       : secondsSinceUpdate < 5
       ? t("dashboard:updated_just_now")
       : `${secondsSinceUpdate}s ${t("dashboard:ago")}`;

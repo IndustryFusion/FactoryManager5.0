@@ -30,7 +30,9 @@ import { Asset } from "@/types/asset-types";
 import Image from "next/image";
 
 import { notifyError } from "@/utility/global-toast";
-import { logHandledError } from "@/utility/log";
+import { isMachineRunning } from "@/utility/machine-state";
+import { logHandledError } from "@/utility/log";import { linkTargets } from "@/utility/ngsi-links";
+
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
@@ -67,7 +69,8 @@ const DashboardCards: React.FC = () => {
         }
     }
 
-    const fetchData = async () => {
+    // Returns true when a real machine_state reading was found (and the clock started).
+    const fetchData = async (): Promise<boolean> => {
         try {
             setDifference("00:00:00");
             let attributeId: string | undefined = await fetchAssets(entityIdValue);
@@ -86,19 +89,22 @@ const DashboardCards: React.FC = () => {
                     withCredentials: true,
                 }) 
     
-                if (Array.isArray(response.data) && response.data.length > 0) {
-                    if (response.data[0]?.value !== "0" && response.data[0]?.value !== "NULL") {
-                        const timeValueReceived = findDifference(response.data[0]?.observedAt);
-                        setDifference(timeValueReceived);
-                        setPrevTimer(timeValueReceived); //set intial timer value
-                    }
-                } 
+                // Only a real reading starts the uptime clock. Without one there is
+                // nothing to count from, and the timer used to tick up from 00:00:00
+                // for a machine that has never reported.
+                if (Array.isArray(response.data) && response.data.length > 0 && isMachineRunning(response.data[0]?.value)) {
+                    const timeValueReceived = findDifference(response.data[0]?.observedAt);
+                    setDifference(timeValueReceived);
+                    setPrevTimer(timeValueReceived); //set intial timer value
+                    return true;
+                }
             } 
         }
         catch (error) {
             console.log("Error From fetchData function from @components/dashboard/dashboard-cards.tsx",error);
           notifyError(t('toast:error'), error, t('toast:load_dashboard_failed'));
         }
+        return false;
     }
 
     const fetchAssets = async (assetId: string) => {
@@ -125,8 +131,12 @@ const DashboardCards: React.FC = () => {
         }
     };
 
-    const runningSince = () => {
-        fetchData();
+    const runningSince = async () => {
+        const hasReading = await fetchData();
+        if (!hasReading) {
+            setDifference("00:00:00");
+            return;
+        }
         intervalId = setInterval(() => {
             setDifference(prevTimer => {
                 const [hours, minutes, seconds] = prevTimer.split(':').map(Number);
@@ -165,16 +175,10 @@ const DashboardCards: React.FC = () => {
         propertiesArray.forEach(property => {
             const key = Object.keys(property)[0];
             const value = property[key];
-            if (Array.isArray(value) && value.length > 0) {
-                value.forEach((item:AssetData) => {
-                    if (item.object !== "json-ld-1.1" && item.object !== "NULL") {
-                        setChildCount((prev) => prev + 1);
-                        setRelationsCount((prev) => prev + 1);
-                    }
-                })
-            } else if (typeof value === "object" && value.object !== "json-ld-1.1" && value.object !== "NULL") {
-                setRelationsCount((prev) => prev + 1);
-                setChildCount((prev) => prev + 1);
+            const targets = linkTargets(value).length;
+            if (targets > 0) {
+                setChildCount((prev) => prev + targets);
+                setRelationsCount((prev) => prev + targets);
             }
         })
 
@@ -209,7 +213,7 @@ const DashboardCards: React.FC = () => {
     }
 
     useEffect(() => {
-        if (machineStateValue !== "0" && machineStateValue !== "NULL") {
+        if (isMachineRunning(machineStateValue)) {
             runningSince();
         } else {
             setDifference("00:00:00")
@@ -239,8 +243,8 @@ const DashboardCards: React.FC = () => {
         fetchAllAlerts();
     }, [entityIdValue])
 
-    // Same condition the header and cards have always used — unchanged.
-    const isRunning = machineStateValue !== "0" && machineStateValue !== "NULL";
+    // A machine counts as running only on a real reading: see isMachineRunning.
+    const isRunning = isMachineRunning(machineStateValue);
 
     return (
         <div className="dv_status_row">

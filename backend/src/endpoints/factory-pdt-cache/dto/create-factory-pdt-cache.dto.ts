@@ -2,7 +2,7 @@ export class CreateFactoryPdtCacheDto {
     _id?: string;
     company_ifric_id: string;
     product_name: string;
-    product_image: string;
+    product_image: string[];
     type: string;
     asset_status: string;
     asset_category: string;

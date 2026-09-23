@@ -88,6 +88,17 @@ function MyApp({ Component, pageProps, router }: AppProps) {
       <PrimeReactProvider>
         <AlertsProvider>
         <Head>
+          <title>Green Smart Factory</title>
+          <meta name="description" content="IndustryFusion-X" key="description" />
+          <meta property="og:title" content="Green Smart Factory" key="og:title" />
+          <meta property="og:description" content="IndustryFusion-X" key="og:description" />
+          <meta property="og:type" content="website" key="og:type" />
+          <meta property="og:site_name" content="Green Smart Factory" key="og:site_name" />
+          <meta property="og:image:width" content="1200" key="og:image:width" />
+          <meta property="og:image:height" content="630" key="og:image:height" />
+          <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
+          <meta name="twitter:title" content="Green Smart Factory" key="twitter:title" />
+          <meta name="twitter:description" content="IndustryFusion-X" key="twitter:description" />
           <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         </Head>
         {isReady && (

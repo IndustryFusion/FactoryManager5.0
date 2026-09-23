@@ -33,7 +33,8 @@ import { useTranslation } from "next-i18next";
 import { CountryOption } from "../../types/factory-form";
 
 import { getErrorMessage } from "@/utility/error-message";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { attrValue, linkTargets } from "@/utility/ngsi-links";
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface ShopFloorEditProps {
@@ -96,9 +97,9 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
                             ""
                         );
                         if (newKey.includes("has")) {
-                            acc[newKey] = shopFloorData[key].object;
+                            acc[newKey] = linkTargets(shopFloorData[key]);
                         } else {
-                            acc[newKey] = shopFloorData[key].value;
+                            acc[newKey] = attrValue(shopFloorData[key]);
                         }
                     } else {
                         acc[key] = shopFloorData[key];

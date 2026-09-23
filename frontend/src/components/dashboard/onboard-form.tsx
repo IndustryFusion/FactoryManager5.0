@@ -36,7 +36,8 @@ import { getAssetById, getRawAssetById } from "@/utility/asset";
 import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
 
 import { notifyError } from "@/utility/global-toast";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { attrValue } from "@/utility/ngsi-links";
+
 type OnboardDataKey = keyof OnboardData;
 
 interface OnboardFormProps {
@@ -109,7 +110,7 @@ const extractOpcUaSpecs = (rawAssetData: any): Array<{ node_id: string; identifi
             prop.type === "Property" &&
             prop[SEGMENT_KEY]?.value === "realtime"
         ) {
-            const bindingPoint = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
+            const bindingPoint = resolveBindingPoint(attrValue(prop[BINDING_POINT_KEY]));
             if (isOpcUaBindingPoint(bindingPoint)) {
                 const parts = bindingPoint.split(";");
                 const node_id = parts[0] || "";
@@ -132,7 +133,7 @@ const extractMqttSpecs = (rawAssetData: any): Array<{ topic: string; key: never[
             prop.type === "Property" &&
             prop[SEGMENT_KEY]?.value === "realtime"
         ) {
-            const bindingPoint = resolveBindingPoint(prop[BINDING_POINT_KEY]?.value);
+            const bindingPoint = resolveBindingPoint(attrValue(prop[BINDING_POINT_KEY]));
             if (!isOpcUaBindingPoint(bindingPoint)) {
                 specifications.push({ topic: bindingPoint, key: [], parameter: [key] });
             }

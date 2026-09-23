@@ -1,0 +1,204 @@
+{
+  "machine_state": {
+    "type": "number",
+    "title": "Machine State",
+    "description": "Real state of the machine",
+    "readOnly": true,
+    "segment": "realtime",
+    "model": false,
+    "owner_ref": "application",
+    "accuracy": 0,
+    "conversionUnit": "null",
+    "dataType": "null",
+    "bindingPoint": [
+      {
+        "state": "Online_Idle",
+        "path": "null",
+        "map": "null"
+      },
+      {
+        "state": "Run",
+        "path": "null",
+        "map": "null"
+      },
+      {
+        "state": "Online_Error",
+        "path": "null",
+        "map": "null"
+      },
+      {
+        "state": "Online_Maintenance",
+        "path": "null",
+        "map": "null"
+      },
+      {
+        "state": "Setup",
+        "path": "null",
+        "map": "null"
+      },
+      {
+        "state": "Testing",
+        "path": "null",
+        "map": "null"
+      }
+    ],
+    "functionTopic": [
+      "Eqaas",
+      "Production Sharing",
+      "Predictive Maintenance"
+    ],
+    "customConfig": "null"
+  },
+  "ambient_operating_temperature_max": {
+    "title": "Ambient Operating Temperature (max.)",
+    "type": "number",
+    "description": "The max temperature in °C",
+    "unit": "°C",
+    "segment": "parameter",
+    "model": true,
+    "owner_ref": "manufacturer"
+  },
+  "net_weight": {
+    "title": "Net Weight",
+    "type": "number",
+    "description": "Net Weight in kilograms",
+    "unit": [
+      "kg",
+      "g"
+    ],
+    "segment": "packaging",
+    "model": true,
+    "owner_ref": "manufacturer"
+  },
+  "weight_percentage_of_total": {
+    "title": "Weight or % of Total",
+    "type": "number",
+    "description": "Weight of the  ingredient",
+    "unit": [
+      "%",
+      "kg",
+      "g"
+    ],
+    "segment": "sub_main",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "parents": [
+      "list_of_ingredients",
+      "list_of_materials",
+      "packaging_materials"
+    ]
+  },
+  "adjusted_total_co2": {
+    "title": "Adjusted Total CO₂",
+    "type": "number",
+    "description": "Adjusted Total CO₂",
+    "unit": "kgCO₂",
+    "segment": "environment",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "parents": [
+      "calculated_total_co2"
+    ]
+  },
+  "adjusted_source": {
+    "title": "Adjusted Source",
+    "type": "string",
+    "description": "Adjusted Source",
+    "segment": "environment",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "enum": [
+      "Life Cycle Assessment (LCA)",
+      "3rd Party Verified CO₂ Audit",
+      "Manufacturer Declaration",
+      "Standardized Database",
+      "Internal Calculation",
+      "Approximation"
+    ],
+    "parents": [
+      "calculated_total_co2"
+    ]
+  },
+  "article_number": {
+    "title": "Article Number",
+    "type": "string",
+    "description": "Article number description - An internal or industry-specific identifier used by the company to track and manage types of parts or products.",
+    "segment": "identification",
+    "model": true,
+    "owner_ref": "manufacturer"
+  },
+  "animal_origin": {
+    "title": "Contains animal-derived substance",
+    "type": "boolean",
+    "description": "Contains animal-derived substance",
+    "segment": "sub_properties",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "parents": [
+      "list_of_ingredients"
+    ]
+  },
+  "manufacturer_product_description": {
+    "title": "Model Short Description",
+    "type": "string",
+    "description": "Description of the product, it's technical features and implementation if needed (long text)",
+    "segment": "model",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "format": "textarea",
+    "maxLength": 200,
+    "translation": true
+  },
+  "hasController": {
+    "title": "Controller",
+    "description": "Controller",
+    "segment": "component",
+    "model": false,
+    "owner_ref": "application",
+    "class": "machine",
+    "relationship": "https://industry-fusion.org/base/v0.1/gasController",
+    "relationship_type": "peer"
+  },
+  "creation_date": {
+    "title": "Asset Creation Date",
+    "type": "date",
+    "description": "Date of the creation of asset",
+    "segment": "application",
+    "model": false,
+    "owner_ref": "application",
+    "readOnly": true
+  },
+  "user_manuals": {
+    "title": "User Manuals",
+    "type": "object",
+    "description": "User manual related to asset",
+    "segment": "instruction",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "contentEncoding": "base64",
+    "contentMediaType": "application/pdf",
+    "enum": []
+  },
+  "voltage_type": {
+    "title": "Voltage Type",
+    "type": "array",
+    "description": "Voltage type",
+    "segment": "parameter",
+    "model": true,
+    "owner_ref": "manufacturer",
+    "enum": [
+      "AC",
+      "DC",
+      "3-phase AC"
+    ]
+  },
+  "items_per_batch": {
+    "title": "Items Per Batch",
+    "type": "number",
+    "description": "Total number of items in a batch.",
+    "unit": "units",
+    "segment": "identification",
+    "model": false,
+    "owner_ref": "manufacturer"
+  }
+}

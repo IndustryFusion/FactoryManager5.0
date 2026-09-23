@@ -43,7 +43,8 @@ import { CountryOption } from "../../types/factory-form";
 import { Dropdown } from "primereact/dropdown";
 
 import { getErrorMessage } from "@/utility/error-message";
-import { logHandledError } from "@/utility/log";
+import { logHandledError } from "@/utility/log";import { linkTargets } from "@/utility/ngsi-links";
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 interface FactoryEditProps {
@@ -246,10 +247,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
                     <div className="field mb-4">
                         <label >hasShopFloor</label>
                         <ul className="p-0 shop-floors">
-                            {Array.isArray(editedFactory?.[key].object)
-                                && editedFactory?.[key].object.length > 0
-                                && editedFactory?.[key].object.includes('urn')
-                                && editedFactory?.[key].object.map((shop: string, index: number) =>
+                            {linkTargets(editedFactory?.[key]).map((shop: string, index: number) =>
                                     <div key={index}>
                                         <li>{shop}</li>
                                     </div>
