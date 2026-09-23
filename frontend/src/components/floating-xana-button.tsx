@@ -2,6 +2,7 @@
 "use client";
 
 import { generateToken } from "@/utility/auth";
+import { XANA_ROUTING_ENABLED } from "@/utility/xana";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue } from "framer-motion";
@@ -37,6 +38,10 @@ export default function FloatingXanaButton() {
 
   async function handleXanaOpen() {
     if (dragging) return; // block click during drag
+    // Switched off until the suite ships XANA PDT AI: XANA AI is hidden in
+    // the app grid, so this would open something the suite no longer offers.
+    // The button stays visible; see utility/xana.ts.
+    if (!XANA_ROUTING_ENABLED) return;
     const token = await getAccessGroup();
     const response = await generateToken({ token: token.ifricdi, product_name: "XANA AI" });
     if (response?.data?.token) {
