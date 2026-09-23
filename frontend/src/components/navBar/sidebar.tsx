@@ -6,6 +6,7 @@ import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { encryptRoute, generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import { getErrorMessage } from "@/utility/error-message";
+import { XANA_ROUTING_ENABLED } from "@/utility/xana";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
@@ -103,6 +104,10 @@ function Sidebar() {
   }
 
   async function handleXanaRoute() {
+    // Switched off until the suite ships XANA PDT AI: XANA AI is hidden in
+    // the app grid, so this would open something the suite no longer offers.
+    // The button stays visible; see utility/xana.ts.
+    if (!XANA_ROUTING_ENABLED) return;
     const token = await getAccessGroup();
     const response = await generateToken({ token: token.ifricdi });
     if (response && response.data) {
