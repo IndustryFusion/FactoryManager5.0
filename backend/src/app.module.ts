@@ -19,6 +19,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ScorpioStoresBootstrap } from './bootstrap/scorpio-stores.bootstrap';
+import { PdtViewsBootstrap } from './bootstrap/pdt-views.bootstrap';
 import { AuthService } from './endpoints/auth/auth.service';
 import { AuthController } from './endpoints/auth/auth.controller';
 import { AlertsService } from './endpoints/alerts/alerts.service';
@@ -133,6 +135,11 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CompanyController
   ],
   providers: [
+    // Provisioning that used to be manual post-deployment steps in the README:
+    // the Scorpio holder entities, and the dashboard views in the PDT
+    // database. Both run once at startup and neither is fatal.
+    ScorpioStoresBootstrap,
+    PdtViewsBootstrap,
     AppService,
     AuthService,
     RouteHandoffService,

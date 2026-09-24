@@ -1,67 +1,34 @@
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FIndustryFusion%2FFactoryManager5.0.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2FIndustryFusion%2FFactoryManager5.0?ref=badge_shield&issueType=license)
+//
+// Copyright (c) 2024 IB Systems GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-
-## Factory Manager 5.0 (For Factory Owners)
-
-The Factory Manager 5.0 IFF application is responsible for managing the linked assets and thier data in the context of factories owned by the user. The assets created in Fleet Manager 5.0 can be imported to Factory Manager using the 'Import Assets' feature in the demo version or using IF-X dataspace manager in upcoming commercial version.
-
-For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running on the central IFF factory server with machines connected it using individual gateways. For detailed information on setup of the factory server and gateways to deploy PDT and data agents is described [here](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md). Once the PDT is setup in the factory, the Factory Manager can be deployed on the same network to interact with the PDT semantic model and data. The Factory Manager can only manage and link the assets, the creation must be always done in Fleet Manager.
-
-The PDT is also used in Factory Manager to create and handle Factory and ShopFloor objects, which need a couple of ID store objects in Scorpio.
-
-**The backend now creates these itself when it starts, so there is nothing to do here.** An existing store is never touched, so a counter that is already in use keeps its place. Set `FACTORY_AUTO_PROVISION=false` to opt out and create them by hand as below.
-
-Factories need no store at all any more: a factory's identifier is minted by the IFRIC registry when the factory is created, which is what makes it unique across deployments rather than only within one PDT. Set `IFRIC_REGISTRY_BACKEND_URL` instead.
-
-For reference, these are the objects the backend creates. In value, urn:ngsi-ld:shopFloors:2:XXX, the XXX range is your choice; the IDs then start from XXX+1. Replace the PDT URL accordingly.
-
-```bash
-
-curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
---header 'Content-Type: application/ld+json' \
---header 'Accept: application/ld+json' \
---data-raw '{
-    "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-    "id": "urn:ngsi-ld:shopFloor-id-store",
-    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-    "last-urn": {
-        "type": "Property",
-        "value": "urn:ngsi-ld:shopFloors:2:000"
-    }
-}'
-
-curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
---header 'Content-Type: application/ld+json' \
---header 'Accept: application/ld+json' \
---data-raw '{
-    "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-    "id": "urn:ngsi-ld:global-allocated-assets-store",
-    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-    "http://www.industry-fusion.org/schema#last-data": {
-        "type": "Relationship",
-        "object": ["default"]
-    }
-}'
-
-```
-
-The data dashboards read a set of views in the PDT's Postgres.
-
-**The backend creates these itself at startup too**, provided it is given a connection: set `PDT_DB_HOST`, `PDT_DB_PORT`, `PDT_DB_NAME`, `PDT_DB_USER` and `PDT_DB_PASSWORD`. Without `PDT_DB_HOST` it leaves the database alone and you create them by hand, as below. Every statement is safe to run again, so restarts cost nothing.
-
-To do it manually: using Kubectl enter the acid-cluster pod in PDT, then login to Postgres DB with the below command.
-
-```bash
-
-psql -U ngb -d tsdb
-
-```
-
-Then execute the following commands one by one,
-
-```sql
-
-CREATE OR REPLACE VIEW value_change_state_entries AS
+/**
+ * The views the data dashboards read, and the role PostgREST reads them as.
+ *
+ * Copied verbatim from the project README, which until now asked an operator
+ * to paste them into the PDT database by hand after every deployment. The
+ * only change is CREATE ROLE, which the README writes bare: that fails once
+ * the role exists, so it would break every restart after the first.
+ *
+ * Every statement is written to be safe to run again — CREATE OR REPLACE for
+ * the views, a guarded CREATE for the role, and GRANT, which is idempotent.
+ */
+export const PDT_VIEW_STATEMENTS: ReadonlyArray<{ label: string; sql: string }> = [
+  {
+    label: "view value_change_state_entries",
+    sql: `CREATE OR REPLACE VIEW value_change_state_entries AS
 SELECT *
 FROM (
     SELECT
@@ -107,9 +74,11 @@ FROM (
     FROM attributes
     WHERE "attributeId" = 'https://industry-fusion.org/base/v0.1/machine_state'
 ) sub
-WHERE value IS DISTINCT FROM prev_value;
-
-CREATE OR REPLACE VIEW power_emission_entries_days AS
+WHERE value IS DISTINCT FROM prev_value`,
+  },
+  {
+    label: "view power_emission_entries_days",
+    sql: `CREATE OR REPLACE VIEW power_emission_entries_days AS
 SELECT
   subquery."entityId",
   DATE_TRUNC('day', subquery.hour) AS day,
@@ -130,10 +99,11 @@ FROM (
   GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
 ) AS subquery
 GROUP BY subquery."entityId", DATE_TRUNC('day', subquery.hour)
-ORDER BY day;
-
-
-CREATE OR REPLACE VIEW power_emission_entries_weeks AS
+ORDER BY day`,
+  },
+  {
+    label: "view power_emission_entries_weeks",
+    sql: `CREATE OR REPLACE VIEW power_emission_entries_weeks AS
 SELECT
   subquery."entityId",
   DATE_TRUNC('week', subquery.hour) AS week,
@@ -154,10 +124,11 @@ FROM (
   GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
 ) AS subquery
 GROUP BY subquery."entityId", DATE_TRUNC('week', subquery.hour)
-ORDER BY week;
-
-
-CREATE OR REPLACE VIEW power_emission_entries_months AS
+ORDER BY week`,
+  },
+  {
+    label: "view power_emission_entries_months",
+    sql: `CREATE OR REPLACE VIEW power_emission_entries_months AS
 SELECT
   subquery."entityId",
   DATE_TRUNC('month', subquery.hour) AS month,
@@ -178,9 +149,11 @@ FROM (
   GROUP BY "entityId", DATE_TRUNC('hour', "observedAt")
 ) AS subquery
 GROUP BY subquery."entityId", DATE_TRUNC('month', subquery.hour)
-ORDER BY month;
-
-CREATE OR REPLACE VIEW machine_state_daily_stats AS
+ORDER BY month`,
+  },
+  {
+    label: "view machine_state_daily_stats",
+    sql: `CREATE OR REPLACE VIEW machine_state_daily_stats AS
 WITH cleaned AS (
     SELECT
         ("observedAt" AT TIME ZONE 'UTC')::date AS day,
@@ -223,9 +196,11 @@ SELECT
     pct_0, pct_1, pct_2,
     hours_0, hours_1, hours_2
 FROM percentages
-ORDER BY day DESC;
-
-CREATE OR REPLACE VIEW machine_state_2h_stats AS
+ORDER BY day DESC`,
+  },
+  {
+    label: "view machine_state_2h_stats",
+    sql: `CREATE OR REPLACE VIEW machine_state_2h_stats AS
 WITH cleaned AS (
     SELECT
         ("observedAt" AT TIME ZONE 'UTC')::date AS day,
@@ -276,71 +251,40 @@ SELECT
     pct_0, pct_1, pct_2,
     hours_0, hours_1, hours_2
 FROM formatted
-ORDER BY day DESC, interval_index ASC;
-
-CREATE ROLE PGREST;
-
-GRANT SELECT ON value_change_state_entries TO pgrest;
-
-GRANT SELECT ON power_emission_entries_days TO pgrest;
-
-GRANT SELECT ON power_emission_entries_weeks TO pgrest;
-
-GRANT SELECT ON power_emission_entries_months TO pgrest;
-
-GRANT SELECT ON machine_state_daily_stats TO pgrest;
-
-GRANT SELECT ON machine_state_2h_stats TO pgrest;
-```
-
-After creation, close the pod console and refresh the timescale bridge. For more information, use [this](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md#pdt-endpoints) document.
-
-The application also uses S3 as object storage, MongoDB for UI object storage and redis as cache storage. Create a demo S3 bucket in your favourite cloud provider, deploy redis using [this](https://github.com/OT-CONTAINER-KIT/redis-operator#quickstart) or using Docker and deploy MongoDB instance using Docker or Community Mongo Operator [link](https://github.com/mongodb/mongodb-kubernetes-operator/blob/master/docs/install-upgrade.md). Then feed the details in .env of backend folder together with PDT endpoint information as shown below.
-
-
-Exmaple .env of backend root folder:
-
-```
-
-GITHUB_BASE_URL=https://api.github.com/repos/<owner>/<repo>/contents
-GITHUB_TOKEN=<git token for above repo>
-API_URL=http://<PDT-URL>/auth/realms/iff/protocol/openid-connect/token
-CLIENT_ID=scorpio
-SCORPIO_URL=http://<PDT-URL>/scorpio/ngsi-ld/v1/entities
-S3_URL=<S3 URL>
-S3_ACCESS_KEY=<S3 Access Key>
-S3_SECRET_KEY=<S3 Secret Key>
-S3_BUCKET=<S3 Bukect Name>
-ALERTA_URL=http://<PDT-URL>/alerta/api
-ALERTA_KEY=<Alerta Key>
-TIMESCALE_URL=http://<PDT-URL>/pgrest/
-MONGO_URL=mongodb://<username>:<password>@<hostname or IP>:<port>/<DB_Name>?directconnection=true&retryWrites=true&w=majority
-CORS_ORIGIN=http://localhost:3002
-REDIS_SERVER=<hostname or IP>
-REDIS_PORT=6379
-
-```
-
-Once the .env is added to the code, install dependencies in 'backend' and 'frontend' projects using,
-
-```
-npm install
-```
-
-And then run the backend project using,
-
-```
-npm run start
-
-```
-
-And then run the frontend project using,
-
-```
-npm run dev
-
-```
-
-The UI application will be available at localhost:3002.
-
-Copyrights: IB Systems GmbH.
+ORDER BY day DESC, interval_index ASC`,
+  },
+  {
+    label: "role pgrest",
+    sql: `DO $do$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pgrest') THEN
+    CREATE ROLE pgrest;
+  END IF;
+END
+$do$`,
+  },
+  {
+    label: "grant on value_change_state_entries",
+    sql: `GRANT SELECT ON value_change_state_entries TO pgrest`,
+  },
+  {
+    label: "grant on power_emission_entries_days",
+    sql: `GRANT SELECT ON power_emission_entries_days TO pgrest`,
+  },
+  {
+    label: "grant on power_emission_entries_weeks",
+    sql: `GRANT SELECT ON power_emission_entries_weeks TO pgrest`,
+  },
+  {
+    label: "grant on power_emission_entries_months",
+    sql: `GRANT SELECT ON power_emission_entries_months TO pgrest`,
+  },
+  {
+    label: "grant on machine_state_daily_stats",
+    sql: `GRANT SELECT ON machine_state_daily_stats TO pgrest`,
+  },
+  {
+    label: "grant on machine_state_2h_stats",
+    sql: `GRANT SELECT ON machine_state_2h_stats TO pgrest`,
+  },
+];
