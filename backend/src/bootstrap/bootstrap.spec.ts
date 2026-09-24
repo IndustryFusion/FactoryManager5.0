@@ -15,6 +15,7 @@
 //
 
 import axios from 'axios';
+import { Logger } from '@nestjs/common';
 import { ScorpioStoresBootstrap } from './scorpio-stores.bootstrap';
 import { PdtViewsBootstrap } from './pdt-views.bootstrap';
 import { PDT_VIEW_STATEMENTS } from './pdt-views.sql';
@@ -23,9 +24,15 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const queries: string[] = [];
+/** Views the fake database reports as existing, and who owns them. */
+let existingViews: Array<{ viewname: string; viewowner: string }> = [];
+let currentUser = 'factory_admin';
+
 const client = {
   connect: jest.fn(),
   query: jest.fn(async (sql: string) => {
+    if (sql.includes('current_user')) return { rows: [{ me: currentUser }] };
+    if (sql.includes('pg_views')) return { rows: existingViews };
     queries.push(sql);
     return { rows: [] };
   }),
@@ -103,6 +110,8 @@ describe('PdtViewsBootstrap', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     queries.length = 0;
+    existingViews = [];
+    currentUser = 'factory_admin';
     delete process.env.FACTORY_AUTO_PROVISION;
     process.env.PDT_DB_HOST = 'pdt-db.test';
     process.env.PDT_DB_USER = 'ngb';
@@ -131,14 +140,64 @@ describe('PdtViewsBootstrap', () => {
     expect(role).toContain('pg_roles');
   });
 
+  it('leaves views owned by someone else alone, without calling them failures', async () => {
+    // What a real installation looks like: the views were created by hand
+    // from the README, so they belong to ngb and cannot be replaced or
+    // granted on by this connection. That is healthy, not an error.
+    existingViews = [
+      { viewname: 'value_change_state_entries', viewowner: 'ngb' },
+      { viewname: 'power_emission_entries_days', viewowner: 'ngb' },
+      { viewname: 'power_emission_entries_weeks', viewowner: 'ngb' },
+      { viewname: 'power_emission_entries_months', viewowner: 'ngb' },
+      { viewname: 'machine_state_daily_stats', viewowner: 'ngb' },
+      { viewname: 'machine_state_2h_stats', viewowner: 'ngb' },
+    ];
+    const errors = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    // Only the role statement is attempted; the twelve view ones are skipped.
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toContain('CREATE ROLE');
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('still creates a view that is missing', async () => {
+    existingViews = [{ viewname: 'value_change_state_entries', viewowner: 'ngb' }];
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    // The one owned elsewhere is skipped along with its grant; the rest run.
+    expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length - 2);
+  });
+
+  it('replaces views it owns itself', async () => {
+    existingViews = [{ viewname: 'value_change_state_entries', viewowner: 'factory_admin' }];
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length);
+  });
+
   it('carries on when one statement fails', async () => {
-    client.query.mockImplementationOnce(async () => {
-      throw new Error('permission denied');
+    // Fails the first view only - not the probes, which run before any of
+    // the statements and whose failure is a different path.
+    let failed = false;
+    client.query.mockImplementation(async (sql: string) => {
+      if (sql.includes('current_user')) return { rows: [{ me: currentUser }] };
+      if (sql.includes('pg_views')) return { rows: existingViews };
+      if (!failed && sql.startsWith('CREATE OR REPLACE VIEW')) {
+        failed = true;
+        throw new Error('permission denied');
+      }
+      queries.push(sql);
+      return { rows: [] };
     });
 
     await expect(new PdtViewsBootstrap().onModuleInit()).resolves.toBeUndefined();
-    // The remaining twelve are still attempted.
-    expect(client.query).toHaveBeenCalledTimes(PDT_VIEW_STATEMENTS.length);
+
+    // The other twelve still ran.
+    expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length - 1);
   });
 
   it('starts the service even when the database is unreachable', async () => {
