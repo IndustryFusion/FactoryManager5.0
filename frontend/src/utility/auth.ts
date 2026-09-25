@@ -123,7 +123,12 @@ export const getAccessGroupData = async(token: string, from?: string) => {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
         };
-        const response = await api.post(`${BACKEND_URL}/auth/decrypt-route`, {token, product_name: "Factory Manager"}, {
+        // Bare axios on purpose: this is part of establishing a session, so a
+        // 401 is an ordinary answer rather than a failure. Through the shared
+        // instance the response interceptor treats it as a lost session,
+        // attempts a refresh and shows the session-expired dialog - to someone
+        // who is in the middle of signing in.
+        const response = await axios.post(`${BACKEND_URL}/auth/decrypt-route`, {token, product_name: "Factory Manager"}, {
             headers: registryHeader
         });
         const loginData = {
@@ -191,7 +196,12 @@ export const generateToken = async (data: Record<string, string>) => {
         // The refresh token rides along so the backend can hand it to the
         // target app (server-to-server), letting that session refresh.
         const stored = await getAccessGroup().catch(() => null);
-        return await api.post(`${BACKEND_URL}/auth/generate-token`, {
+        // Bare axios on purpose: this is part of establishing a session, so a
+        // 401 is an ordinary answer rather than a failure. Through the shared
+        // instance the response interceptor treats it as a lost session,
+        // attempts a refresh and shows the session-expired dialog - to someone
+        // who is in the middle of signing in.
+        return await axios.post(`${BACKEND_URL}/auth/generate-token`, {
             ...data,
             ...(stored?.ifricdr ? { refresh_token: stored.ifricdr } : {}),
         });
@@ -221,7 +231,12 @@ export const authenticateToken = async () => {
     if (!stored?.ifricdi) {
       return false;
     }
-    const response = await api.get(`${BACKEND_URL}/auth/authenticate-token/${stored.ifricdi}`);
+    // Bare axios on purpose: this is part of establishing a session, so a
+    // 401 is an ordinary answer rather than a failure. Through the shared
+    // instance the response interceptor treats it as a lost session,
+    // attempts a refresh and shows the session-expired dialog - to someone
+    // who is in the middle of signing in.
+    const response = await axios.get(`${BACKEND_URL}/auth/authenticate-token/${stored.ifricdi}`);
     return response.data;
   };
   try {
