@@ -15,6 +15,7 @@
 // 
 
 import { Controller, Post, Delete, Req, Body, UseGuards, Get, Param, Query, Patch } from '@nestjs/common';
+import { Public } from './public.decorator';
 import { FindIndexedDbAuthDto, EncryptRouteDto, CompanyTwinDto, LoginDto } from './dto/token.dto';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
@@ -33,11 +34,13 @@ export class AuthController {
    * Ends the session in Keycloak as well as here. Public: by the time a user
    * logs out their access token may already have expired.
    */
+  @Public()
   @Post('logout')
   logout(@Body() data: { email: string; ifricdr?: string }) {
     return this.authService.logOut(data);
   }
 
+  @Public()
   @Post('refresh')
   refreshSession(@Body('ifricdr') ifricdr: string) {
     return this.authService.refreshSession(ifricdr);
@@ -49,6 +52,7 @@ export class AuthController {
   // one server-wide token in Redis; that token is the backend's own service
   // credential and TokenService still obtains it by itself from USERNAME and
   // PASSWORD, so no user login is needed for it.
+  @Public()
   @Post('login')
   userLogin(@Body() data: LoginDto) {
     return this.authService.logIn(data);
@@ -67,11 +71,13 @@ export class AuthController {
   // Server-to-server, from IFX Suite, immediately before it sends a user here
   // over SSO. Unguarded because the signed route token in the body is the
   // credential — see AuthService.receiveRouteHandoff.
+  @Public()
   @Post('receive-route-handoff')
   receiveRouteHandoff(@Body() body: { routeToken: string; ifricdr: string }) {
     return this.authService.receiveRouteHandoff(body);
   }
 
+  @Public()
   @Post('decrypt-route')
   decryptRoute(@Body() data: FindIndexedDbAuthDto) {
     try {
@@ -81,6 +87,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('generate-token')
   generateToken(@Body() data: Record<string, any>) {
     return this.authService.generateToken(data);
@@ -122,6 +129,7 @@ export class AuthController {
     return this.authService.getCompanyProducts(company_ifric_id, req);
   }
 
+  @Public()
   @Get('authenticate-token/:ifricdi')
   authenticateToken(@Param('ifricdi') ifricdi: string) {
     return this.authService.authenticateToken(ifricdi);

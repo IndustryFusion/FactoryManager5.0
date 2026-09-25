@@ -15,6 +15,7 @@
 // 
 
 import axios from "axios";
+import api from "@/utility/jwt";
 import { Button } from "primereact/button";
 import { Checkbox } from "primereact/checkbox";
 import { Dialog } from "primereact/dialog";
@@ -81,7 +82,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
     const getOnboardFormData = async () => {
         try {
-            const response = await axios.get(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`,
+            const response = await api.get(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -319,7 +320,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 console.log("edit payload", newpayload);
 
                 try {
-                    const response = await axios.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
+                    const response = await api.patch(API_URL + `/onboarding-asset/${editOnboardAssetProp.onboardAssetId}`, newpayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",

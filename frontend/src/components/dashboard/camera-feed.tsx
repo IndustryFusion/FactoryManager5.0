@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import api from "@/utility/jwt";
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
@@ -146,7 +147,7 @@ const CameraFeedBlock = () => {
   const fetchStreams = useCallback(async () => {
     if (!entityIdValue) return;
     try {
-      const res = await axios.get(`${API_URL}/cameras/devices`, {
+      const res = await api.get(`${API_URL}/cameras/devices`, {
         withCredentials: true,
       });
       const allStreams: StreamInfo[] = res.data?.streams ?? [];

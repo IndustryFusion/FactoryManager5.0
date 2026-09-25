@@ -15,6 +15,7 @@
 // 
 
 import React, { useEffect, useRef, useState } from "react";
+import api from "@/utility/jwt";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -169,7 +170,7 @@ const Relations = () => {
         const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
 
         try {
-            await axios.get(reactFlowUpdate, {
+            await api.get(reactFlowUpdate, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -191,7 +192,7 @@ const Relations = () => {
     const handleUpdateRelations = async (payload: Payload) => {
         const url = `${API_URL}/asset/update-relation`;
         try {
-            const response = await axios.patch(url, payload, {
+            const response = await api.patch(url, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",

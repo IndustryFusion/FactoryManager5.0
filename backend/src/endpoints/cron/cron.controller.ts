@@ -15,6 +15,7 @@
 // 
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query } from '@nestjs/common';
+import { Public } from '../auth/public.decorator';
 import { TokenService } from '../session/token.service';
 import { CronService } from './cron.service';
 
@@ -25,6 +26,7 @@ export class CronController {
         private readonly tokenService: TokenService
     ) {}
 
+    @Public()
     @Get()
     async validate() {
         try {

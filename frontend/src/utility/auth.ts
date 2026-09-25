@@ -123,7 +123,7 @@ export const getAccessGroupData = async(token: string, from?: string) => {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
         };
-        const response = await axios.post(`${BACKEND_URL}/auth/decrypt-route`, {token, product_name: "Factory Manager"}, {
+        const response = await api.post(`${BACKEND_URL}/auth/decrypt-route`, {token, product_name: "Factory Manager"}, {
             headers: registryHeader
         });
         const loginData = {
@@ -191,7 +191,7 @@ export const generateToken = async (data: Record<string, string>) => {
         // The refresh token rides along so the backend can hand it to the
         // target app (server-to-server), letting that session refresh.
         const stored = await getAccessGroup().catch(() => null);
-        return await axios.post(`${BACKEND_URL}/auth/generate-token`, {
+        return await api.post(`${BACKEND_URL}/auth/generate-token`, {
             ...data,
             ...(stored?.ifricdr ? { refresh_token: stored.ifricdr } : {}),
         });
@@ -221,7 +221,7 @@ export const authenticateToken = async () => {
     if (!stored?.ifricdi) {
       return false;
     }
-    const response = await axios.get(`${BACKEND_URL}/auth/authenticate-token/${stored.ifricdi}`);
+    const response = await api.get(`${BACKEND_URL}/auth/authenticate-token/${stored.ifricdi}`);
     return response.data;
   };
   try {

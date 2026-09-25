@@ -16,6 +16,7 @@
 // 
 
 import { Chart } from 'primereact/chart';
+import api from "@/utility/jwt";
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import ChartJS from 'chart.js/auto';
@@ -102,7 +103,7 @@ const PowerCo2Chart = () => {
   const fetchData = async (entityIdValue: string, selectedInterval: string, startTime: string, endTime: string) => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/power-consumption/chart`, {
+      const response = await api.get(`${API_URL}/power-consumption/chart`, {
         params: {
           'assetId': entityIdValue,
           'type': selectedInterval,
@@ -116,7 +117,7 @@ const PowerCo2Chart = () => {
         withCredentials: true,
       });
       if (reduxId !== entityIdValue) {
-        const firstValueResponse = await axios.get(`${API_URL}/power-consumption`, {
+        const firstValueResponse = await api.get(`${API_URL}/power-consumption`, {
           params: {
             entityId: `eq.${entityIdValue}`,
             limit: '1'
@@ -244,7 +245,7 @@ const PowerCo2Chart = () => {
     try {
       if (assetId) {
         let attributeId: string = '';
-        const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+        const response = await api.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",

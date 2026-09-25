@@ -15,6 +15,7 @@
 // 
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import api from "@/utility/jwt";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 import { Factory } from "@/types/factory-type";
@@ -70,7 +71,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     
     const findFactoryTemplate = async () => {
         try {
-            const response = await axios.get(API_URL + '/factory-site/template', {
+            const response = await api.get(API_URL + '/factory-site/template', {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -96,7 +97,7 @@ const EditFactory: React.FC<FactoryEditProps> = ({ factory, isEditProp, setIsEdi
     useEffect(() => {
         const fetchFactoryDetails = async (factory: string) => {
             try {
-                const response = await axios.get(`${API_URL}/factory-site/${factory}`, {
+                const response = await api.get(`${API_URL}/factory-site/${factory}`, {
                     headers: {
                         "Content-Type": "application/json",
                         Accept: "application/json",

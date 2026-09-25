@@ -15,13 +15,14 @@
 // 
 
 import axios from 'axios';
+import api from "@/utility/jwt";
 
 import { notifyError } from "@/utility/global-toast";
 export const getAlerts = async () => {
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     try {
         let url = API_URL + '/alerts';
-        const response = await axios.get(url);
+        const response = await api.get(url);
         return response.data;
     } catch (err) {
         console.log('Error From @component/alert/alert-service.ts ',err);
@@ -35,7 +36,7 @@ export const postStatusForAlert = async (id: string, data: any) => {
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     try {
         let url =  API_URL + '/alerts/' + id + '/status';
-        const response = await axios.post(url, data);
+        const response = await api.post(url, data);
         return response.data;
     } catch (err) {
         console.log('Error From @component/alert/alert-service.ts ',err);

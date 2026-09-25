@@ -15,6 +15,7 @@
 // 
 
 import axios from "axios";
+import api from "@/utility/jwt";
 import React, { useEffect, useState, ChangeEvent, useRef } from "react";
 import { Property, Schema } from "../../types/factory-form";
 import { InputText } from "primereact/inputtext";
@@ -76,7 +77,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
 
   const findShopFloorTemplate = async () => {
     try {
-      const response = await axios.get(API_URL + "/shop-floor/template", {
+      const response = await api.get(API_URL + "/shop-floor/template", {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -180,7 +181,7 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
     }
 
     try {
-      const response = await axios.post(API_URL + "/shop-floor", payload, {
+      const response = await api.post(API_URL + "/shop-floor", payload, {
         params: {
           "factory-id": factoryId,
         },

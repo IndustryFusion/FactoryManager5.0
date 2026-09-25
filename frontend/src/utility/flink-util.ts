@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "@/utility/jwt";
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
@@ -15,7 +16,7 @@ export const uploadValidationFiles =async(files: any)=>{
       }
     });
 
-    const response = await axios.post(`${backendUrl}/jobs/create`, formData, {
+    const response = await api.post(`${backendUrl}/jobs/create`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

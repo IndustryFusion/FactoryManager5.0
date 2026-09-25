@@ -15,6 +15,7 @@
 // 
 
 import { useDashboard } from "@/context/dashboard-context";
+import api from "@/utility/jwt";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -79,7 +80,7 @@ const RelationDialog: React.FC<RelationPopupProps> = ({ relationsProp, setRelati
 
     const relationParent = async () => {
         try {
-            const response = await axios.get(API_URL + "/asset/parent-ids", {
+            const response = await api.get(API_URL + "/asset/parent-ids", {
                 params: {
                     "asset-id": selectedAssetData?.id,
                     // selectedAssetData is the raw NGSI-LD entity: the category

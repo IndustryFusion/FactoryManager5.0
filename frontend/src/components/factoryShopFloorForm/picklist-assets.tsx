@@ -15,6 +15,7 @@
 // 
 
 import { getShopFloorAssets, fetchAllocatedAssets, getNonShopFloorAsset } from "@/utility/factory-site-utility";
+import api from "@/utility/jwt";
 import { PickList } from "primereact/picklist";
 import { RootState } from "@/redux/store";
 import { create, reset } from "@/redux/unAllocatedAsset/unAllocatedAssetSlice";
@@ -193,7 +194,7 @@ const PicklistAssets = () => {
     async function updateReactFlow(factoryId: string) {
         const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
         try {
-            await axios.get(reactFlowUpdate, {
+            await api.get(reactFlowUpdate, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -211,7 +212,7 @@ const PicklistAssets = () => {
         const payload = getPayload();
         const url = `${API_URL}/shop-floor/update-asset`;
         try {
-            const response = await axios.patch(url, payload, {
+            const response = await api.patch(url, payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",

@@ -41,7 +41,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
 
   export const fetchAsset = async()=>{
     try{
-        const response = await axios.get(API_URL + "/asset/get-owner-asset", {
+        const response = await api.get(API_URL + "/asset/get-owner-asset", {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
@@ -80,7 +80,7 @@ const mapBackendDataToAsset = (backendData: any[]): Asset[] => {
   export const fetchFormAllocatedAsset =async(payload:{})=>{
     const url = `${API_URL}/allocated-asset/form`;
     try{
-      const response = await axios.post(url, payload, {
+      const response = await api.post(url, payload, {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
