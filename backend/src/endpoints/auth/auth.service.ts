@@ -48,6 +48,25 @@ export class AuthService {
    * Unrelated to `login(username, password)` below, which obtains the backend's
    * own IFF service token for TokenService.
    */
+  /**
+   * This installation belongs to one company; nobody else may sign in.
+   *
+   * The same rule AuthGuard applies to every request, applied once at sign-in
+   * so the user is told on the form rather than by an error on a page they
+   * have already been taken to. Unset, every company is accepted, as before.
+   */
+  private assertOwnCompany(callerCompany: string | undefined): void {
+    const instanceCompany = process.env.INSTANCE_COMPANY_IFRIC_ID;
+    if (!instanceCompany) return;
+    if (callerCompany && callerCompany === instanceCompany) return;
+
+    throw new HttpException(
+      `This installation belongs to ${instanceCompany}. ` +
+        'Sign in with that company\'s account.',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
   async logIn(data: LoginDto) {
     try {
       const registryResponse = await axios.post(
@@ -63,6 +82,9 @@ export class AuthService {
       if (body?.status != 200 || !body?.data?.jwt_token) {
         throw new HttpException(body?.message ?? 'Login failed', HttpStatus.UNAUTHORIZED);
       }
+      // Refused here rather than on the first guarded call afterwards: the
+      // credentials are right, the account simply belongs elsewhere.
+      this.assertOwnCompany(body?.data?.company_ifric_id);
       body.data.ifricdi = this.mask(await this.encryptData(body.data.jwt_token), this.MASK_SECRET);
       delete body.data.jwt_token;
       delete body.data.access_token;
