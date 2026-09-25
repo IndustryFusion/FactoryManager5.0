@@ -15,6 +15,7 @@
 //
 const moment = require('moment');
 import { Dialog } from "primereact/dialog";
+import api from "@/utility/jwt";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import "../../styles/dashboard.css"
@@ -83,7 +84,7 @@ const AssetManagementDialog: React.FC<AssetManagementDialogProps> = ({ assetMana
   const deleteAssetData = async () => {
     if (!deleteAssetId) return;
     try {
-      const response = await axios.delete(API_URL + `/asset/delete-asset/${deleteAssetId}`, {
+      const response = await api.delete(API_URL + `/asset/delete-asset/${deleteAssetId}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

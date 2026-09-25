@@ -178,7 +178,7 @@ export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
       throw new Error('Authentication token not found');
     }
     
-    const response = await axios.post(
+    const response = await api.post(
       `${BACKEND_API_URL}/asset/get-owner-asset/${company_ifric_id}`,
       {}, 
       {
@@ -199,7 +199,7 @@ export const setFactoryOwnerAssets = async (company_ifric_id: string)=> {
 
 export const getSyncPdtData = async (company_ifric_id: string)=> {
   try {
-    const response = await axios.get(
+    const response = await api.get(
       `${BACKEND_API_URL}/company/get-sync-pdt-data/${company_ifric_id}`);
     console.log("resposne from getSyncPdtData ",response.data)
     return response.data;
@@ -210,7 +210,7 @@ export const getSyncPdtData = async (company_ifric_id: string)=> {
 
 export const getSyncPdtCount = async (company_ifric_id: string)=> {
   try {
-    const response = await axios.get(
+    const response = await api.get(
       `${BACKEND_API_URL}/company/get-sync-pdt-count/${company_ifric_id}`);
     return response.data;
   } catch (error: any) {

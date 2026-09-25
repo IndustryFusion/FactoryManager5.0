@@ -15,6 +15,7 @@
 // 
 
 import axios from "axios";
+import api from "@/utility/jwt";
 
 import { useRouter } from "next/router";
 
@@ -24,7 +25,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const fetchAsset = async () => {
   try {
-    const response = await axios.get(`${API_URL}/asset`, {
+    const response = await api.get(`${API_URL}/asset`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -39,7 +40,7 @@ export const fetchAsset = async () => {
 };
 export const createNewAsset = async (templateId: string) => {
   try {
-    const response = await axios.post(
+    const response = await api.post(
       `${API_URL}/asset/${templateId}`,
 
       {
@@ -90,7 +91,7 @@ export const handleEditClick = async (assetId: string) => {
   const router = useRouter();
 
   try {
-    const response = await axios.patch(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
+    const response = await api.patch(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

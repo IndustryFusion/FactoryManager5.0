@@ -1,5 +1,6 @@
 
 import "../../styles/factory-overview.css";
+import api from "@/utility/jwt";
 import { useRef, useState, useEffect } from "react";
 import Footer from "@/components/navBar/footer";
 import Navbar from "@/components/navBar/navbar";
@@ -90,7 +91,7 @@ const FactoryOverview1 = () => {
 
   const fetchFactoryLists = async () => {
     try {
-      const response = await axios.get(`${API_URL}/factory-site`, {
+      const response = await api.get(`${API_URL}/factory-site`, {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         withCredentials: true,
       });

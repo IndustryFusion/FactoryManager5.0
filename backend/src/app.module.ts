@@ -19,6 +19,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './endpoints/auth/auth.guard';
 import { ScorpioStoresBootstrap } from './bootstrap/scorpio-stores.bootstrap';
 import { PdtViewsBootstrap } from './bootstrap/pdt-views.bootstrap';
 import { AuthService } from './endpoints/auth/auth.service';
@@ -135,6 +137,11 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     CompanyController
   ],
   providers: [
+    // Authentication is deny-by-default: every route is guarded unless it
+    // carries @Public(), so a new handler is protected whether or not its
+    // author thought about it. The guard also refuses a caller from another
+    // company - this installation belongs to one.
+    { provide: APP_GUARD, useClass: AuthGuard },
     // Provisioning that used to be manual post-deployment steps in the README:
     // the Scorpio holder entities, and the dashboard views in the PDT
     // database. Both run once at startup and neither is fatal.

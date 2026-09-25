@@ -22,6 +22,7 @@ import React, {
   MouseEvent,
 } from "react";
 import { useRouter } from "next/router";
+import api from "@/utility/jwt";
 import { useHotkeys } from "react-hotkeys-hook"; // Import the hook for handling keyboard shortcuts
 import ReactFlow, {
   addEdge,
@@ -624,7 +625,7 @@ const FlowEditor: React.FC<
       try {
         setIsOperationInProgress(true);
 
-        const getReactFlowMongo = await axios.get(
+        const getReactFlowMongo = await api.get(
           `${API_URL}/react-flow/${factoryId}`,
           {
             headers: {
@@ -778,7 +779,7 @@ const FlowEditor: React.FC<
     try {
       setIsOperationInProgress(true);
 
-      const reactFlowUpdateMongo = await axios.patch(
+      const reactFlowUpdateMongo = await api.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
         {
@@ -800,7 +801,7 @@ const FlowEditor: React.FC<
           life: 3000,
         });
       }
-      const reactAllocatedAssetScorpio = await axios.patch(
+      const reactAllocatedAssetScorpio = await api.patch(
         `${API_URL}/allocated-asset`,
         payLoad.factoryData.edges,
         {
@@ -824,7 +825,7 @@ const FlowEditor: React.FC<
           life: 3000,
         });
       }
-      const reactFlowScorpioUpdate = await axios.patch(
+      const reactFlowScorpioUpdate = await api.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
@@ -885,7 +886,7 @@ const FlowEditor: React.FC<
     console.log("factoryData", payLoad)
     try {
       setIsOperationInProgress(true);
-      const reactFlowUpdateMongo = await axios.post(
+      const reactFlowUpdateMongo = await api.post(
         `${API_URL}/react-flow`,
         payLoad,
         {
@@ -907,7 +908,7 @@ const FlowEditor: React.FC<
         });
       }
 
-      const reactAllocatedAssetScorpio = await axios.post(
+      const reactAllocatedAssetScorpio = await api.post(
         API_URL + "/allocated-asset",
         payLoad.factoryData.edges,
         {
@@ -933,7 +934,7 @@ const FlowEditor: React.FC<
         });
       }
 
-      const reactFlowScorpioUpdate = await axios.patch(
+      const reactFlowScorpioUpdate = await api.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
@@ -996,7 +997,7 @@ const FlowEditor: React.FC<
     };
 
     try {
-      const reactFlowUpdateMongo = await axios.patch(
+      const reactFlowUpdateMongo = await api.patch(
         `${API_URL}/react-flow/${factoryId}`,
         payLoad,
         {
@@ -1008,7 +1009,7 @@ const FlowEditor: React.FC<
         }
       );
 
-      const allocatedAssetDeletion = await axios.delete(
+      const allocatedAssetDeletion = await api.delete(
         `${API_URL}/allocated-asset`,
         {
           headers: {
@@ -1021,7 +1022,7 @@ const FlowEditor: React.FC<
           },
         }
       );
-      const reactFlowScorpioUpdate = await axios.patch(
+      const reactFlowScorpioUpdate = await api.patch(
         `${API_URL}/shop-floor/update-react`,
         payLoad.factoryData.edges,
         {
@@ -1066,7 +1067,7 @@ const FlowEditor: React.FC<
     const reactFlowUpdate = `${API_URL}/react-flow/${factoryId}`;
     try {
       setIsOperationInProgress(true); // Show a loading indicator or disable UI elements
-      const response = await axios.get(reactFlowUpdate, {
+      const response = await api.get(reactFlowUpdate, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -1096,7 +1097,7 @@ const FlowEditor: React.FC<
       setIsOperationInProgress(true);
 
       // Fetch the current state from the server to determine the nature of the flowchart
-      const getReactFlowMongo = await axios.get(
+      const getReactFlowMongo = await api.get(
         `${API_URL}/react-flow/${factoryId}`,
         {
           headers: {
@@ -1159,7 +1160,7 @@ const FlowEditor: React.FC<
             },
           };
 
-          const reactFlowUpdateMongo = await axios.patch(
+          const reactFlowUpdateMongo = await api.patch(
             `${API_URL}/react-flow/${factoryId}`,
             payLoad,
             {
@@ -1181,7 +1182,7 @@ const FlowEditor: React.FC<
             });
           }
 
-          const allocatedAssetAvailableOrNot = await axios.get(
+          const allocatedAssetAvailableOrNot = await api.get(
             `${API_URL}/allocated-asset/${factoryId}`,
             {
               headers: {
@@ -1193,7 +1194,7 @@ const FlowEditor: React.FC<
           );
 
           if (allocatedAssetAvailableOrNot.data.length == 0) {
-            const reactAllocatedAssetScorpio = await axios.post(
+            const reactAllocatedAssetScorpio = await api.post(
               API_URL + "/allocated-asset",
               payLoad.factoryData.edges,
               {
@@ -1217,7 +1218,7 @@ const FlowEditor: React.FC<
               });
             }
           } else {
-            const reactAllocatedAssetScorpio = await axios.patch(
+            const reactAllocatedAssetScorpio = await api.patch(
               API_URL + "/allocated-asset",
               payLoad.factoryData.edges,
               {
@@ -1243,7 +1244,7 @@ const FlowEditor: React.FC<
             }
           }
 
-          const reactFlowScorpioUpdate = await axios.patch(
+          const reactFlowScorpioUpdate = await api.patch(
             `${API_URL}/shop-floor/update-react`,
             payLoad.factoryData.edges,
             {

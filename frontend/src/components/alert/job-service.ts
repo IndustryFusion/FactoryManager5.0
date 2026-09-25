@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "@/utility/jwt";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -13,7 +14,7 @@ export interface Job {
 
 export const getJobs = async (): Promise<{ jobs: Job[] }> => {
   try {
-    const response = await axios.get(`${API_URL}/jobs`, {
+    const response = await api.get(`${API_URL}/jobs`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -28,7 +29,7 @@ export const getJobs = async (): Promise<{ jobs: Job[] }> => {
 
 export const getJobById = async (jobId: string): Promise<Job> => {
   try {
-    const response = await axios.get(`${API_URL}/jobs/${jobId}`, {
+    const response = await api.get(`${API_URL}/jobs/${jobId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

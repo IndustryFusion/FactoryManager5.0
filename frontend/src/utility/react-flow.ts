@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "@/utility/jwt";
 import dagre from "@dagrejs/dagre";
 import type { Node, Edge } from "reactflow";
 
@@ -7,7 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL
 export const handleUpdateRelations = async (payload: Payload) => {
     const url = `${API_URL}/asset/update-relation`;
     try {
-        const response = await axios.patch(url, payload, {
+        const response = await api.patch(url, payload, {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",

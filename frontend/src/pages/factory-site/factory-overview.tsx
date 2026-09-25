@@ -1,4 +1,5 @@
 import { MdLocationOn } from "react-icons/md";
+import api from "@/utility/jwt";
 import { Factory } from "../../types/factory-type";
 import axios, { AxiosError } from "axios";
 import { useEffect, useState, useRef } from "react";
@@ -118,7 +119,7 @@ const FactoryOverview = () => {
         showToast("warn", t('toast:not_signed_in'), t('toast:no_company_session'));
         return;
       }
-      const response = await axios.get(API_URL + `/factory-site/company-specific/${accessGroupData.company_ifric_id}`, {
+      const response = await api.get(API_URL + `/factory-site/company-specific/${accessGroupData.company_ifric_id}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -170,7 +171,7 @@ const FactoryOverview = () => {
 
   async function createAssets(body: string) {
     try {
-      const response = await axios.post(API_URL + "/asset", body, {
+      const response = await api.post(API_URL + "/asset", body, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

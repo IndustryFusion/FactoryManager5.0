@@ -15,6 +15,7 @@
 // 
 
 import { Asset } from "../types/asset-types";
+import api from "@/utility/jwt";
 import axios from "axios";
 
 import { notifyError } from "@/utility/global-toast";
@@ -69,7 +70,7 @@ export const fetchAssets = async (assetId: string) => {
  
   try {
       const attributeIds: string[] = [];
-      const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+      const response = await api.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
           headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
@@ -78,7 +79,7 @@ export const fetchAssets = async (assetId: string) => {
       });
       const assetData: Asset = response.data;
 
-      const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
+      const temp = await api.get(API_URL + `/mongodb-templates/type/${btoa(assetData.type)}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -125,7 +126,7 @@ export const fetchAssets = async (assetId: string) => {
 
 export const getMachineState10Days = async () => {
   try {
-    const response = await axios.get(API_URL + '/pgrest/machine-state/10-days', {
+    const response = await api.get(API_URL + '/pgrest/machine-state/10-days', {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -140,7 +141,7 @@ export const getMachineState10Days = async () => {
 
 export const getMachineStateIntraDays = async () => {
   try {
-    const response = await axios.get(API_URL + '/pgrest/machine-state/intra-day', {
+    const response = await api.get(API_URL + '/pgrest/machine-state/intra-day', {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",

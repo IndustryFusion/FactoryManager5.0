@@ -15,6 +15,7 @@
 // 
 
 import React, { Dispatch, SetStateAction, useEffect, useState, ReactNode, useRef } from "react";
+import api from "@/utility/jwt";
 import { Asset } from "@/types/asset-types";
 import { fetchAsset } from "@/utility/asset-utility";
 import { DataTable } from "primereact/datatable";
@@ -147,7 +148,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
 
   const handleClick = async (selectedAsset: Asset) => {
-    const response = await axios.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
+    const response = await api.get(API_URL + `/mongodb-templates/type/${btoa(selectedAsset.type)}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -212,7 +213,7 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   useEffect(() => {
     if (!selectedRow?.id) { setIsOnboarded(false); return; }
-    axios.get(`${API_URL}/onboarding-asset/${selectedRow.id}`, {
+    api.get(`${API_URL}/onboarding-asset/${selectedRow.id}`, {
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       withCredentials: true,
     })

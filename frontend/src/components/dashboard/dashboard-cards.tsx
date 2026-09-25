@@ -15,6 +15,7 @@
 // 
 
 import { useDashboard } from "@/context/dashboard-context";
+import api from "@/utility/jwt";
 import { useEffect, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
@@ -75,7 +76,7 @@ const DashboardCards: React.FC = () => {
             setDifference("00:00:00");
             let attributeId: string | undefined = await fetchAssets(entityIdValue);
             if (entityIdValue && attributeId && attributeId.length > 0) {
-                let response = await axios.get(API_URL + '/value-change-state', {
+                let response = await api.get(API_URL + '/value-change-state', {
                     params: {
                         attributeId,
                         entityId: 'eq.' + entityIdValue,
@@ -110,7 +111,7 @@ const DashboardCards: React.FC = () => {
     const fetchAssets = async (assetId: string) => {
         try {
             let attributeId: string = '';
-            const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+            const response = await api.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -187,7 +188,7 @@ const DashboardCards: React.FC = () => {
     const relationParent = async () => {
         try {
             if (Object.keys(selectedAssetData).length > 0) {
-                const response = await axios.get(API_URL + "/asset/parent-ids", {
+                const response = await api.get(API_URL + "/asset/parent-ids", {
                     params: {
                         "asset-id": selectedAssetData?.id,
                         // selectedAssetData is the raw NGSI-LD entity: the category

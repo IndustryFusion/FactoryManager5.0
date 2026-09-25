@@ -15,6 +15,7 @@
 //
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import api from "@/utility/jwt";
 import { ChartData, ChartOptions, TooltipItem } from "chart.js";
 import { Chart } from "primereact/chart";
 import axios from "axios";
@@ -546,7 +547,7 @@ const CombineSensorChart: React.FC = () => {
       if (templateUnitMap === undefined) {
         let fetched: Record<string, string> = {};
         try {
-          const temp = await axios.get(API_URL + `/mongodb-templates/type/${btoa(assetType)}`, {
+          const temp = await api.get(API_URL + `/mongodb-templates/type/${btoa(assetType)}`, {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
@@ -673,7 +674,7 @@ const CombineSensorChart: React.FC = () => {
     }
 
     try {
-      const response = await axios.get(`${API_URL}/pgrest`, {
+      const response = await api.get(`${API_URL}/pgrest`, {
         params,
         headers: {
           "Content-Type": "application/json",

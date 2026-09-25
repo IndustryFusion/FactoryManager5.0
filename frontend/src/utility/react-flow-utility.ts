@@ -15,6 +15,7 @@
 //
 
 import axios from "axios";
+import api from "@/utility/jwt";
 import dagre from "@dagrejs/dagre";
 
 import { Edge, ExtendedNode } from "../types/reactflow";
@@ -23,7 +24,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export const fetchFlowData = async (factoryId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+    const response = await api.get(`${API_URL}/react-flow/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -38,7 +39,7 @@ export const fetchFlowData = async (factoryId: string) => {
 
 export const saveFlowData = async (payload: any) => {
   try {
-    const response = await axios.post(`${API_URL}/react-flow`, payload, {
+    const response = await api.post(`${API_URL}/react-flow`, payload, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -53,7 +54,7 @@ export const saveFlowData = async (payload: any) => {
 
 export const updateFlowData = async (factoryId: string, payload: any) => {
   try {
-    const response = await axios.patch(
+    const response = await api.patch(
       `${API_URL}/react-flow/${factoryId}`,
       payload,
       {

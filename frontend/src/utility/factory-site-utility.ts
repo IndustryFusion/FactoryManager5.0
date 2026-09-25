@@ -83,7 +83,7 @@ export const handleUpload = async (file: File): Promise<string> => {
   uploadData.append("file", file);
 
   try {
-    const response = await axios.post(API_URL + "/file", uploadData, {
+    const response = await api.post(API_URL + "/file", uploadData, {
       headers: {
         "Content-Type": "multipart/form-data",
         Accept: "application/json",
@@ -108,7 +108,7 @@ export const handleUpload = async (file: File): Promise<string> => {
  */
 export const fetchFactoriesAndAssets = async () => {
   try {
-    const response = await axios.get(API_URL + "/factory-site", {
+    const response = await api.get(API_URL + "/factory-site", {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -132,7 +132,7 @@ export const fetchFactoriesAndAssets = async () => {
  */
 export async function fetchFactoryDetails(factoryId: string) {
   try {
-    const response = await axios.get(`${API_URL}/factory-site/${factoryId}`, {
+    const response = await api.get(`${API_URL}/factory-site/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -157,7 +157,7 @@ export async function updateFactoryData(
 ) {
   try {
     const transformedData = transformDataForBackend(dataToUpdate);
-    await axios.patch(`${API_URL}/factory-site/${factoryId}`, transformedData, {
+    await api.patch(`${API_URL}/factory-site/${factoryId}`, transformedData, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -177,7 +177,7 @@ export async function updateFactoryData(
  */
 export const deleteFactory = async (factoryToDelete: Factory) => {
   try {
-    await axios.delete(API_URL + `/factory-site/${factoryToDelete.id}`, {
+    await api.delete(API_URL + `/factory-site/${factoryToDelete.id}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -224,7 +224,7 @@ export const transformDataForBackend = (factoryData: Factory) => {
  * @throws {Error} Throws an error if the update fails.
  */
 export const updateFactory = async (factoryToUpdate: Factory, id: string) => {
-  const response = await axios.patch(
+  const response = await api.patch(
     `${API_URL}/factory-site/${id}`,
 
     factoryToUpdate,
@@ -261,7 +261,7 @@ const flattenData = (data: any): any => {
 };
 
 export const getShopFloors = async (factoryId: string) => {
-  const response = await axios.get(`${API_URL}/shop-floor/${factoryId}`, {
+  const response = await api.get(`${API_URL}/shop-floor/${factoryId}`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -276,7 +276,7 @@ export const getShopFloors = async (factoryId: string) => {
 
 export const getshopFloorById = async (factoryId: string) => {
 
-  const response = await axios.get(`${API_URL}/shop-floor/${factoryId}`, {
+  const response = await api.get(`${API_URL}/shop-floor/${factoryId}`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -333,7 +333,7 @@ export const getNonShopFloorAssetByType = async (asset_category: string, ) => {
 
 export const getNonShopFloorAssetDetails = async (assetId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
+    const response = await api.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -350,7 +350,7 @@ export const getNonShopFloorAssetDetails = async (assetId: string) => {
 
 export const fetchAsset = async () => {
   try {
-    const response = await axios.get(API_URL + "/asset", {
+    const response = await api.get(API_URL + "/asset", {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -426,7 +426,7 @@ export const fetchAndDetermineSaveState = async (
   API_URL: any
 ) => {
   try {
-    const response = await axios.get(`${API_URL}/react-flow/${factoryId}`, {
+    const response = await api.get(`${API_URL}/react-flow/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -452,7 +452,7 @@ export async function deleteShopFloorById(
   factoryId: string
 ): Promise<void> {
   try {
-    await axios.delete(`${API_URL}/shop-floor/${shopFloorId}`, {
+    await api.delete(`${API_URL}/shop-floor/${shopFloorId}`, {
       params: {
         "factory-id": factoryId,
       },
@@ -469,7 +469,7 @@ export async function deleteShopFloorById(
 
 export async function getShopFloorAndAssetData(factoryId: string) {
   try {
-    const factoryDataResponse = await axios.get(
+    const factoryDataResponse = await api.get(
       `${API_URL}/factory-site/${factoryId}`,
       {
         headers: {
@@ -483,7 +483,7 @@ export async function getShopFloorAndAssetData(factoryId: string) {
     const shopFloorId =
       linkTargets(factoryData["http://www.industry-fusion.org/schema#hasShopFloor"])[0];
 
-    const shopFloorDataResponse = await axios.get(
+    const shopFloorDataResponse = await api.get(
       `${API_URL}/shop-floor/${shopFloorId}`,
       {
         headers: {
@@ -502,7 +502,7 @@ export async function getShopFloorAndAssetData(factoryId: string) {
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
       const assetDataPromises = assetIds.map((assetId: any) =>
-        axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
+        api.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -619,7 +619,7 @@ export const saveFlowchartData = async (
 ) => {
   const payload = {};
   try {
-    const response = await axios.post(`${API_URL}/react-flow`, payload, {
+    const response = await api.post(`${API_URL}/react-flow`, payload, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -634,7 +634,7 @@ export const saveFlowchartData = async (
 
 export const getAssetRelationById = async (assetId: string) => {
   try {
-    const response = await axios.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
+    const response = await api.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -648,7 +648,7 @@ export const getAssetRelationById = async (assetId: string) => {
     // the slots the product itself shows.
     let templateProperties;
     try {
-      const template = await axios.get(API_URL + `/mongodb-templates/type/${btoa(entity.type)}`, {
+      const template = await api.get(API_URL + `/mongodb-templates/type/${btoa(entity.type)}`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -671,7 +671,7 @@ export const getAssetRelationById = async (assetId: string) => {
 
 export const getAssetById = async(assetId: string) =>{
   try {
-    const response = await axios.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
+    const response = await api.get(API_URL + "/asset/get-asset-by-id/" + `${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -689,7 +689,7 @@ export const getAssetById = async(assetId: string) =>{
 
 export const fetchAllocatedAssets = async (factoryId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/allocated-asset/${factoryId}`, {
+    const response = await api.get(`${API_URL}/allocated-asset/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -704,7 +704,7 @@ export const fetchAllocatedAssets = async (factoryId: string) => {
 
 export const fetchAllAllocatedAssets = async () => {
   try {
-    const response = await axios.get(`${API_URL}/allocated-asset/product-names`, {
+    const response = await api.get(`${API_URL}/allocated-asset/product-names`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -722,7 +722,7 @@ export const fetchAllAllocatedAssets = async () => {
 
 export const fetchAssetDetailById = async(assetId:string)=>{
   try {
-    const response = await axios.get(API_URL + "/asset/" + `${assetId}`, {
+    const response = await api.get(API_URL + "/asset/" + `${assetId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -748,7 +748,7 @@ export const fetchAssetDetailById = async(assetId:string)=>{
 
 export async function getShopFloorAssets(shopFloorId: string) {
   try {
-    const shopFloorDataResponse = await axios.get(
+    const shopFloorDataResponse = await api.get(
       `${API_URL}/shop-floor/${shopFloorId}`,
       {
         headers: {
@@ -767,7 +767,7 @@ export async function getShopFloorAssets(shopFloorId: string) {
     if (assetIds && assetIds.length > 0) {
       // Fetch data for all assetIds
       const assetDataPromises = assetIds.map((assetId: any) =>{     
-       return   axios.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
+       return   api.get(`${API_URL}/asset/get-asset-by-id/${assetId}`, {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
@@ -827,7 +827,7 @@ export const customLogger: {
 
 const fetchSingleShopFloor = async (shopFloorId: string): Promise<ShopFloorResponse> => {
   try {
-    const response = await axios.get(`${API_URL}/shop-floor/${shopFloorId}`, {
+    const response = await api.get(`${API_URL}/shop-floor/${shopFloorId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

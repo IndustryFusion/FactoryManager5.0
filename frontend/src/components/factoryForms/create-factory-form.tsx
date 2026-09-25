@@ -15,6 +15,7 @@
 // 
 
 import React, { useState, ChangeEvent, useEffect, useRef, useMemo } from "react";
+import api from "@/utility/jwt";
 import Select from "react-select";
 import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
@@ -175,7 +176,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
             // this token, so a factory cannot be filed under a company the
             // signed-in user does not belong to. The token is also what the
             // registry needs in order to mint the factory's identifier.
-            const response = await axios.post(API_URL + "/factory-site/", payload, {
+            const response = await api.post(API_URL + "/factory-site/", payload, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -252,7 +253,7 @@ const CreateFactory: React.FC<FactoryFormProps> = ({ onSave, initialData, visibl
 
     const findFactoryTemplate = async () => {
         try {
-            const response = await axios.get(API_URL + "/factory-site/template", {
+            const response = await api.get(API_URL + "/factory-site/template", {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",

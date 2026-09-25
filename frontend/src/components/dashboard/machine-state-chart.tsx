@@ -16,6 +16,7 @@
 // 
 
 import { useEffect, useRef, useState } from "react";
+import api from "@/utility/jwt";
 import { Chart } from "primereact/chart";
 import axios from "axios";
 import { Asset } from "@/types/asset-types";
@@ -117,7 +118,7 @@ const MachineStateChart = () => {
             setIsLoading(true);
            
             if(attributeId && ((machineStateData.id !== entityIdValue || selectedInterval == 'days') || (selectedInterval !== 'days' && Object.keys(machineStateData[selectedInterval]).length === 0))){
-                let response = await axios.get(API_URL + `/value-change-state/chart`, {
+                let response = await api.get(API_URL + `/value-change-state/chart`, {
                     params: {
                         attributeId,
                         'asset-id': entityId,
@@ -138,7 +139,7 @@ const MachineStateChart = () => {
                 }
                 
                 if (checkEmpty) {
-                    let lastDataResponse = await axios.get(API_URL + `/value-change-state`, {
+                    let lastDataResponse = await api.get(API_URL + `/value-change-state`, {
                         params: {
                             attributeId,
                             entityId: entityId,     
@@ -203,7 +204,7 @@ const MachineStateChart = () => {
         try {
             if (assetId) {
                 let attributeId: string = '';
-                const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+                const response = await api.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
                     headers: {
                         "Content-Type": "application/json",
                         Accept: "application/json",

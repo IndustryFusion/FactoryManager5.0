@@ -11,6 +11,7 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode,
 } from "react";
 import axios from "axios";
+import api from "@/utility/jwt";
 import { useTranslation } from "next-i18next";
 import { getAlerts } from "@/components/alert/alert-service";
 import { getJobs, Job } from "@/components/alert/job-service";
@@ -67,7 +68,7 @@ export const AlertsProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchAssetData = useCallback(async (assetId: string) => {
     try {
-      const response = await axios.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
+      const response = await api.get(API_URL + `/asset/get-asset-by-id/${assetId}`, {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         withCredentials: true,
       });

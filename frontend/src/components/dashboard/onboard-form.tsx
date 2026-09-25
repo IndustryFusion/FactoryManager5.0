@@ -15,6 +15,7 @@
 // 
 
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import api from "@/utility/jwt";
 import axios from "axios";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
@@ -472,7 +473,7 @@ const OnboardForm: React.FC<OnboardFormProps> = ({
                 const newpayload = JSON.stringify(YAML.parse(payload));
 
                 try {
-                    const response = await axios.post(API_URL + "/onboarding-asset", newpayload, {
+                    const response = await api.post(API_URL + "/onboarding-asset", newpayload, {
                         headers: {
                             "Content-Type": "application/json",
                             Accept: "application/json",

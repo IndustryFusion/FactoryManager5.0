@@ -16,6 +16,7 @@
 
 import axios from "axios"
 import { useEffect, useState, ChangeEvent, useRef } from "react";
+import api from "@/utility/jwt";
 import { Property, Schema } from "../../types/factory-form";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
@@ -64,7 +65,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
     const findShopFloorTemplate = async () => {
         try {
-            const response = await axios.get(API_URL + '/shop-floor/template', {
+            const response = await api.get(API_URL + '/shop-floor/template', {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -81,7 +82,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
     const getShopFloorData = async () => {
         try {
-            const response = await axios.get(API_URL + `/shop-floor/${editShopFloorProp}`, {
+            const response = await api.get(API_URL + `/shop-floor/${editShopFloorProp}`, {
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -184,7 +185,7 @@ const EditShopFloor: React.FC<ShopFloorEditProps> = ({
 
            
 
-                const response = await axios.patch(API_URL + `/shop-floor/${editShopFloorProp}`, finalData, {
+                const response = await api.patch(API_URL + `/shop-floor/${editShopFloorProp}`, finalData, {
                     headers: {
                         "Content-Type": "application/json",
                         Accept: "application/json",
