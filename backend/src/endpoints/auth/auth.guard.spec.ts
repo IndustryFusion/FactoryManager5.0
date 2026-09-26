@@ -18,6 +18,7 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { CompactEncrypt } from 'jose';
 import { AuthGuard } from './auth.guard';
+import { TOKEN_IN_QUERY_KEY } from './token-in-query.decorator';
 
 /**
  * This installation belongs to one company, and nobody else may sign in to
@@ -85,6 +86,22 @@ const contextForOneRequest = (token: string) => {
 /** Says "not public", which is the case for every route under test here. */
 const reflector = { getAllAndOverride: () => false } as any;
 
+/** A request carrying its token in the query, as EventSource has to. */
+const contextWithQueryToken = (token?: string) =>
+  ({
+    getType: () => 'http',
+    getHandler: () => undefined,
+    getClass: () => undefined,
+    switchToHttp: () => ({
+      getRequest: () => ({ headers: {}, query: token ? { token } : {} }),
+    }),
+  }) as any;
+
+/** Answers "not public, but this route may take its token from the query". */
+const streamReflector = {
+  getAllAndOverride: (key: string) => key === TOKEN_IN_QUERY_KEY,
+} as any;
+
 describe('AuthGuard company check', () => {
   beforeEach(() => {
     process.env.MASK_SECRET = MASK_SECRET;
@@ -137,6 +154,26 @@ describe('AuthGuard company check', () => {
     await expect(
       new AuthGuard(reflector).canActivate(contextWith(await tokenFor(THEIRS))),
     ).resolves.toBe(true);
+  });
+
+  it('takes the token from the query only where the route allows it', async () => {
+    // EventSource cannot set a header, so the stream route reads ?token=.
+    const token = await tokenFor(OURS);
+    await expect(
+      new AuthGuard(streamReflector).canActivate(contextWithQueryToken(token)),
+    ).resolves.toBe(true);
+
+    // Every other route ignores the query and refuses: a credential in a URL
+    // is allowed exactly where it was allowed on purpose.
+    await expect(
+      new AuthGuard(reflector).canActivate(contextWithQueryToken(token)),
+    ).rejects.toThrow(UnauthorizedException);
+
+    // And the route still needs a token — the decorator moves where the guard
+    // looks, it does not make the route public.
+    await expect(
+      new AuthGuard(streamReflector).canActivate(contextWithQueryToken()),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('still rejects a missing or unreadable token as unauthorised', async () => {

@@ -863,7 +863,11 @@ const transformShopFloorData = (shopFloorData: ShopFloorResponse): TransformedSh
 export const fetchAllShopFloors = async (factoryId: string): Promise<TransformedShopFloor[]> => {
   try {
     // Fetch factory data to get shop floor IDs
-    const factoryResponse = await axios.get<FactoryResponse>(`${API_URL}/shop-floor/${factoryId}`, {
+    // `api`, not bare axios: the instance is what attaches the session token,
+    // refreshes it on a 401 and replays the call. Sent bare, this first request
+    // was refused, so a factory's shop floors could be created and then not
+    // listed — the next call in this function already uses `api`.
+    const factoryResponse = await api.get<FactoryResponse>(`${API_URL}/shop-floor/${factoryId}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

@@ -18,6 +18,7 @@ import * as Multer from 'multer';
 import { InjectModel } from '@nestjs/mongoose';
 import { FlinkJob } from '../schemas/flink-job.schema';
 import { Model } from 'mongoose';
+import { TokenInQuery } from '../auth/token-in-query.decorator';
 
 // Multer: keep files in memory and filter for .ttl
 const multerOptions = {
@@ -96,6 +97,9 @@ export class FlinkDeployController {
   }
 
   // 1) Stream logs (SSE proxy)
+  // EventSource cannot send an Authorization header, so this one route reads
+  // the same masked token from `?token=`. See token-in-query.decorator.ts.
+  @TokenInQuery()
   @Get(':id/stream')
   async stream(@Param('id') jobId: string, @Res() res: Response) {
     const job = await this.jobModel.findOne({ jobId });

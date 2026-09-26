@@ -12,6 +12,7 @@ import { createHash } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from './public.decorator';
+import { TOKEN_IN_QUERY_KEY } from './token-in-query.decorator';
 
 /**
  * Marks a request whose token this guard has already read.
@@ -68,7 +69,9 @@ export class AuthGuard implements CanActivate {
     // token for a second pass to read.
     if (request[AUTH_CHECKED]) return true;
 
-    const token = this.extractTokenFromHeader(request);
+    const token =
+      this.extractTokenFromHeader(request) ??
+      (this.allowsTokenInQuery(context) ? this.extractTokenFromQuery(request) : undefined);
     if (!token) {
       throw new UnauthorizedException();
     }
@@ -139,6 +142,21 @@ export class AuthGuard implements CanActivate {
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  /** Only routes carrying @TokenInQuery() — server-sent events. */
+  private allowsTokenInQuery(context: ExecutionContext): boolean {
+    return (
+      this.reflector?.getAllAndOverride<boolean>(TOKEN_IN_QUERY_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) === true
+    );
+  }
+
+  private extractTokenFromQuery(request: Request): string | undefined {
+    const token = (request.query as Record<string, unknown>)?.token;
+    return typeof token === 'string' && token ? token : undefined;
   }
 
   private unMask(masked: string, key: string): string {
