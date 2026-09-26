@@ -195,7 +195,15 @@ const CreateShopFloor: React.FC<CreateShopFloorProps> = ({
       const shopFloorResponse = response.data;
       
 
-      if (shopFloorResponse.status === 201) {
+      // Any success, not one exact code: the backend reports what Scorpio
+      // answered, and an upsert that updates answers 204 where a create
+      // answers 201. Matching 201 alone left a shop floor created, with no
+      // confirmation and no place in the list until the page was reloaded.
+      const created =
+        typeof shopFloorResponse.status === "number" &&
+        shopFloorResponse.status >= 200 &&
+        shopFloorResponse.status < 300;
+      if (created) {
         showSuccess();
         setIsVisibleProp(false);
         const newShopFloor: shopFloor = {
