@@ -22,6 +22,7 @@ import { FactorySiteService } from '../factory-site/factory-site.service';
 import { upstreamMessage } from '../../utils/upstream-error';
 import { UrnHolderService } from '../urn-holder/urn-holder.service';
 import { attrValue, prepareForScorpio, replaceEntity } from '../../utils/ngsi-ld';
+import { assetCategoryOf } from '../../utils/asset-category';
 
 /**
  * The suffix every per-factory allocated-assets store id ends with.
@@ -216,7 +217,12 @@ async createGlobal(token: string) {
             const finalData = {
               id,
               product_name: assetData[Object.keys(assetData).find(key => key.includes("product_name"))]?.value, 
-              asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value 
+              // Products copied from IFX carry 'NULL' where a category was
+              // never given; the entity's type answers instead.
+              asset_category: assetCategoryOf({
+                asset_category: assetData[Object.keys(assetData).find(key => key.includes("asset_category"))]?.value,
+                type: assetData.type,
+              })
             };
             finalArray.push(finalData);
           } catch(err) {

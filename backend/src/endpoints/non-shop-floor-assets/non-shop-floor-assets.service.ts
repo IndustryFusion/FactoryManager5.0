@@ -24,6 +24,7 @@ import { Model } from 'mongoose';
 import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { assetCategoryExpr } from '../../utils/asset-category';
 @Injectable()
 export class NonShopFloorAssetsService {
   constructor(
@@ -44,7 +45,9 @@ export class NonShopFloorAssetsService {
             _id: 0,
             id: 1,
             product_name: 1,
-            asset_category: 1,
+            // Never the 'NULL' placeholder: this is shown under a product's
+            // name on the flow. See utils/asset-category.
+            asset_category: assetCategoryExpr,
             asset_serial_number: 1
           }
         }
@@ -71,7 +74,9 @@ export class NonShopFloorAssetsService {
             _id: 0,
             id: 1,
             product_name: 1,
-            asset_category: 1,
+            // Never the 'NULL' placeholder: this is shown under a product's
+            // name on the flow. See utils/asset-category.
+            asset_category: assetCategoryExpr,
             asset_serial_number: 1
           }
         }
