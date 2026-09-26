@@ -846,6 +846,16 @@ const FlowEditor: React.FC<
         });
       }
       dispatch(reset());
+      // Say so. Every success branch in this file was empty, and the one
+      // success toast was only ever set to null — so a save that worked and a
+      // save that silently failed looked exactly the same on screen.
+      toast.current?.show({
+        severity: "success",
+        summary: t('reactflow:success'),
+        detail: t('reactflow:flowchartUpdated'),
+        life: 2500,
+      });
+      setHasChanges(false);
     } catch (error) {
       logHandledError("Error saving flowchart:", error);
       toast.current?.show({
@@ -948,7 +958,13 @@ const FlowEditor: React.FC<
       );
       dispatch(reset());
       if (reactFlowScorpioUpdate.status == 200) {
-
+        toast.current?.show({
+          severity: "success",
+          summary: t('reactflow:success'),
+          detail: t('reactflow:flowchartUpdated'),
+          life: 2500,
+        });
+        setHasChanges(false);
       } else {
         toast.current?.show({
           severity: "warn",
@@ -1064,10 +1080,13 @@ const FlowEditor: React.FC<
   //@desc :
   //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
   const refreshFromScorpio = async () => {
-    const reactFlowUpdate = `${API_URL}/react-flow/${factoryId}`;
+    // The endpoint that rebuilds the flow from Scorpio. This used to fetch the
+    // plain Mongo copy, throw the answer away and re-read Mongo — so the
+    // button could never repair a flow that had drifted from Scorpio.
+    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
     try {
       setIsOperationInProgress(true); // Show a loading indicator or disable UI elements
-      const response = await api.get(reactFlowUpdate, {
+      await api.get(reactFlowUpdate, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

@@ -125,17 +125,26 @@ export class ShopFloorController {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateReact(data, token);
-      if(response['status'] == 200 || response['status'] == 204) {
-        let updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
-        if(updateGlobalResponse['status'] == 200 || updateGlobalResponse['status'] == 204) {
-          return {
-            success: true,
-            status: response['status'],
-            message: 'Updated Successfully',
-          }
-       }
-      } else {
-        return response;
+      if(response['status'] != 200 && response['status'] != 204) {
+        throw new HttpException(
+          `The flow could not be written to Scorpio (upstream status ${response?.['status']}).`,
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+      const updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
+      if(updateGlobalResponse['status'] != 200 && updateGlobalResponse['status'] != 204) {
+        // Half-written is not success. This used to fall through and return
+        // undefined — HTTP 200 with an empty body — so the editor reported a
+        // save whose second half had failed.
+        throw new HttpException(
+          `The flow was saved but the allocated-asset list could not be rebuilt (upstream status ${updateGlobalResponse?.['status']}).`,
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+      return {
+        success: true,
+        status: response['status'],
+        message: 'Updated Successfully',
       }
     } catch (err) {
       throw err;

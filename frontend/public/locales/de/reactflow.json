@@ -100,6 +100,7 @@
     "shopFloor": "Bereich",
     "editShopFloor": "Bereich bearbeiten",
     "success": "Erfolg",
+    "flowchartUpdated": "Flussdiagramm gespeichert",
     "error": "Fehler",
     "shopFloorAddedSuccessfully": "Bereich erfolgreich hinzugefügt",
     "shopFloorUpdatedSuccessfully": "Bereich erfolgreich aktualisiert",
