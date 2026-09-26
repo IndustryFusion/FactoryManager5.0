@@ -50,10 +50,15 @@ export class ShopFloorController {
           const hasShopFloorKey = "http://www.industry-fusion.org/schema#hasShopFloor";
           data[hasShopFloorKey] = toLinks([...linkTargets(data[hasShopFloorKey]), createResponse.id]);
           // One replace instead of delete-then-create of the factory site.
-          const response = await replaceEntity(this.scorpioUrl, data, headers);
+          await replaceEntity(this.scorpioUrl, data, headers);
           return {
+            // The status of what was asked for — the shop floor, created.
+            // It used to be the status of the factory-site write that
+            // follows, and Scorpio answers an upsert that *updates* with 204,
+            // so a successful create reported 204 and the screen, which shows
+            // its confirmation on 201, did nothing at all.
             success: true,
-            status: response['status'],
+            status: createResponse['status'],
             message: 'shop-floor created and added in factory-site successfully',
             id: createResponse['id'],
             floorName: createResponse['floorName']
