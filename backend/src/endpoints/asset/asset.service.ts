@@ -440,6 +440,21 @@ export class AssetService {
   }
 
 
+  /**
+   * The fields of an IFX product row this app only displays, never owns.
+   *
+   * `factory_site`, `shop_floor` and `isCacheUpdated` are this application's
+   * own: they say where an asset sits in *this* factory and whether that still
+   * has to be pushed up. Refreshing a row from IFX must not touch them.
+   */
+  private displayFieldsOf(ifxRow: Record<string, any> | undefined): Record<string, any> | null {
+    if (!ifxRow) return null;
+    const { _id, factory_site, shop_floor, isCacheUpdated, ...displayed } = ifxRow;
+    if (!Object.keys(displayed).length) return null;
+    displayed.asset_category = assetCategoryOf(displayed);
+    return displayed;
+  }
+
   async setFactoryOwnerAssets(company_ifric_id: string, token: string, req: Request) {
     try {
       const headers = {
@@ -522,7 +537,24 @@ export class AssetService {
           } finally {
             const exists = await this.factoryPdtCacheModel.exists({ id: assetId, company_ifric_id });
             if (exists) {
+              // A present row used to be left exactly as it was, so a product
+              // renamed in IFX — or given a category, or a fresh certificate —
+              // kept its old values here until someone ran Sync PDT, and Sync
+              // only sees what IFX flagged. The display fields are refreshed
+              // from the row IFX just sent; what this app owns (the factory
+              // and shop floor an asset sits on, and its pending-upload flag)
+              // is never touched.
+              const refreshed = this.displayFieldsOf(ifxCacheRows[assetId]);
               outcome.cache = 'row already present';
+              if (refreshed) {
+                const result = await this.factoryPdtCacheModel.updateOne(
+                  { id: assetId, company_ifric_id },
+                  { $set: refreshed },
+                );
+                if (result.modifiedCount) {
+                  outcome.cache = 'row already present (refreshed from IFX)';
+                }
+              }
             } else if (!inScorpio) {
               outcome.cache = 'not created: the product is not in local Scorpio';
             } else if (!ifxCacheRows[assetId]) {
@@ -532,7 +564,18 @@ export class AssetService {
               // Cleaned on the way in, so a row imported before IFX stopped
               // writing 'NULL' does not carry it onto the factory flow.
               newCacheData.asset_category = assetCategoryOf(newCacheData);
-              await this.factoryPdtCacheModel.create(newCacheData);
+              // One row per product per company, whatever else is happening.
+              // `exists()` and `create()` are two awaits with nothing between
+              // them, so two tabs, a double-clicked Refresh, or one asset
+              // listed twice by the registry each produced a second row — and
+              // duplicates then drift apart, because the sync updates one and
+              // the allocation updates all of them. The live database has
+              // several of these.
+              await this.factoryPdtCacheModel.updateOne(
+                { id: assetId, company_ifric_id },
+                { $setOnInsert: newCacheData },
+                { upsert: true },
+              );
               cacheUpdatedAssetIds.push(assetId);
               outcome.cache = 'row created (shows in the Assets table)';
             }

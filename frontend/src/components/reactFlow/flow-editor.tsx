@@ -130,6 +130,9 @@ const FlowEditor: React.FC<
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const { latestShopFloor } = useShopFloor();
   const [hasChanges, setHasChanges] = useState(false);
+  // Relation slots emptied on screen and not yet cleared in Scorpio. Kept
+  // until a save carries them, because the edges that described them are gone.
+  const clearedRelations = useRef<{ assetId: string; relationType: string }[]>([]);
   const [isRestored, setIsRestored] = useState(false);
   const [originalNodes, setOriginalNodes] = useState([]);
   const [originalEdges, setOriginalEdges] = useState([]);
@@ -225,6 +228,18 @@ const FlowEditor: React.FC<
             payload[parentNode.data.id][relationType].push(targetAssetId);
           }
         }
+      }
+    });
+
+    // Slots whose relation node was deleted: an empty list is how the backend
+    // is told to remove the link. Without this the relation stayed in Scorpio
+    // after it had been deleted on screen and saved.
+    clearedRelations.current.forEach(({ assetId, relationType }) => {
+      if (!payload[assetId]) {
+        payload[assetId] = {};
+      }
+      if (!payload[assetId][relationType]) {
+        payload[assetId][relationType] = [];
       }
     });
 
@@ -846,6 +861,16 @@ const FlowEditor: React.FC<
         });
       }
       dispatch(reset());
+      // Say so. Every success branch in this file was empty, and the one
+      // success toast was only ever set to null — so a save that worked and a
+      // save that silently failed looked exactly the same on screen.
+      toast.current?.show({
+        severity: "success",
+        summary: t('reactflow:success'),
+        detail: t('reactflow:flowchartUpdated'),
+        life: 2500,
+      });
+      setHasChanges(false);
     } catch (error) {
       logHandledError("Error saving flowchart:", error);
       toast.current?.show({
@@ -948,7 +973,13 @@ const FlowEditor: React.FC<
       );
       dispatch(reset());
       if (reactFlowScorpioUpdate.status == 200) {
-
+        toast.current?.show({
+          severity: "success",
+          summary: t('reactflow:success'),
+          detail: t('reactflow:flowchartUpdated'),
+          life: 2500,
+        });
+        setHasChanges(false);
       } else {
         toast.current?.show({
           severity: "warn",
@@ -1064,10 +1095,13 @@ const FlowEditor: React.FC<
   //@desc :
   //@GET : the React Flow data for the specified factory ID from scorpio and update react-flow mongo (nodes and/or edges)
   const refreshFromScorpio = async () => {
-    const reactFlowUpdate = `${API_URL}/react-flow/${factoryId}`;
+    // The endpoint that rebuilds the flow from Scorpio. This used to fetch the
+    // plain Mongo copy, throw the answer away and re-read Mongo — so the
+    // button could never repair a flow that had drifted from Scorpio.
+    const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
     try {
       setIsOperationInProgress(true); // Show a loading indicator or disable UI elements
-      const response = await api.get(reactFlowUpdate, {
+      await api.get(reactFlowUpdate, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -1118,7 +1152,21 @@ const FlowEditor: React.FC<
 
 
       if (Object.keys(relationPayload).length > 0) {
-        await handleUpdateRelations(relationPayload);
+        try {
+          await handleUpdateRelations(relationPayload);
+          // Carried: the slots cleared on screen are cleared in Scorpio too.
+          clearedRelations.current = [];
+        } catch (error) {
+          // Not fatal to the save — the flow itself is still worth writing —
+          // but it must not pass in silence, which is what it did before.
+          logHandledError("Failed to save relations:", error);
+          toast.current?.show({
+            severity: "warn",
+            summary: t('reactflow:error'),
+            detail: (error as Error).message,
+            life: 4000,
+          });
+        }
       }
 
       if (isEmpty) {
@@ -1660,6 +1708,25 @@ const FlowEditor: React.FC<
 
     const { nodeIdsToDelete, edgeIdsToDelete } = buildCascadeDeletion(prunedSelection, workingNodes, workingEdges);
     selectedSubflowIds.forEach(id => nodeIdsToDelete.add(id));
+
+    // A deleted relation node takes both of its edges with it, so it simply
+    // disappeared from the payload the save builds from the remaining edges,
+    // and Scorpio kept the link for ever. Remember the slot instead.
+    workingNodes
+      .filter(n => nodeIdsToDelete.has(n.id) && getNodeType(n) === "relation")
+      .forEach(relationNode => {
+        const relationType = relationNode.id.split("_")[1];
+        const parentEdge = workingEdges.find(
+          e => e.target === relationNode.id &&
+            workingNodes.find(n => n.id === e.source)?.data?.type === "asset"
+        );
+        const assetId = parentEdge
+          ? (workingNodes.find(n => n.id === parentEdge.source)?.data as any)?.id
+          : undefined;
+        if (assetId && relationType) {
+          clearedRelations.current.push({ assetId, relationType });
+        }
+      });
 
     const newNodes = workingNodes.filter(n => !nodeIdsToDelete.has(n.id));
     const newEdges = workingEdges.filter(

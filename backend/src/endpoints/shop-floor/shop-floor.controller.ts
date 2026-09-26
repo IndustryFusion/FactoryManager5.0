@@ -23,6 +23,7 @@ import { AllocatedAssetService } from '../allocated-asset/allocated-asset.servic
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { linkTargets, replaceEntity, toLinks } from '../../utils/ngsi-ld';
+import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 @Controller('shop-floor')
 export class ShopFloorController {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -30,6 +31,7 @@ export class ShopFloorController {
     private readonly shopFloorService: ShopFloorService, 
     private readonly factorySiteService: FactorySiteService,
     private readonly allocatedAssetService: AllocatedAssetService,
+    private readonly factoryPdtCacheService: FactoryPdtCacheService,
     private readonly tokenService: TokenService
     ) {}
 
@@ -123,17 +125,26 @@ export class ShopFloorController {
     try {
       const token = await this.tokenService.getToken();
       const response = await this.shopFloorService.updateReact(data, token);
-      if(response['status'] == 200 || response['status'] == 204) {
-        let updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
-        if(updateGlobalResponse['status'] == 200 || updateGlobalResponse['status'] == 204) {
-          return {
-            success: true,
-            status: response['status'],
-            message: 'Updated Successfully',
-          }
-       }
-      } else {
-        return response;
+      if(response['status'] != 200 && response['status'] != 204) {
+        throw new HttpException(
+          `The flow could not be written to Scorpio (upstream status ${response?.['status']}).`,
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+      const updateGlobalResponse = await this.allocatedAssetService.updateGlobal(token);
+      if(updateGlobalResponse['status'] != 200 && updateGlobalResponse['status'] != 204) {
+        // Half-written is not success. This used to fall through and return
+        // undefined — HTTP 200 with an empty body — so the editor reported a
+        // save whose second half had failed.
+        throw new HttpException(
+          `The flow was saved but the allocated-asset list could not be rebuilt (upstream status ${updateGlobalResponse?.['status']}).`,
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+      return {
+        success: true,
+        status: response['status'],
+        message: 'Updated Successfully',
       }
     } catch (err) {
       throw err;
@@ -207,6 +218,17 @@ export class ShopFloorController {
             'Content-Type': 'application/ld+json',
             Accept: 'application/ld+json',
           };
+          // Let its assets go first: they keep pointing at this shop floor
+          // otherwise, which keeps them out of the available-assets list for
+          // good — the list only shows assets with no factory. Not fatal: a
+          // shop floor that is already deleted must not fail on its assets.
+          try {
+            await this.factoryPdtCacheService.releaseFromShopFloor(id);
+            await this.allocatedAssetService.updateGlobal(token);
+          } catch (err) {
+            console.error(`shop floor ${id} deleted, assets not released: ${err.message}`);
+          }
+
           const data = await this.factorySiteService.findOne(factoryId, token);
           if(data) {
             const hasShopFloorKey = "http://www.industry-fusion.org/schema#hasShopFloor";

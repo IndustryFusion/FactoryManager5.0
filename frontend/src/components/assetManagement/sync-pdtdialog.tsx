@@ -20,6 +20,8 @@ interface ImportResponseData {
 }
 
 interface SyncPdtDialogProps {
+  /** Called once a sync has finished, so the caller can reload what it shows. */
+  onSynced?: () => void;
   visible: boolean;
   setVisible: Dispatch<SetStateAction<boolean>>;
 }
@@ -27,6 +29,7 @@ interface SyncPdtDialogProps {
 const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   visible,
   setVisible,
+  onSynced,
 }) => {
   const {t} = useTranslation("overview")
   const [step, setStep] = useState<number>(1);
@@ -122,6 +125,12 @@ const SyncPdtDialog: React.FC<SyncPdtDialogProps> = ({
   };
 
   const handleClose = () => {
+    // The page still shows the numbers it loaded before the sync: the pending
+    // count is fetched once on mount and the asset table is not reloaded. So
+    // a finished sync left "N to sync" on screen, inviting a second sync that
+    // legitimately had nothing to do — which is what "syncing again does
+    // nothing" looked like.
+    onSynced?.();
     setVisible(false);
     setStep(1);
     setStartProgress(false);

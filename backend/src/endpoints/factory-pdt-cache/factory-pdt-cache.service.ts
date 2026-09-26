@@ -59,6 +59,51 @@ export class FactoryPdtCacheService implements OnModuleInit {
       }
     }
   }
+  /**
+   * Takes a shop floor off the assets that are no longer on it, and lets an
+   * asset go once it is on no shop floor at all.
+   *
+   * The counterpart to updateFactoryAndShopFloor, which only ever adds. With
+   * nothing to remove a shop floor, an asset kept `factory_site` forever —
+   * and the "available assets" list only shows rows whose `factory_site` is
+   * empty, so a removed asset appeared in no list at all and could never be
+   * placed again.
+   *
+   * `keepAssetIds` are the assets still on the floor; everything else that
+   * still claims it is released. Safe with an empty list, which is what a
+   * deleted shop floor and an emptied one both pass.
+   */
+  async releaseFromShopFloor(shopFloorId: string, keepAssetIds: string[] = []) {
+    try {
+      return await this.factoryPdtCacheModel.updateMany(
+        { shop_floor: shopFloorId, id: { $nin: keepAssetIds } },
+        [
+          {
+            $set: {
+              shop_floor: {
+                $setDifference: [{ $ifNull: ['$shop_floor', []] }, [shopFloorId]],
+              },
+              isCacheUpdated: true,
+            },
+          },
+          {
+            // A second stage, so this sees the list the first one just wrote.
+            $set: {
+              factory_site: {
+                $cond: [{ $eq: ['$shop_floor', []] }, '', '$factory_site'],
+              },
+            },
+          },
+        ],
+      );
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateFactoryAndShopFloor(data: Record<string, any>) {
     try {
       const shopFloors = Array.isArray(data.shop_floor) ? data.shop_floor : [data.shop_floor];

@@ -5,7 +5,24 @@ import type { Node, Edge } from "reactflow";
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL
 
-export const handleUpdateRelations = async (payload: Payload) => {
+/** `{ assetId: { relationType: [targetAssetId, ...] } }`. An empty list clears the slot. */
+export type RelationPayload = Record<string, Record<string, string[]>>;
+
+/**
+ * Writes an asset's relations to Scorpio.
+ *
+ * It used to reference three names that do not exist in this file —
+ * `Payload`, `deleteRelation` and `showToast` — which ships because
+ * next.config sets `typescript.ignoreBuildErrors`. At runtime the success
+ * branch threw a ReferenceError, the catch only reacted to axios errors, and
+ * nothing was ever shown: relations never confirmed, and a failed write was
+ * as silent as a successful one. It also never rethrew, so the caller carried
+ * on as if the relations had been saved.
+ *
+ * It throws now. The caller decides what to tell the user, because only the
+ * caller has a toast to tell it with.
+ */
+export const handleUpdateRelations = async (payload: RelationPayload) => {
     const url = `${API_URL}/asset/update-relation`;
     try {
         const response = await api.patch(url, payload, {
@@ -14,30 +31,24 @@ export const handleUpdateRelations = async (payload: Payload) => {
                 Accept: "application/json",
             },
             withCredentials: true,
-        })
-
-        if (response.data?.status === 204 && response.data?.success === true) {
-            if (deleteRelation) {
-
-                showToast("success", "success", "Relation deleted successfully");
-            } else {
-                showToast("success", "success", "Relations saved successfully");
-            }
-
+        });
+        // The route answers HTTP 200 whatever happened; what it did is in the
+        // body. Anything but a clean 204 from Scorpio is a failure.
+        if (response.data?.success !== true || response.data?.status !== 204) {
+            throw new Error(
+                response.data?.message ?? "The relations could not be saved."
+            );
         }
-    }catch (error) {
+        return response.data;
+    } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error("Error response:", error.response?.data.message);
-        showToast('error', 'Error', "Updating relations");
-        } 
+            throw new Error(
+                error.response?.data?.message ?? "The relations could not be saved."
+            );
+        }
+        throw error;
     }
 }
-
-
-
-
-
-
 
 export type RFNode = Node;
 export type RFEdge = Edge;

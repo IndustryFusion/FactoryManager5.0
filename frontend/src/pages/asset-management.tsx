@@ -12,7 +12,7 @@ import '@/styles/factory-overview.css';
 import '@/styles/asset-management/asset-management-page.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllocatedAssetsAsync, fetchAssets, setActiveTabIndex } from '@/redux/assetManagement/assetManagementSlice';
-import { RootState } from '@/redux/store';
+import { RootState , AppDispatch } from '@/redux/store';
 import SyncPdtDialog from '@/components/assetManagement/sync-pdtdialog';
 import { Button } from 'primereact/button';
 import { getAccessGroup } from '@/utility/indexed-db';
@@ -24,7 +24,7 @@ import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
 const AssetManagementPage = () => {
   const [isSidebarExpand, setSidebarExpand] = useState(true);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const activeIndex = useSelector((state: RootState) => state.assetManagement.activeTabIndex);
   const { assets } = useSelector((state: RootState) => state.assetManagement);
   const { t } = useTranslation(['common', 'button', 'overview']);
@@ -39,6 +39,23 @@ const AssetManagementPage = () => {
   const opGroup = useRef(null);
   const [sortAscending, setSortAscending] = useState<boolean>(true);
   const [syncPdtCount, setSyncPdtCount] = useState<number>(0);
+
+  /** Reload what a sync changes: the pending count, and the assets themselves. */
+  const refreshAfterSync = async () => {
+    try {
+      const company_ifric_id = accessgroupIndexDb?.company_ifric_id;
+      if (company_ifric_id) {
+        const response = await getSyncPdtCount(company_ifric_id);
+        setSyncPdtCount(response.assetsWithUpdates);
+      }
+      await Promise.all([
+        dispatch(fetchAssets()),
+        dispatch(fetchAllocatedAssetsAsync()),
+      ]);
+    } catch (error) {
+      logHandledError('Failed to refresh after sync:', error);
+    }
+  };
 
   useEffect(() => {
     const initializeData = async () => {
@@ -310,6 +327,7 @@ const AssetManagementPage = () => {
         <SyncPdtDialog
           visible={dialogVisible}
           setVisible={setDialogVisible}
+          onSynced={refreshAfterSync}
         />
       </div>
     </div>

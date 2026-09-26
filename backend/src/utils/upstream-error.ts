@@ -1,3 +1,5 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
+
 /**
  * Extracts the most useful human-readable message from a failed upstream call.
  *
@@ -57,4 +59,25 @@ export function upstreamMessage(err: any, fallback = 'Upstream request failed'):
   }
 
   return fallback;
+}
+
+/**
+ * The exception to throw for a failure that came from somewhere else.
+ *
+ * Handlers used to *return* `{success:false, status: err.response.status}`,
+ * which left the HTTP status at 200 or 201: a failed write read as a
+ * successful one to every caller. And `err.response` is an axios shape — on
+ * the HttpException a service throws it is the payload, so the status came
+ * out undefined. This keeps a status the caller can act on and a message a
+ * person can read.
+ */
+export function toHttpException(err: any): HttpException {
+  if (err instanceof HttpException) {
+    return err;
+  }
+  const status = err?.response?.status;
+  return new HttpException(
+    upstreamMessage(err),
+    typeof status === 'number' ? status : HttpStatus.INTERNAL_SERVER_ERROR,
+  );
 }

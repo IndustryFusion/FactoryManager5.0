@@ -45,13 +45,13 @@ export class ReactFlowService {
       if(!response) {
         const createdFactory = new this.factoryModel(data);
         return createdFactory.save();
-      } else {
-        return {
-          "success": false,
-          "status": 409,
-          "message": "factoryId already exists"
-        }
       }
+      // The flow is already there: saving it means writing it, not refusing.
+      // This used to return `{success:false, status:409}` as an ordinary
+      // value, which Nest sends with HTTP 201 — so the editor reported a save
+      // that never happened, and then wrote Scorpio from the stale document.
+      await this.factoryModel.updateOne({ factoryId: data.factoryId }, data);
+      return this.factoryModel.findOne({ factoryId: data.factoryId });
       
     } catch(err) {
       if (err instanceof HttpException) {
@@ -95,8 +95,11 @@ export class ReactFlowService {
 
   async update(factoryId: string, data: ReactFlowDto) {
     try {
+      // upsert, because a flow that is not in Mongo yet must still be saved:
+      // updateOne matched nothing, changed nothing, and answered 200, so the
+      // editor showed no error and the flow was simply not there.
       const updatedUser = await this.factoryModel.updateOne({factoryId} , data, {
-        new: true, 
+        upsert: true,
       });
 
       // take subFlowIds to update product_line for assets

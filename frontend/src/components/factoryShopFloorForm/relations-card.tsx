@@ -208,12 +208,21 @@ const Relations = () => {
                     showToast("success", "success", t('toast:relations_saved'));
                 }
 
+            } else {
+                // The route answers HTTP 200 whatever happened; what it did is
+                // in the body. Without this branch a refused write looked
+                // exactly like a successful one.
+                showToast('error', t('toast:error'), response.data?.message ?? t('toast:updating_relations'));
             }
         }catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error("Error response:", error.response?.data.message);
                showToast('error', t('toast:error'), t('toast:updating_relations'));
-            } 
+            } else {
+                // Anything that was not an axios error was swallowed whole.
+                console.error("Failed to update relations:", error);
+                showToast('error', t('toast:error'), t('toast:updating_relations'));
+            }
         }
     }
 

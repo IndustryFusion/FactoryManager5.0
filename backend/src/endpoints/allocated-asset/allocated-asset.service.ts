@@ -97,8 +97,9 @@ export class AllocatedAssetService {
             'Accept': 'application/ld+json'
           };
           let id = `${factoryId}:allocated-assets`;
-          const data = prepareForScorpio(allocatedStore(id, formattedAssetArr), { label: `allocated assets ${id}` });
-          let response = await axios.post(this.scorpioUrl, data, {headers});
+          // Replaced, not created: a plain POST answers 409 when the store is
+          // already there, and the caller could not tell that from success.
+          let response = await replaceEntity(this.scorpioUrl, allocatedStore(id, formattedAssetArr), headers);
           await this.updateGlobal(token)
           return {
             status: response.status,
@@ -120,8 +121,11 @@ export class AllocatedAssetService {
           }
         }
       } else {
+        // Nothing to allocate is a result, not a failure — and it must carry a
+        // status the callers understand. `status: true` compared false against
+        // every check, so update() fell through it and returned nothing at all.
         return {
-          status: true,
+          status: HttpStatus.OK,
           statusText: 'No Allocated Assets Available'
         }
       }
@@ -333,27 +337,51 @@ async createGlobal(token: string) {
     }
   }
 
+  /**
+   * Brings the factory's allocated-assets store in line with its flow.
+   *
+   * It used to delete the store and then re-create it, so a failure in the
+   * second step left the factory with no store at all — and when the flow had
+   * no assets left, create() reported "nothing to allocate", which did not
+   * match the success check, so this returned undefined and the caller
+   * answered 500 with the store already gone. That is what removing the last
+   * asset from a shop floor did.
+   *
+   * Now: with assets, the store is replaced in one write; with none, it is
+   * deleted, and a store that was never there is not an error. Either way the
+   * global list is rebuilt and a status comes back.
+   */
   async update(factoryId: string, token: string) {
-    try{
-      let id = `${factoryId}:allocated-assets`;
-      let deleteResponse = await this.remove(id, token);
-      if(deleteResponse['status'] == 200 || deleteResponse['status'] == 204) {
-        let response =  await this.create(factoryId, token);
-        if(response['status'] == 200 || response['status'] == 201) {
-          let globalResponse = await this.updateGlobal(token); 
-          return {
-            status: globalResponse.status,
-            data: globalResponse.data,
-          };
+    try {
+      const id = `${factoryId}:allocated-assets`;
+      const response = await this.create(factoryId, token);
+      const hasAssets = response['statusText'] !== 'No Allocated Assets Available';
+
+      if (!hasAssets) {
+        try {
+          await this.remove(id, token);
+        } catch (err) {
+          // Already absent: the end state asked for is the end state we have.
+          if (err?.response?.status !== 404 && err?.getStatus?.() !== HttpStatus.NOT_FOUND) {
+            throw err;
+          }
         }
       }
-    } catch(err) {
+
+      // create() rebuilds the global list only when it wrote a store; with the
+      // last asset removed it still has to be taken out of the global list.
+      const globalResponse = await this.updateGlobal(token);
+      return {
+        status: HttpStatus.OK,
+        data: globalResponse?.data ?? [],
+      };
+    } catch (err) {
       if (err instanceof HttpException) {
         throw err;
       } else if (err.response) {
         throw new HttpException(upstreamMessage(err), err.response.status);
       } else {
-        throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+        throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
