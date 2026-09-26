@@ -201,7 +201,11 @@ const CustomAssetNode: React.FC<CustomAssetNodeProps> = ({  id, data,selected })
     });
   };
   const title = data.label ?? t('reactflow:asset');
-  const sub = data.asset_category ?? "";
+  // A flow saved before this was fixed still holds 'NULL' in the node itself,
+  // which IFX wrote for a product created without a category. Nothing to show
+  // is better than a word that means nothing on a factory plan.
+  const rawCategory = typeof data.asset_category === "string" ? data.asset_category.trim() : "";
+  const sub = rawCategory === "NULL" ? "" : rawCategory;
   const vendorOrSerial = data.manufacturer || getShortSerial(data.asset_serial_number) || "";
 
   const onSelect = (e: React.MouseEvent) => {

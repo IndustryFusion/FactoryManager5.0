@@ -30,6 +30,7 @@ import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.s
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { assertCompliant, linkTargets, prepareForScorpio, replaceEntity, templateCache, toLinks, toNgsiLd } from '../../utils/ngsi-ld';
+import { assetCategoryOf } from '../../utils/asset-category';
 @Injectable()
 export class AssetService {
   private readonly logger = new Logger(AssetService.name);
@@ -528,6 +529,9 @@ export class AssetService {
               outcome.cache = "not created: IFX has no product-list row for it under this company (the Assets table will not show it)";
             } else {
               const { _id, ...newCacheData } = ifxCacheRows[assetId];
+              // Cleaned on the way in, so a row imported before IFX stopped
+              // writing 'NULL' does not carry it onto the factory flow.
+              newCacheData.asset_category = assetCategoryOf(newCacheData);
               await this.factoryPdtCacheModel.create(newCacheData);
               cacheUpdatedAssetIds.push(assetId);
               outcome.cache = 'row created (shows in the Assets table)';
