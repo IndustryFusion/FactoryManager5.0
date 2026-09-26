@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query, HttpException } from '@nestjs/common';
 import { AllocatedAssetService } from './allocated-asset.service';
 import { TokenService } from '../session/token.service';
 
@@ -114,6 +114,12 @@ export class AllocatedAssetController {
       const token = await this.tokenService.getToken();
       return await this.allocatedAssetService.findOne(id, token);
     } catch (err) {
+      // Every failure used to be answered as a bare "Not Found", so Scorpio
+      // being unreachable, or a token being refused, read to the caller as an
+      // empty factory. The service says what went wrong; pass it on.
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new NotFoundException();
     }
   }
