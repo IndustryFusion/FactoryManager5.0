@@ -273,7 +273,11 @@ const DashboardAssets: React.FC<DashboardAssetsProps> = ({ setBlockerProp, setPr
 
   return (
     <>
-      <Toast ref={toast} />
+      {/* At the document root, not here: this toast lives inside the sticky
+          asset bar, whose own z-index traps anything within it below the
+          navbar — which is why "IFRIC ID copied" appeared cut off behind it.
+          A stacking context cannot be escaped with a z-index. */}
+      <Toast ref={toast} appendTo={typeof document !== "undefined" ? document.body : undefined} />
       <div>
         <div className="dashboard-assets">
           {loading ? (

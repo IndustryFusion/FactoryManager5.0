@@ -26,6 +26,7 @@ import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { linkTargets, prepareForScorpio, replaceEntity, toLinks } from '../../utils/ngsi-ld';
+import { UrnHolderService } from '../urn-holder/urn-holder.service';
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -34,7 +35,8 @@ export class ShopFloorService {
     private readonly factoryPdtCacheModel: Model<FactoryPdtCache>,
     private readonly factorySiteService: FactorySiteService,
     private readonly assetService: AssetService,
-    private readonly factoryPdtCacheService: FactoryPdtCacheService
+    private readonly factoryPdtCacheService: FactoryPdtCacheService,
+    private readonly urnHolders: UrnHolderService
     ) {}
 
   async create(data: shopFloorDescriptionDto, token: string) {
@@ -53,72 +55,17 @@ export class ShopFloorService {
 
       if(!shopFloorData.data.length){
         console.log("shopFloorData",shopFloorData)
-        //fetch the last urn from scorpio and create a new urn
-        const fetchLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store`;
-        console.log("fetchLastUrnUrl",fetchLastUrnUrl)
-        
-        try{
-          const getLastUrn = await axios.get(fetchLastUrnUrl, {
-            headers,
-          });
-        }
-        catch(error){
-          if (error.response && error.response.status === 404){
-            const shopStore = {
-              "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-              "id": "urn:ngsi-ld:shopFloor-id-store",
-              "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-              "last-urn": {
-                  "type": "Property",
-                  "value": "urn:ngsi-ld:shopFloors:2:000"
-              }
-            }
-            const response = await axios.post(this.scorpioUrl, prepareForScorpio(shopStore), {headers});
-            if (response.status !== 201){
-              throw new HttpException({
-                errorCode: `FS_${response.status}`,
-                message: upstreamMessage({ response })
-              }, response.status);
-            }
-          } else if (error.response) {
-            throw new HttpException({
-              errorCode: `FS_${error.response.status}`,
-              message: upstreamMessage(error)
-            }, error.response.status);
-          } else {
-            throw new HttpException({
-              errorCode: "FS_500",
-              message: error.message
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        }
-        
-        let getLastUrn = await axios.get(fetchLastUrnUrl, {
-            headers
-        });
-
-        getLastUrn = getLastUrn.data;
-        console.log("getLastUrn.data",getLastUrn)
-        let newUrn = '',
-          lastUrn = {},
-          lastUrnKey = '';
-        lastUrn['@context'] = getLastUrn['@context'];
-        for (let key in getLastUrn) {
-          if (key.includes('last-urn')) {
-            lastUrnKey = key;
-            lastUrn[lastUrnKey] = getLastUrn[key];
-            newUrn = getLastUrn[key]['value'].split(':')[4];
-            newUrn = (parseInt(newUrn, 10) + 1)
-              .toString()
-              .padStart(newUrn.length, '0');
-          }
-        }
+        // The next id comes from this application's own counter, taken
+        // atomically — see endpoints/urn-holder. It used to be read from a
+        // holder entity in Scorpio, added to and written back, so two people
+        // creating a shop floor in the same moment could take the same id.
+        const nextUrn = await this.urnHolders.nextShopFloorUrn();
 
         //set the result to store in scorpio
         const result = {
           '@context':
             'https://industryfusion.github.io/contexts/v0.1/context.jsonld',
-          id: `urn:ngsi-ld:shopFloors:2:${newUrn}`,
+          id: nextUrn,
           type: data.type,
         };
         for (let key in data.properties) {
@@ -133,14 +80,9 @@ export class ShopFloorService {
             };
           }
         }
-        // Check the shop floor before taking its id, so a refused write
-        // does not use up a number.
+        // A number that is taken stays taken, whether or not this write
+        // succeeds: the sequence may skip, and ids stay unique.
         const shopFloor = prepareForScorpio(result, { label: `shop floor ${result.id}` });
-        //update the last urn with the current urn in scorpio
-        lastUrn[lastUrnKey].value = `urn:ngsi-ld:shopFloors:2:${newUrn}`;
-        const updateLastUrnUrl = `${this.scorpioUrl}/urn:ngsi-ld:shopFloor-id-store/attrs`;
-        await axios.patch(updateLastUrnUrl, prepareForScorpio(lastUrn, { requireId: false }), { headers });
-
         //store the template data to scorpio
         const response = await axios.post(this.scorpioUrl, shopFloor, { headers });
         return {

@@ -31,6 +31,7 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
+import { getAccessGroup } from "@/utility/indexed-db";
 export type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
 
 const ALL_STATES: { label: string; value: AlertaState }[] = [
@@ -199,7 +200,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
       if (job.status === 'SUCCEEDED' || job.status === 'FAILED') {
         fetchJobLogsHttp(job.jobId);
       } else {
-        streamJobLogs(job.jobId);
+        void streamJobLogs(job.jobId);
       }
     }
   };
@@ -208,8 +209,12 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
     setIsLoadingLogs(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+      // The backend checks the session on this route too, and a plain fetch
+      // carries no token — the same reason the shop-floor list used to fail.
+      const stored = await getAccessGroup().catch(() => null);
       const response = await fetch(`${API_URL}/jobs/${jobId}/logs-text`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: stored?.ifricdi ? { Authorization: `Bearer ${stored.ifricdi}` } : {},
       });
       
       if (response.ok) {
@@ -228,14 +233,14 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
     } catch (error) {
       logHandledError('Failed to fetch logs:', error);
       setLogs('Failed to load logs. Using SSE stream instead...\n');
-      streamJobLogs(jobId);
+      void streamJobLogs(jobId);
       notifyError(t('toast:error'), error, t('toast:load_job_logs_failed'));
     } finally {
       setIsLoadingLogs(false);
     }
   };
 
-  const streamJobLogs = (jobId: string) => {
+  const streamJobLogs = async (jobId: string) => {
     setIsLoadingLogs(true);
     
     // Close existing connection if any
@@ -244,7 +249,14 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
     }
 
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    const eventSource = new EventSource(`${API_URL}/jobs/${jobId}/stream`, {
+    // EventSource cannot send headers, so the session goes in the query — the
+    // one route on the backend that reads it there (@TokenInQuery). Without
+    // it the stream is refused and the logs never arrive.
+    const stored = await getAccessGroup().catch(() => null);
+    const streamUrl = stored?.ifricdi
+      ? `${API_URL}/jobs/${jobId}/stream?token=${encodeURIComponent(stored.ifricdi)}`
+      : `${API_URL}/jobs/${jobId}/stream`;
+    const eventSource = new EventSource(streamUrl, {
       withCredentials: true
     });
     

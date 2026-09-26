@@ -4,9 +4,9 @@ import "../../styles/sidebar.css";
 import Image from "next/image";
 import { Button } from "primereact/button";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { encryptRoute, generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
+import { encryptRoute, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
 import { getErrorMessage } from "@/utility/error-message";
-import { XANA_ROUTING_ENABLED } from "@/utility/xana";
+import { openXanaPdt } from "@/utility/xana";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
 import axios from "axios"; // You need this for error handling
@@ -15,7 +15,6 @@ import { useTranslation } from "next-i18next";
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
-const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
 function Sidebar() {
   const router = useRouter();
@@ -103,17 +102,9 @@ function Sidebar() {
     }
   }
 
-  async function handleXanaRoute() {
-    // Switched off until the suite ships XANA PDT AI: XANA AI is hidden in
-    // the app grid, so this would open something the suite no longer offers.
-    // The button stays visible; see utility/xana.ts.
-    if (!XANA_ROUTING_ENABLED) return;
-    const token = await getAccessGroup();
-    const response = await generateToken({ token: token.ifricdi });
-    if (response && response.data) {
-      const token2 = response.data.token;
-      window.open(`${xana_url}?token=${token2}`, '_blank', 'noopener,noreferrer');
-    }
+  function handleXanaRoute() {
+    // A plain link — XANA PDT signs its own users in. See utility/xana.ts.
+    openXanaPdt();
   }
 
   return (
