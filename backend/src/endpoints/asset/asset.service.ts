@@ -532,7 +532,18 @@ export class AssetService {
               // Cleaned on the way in, so a row imported before IFX stopped
               // writing 'NULL' does not carry it onto the factory flow.
               newCacheData.asset_category = assetCategoryOf(newCacheData);
-              await this.factoryPdtCacheModel.create(newCacheData);
+              // One row per product per company, whatever else is happening.
+              // `exists()` and `create()` are two awaits with nothing between
+              // them, so two tabs, a double-clicked Refresh, or one asset
+              // listed twice by the registry each produced a second row — and
+              // duplicates then drift apart, because the sync updates one and
+              // the allocation updates all of them. The live database has
+              // several of these.
+              await this.factoryPdtCacheModel.updateOne(
+                { id: assetId, company_ifric_id },
+                { $setOnInsert: newCacheData },
+                { upsert: true },
+              );
               cacheUpdatedAssetIds.push(assetId);
               outcome.cache = 'row created (shows in the Assets table)';
             }

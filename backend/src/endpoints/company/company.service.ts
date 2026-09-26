@@ -8,6 +8,7 @@ import { Response, Request } from 'express';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { assertCompliant, mergeForSync, templateCache, toNgsiLd } from '../../utils/ngsi-ld';
+import { assetCategoryOf } from '../../utils/asset-category';
 @Injectable()
 export class CompanyService {
   private readonly logger = new Logger(CompanyService.name);
@@ -107,7 +108,20 @@ export class CompanyService {
       // after ifx cache update set isCacheUpdated to false for factory pdt cache
       await this.factoryPdtCache.updateMany({company_ifric_id}, {isCacheUpdated : false});
 
-      let total = ifxCacheData.data.length, processed = 0, updatedAssetIds = [];
+      // The badge counts two kinds of pending work: changes waiting to come
+      // down from IFX, and local factory/shop-floor assignments waiting to go
+      // up. Only the first was counted here, so a badge made up of the second
+      // showed "N to sync" and then processed nothing — which is exactly what
+      // "it says there is work and nothing happens" looks like. The push above
+      // is that work, it is one request, and it is done by the time we get here.
+      const pushedUp = factoryPdtData.length;
+      let total = ifxCacheData.data.length + pushedUp;
+      let processed = pushedUp;
+      let updatedAssetIds = [];
+      if (pushedUp) {
+        successCount += pushedUp;
+        res.write(JSON.stringify({ total, processed }) + "\n");
+      }
       const templateFor = templateCache();
       const batchSize = 50;
       for(let i = 0; i < ifxCacheData.data.length; i += batchSize) {
@@ -150,6 +164,10 @@ export class CompanyService {
               delete asset.shop_floor;
               delete asset._id;
 
+              // The same cleanup the import applies. Without it the sync
+              // writes IFX's raw row back and the category regresses to the
+              // 'NULL' placeholder. See utils/asset-category.
+              asset.asset_category = assetCategoryOf(asset);
               await this.factoryPdtCache.updateOne({company_ifric_id, id: asset.id}, { $set: asset });
 
               // add assetId in updatedAssetIds after successful update
