@@ -21,7 +21,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './endpoints/auth/auth.guard';
-import { ScorpioStoresBootstrap } from './bootstrap/scorpio-stores.bootstrap';
+import { UrnHoldersBootstrap } from './bootstrap/urn-holders.bootstrap';
 import { PdtViewsBootstrap } from './bootstrap/pdt-views.bootstrap';
 import { AuthService } from './endpoints/auth/auth.service';
 import { AuthController } from './endpoints/auth/auth.controller';
@@ -80,6 +80,8 @@ import { FlinkDeployController } from './endpoints/flink-deploy/flink-deploy.con
 import { FlinkDeployService } from './endpoints/flink-deploy/flink-deploy.service';
 import { AssetModule } from './endpoints/asset/asset.module';
 import { FlinkJob, FlinkJobSchema } from './endpoints/schemas/flink-job.schema';
+import { UrnHolder, UrnHolderSchema } from './endpoints/schemas/urn-holder.schema';
+import { UrnHolderService } from './endpoints/urn-holder/urn-holder.service';
 import { CompanyController } from './endpoints/company/company.controller';
 import { CompanyService } from './endpoints/company/company.service';
 import { CameraModule } from './endpoints/camera/camera.module';
@@ -98,7 +100,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     MongooseModule.forFeature([
       { name: FactorySite.name, schema: FactorySiteSchema },
       { name: FactoryPdtCache.name, schema: FactoryPdtCacheSchema },
-      { name: FlinkJob.name, schema: FlinkJobSchema }
+      { name: FlinkJob.name, schema: FlinkJobSchema },
+      { name: UrnHolder.name, schema: UrnHolderSchema }
     ]),
     MongooseModule.forFeature([
       { name: Onboarding.name, schema: OnboardingSchema },
@@ -142,10 +145,11 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     // author thought about it. The guard also refuses a caller from another
     // company - this installation belongs to one.
     { provide: APP_GUARD, useClass: AuthGuard },
-    // Provisioning that used to be manual post-deployment steps in the README:
-    // the Scorpio holder entities, and the dashboard views in the PDT
-    // database. Both run once at startup and neither is fatal.
-    ScorpioStoresBootstrap,
+    // Provisioning that used to be a manual post-deployment step in the
+    // README: this application's own two bookkeeping records, and the
+    // dashboard views in the PDT database. Both run once at startup and
+    // neither is fatal.
+    UrnHoldersBootstrap,
     PdtViewsBootstrap,
     AppService,
     AuthService,
@@ -175,7 +179,8 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     ContractService,
     FactoryPdtCacheService,
     FlinkDeployService,
-    CompanyService
+    CompanyService,
+    UrnHolderService
   ]
 })
 export class AppModule {

@@ -20,6 +20,7 @@ import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
 import { upstreamMessage } from '../../utils/upstream-error';
+import { UrnHolderService } from '../urn-holder/urn-holder.service';
 import { attrValue, prepareForScorpio, replaceEntity } from '../../utils/ngsi-ld';
 
 /**
@@ -65,7 +66,8 @@ export class AllocatedAssetService {
   constructor(
     private readonly assetService: AssetService,
     private readonly reactFlowService: ReactFlowService,
-    private readonly factorySiteService: FactorySiteService
+    private readonly factorySiteService: FactorySiteService,
+    private readonly urnHolders: UrnHolderService
   ) {}
   private readonly scorpioUrl = process.env.SCORPIO_URL;
 
@@ -148,33 +150,24 @@ async createGlobal(token: string) {
       new Set(assetArr.map(item => JSON.stringify(item)))
     ).map(item => JSON.parse(item));
 
-    const headers = {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/ld+json',
-      'Accept': 'application/ld+json'
-    };
-   
     try {
-      // Replace in one request: creates the store if it is missing, and never
-      // leaves it deleted when the write fails.
-      let response = await replaceEntity(this.scorpioUrl, allocatedStore("urn:ngsi-ld:global-allocated-assets-store", assetArr), headers);
+      // The list is this application's own bookkeeping, rebuilt in full from
+      // the per-factory stores read above, so it is kept here rather than as
+      // an entity in Scorpio — see endpoints/urn-holder. Written in one go, as
+      // it was before: never deleted and left empty when a write fails.
+      const assets = await this.urnHolders.setGlobalAllocatedAssets(
+        assetArr.map((item) => item.id),
+      );
       return {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data
+        status: HttpStatus.OK,
+        statusText: 'OK',
+        data: assets
       }
     } catch(err) {
-      if (err.response) {
-        throw new HttpException({
-          errorCode: `FS_${err.response.status}`,
-          message: upstreamMessage(err)
-        }, err.response.status);
-      } else {
-        throw new HttpException({
-          errorCode: "FS_500",
-          message: err.message
-        }, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+      throw new HttpException({
+        errorCode: "FS_500",
+        message: err.message
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   } catch(err) {
     if (err instanceof HttpException) {
@@ -306,36 +299,22 @@ async createGlobal(token: string) {
   }
 
   async getGlobalAllocatedAssets(token: string) {
-    try{
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      };
-      //fetch the allocated assets from scorpio
-      const fetchUrl = `${this.scorpioUrl}/urn:ngsi-ld:global-allocated-assets-store`;
-      let response = await axios.get(fetchUrl, {
-        headers
-      });
-     if (response.data) {
-      console.log("global assets", response.data);
-      
-      return allocatedItems(response.data).map(item => item.id);
-    }
-    
-    return [];
-    
-  } catch (err) {
-    if (err.response && err.response.status === 404) {
-      await this.createGlobal(token);
-      return await this.getGlobalAllocatedAssets(token);
-    } else if (err.response) {
-      throw new HttpException(upstreamMessage(err), err.response.status);
-    } else {
+    try {
+      const assets = await this.urnHolders.getGlobalAllocatedAssets();
+      // Nothing recorded yet: build it once from the per-factory stores —
+      // the same answer the missing-entity path in Scorpio used to give.
+      if (!assets.length) {
+        const rebuilt = await this.createGlobal(token);
+        return Array.isArray(rebuilt?.data) ? rebuilt.data : [];
+      }
+      return assets;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new HttpException(err.message, HttpStatus.NOT_FOUND);
     }
   }
-}
 
   async update(factoryId: string, token: string) {
     try{

@@ -7,43 +7,15 @@ The Factory Manager 5.0 IFF application is responsible for managing the linked a
 
 For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running on the central IFF factory server with machines connected it using individual gateways. For detailed information on setup of the factory server and gateways to deploy PDT and data agents is described [here](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md). Once the PDT is setup in the factory, the Factory Manager can be deployed on the same network to interact with the PDT semantic model and data. The Factory Manager can only manage and link the assets, the creation must be always done in Fleet Manager.
 
-The PDT is also used in Factory Manager to create and handle Factory and ShopFloor objects, which need a couple of ID store objects in Scorpio.
+The PDT is used in Factory Manager to create and handle Factory and ShopFloor objects.
 
-**The backend now creates these itself when it starts, so there is nothing to do here.** An existing store is never touched, so a counter that is already in use keeps its place. Set `FACTORY_AUTO_PROVISION=false` to opt out and create them by hand as below.
+Two records are kept for that bookkeeping: a counter for shop floor ids, and the list of allocated assets across every factory. **They live in this application's own MongoDB (the `urn_holders` collection) and are created at startup, so there is nothing to do here.** Neither describes the factory, so neither belongs in Scorpio: one is a sequence, the other is rebuilt from entities Scorpio already holds.
 
-Factories need no store at all any more: a factory's identifier is minted by the IFRIC registry when the factory is created, which is what makes it unique across deployments rather than only within one PDT. Set `IFRIC_REGISTRY_BACKEND_URL` instead.
+On an installation that has been running against Scorpio, the first value is inherited rather than reset — from the old `urn:ngsi-ld:shopFloor-id-store` if it is still there, otherwise from the highest shop floor id Scorpio holds. Ids therefore continue where they left off. A record that already exists in MongoDB is never touched. Set `FACTORY_AUTO_PROVISION=false` to opt out.
 
-For reference, these are the objects the backend creates. In value, urn:ngsi-ld:shopFloors:2:XXX, the XXX range is your choice; the IDs then start from XXX+1. Replace the PDT URL accordingly.
+The old `urn:ngsi-ld:shopFloor-id-store` and `urn:ngsi-ld:global-allocated-assets-store` entities are no longer read or written. Nothing removes them, so they can stay where they are.
 
-```bash
-
-curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
---header 'Content-Type: application/ld+json' \
---header 'Accept: application/ld+json' \
---data-raw '{
-    "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-    "id": "urn:ngsi-ld:shopFloor-id-store",
-    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-    "last-urn": {
-        "type": "Property",
-        "value": "urn:ngsi-ld:shopFloors:2:000"
-    }
-}'
-
-curl --location 'http://<PDT-URL>/ngsi-ld/v1/entities/' \
---header 'Content-Type: application/ld+json' \
---header 'Accept: application/ld+json' \
---data-raw '{
-    "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.3.jsonld",
-    "id": "urn:ngsi-ld:global-allocated-assets-store",
-    "type": "https://industry-fusion.org/base/v0.1/urn-holder",
-    "http://www.industry-fusion.org/schema#last-data": {
-        "type": "Relationship",
-        "object": ["default"]
-    }
-}'
-
-```
+Factories need no counter at all: a factory's identifier is minted by the IFRIC registry when the factory is created, which is what makes it unique across deployments rather than only within one PDT. Set `IFRIC_REGISTRY_BACKEND_URL` instead.
 
 The data dashboards read a set of views in the PDT's Postgres.
 

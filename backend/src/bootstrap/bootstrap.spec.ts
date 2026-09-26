@@ -16,7 +16,7 @@
 
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
-import { ScorpioStoresBootstrap } from './scorpio-stores.bootstrap';
+import { UrnHoldersBootstrap } from './urn-holders.bootstrap';
 import { PdtViewsBootstrap } from './pdt-views.bootstrap';
 import { PDT_VIEW_STATEMENTS } from './pdt-views.sql';
 
@@ -48,60 +48,105 @@ jest.mock('pg', () => ({ Client: jest.fn(() => client) }));
 
 const tokenService = { getToken: async () => 'service-token' } as any;
 
-describe('ScorpioStoresBootstrap', () => {
+/** A stand-in for the Mongo-backed holders, recording what was seeded. */
+const holderStore = () => {
+  const seeded = new Map<string, any>();
+  return {
+    seeded,
+    has: async (key: string) => seeded.has(key),
+    seedIfAbsent: async (key: string, values: any) => {
+      if (seeded.has(key)) return false;
+      seeded.set(key, values);
+      return true;
+    },
+  } as any;
+};
+
+describe('UrnHoldersBootstrap', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.SCORPIO_URL = 'http://scorpio.test/entities';
     delete process.env.FACTORY_AUTO_PROVISION;
   });
 
-  it('creates both stores when neither exists', async () => {
-    mockedAxios.get.mockRejectedValue({ response: { status: 404 } });
-    mockedAxios.post.mockResolvedValue({ status: 201 } as any);
+  it('carries the count over from the Scorpio holder', async () => {
+    mockedAxios.get.mockImplementation(async (url: string) => {
+      if (url.includes('shopFloor-id-store')) {
+        return { data: { 'last-urn': { value: 'urn:ngsi-ld:shopFloors:2:007' } } } as any;
+      }
+      throw { response: { status: 404 } };
+    });
+    const holders = holderStore();
 
-    await new ScorpioStoresBootstrap(tokenService).onModuleInit();
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
 
-    const created = mockedAxios.post.mock.calls.map(([, body]: any) => body.id);
-    expect(created).toEqual([
-      'urn:ngsi-ld:shopFloor-id-store',
-      'urn:ngsi-ld:global-allocated-assets-store',
-    ]);
+    expect(holders.seeded.get('shop-floor-counter')).toEqual({ lastNumber: 7, width: 3 });
+    expect(holders.seeded.get('global-allocated-assets')).toEqual({ assets: [] });
   });
 
-  it('leaves an existing store untouched', async () => {
-    // Overwriting the shop floor store would reset its counter and hand out
-    // ids that are already in use.
-    mockedAxios.get.mockResolvedValue({ data: { id: 'x' } } as any);
+  it('falls back to the highest shop floor that exists', async () => {
+    // The holder is gone but the floors are not. Starting from zero here
+    // would mint ids that are already taken.
+    mockedAxios.get.mockImplementation(async (url: string) => {
+      if (url.includes('id-store') || url.includes('global-allocated')) {
+        throw { response: { status: 404 } };
+      }
+      return {
+        data: [
+          { id: 'urn:ngsi-ld:shopFloors:2:004' },
+          { id: 'urn:ngsi-ld:shopFloors:2:011' },
+          { id: 'urn:ngsi-ld:not-a-shop-floor' },
+        ],
+      } as any;
+    });
+    const holders = holderStore();
 
-    await new ScorpioStoresBootstrap(tokenService).onModuleInit();
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
 
-    expect(mockedAxios.post).not.toHaveBeenCalled();
+    expect(holders.seeded.get('shop-floor-counter').lastNumber).toBe(11);
   });
 
-  it('seeds the shop floor counter at the README value', async () => {
-    mockedAxios.get.mockRejectedValue({ response: { status: 404 } });
-    mockedAxios.post.mockResolvedValue({ status: 201 } as any);
+  it('starts at zero on an empty installation', async () => {
+    mockedAxios.get.mockImplementation(async (url: string) => {
+      if (url.includes('store')) throw { response: { status: 404 } };
+      return { data: [] } as any;
+    });
+    const holders = holderStore();
 
-    await new ScorpioStoresBootstrap(tokenService).onModuleInit();
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
 
-    const [, body]: any = mockedAxios.post.mock.calls[0];
-    const key = Object.keys(body).find((k) => k.includes('last-urn'));
-    expect(body[key!].value).toBe('urn:ngsi-ld:shopFloors:2:000');
+    expect(holders.seeded.get('shop-floor-counter').lastNumber).toBe(0);
   });
 
-  it('starts the service even when Scorpio is unreachable', async () => {
+  it('leaves holders that already exist alone', async () => {
+    const holders = holderStore();
+    holders.seeded.set('shop-floor-counter', { lastNumber: 42, width: 3 });
+    holders.seeded.set('global-allocated-assets', { assets: ['a'] });
+
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
+
+    expect(holders.seeded.get('shop-floor-counter').lastNumber).toBe(42);
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+  });
+
+  it('seeds nothing, rather than a colliding counter, when Scorpio cannot be read', async () => {
     mockedAxios.get.mockRejectedValue(new Error('connect ECONNREFUSED'));
+    const holders = holderStore();
 
+    // Still starts: a boot-time outage must not stop the service.
     await expect(
-      new ScorpioStoresBootstrap(tokenService).onModuleInit(),
+      new UrnHoldersBootstrap(tokenService, holders).onModuleInit(),
     ).resolves.toBeUndefined();
+    expect(holders.seeded.size).toBe(0);
   });
 
   it('can be switched off', async () => {
     process.env.FACTORY_AUTO_PROVISION = 'false';
+    const holders = holderStore();
 
-    await new ScorpioStoresBootstrap(tokenService).onModuleInit();
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
 
+    expect(holders.seeded.size).toBe(0);
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 });
