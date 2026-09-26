@@ -190,9 +190,20 @@ async createGlobal(token: string) {
       let id = `${factoryId}:allocated-assets`;
       //fetch the allocated assets from scorpio
       const fetchUrl = `${this.scorpioUrl}/${id}`;
-      let response = await axios.get(fetchUrl, {
-        headers
-      });
+      let response: { data?: any };
+      try {
+        response = await axios.get(fetchUrl, { headers });
+      } catch (err) {
+        // A factory that has allocated nothing yet has no store, and that is
+        // an answer, not a failure: nothing is allocated. Reported as a 404 it
+        // aborted the caller — the flow editor asks this before deciding
+        // whether to create the store, so saving a factory's first allocation
+        // failed on the very question meant to allow it.
+        if (err?.response?.status === 404) {
+          return [];
+        }
+        throw err;
+      }
 
       let assetIds = allocatedItems(response.data);
 
