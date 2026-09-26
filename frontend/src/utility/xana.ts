@@ -15,22 +15,21 @@
 //
 
 /**
- * Whether the XANA entry points in this app do anything when clicked.
+ * Where the XANA entry points in this app go.
  *
- * Switched off deliberately. XANA AI is hidden in the IFX Suite app grid, so
- * sending someone there from here would open an application the suite no
- * longer offers. The buttons and links stay visible on purpose — the entry
- * points are meant to remain where users already know to find them — but a
- * click does nothing until XANA PDT AI ships and they are pointed at it.
+ * XANA PDT signs its own users in, so this is a plain link: no route token is
+ * minted and nothing about the session is passed along. That is also why the
+ * handlers no longer call `generate-token` — there is no product by this name
+ * for the registry to mint a token for.
  *
- * Re-enabling is this one flag. The routing behind it is left intact rather
- * than deleted, in all three places it is reached from:
+ * Three places reach this:
  *   - the floating "Ask XANA" button (components/floating-xana-button.tsx)
- *   - the sidebar entry            (components/navBar/sidebar.tsx)
- *   - the dashboard banner         (pages/dashboard.tsx)
- *
- * When that happens, the product name each handler asks a token for needs
- * revisiting too: the floating button requests "XANA AI" explicitly, while
- * the other two leave it to the backend's default.
+ *   - the sidebar entry              (components/navBar/sidebar.tsx)
+ *   - the dashboard banner           (pages/dashboard.tsx)
  */
-export const XANA_ROUTING_ENABLED = false;
+export const XANA_PDT_URL =
+  process.env.NEXT_PUBLIC_XANA_PDT_URL || 'https://xana-pdt.local';
+
+export const openXanaPdt = () => {
+  window.open(XANA_PDT_URL, '_blank', 'noopener,noreferrer');
+};

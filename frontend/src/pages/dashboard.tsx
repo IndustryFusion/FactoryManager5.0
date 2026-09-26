@@ -4,8 +4,8 @@ import Navbar from "@/components/navBar/navbar";
 import "../styles/dashboard-page.css";
 import StackedPercentageBarChart from "@/components/dashboard/dashboard-charts";
 import { getAccessGroup } from "@/utility/indexed-db";
-import { generateToken, getCompanyDetailsById, getUserDetails } from "@/utility/auth";
-import { XANA_ROUTING_ENABLED } from "@/utility/xana";
+import { getCompanyDetailsById, getUserDetails } from "@/utility/auth";
+import { openXanaPdt } from "@/utility/xana";
 import axios from "axios";
 import { showToast } from "@/utility/toast";
 import { Toast } from "primereact/toast";
@@ -38,7 +38,6 @@ export function getProxiedImageUrl(s3Url: string | null | undefined | string[]):
   return `${BACKEND_API_URL}/file/by-name/${fileName}`;
 };
 
-const xana_url = process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
 
 
 /** Alerta severities mapped to the dot colours already used in alert-details.tsx. */
@@ -133,17 +132,9 @@ const DashboardPage: React.FC = () => {
         return `${prefix}...............${suffix}`;
     };
 
-    async function handleXanaOpen() {
-        // Switched off until the suite ships XANA PDT AI: XANA AI is hidden
-        // in the app grid, so this would open something the suite no longer
-        // offers. The button stays visible; see utility/xana.ts.
-        if (!XANA_ROUTING_ENABLED) return;
-        const token = await getAccessGroup();
-        const response = await generateToken({ token: token.ifricdi });
-        if (response && response.data) {
-            const token2 = response.data.token;
-            window.open(`${xana_url}?token=${token2}`, '_blank', 'noopener,noreferrer');
-        }
+    function handleXanaOpen() {
+        // A plain link — XANA PDT signs its own users in. See utility/xana.ts.
+        openXanaPdt();
     }
 
     return (

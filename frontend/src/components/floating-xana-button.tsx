@@ -1,8 +1,7 @@
 // components/FloatingXanaButton.tsx
 "use client";
 
-import { generateToken } from "@/utility/auth";
-import { XANA_ROUTING_ENABLED } from "@/utility/xana";
+import { openXanaPdt } from "@/utility/xana";
 import { getAccessGroup } from "@/utility/indexed-db";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue } from "framer-motion";
@@ -36,20 +35,10 @@ export default function FloatingXanaButton() {
     setMounted(true);
   }, [x, y]);
 
-  async function handleXanaOpen() {
+  function handleXanaOpen() {
     if (dragging) return; // block click during drag
-    // Switched off until the suite ships XANA PDT AI: XANA AI is hidden in
-    // the app grid, so this would open something the suite no longer offers.
-    // The button stays visible; see utility/xana.ts.
-    if (!XANA_ROUTING_ENABLED) return;
-    const token = await getAccessGroup();
-    const response = await generateToken({ token: token.ifricdi, product_name: "XANA AI" });
-    if (response?.data?.token) {
-      const token2 = response.data.token;
-      const xana_url =
-        process.env.NEXT_PUBLIC_XANA_URL || "https://dev-xana.industryfusion-x.org";
-      window.open(`${xana_url}?token=${token2}`, "_blank", "noopener,noreferrer");
-    }
+    // A plain link — XANA PDT signs its own users in. See utility/xana.ts.
+    openXanaPdt();
   }
 
   if (!isLoggedIn || !mounted) return null;
