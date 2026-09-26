@@ -23,6 +23,7 @@ import { AllocatedAssetService } from '../allocated-asset/allocated-asset.servic
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { linkTargets, replaceEntity, toLinks } from '../../utils/ngsi-ld';
+import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.service';
 @Controller('shop-floor')
 export class ShopFloorController {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -30,6 +31,7 @@ export class ShopFloorController {
     private readonly shopFloorService: ShopFloorService, 
     private readonly factorySiteService: FactorySiteService,
     private readonly allocatedAssetService: AllocatedAssetService,
+    private readonly factoryPdtCacheService: FactoryPdtCacheService,
     private readonly tokenService: TokenService
     ) {}
 
@@ -207,6 +209,17 @@ export class ShopFloorController {
             'Content-Type': 'application/ld+json',
             Accept: 'application/ld+json',
           };
+          // Let its assets go first: they keep pointing at this shop floor
+          // otherwise, which keeps them out of the available-assets list for
+          // good — the list only shows assets with no factory. Not fatal: a
+          // shop floor that is already deleted must not fail on its assets.
+          try {
+            await this.factoryPdtCacheService.releaseFromShopFloor(id);
+            await this.allocatedAssetService.updateGlobal(token);
+          } catch (err) {
+            console.error(`shop floor ${id} deleted, assets not released: ${err.message}`);
+          }
+
           const data = await this.factorySiteService.findOne(factoryId, token);
           if(data) {
             const hasShopFloorKey = "http://www.industry-fusion.org/schema#hasShopFloor";

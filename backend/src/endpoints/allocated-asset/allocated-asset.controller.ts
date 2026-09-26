@@ -14,9 +14,10 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, NotFoundException, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { AllocatedAssetService } from './allocated-asset.service';
 import { TokenService } from '../session/token.service';
+import { toHttpException } from '../../utils/upstream-error';
 
 @Controller('allocated-asset')
 export class AllocatedAssetController {
@@ -37,12 +38,12 @@ export class AllocatedAssetController {
           message: response['statusText']
         }
       }
+      throw new HttpException(
+        `The allocated assets could not be written (upstream status ${response?.['status']}).`,
+        HttpStatus.BAD_GATEWAY,
+      );
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      }
+      throw toHttpException(err);
     }
   }
 
@@ -58,12 +59,12 @@ export class AllocatedAssetController {
           message: response['statusText']
         }
       }
+      throw new HttpException(
+        `The allocated assets could not be written (upstream status ${response?.['status']}).`,
+        HttpStatus.BAD_GATEWAY,
+      );
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      }
+      throw toHttpException(err);
     }
   }
 
@@ -79,12 +80,12 @@ export class AllocatedAssetController {
           message: response['statusText']
         }
       }
+      throw new HttpException(
+        `The allocated assets could not be written (upstream status ${response?.['status']}).`,
+        HttpStatus.BAD_GATEWAY,
+      );
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      }
+      throw toHttpException(err);
     }
   } 
 
@@ -136,12 +137,18 @@ export class AllocatedAssetController {
           message: 'Updated Successfully',
         }
       }
+      // No silent fall-through: an unexpected status is a failure, and the
+      // caller has to be able to see it.
+      throw new HttpException(
+        `The allocated assets could not be updated (upstream status ${response?.['status']}).`,
+        HttpStatus.BAD_GATEWAY,
+      );
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      // Thrown, not returned: returning the failure left the HTTP status at
+      // 200/201, so every caller read a failed write as a successful one. And
+      // `err.response` is an axios shape — on the HttpException the service
+      // actually throws it is the payload, so the status came out undefined.
+      throw toHttpException(err);
     }
     
   }
@@ -158,12 +165,18 @@ export class AllocatedAssetController {
           message: 'Updated Successfully',
         }
       }
+      // No silent fall-through: an unexpected status is a failure, and the
+      // caller has to be able to see it.
+      throw new HttpException(
+        `The allocated assets could not be updated (upstream status ${response?.['status']}).`,
+        HttpStatus.BAD_GATEWAY,
+      );
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      // Thrown, not returned: returning the failure left the HTTP status at
+      // 200/201, so every caller read a failed write as a successful one. And
+      // `err.response` is an axios shape — on the HttpException the service
+      // actually throws it is the payload, so the status came out undefined.
+      throw toHttpException(err);
     }
     
   }
@@ -181,11 +194,11 @@ export class AllocatedAssetController {
         }
       }
     } catch(err) {
-      return { 
-        success: false, 
-        status: err.response.status,
-        message: err.response.data 
-      };
+      // Thrown, not returned: returning the failure left the HTTP status at
+      // 200/201, so every caller read a failed write as a successful one. And
+      // `err.response` is an axios shape — on the HttpException the service
+      // actually throws it is the payload, so the status came out undefined.
+      throw toHttpException(err);
     }
   }
 }

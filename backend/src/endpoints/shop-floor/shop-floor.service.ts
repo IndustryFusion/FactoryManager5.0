@@ -321,8 +321,18 @@ export class ShopFloorService {
   async updateReact(node: any, token: string) {
     try {
       let shopFloorobj = {}, assetObj = {}, factoryId = "";
+      // Every shop floor the flow still shows under its factory — including
+      // the ones that now carry no asset. The cleanup below is keyed on shop
+      // floors that still have an asset edge, so without this set an emptied
+      // shop floor was never cleaned up and its last asset was never released.
+      const shopFloorsInFlow = new Set<string>();
       for(let i = 0; i < node.length; i++){
         let id = node[i].source;
+        // Collected first, before any branch below can `continue` past it:
+        // this is what lets an emptied shop floor still be cleaned up.
+        if(node[i].source.startsWith('factory_') && node[i].target.startsWith('shopFloor_')){
+          shopFloorsInFlow.add(node[i].target.slice('shopFloor_'.length));
+        }
         // React Flow node ids are `<kind>_<entity id>`. Match the node kind by
         // its prefix, never by text inside the entity id: this used to test
         // `includes('factories')`, which only worked while factory ids were
@@ -341,21 +351,20 @@ export class ShopFloorService {
             }
           }
           if(!check){
-            let shopFloorData = await this.findOne(node[i].target.split('_').pop(), token);
-            shopFloorData['http://www.industry-fusion.org/schema#hasAsset'] = {
-              type: 'Relationship',
-              object: ''
-            }
-
-            let deleteResponse = await this.remove(node[i].target.split('_').pop(), token);
-            if(deleteResponse.status == 200 || deleteResponse.status == 204){
-              let response = await this.createShopFloor(shopFloorData, token);
-              if(response['status'] == 200 || response['status'] == 201){
-                continue;
-              } else {
-                return response;
-              }
-            }
+            // This shop floor carries no asset any more: clear its asset
+            // links, written in one replace. It used to DELETE the shop floor
+            // and POST it back, so a failed re-create lost the shop floor
+            // while the factory still pointed at it — the pattern the rest of
+            // this codebase was moved off (utils/ngsi-ld/scorpio-write.ts).
+            const sfHeaders = {
+              Authorization: 'Bearer ' + token,
+              'Content-Type': 'application/ld+json',
+              Accept: 'application/ld+json',
+            };
+            const shopFloorData = await this.findOne(node[i].target.split('_').pop(), token);
+            delete shopFloorData['http://www.industry-fusion.org/schema#hasAsset'];
+            await replaceEntity(this.scorpioUrl, shopFloorData, sfHeaders);
+            continue;
           }
         }
         if(node[i].source.includes('shopFloor') && !shopFloorobj.hasOwnProperty(id.split('_').pop())){
@@ -373,25 +382,30 @@ export class ShopFloorService {
           }
           if(!check){
             try {
+              // This asset has no relations drawn under it any more: drop its
+              // relationship attributes and write it back in one replace. It
+              // used to DELETE the asset and POST it again, with any failure
+              // swallowed by the catch below — so a failed re-create removed
+              // the asset from Scorpio and said nothing at all.
+              const assetHeaders = {
+                Authorization: 'Bearer ' + token,
+                'Content-Type': 'application/ld+json',
+                Accept: 'application/ld+json',
+              };
               let assetData = await this.assetService.getAssetDataById(node[i].target.split('_')[1], token);
               for (const key in assetData){
-                if (key.includes('has')){
-                  assetData[key] = {
-                    type: 'Relationship',
-                    object: '',
-                  }
+                // Relationships only: any attribute whose name merely contains
+                // "has" was being blanked along with them.
+                if (key.includes('has') && assetData[key]?.type === 'Relationship'){
+                  delete assetData[key];
                 }
               }
-              let deleteResponse = await this.assetService.deleteAssetById(node[i].target.split('_')[1], token);
-              if(deleteResponse.status == 200 || deleteResponse.status == 204){
-                let response = await this.assetService.setAssetData(assetData, token);
-                if(response['status'] == 200 || response['status'] == 201){
-                  continue;
-                } else {
-                  return response;
-                }
-              }
+              await replaceEntity(this.scorpioUrl, assetData, assetHeaders);
+              continue;
             } catch(err) {
+              // One asset's links must not stop the flow being saved, but the
+              // failure is no longer invisible.
+              console.error(`could not clear the relations of ${node[i].target}: ${err.message}`);
               continue;
             }
           }
@@ -407,6 +421,21 @@ export class ShopFloorService {
           }
         }
       }
+      // Runs before the branches below, and for every shop floor in the flow:
+      // an asset removed from a floor keeps claiming it until this says
+      // otherwise, and the branches only ever look at floors that still have
+      // one. Never fails the save — a released asset is a correction, and the
+      // flow itself has already been written.
+      await Promise.all(
+        [...shopFloorsInFlow].map((shopFloorId) =>
+          this.factoryPdtCacheService
+            .releaseFromShopFloor(shopFloorId, shopFloorobj[shopFloorId] ?? [])
+            .catch((err) =>
+              console.error(`could not release assets of ${shopFloorId}: ${err.message}`),
+            ),
+        ),
+      );
+
       if(Object.keys(shopFloorobj).length && Object.keys(assetObj).length){
         let response = await this.updateAssets(shopFloorobj, token);
         // add shopfloor and factory in cache to assets attached to shopfloor
