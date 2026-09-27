@@ -30,77 +30,86 @@ const flowWith = (assetIds: string[]) => ({
   }),
 });
 
-const service = (assetIds: string[]) =>
-  new AllocatedAssetService(
+/** The factory's own list, as this application now holds it. */
+const holders = () => {
+  const lists = new Map<string, string[]>();
+  return {
+    lists,
+    getFactoryAllocatedAssets: jest.fn(async (factoryId: string) => lists.get(factoryId) ?? []),
+    setFactoryAllocatedAssets: jest.fn(async (factoryId: string, assets: string[]) => {
+      lists.set(factoryId, assets);
+      return assets;
+    }),
+    deleteFactoryAllocatedAssets: jest.fn(async (factoryId: string) => lists.delete(factoryId)),
+    listFactoryAllocatedAssets: jest.fn(async () =>
+      [...lists.entries()].map(([factoryId, assets]) => ({ factoryId, assets })),
+    ),
+    getGlobalAllocatedAssets: jest.fn().mockResolvedValue([]),
+    setGlobalAllocatedAssets: jest.fn(async (assets: string[]) => assets),
+  };
+};
+
+const service = (assetIds: string[], store = holders()) => ({
+  store,
+  service: new AllocatedAssetService(
     { getAssetDataById: jest.fn().mockResolvedValue({}) } as any,
     flowWith(assetIds) as any,
     { findAll: jest.fn().mockResolvedValue([]) } as any,
-    { setGlobalAllocatedAssets: jest.fn().mockResolvedValue([]),
-      getGlobalAllocatedAssets: jest.fn().mockResolvedValue([]) } as any,
-  );
+    store as any,
+  ),
+});
 
 describe('removing the last asset from a factory', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     process.env.SCORPIO_URL = 'http://scorpio.test/entities';
-    // The global list is rebuilt from every factory's store; this company has
-    // none besides the one under test.
     mockedAxios.get.mockResolvedValue({ data: [] } as any);
   });
 
   it('answers with a status instead of nothing', async () => {
-    // The whole defect: create() reported "nothing to allocate", which matched
-    // no success check, so update() returned undefined and the controller
-    // answered 500 — with the store already deleted.
-    mockedAxios.delete.mockResolvedValue({ status: 204 } as any);
-    mockedAxios.post.mockResolvedValue({ status: 204, data: [] } as any);
+    // The defect: "nothing to allocate" matched no success check, so update()
+    // returned undefined and the controller answered 500 — with the factory's
+    // list already deleted.
+    const { service: allocated } = service([]);
 
-    const result = await service([]).update(FACTORY, 'token');
+    const result = await allocated.update(FACTORY, 'token');
 
     expect(result).toBeDefined();
     expect(result.status).toBe(200);
   });
 
-  it('deletes the factory store when nothing is allocated any more', async () => {
-    mockedAxios.delete.mockResolvedValue({ status: 204 } as any);
-    mockedAxios.post.mockResolvedValue({ status: 204, data: [] } as any);
+  it("forgets the factory's list when nothing is allocated any more", async () => {
+    const { service: allocated, store } = service([]);
+    store.lists.set(FACTORY, ['urn:asset:gone']);
 
-    await service([]).update(FACTORY, 'token');
+    await allocated.update(FACTORY, 'token');
 
-    expect(mockedAxios.delete).toHaveBeenCalledWith(
-      expect.stringContaining(STORE),
-      expect.anything(),
-    );
+    expect(store.deleteFactoryAllocatedAssets).toHaveBeenCalledWith(FACTORY);
+    expect(store.lists.has(FACTORY)).toBe(false);
   });
 
-  it('does not fail when that store was never there', async () => {
-    // A factory whose assets were never allocated: deleting nothing is fine.
-    mockedAxios.delete.mockRejectedValue({ response: { status: 404 } });
-    mockedAxios.post.mockResolvedValue({ status: 204, data: [] } as any);
+  it('does not fail when that factory had no list at all', async () => {
+    const { service: allocated } = service([]);
 
-    await expect(service([]).update(FACTORY, 'token')).resolves.toMatchObject({ status: 200 });
+    await expect(allocated.update(FACTORY, 'token')).resolves.toMatchObject({ status: 200 });
   });
 
-  it('replaces the store rather than deleting it first when assets remain', async () => {
-    mockedAxios.post.mockResolvedValue({ status: 204, statusText: 'No Content', data: [] } as any);
+  it('writes the list in one go when assets remain', async () => {
+    const { service: allocated, store } = service(['urn:asset:a']);
 
-    const result = await service(['urn:asset:a']).update(FACTORY, 'token');
+    const result = await allocated.update(FACTORY, 'token');
 
     expect(result.status).toBe(200);
-    // The store is upserted in one write; nothing is deleted on the way.
-    expect(mockedAxios.delete).not.toHaveBeenCalled();
-    expect(mockedAxios.post).toHaveBeenCalledWith(
-      expect.stringContaining('entityOperations/upsert'),
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(store.setFactoryAllocatedAssets).toHaveBeenCalledWith(FACTORY, ['urn:asset:a']);
+    // Nothing is deleted on the way: the list is replaced, never emptied first.
+    expect(store.deleteFactoryAllocatedAssets).not.toHaveBeenCalled();
   });
 
   it('still reports a real failure', async () => {
-    mockedAxios.post.mockRejectedValue({ response: { status: 503, data: { title: 'down' } } });
+    const store = holders();
+    store.setFactoryAllocatedAssets.mockRejectedValue(new Error('mongo down'));
+    const { service: allocated } = service(['urn:asset:a'], store);
 
-    await expect(service(['urn:asset:a']).update(FACTORY, 'token')).rejects.toBeInstanceOf(
-      HttpException,
-    );
+    await expect(allocated.update(FACTORY, 'token')).rejects.toBeInstanceOf(HttpException);
   });
 });

@@ -17,6 +17,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
+  factoryAllocatedAssetsKey,
+  factoryOfAllocatedAssetsKey,
   GLOBAL_ALLOCATED_ASSETS,
   SHOP_FLOOR_COUNTER,
   UrnHolder,
@@ -79,6 +81,43 @@ export class UrnHolderService {
       { new: true, upsert: true },
     );
     return holder.assets ?? [];
+  }
+
+  /** One factory's allocated assets. Empty when it has none. */
+  async getFactoryAllocatedAssets(factoryId: string): Promise<string[]> {
+    const holder = await this.holders.findOne({ key: factoryAllocatedAssetsKey(factoryId) });
+    return holder?.assets ?? [];
+  }
+
+  /** Replaces one factory's list, as the entity was replaced. */
+  async setFactoryAllocatedAssets(factoryId: string, assets: string[]): Promise<string[]> {
+    const holder = await this.holders.findOneAndUpdate(
+      { key: factoryAllocatedAssetsKey(factoryId) },
+      { $set: { assets } },
+      { new: true, upsert: true },
+    );
+    return holder.assets ?? [];
+  }
+
+  /** Forgets a factory's list. Not an error when there was none. */
+  async deleteFactoryAllocatedAssets(factoryId: string): Promise<boolean> {
+    const result = await this.holders.deleteOne({
+      key: factoryAllocatedAssetsKey(factoryId),
+    });
+    return (result.deletedCount ?? 0) > 0;
+  }
+
+  /** Every factory's list, for the global rebuild and for asset removal. */
+  async listFactoryAllocatedAssets(): Promise<{ factoryId: string; assets: string[] }[]> {
+    const holders = await this.holders.find({
+      key: { $regex: '^allocated-assets:' },
+    });
+    return holders
+      .map((holder) => ({
+        factoryId: factoryOfAllocatedAssetsKey(holder.key) ?? '',
+        assets: holder.assets ?? [],
+      }))
+      .filter((entry) => entry.factoryId);
   }
 
   /**

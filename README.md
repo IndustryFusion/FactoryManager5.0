@@ -9,11 +9,11 @@ For the setup, Factory Manager 5.0 needs IFF Process Digital Twin (PDT) running 
 
 The PDT is used in Factory Manager to create and handle Factory and ShopFloor objects.
 
-Two records are kept for that bookkeeping: a counter for shop floor ids, and the list of allocated assets across every factory. **They live in this application's own MongoDB (the `urn_holders` collection) and are created at startup, so there is nothing to do here.** Neither describes the factory, so neither belongs in Scorpio: one is a sequence, the other is rebuilt from entities Scorpio already holds.
+Three kinds of record are kept for that bookkeeping: a counter for shop floor ids, the list of allocated assets across every factory, and each factory's own allocated-asset list. **They live in this application's own MongoDB (the `urn_holders` collection) and are created at startup, so there is nothing to do here.** Neither describes the factory, so neither belongs in Scorpio: one is a sequence, the other is rebuilt from entities Scorpio already holds.
 
 On an installation that has been running against Scorpio, the first value is inherited rather than reset — from the old `urn:ngsi-ld:shopFloor-id-store` if it is still there, otherwise from the highest shop floor id Scorpio holds. Ids therefore continue where they left off. A record that already exists in MongoDB is never touched. Set `FACTORY_AUTO_PROVISION=false` to opt out.
 
-The old `urn:ngsi-ld:shopFloor-id-store` and `urn:ngsi-ld:global-allocated-assets-store` entities are no longer read or written. Nothing removes them, so they can stay where they are.
+The old `urn:ngsi-ld:shopFloor-id-store`, `urn:ngsi-ld:global-allocated-assets-store` and the per-factory `<factoryId>:allocated-assets` entities (all of type `urn-holder`) are no longer read or written. Their values are carried over at startup and nothing removes the entities, so they can stay where they are. No `urn-holder` entity is created in Scorpio any more.
 
 Factories need no counter at all: a factory's identifier is minted by the IFRIC registry when the factory is created, which is what makes it unique across deployments rather than only within one PDT. Set `IFRIC_REGISTRY_BACKEND_URL` instead.
 

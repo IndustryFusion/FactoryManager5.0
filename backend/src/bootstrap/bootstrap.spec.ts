@@ -119,6 +119,7 @@ describe('UrnHoldersBootstrap', () => {
   });
 
   it('leaves holders that already exist alone', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] } as any);
     const holders = holderStore();
     holders.seeded.set('shop-floor-counter', { lastNumber: 42, width: 3 });
     holders.seeded.set('global-allocated-assets', { assets: ['a'] });
@@ -126,7 +127,37 @@ describe('UrnHoldersBootstrap', () => {
     await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
 
     expect(holders.seeded.get('shop-floor-counter').lastNumber).toBe(42);
-    expect(mockedAxios.get).not.toHaveBeenCalled();
+    expect(holders.seeded.get('global-allocated-assets').assets).toEqual(['a']);
+  });
+
+  it("carries over each factory's allocated assets", async () => {
+    // The per-factory lists were entities too; a factory whose list is not
+    // carried over would open its flow with nothing allocated.
+    mockedAxios.get.mockImplementation(async (url: string) => {
+      if (url.includes('allocated-assets$')) {
+        return {
+          data: [
+            {
+              id: 'urn:ifric:ifx-eur-loc-fac-1:allocated-assets',
+              'http://www.industry-fusion.org/schema#last-data': {
+                type: 'JsonProperty',
+                json: {
+                  'https://industry-fusion.org/base/v0.1/items': [{ id: 'urn:asset:a' }],
+                },
+              },
+            },
+          ],
+        } as any;
+      }
+      throw { response: { status: 404 } };
+    });
+    const holders = holderStore();
+
+    await new UrnHoldersBootstrap(tokenService, holders).onModuleInit();
+
+    expect(holders.seeded.get('allocated-assets:urn:ifric:ifx-eur-loc-fac-1')).toEqual({
+      assets: ['urn:asset:a'],
+    });
   });
 
   it('seeds nothing, rather than a colliding counter, when Scorpio cannot be read', async () => {

@@ -22,17 +22,19 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const FACTORY = 'urn:ifric:ifx-eur-loc-fac-1';
 
-const service = () =>
+const service = (assets: string[] | null = null, assetData: any = {}) =>
   new AllocatedAssetService(
-    { getAssetDataById: jest.fn() } as any,
+    { getAssetDataById: jest.fn().mockResolvedValue(assetData) } as any,
     {} as any,
     {} as any,
-    {} as any,
+    {
+      getFactoryAllocatedAssets: jest.fn().mockResolvedValue(assets ?? []),
+    } as any,
   );
 
 /**
  * The flow editor asks what a factory has allocated before deciding whether
- * to create its store. On a factory that has allocated nothing, that question
+ * to create its list. On a factory that has allocated nothing, that question
  * used to answer 404 and abort the save it was meant to enable.
  */
 describe('a factory with nothing allocated yet', () => {
@@ -42,33 +44,11 @@ describe('a factory with nothing allocated yet', () => {
   });
 
   it('answers with an empty list, not an error', async () => {
-    mockedAxios.get.mockRejectedValue({ response: { status: 404 } });
-
-    await expect(service().findOne(FACTORY, 'token')).resolves.toEqual([]);
+    await expect(service([]).findOne(FACTORY, 'token')).resolves.toEqual([]);
   });
 
-  it('still reports a real failure as itself', async () => {
-    // Scorpio unreachable is not an empty factory, and must not read as one.
-    mockedAxios.get.mockRejectedValue({
-      response: { status: 503, data: { title: 'unavailable' } },
-    });
-
-    await expect(service().findOne(FACTORY, 'token')).rejects.toBeInstanceOf(HttpException);
-  });
-
-  it('returns what is allocated when the store is there', async () => {
-    mockedAxios.get.mockResolvedValue({
-      data: {
-        'http://www.industry-fusion.org/schema#last-data': {
-          type: 'JsonProperty',
-          json: {
-            'https://industry-fusion.org/base/v0.1/items': [{ id: 'urn:asset:a' }],
-          },
-        },
-      },
-    } as any);
-    const allocated = service();
-    (allocated as any).assetService.getAssetDataById.mockResolvedValue({
+  it('returns what is allocated when the factory has a list', async () => {
+    const allocated = service(['urn:asset:a'], {
       'http://www.industry-fusion.org/schema#product_name': { value: 'Laser' },
       'http://www.industry-fusion.org/schema#asset_category': { value: 'cutter' },
     });
@@ -76,5 +56,16 @@ describe('a factory with nothing allocated yet', () => {
     await expect(allocated.findOne(FACTORY, 'token')).resolves.toEqual([
       { id: 'urn:asset:a', product_name: 'Laser', asset_category: 'cutter' },
     ]);
+  });
+
+  it('still reports a real failure as itself', async () => {
+    const allocated = new AllocatedAssetService(
+      { getAssetDataById: jest.fn() } as any,
+      {} as any,
+      {} as any,
+      { getFactoryAllocatedAssets: jest.fn().mockRejectedValue(new Error('mongo down')) } as any,
+    );
+
+    await expect(allocated.findOne(FACTORY, 'token')).rejects.toBeInstanceOf(HttpException);
   });
 });
