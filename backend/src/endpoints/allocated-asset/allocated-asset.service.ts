@@ -15,13 +15,11 @@
 // 
 
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import axios from 'axios';
 import { AssetService } from '../asset/asset.service';
 import { ReactFlowService } from '../react-flow/react-flow.service';
 import { FactorySiteService } from '../factory-site/factory-site.service';
-import { upstreamMessage } from '../../utils/upstream-error';
+import { toHttpException, upstreamMessage } from '../../utils/upstream-error';
 import { UrnHolderService } from '../urn-holder/urn-holder.service';
-import { attrValue, prepareForScorpio, replaceEntity } from '../../utils/ngsi-ld';
 import { assetCategoryOf } from '../../utils/asset-category';
 
 /**
@@ -43,25 +41,11 @@ const escapeForIdPattern = (value: string): string =>
 const LAST_DATA = 'http://www.industry-fusion.org/schema#last-data';
 const ITEMS = 'https://industry-fusion.org/base/v0.1/items';
 
-// The {id} items of an allocated-assets store. Reads the compliant JsonProperty
-// form (kept verbatim, so `items` may be unexpanded) and the old Property form,
-// whose object value Scorpio expanded to full IRIs.
-const allocatedItems = (store: Record<string, any> | undefined): { id: string }[] => {
-  const payload = attrValue(store?.[LAST_DATA]);
-  const items = payload?.[ITEMS] ?? payload?.items;
-  const list = Array.isArray(items) ? items : items?.id ? [items] : [];
-  return list.filter((item) => typeof item?.id === 'string');
-};
+// This service no longer writes NGSI-LD: a factory's allocated assets are
+// this application's own bookkeeping, held with the shop floor counter and
+// the global list — see endpoints/urn-holder. What used to live here (the
+// entity shape, the id-pattern query and its regex escaping) went with it.
 
-// An allocated-assets store in the compliant form: the item list is structured
-// data, so it is a JsonProperty (a Property with an object value is dropped by
-// the platform's Debezium bridge).
-const allocatedStore = (id: string, items: { id: string }[]) => ({
-  "@context": "https://industryfusion.github.io/contexts/v0.1/context.jsonld",
-  id,
-  type: "urn-holder",
-  [LAST_DATA]: { type: 'JsonProperty', json: { [ITEMS]: items } },
-});
 @Injectable()
 export class AllocatedAssetService {
   constructor(
@@ -70,7 +54,6 @@ export class AllocatedAssetService {
     private readonly factorySiteService: FactorySiteService,
     private readonly urnHolders: UrnHolderService
   ) {}
-  private readonly scorpioUrl = process.env.SCORPIO_URL;
 
   async create(factoryId: string, token: string) {
     try{
@@ -96,14 +79,16 @@ export class AllocatedAssetService {
             'Content-Type': 'application/ld+json',
             'Accept': 'application/ld+json'
           };
-          let id = `${factoryId}:allocated-assets`;
-          // Replaced, not created: a plain POST answers 409 when the store is
-          // already there, and the caller could not tell that from success.
-          let response = await replaceEntity(this.scorpioUrl, allocatedStore(id, formattedAssetArr), headers);
+          // The factory's own list, kept with the other bookkeeping this
+          // application owns — see endpoints/urn-holder. It used to be an
+          // NGSI-LD `urn-holder` entity in Scorpio, which is a store of what
+          // the factory *is*; this list is rebuilt from the flow and nothing
+          // outside this app reads it.
+          await this.urnHolders.setFactoryAllocatedAssets(factoryId, assetArr);
           await this.updateGlobal(token)
           return {
-            status: response.status,
-            statusText: response.statusText
+            status: HttpStatus.OK,
+            statusText: 'Allocated assets updated'
           }
         } catch(err) {
           if(err instanceof HttpException) {
@@ -142,18 +127,9 @@ export class AllocatedAssetService {
   
 async createGlobal(token: string) {
   try {
-    let allocatedAssetData = await this.findAll(token);
-    console.log("allocatedAssetData createGlobal",allocatedAssetData)
-    let assetArr = [];
-    
-    for(let i = 0; i < allocatedAssetData.length; i++) {
-      assetArr = [...assetArr, ...allocatedItems(allocatedAssetData[i])];
-    }
-
-    // Remove duplicates while preserving object structure
-    assetArr = Array.from(
-      new Set(assetArr.map(item => JSON.stringify(item)))
-    ).map(item => JSON.parse(item));
+    const stores = await this.findAll(token);
+    // One entry per asset, however many factories list it.
+    const assetArr = [...new Set(stores.flatMap((store) => store.assets))].map((id) => ({ id }));
 
     try {
       // The list is this application's own bookkeeping, rebuilt in full from
@@ -192,25 +168,9 @@ async createGlobal(token: string) {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let id = `${factoryId}:allocated-assets`;
-      //fetch the allocated assets from scorpio
-      const fetchUrl = `${this.scorpioUrl}/${id}`;
-      let response: { data?: any };
-      try {
-        response = await axios.get(fetchUrl, { headers });
-      } catch (err) {
-        // A factory that has allocated nothing yet has no store, and that is
-        // an answer, not a failure: nothing is allocated. Reported as a 404 it
-        // aborted the caller — the flow editor asks this before deciding
-        // whether to create the store, so saving a factory's first allocation
-        // failed on the very question meant to allow it.
-        if (err?.response?.status === 404) {
-          return [];
-        }
-        throw err;
-      }
+      const assetIds = (await this.urnHolders.getFactoryAllocatedAssets(factoryId))
+        .map((id) => ({ id }));
 
-      let assetIds = allocatedItems(response.data);
 
       let finalArray = [];
       if (assetIds.length > 0) {
@@ -253,38 +213,21 @@ async createGlobal(token: string) {
     }
   }
 
-  async findAll(token: string) {
-    try{
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      };
-      //fetch the allocated assets from scorpio
-      // Matched on the suffix alone. This used to be anchored to
-      // `urn:ngsi-ld:.*`, which silently returned an empty list — not an
-      // error — for any store whose factory id used a different scheme, and
-      // that emptiness then propagated into asset deletion and the global
-      // store rebuild. The type filter is what actually narrows the query.
-      const fetchUrl = `${this.scorpioUrl}/?idPattern=${ALLOCATED_ASSETS_ID_PATTERN}&type=https://industry-fusion.org/base/v0.1/urn-holder`;
-
-      let response = await axios.get(fetchUrl, {
-        headers
-      });
-      // console.log("findAll",response.data) 
-      return response.data;
-    } catch(err) {
-      if (err.response) {
-        throw new HttpException({
-          errorCode: `FS_${err.response.status}`,
-          message: upstreamMessage(err)
-        }, err.response.status);
-      } else {
-        throw new HttpException({
-          errorCode: "FS_500",
-          message: err.message
-        }, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+  /**
+   * Every factory's allocated assets, in the shape the callers expect:
+   * `{ id: '<factoryId>:allocated-assets', assets: [...] }`. The ids are the
+   * same strings the entities used, so nothing above this had to change.
+   */
+  async findAll(token?: string) {
+    try {
+      const stores = await this.urnHolders.listFactoryAllocatedAssets();
+      return stores.map((store) => ({
+        id: `${store.factoryId}:allocated-assets`,
+        factoryId: store.factoryId,
+        assets: store.assets,
+      }));
+    } catch (err) {
+      throw toHttpException(err);
     }
   }
 
@@ -297,7 +240,7 @@ async createGlobal(token: string) {
         factoryId = factoryId.split(':allocated-assets')[0];
         let factoryData = await this.factorySiteService.findOne(factoryId, token);
         let factoryName = factoryData["http://www.industry-fusion.org/schema#factory_name"].value;
-        const factorySpecificAssets = allocatedItems(allocatedAssetData[i]);
+        const factorySpecificAssets = allocatedAssetData[i].assets.map((id) => ({ id }));
         finalData[factoryName] = [];
         for(let i = 0; i < factorySpecificAssets.length; i++){
           let assetData = await this.assetService.getAssetDataById(factorySpecificAssets[i].id, token);
@@ -395,28 +338,13 @@ async createGlobal(token: string) {
       };
       for (let key in data) {
         try {
-          let id = `${key}:allocated-assets`;
-          // Convert incoming asset IDs to the required format
-          let finalAssetData = data[key].map(assetId => ({ id: assetId }));
-          
-          // The id goes into a regex, so it is escaped: an unescaped `.`,
-          // `+` or `(` in a minted id would match the wrong store, or none.
-          let checkUrl = `${this.scorpioUrl}/?idPattern=^${escapeForIdPattern(id)}$&type=https://industry-fusion.org/base/v0.1/urn-holder`;
-          let response = await axios.get(checkUrl, {
-            headers
-          });
-
-          if (response.data.length > 0) {
-            let assetData = response.data[0];
-            
-            finalAssetData = [...finalAssetData, ...allocatedItems(assetData)];
-          }
-
-          // Remove duplicates based on asset ID
-          finalAssetData = [...new Map(finalAssetData.map(item => [item.id, item])).values()];
-
-          // One replace instead of delete-then-create.
-          await replaceEntity(this.scorpioUrl, allocatedStore(id, finalAssetData), headers);
+          // Added to whatever the factory already had — the same merge as
+          // before, now against this application's own list rather than an
+          // entity in Scorpio. No id pattern to escape and no query to get
+          // wrong: the factory is the key.
+          const existing = await this.urnHolders.getFactoryAllocatedAssets(key);
+          const merged = [...new Set([...data[key], ...existing])];
+          await this.urnHolders.setFactoryAllocatedAssets(key, merged);
         } catch(err) {
           if (err instanceof HttpException) {
             throw err;
@@ -446,17 +374,14 @@ async createGlobal(token: string) {
   // Removes an asset from every factory's allocated-assets store. Returns the id
   // of the (last) factory that had it, or '' when none did.
   async removeAssetFromStores(assetId: string, token: string) {
-    const headers = {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/ld+json',
-      'Accept': 'application/ld+json'
-    };
     let factoryId = '';
     for (const store of await this.findAll(token)) {
-      const items = allocatedItems(store);
-      if (!items.some((item) => item.id === assetId)) continue;
-      factoryId = store.id.split(':allocated-assets')[0];
-      await replaceEntity(this.scorpioUrl, allocatedStore(store.id, items.filter((item) => item.id !== assetId)), headers);
+      if (!store.assets.includes(assetId)) continue;
+      factoryId = store.factoryId;
+      await this.urnHolders.setFactoryAllocatedAssets(
+        store.factoryId,
+        store.assets.filter((id) => id !== assetId),
+      );
     }
     return factoryId;
   }
@@ -480,18 +405,16 @@ async createGlobal(token: string) {
     }
   }
 
+  /** `id` is `<factoryId>:allocated-assets`, as it always was. */
   async remove(id:string, token: string) {
     try {
-      const headers = {
-        Authorization: 'Bearer ' + token,
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      };
-      const updateUrl = `${this.scorpioUrl}/${id}`;
-      let response =  await axios.delete(updateUrl, { headers });
+      const factoryId = id.split(':allocated-assets')[0];
+      await this.urnHolders.deleteFactoryAllocatedAssets(factoryId);
+      // A list that was never there is not an error: the end state asked for
+      // is the end state we have.
       return {
-        status: response.status,
-        data: response.data,
+        status: HttpStatus.NO_CONTENT,
+        data: null,
       };
     } catch(err) {
       if (err.response) {

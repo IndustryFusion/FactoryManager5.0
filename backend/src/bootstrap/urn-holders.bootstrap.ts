@@ -17,6 +17,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
 import { TokenService } from '../endpoints/session/token.service';
 import {
+  factoryAllocatedAssetsKey,
   GLOBAL_ALLOCATED_ASSETS,
   SHOP_FLOOR_COUNTER,
 } from '../endpoints/schemas/urn-holder.schema';
@@ -27,6 +28,8 @@ import {
 
 const SCORPIO_SHOP_FLOOR_STORE = 'urn:ngsi-ld:shopFloor-id-store';
 const SCORPIO_GLOBAL_STORE = 'urn:ngsi-ld:global-allocated-assets-store';
+const SCORPIO_FACTORY_STORE_PATTERN = ':allocated-assets$';
+const SCORPIO_URN_HOLDER_TYPE = 'https://industry-fusion.org/base/v0.1/urn-holder';
 const SHOP_FLOOR_TYPE = 'https://industry-fusion.org/base/v0.1/shopFloor';
 
 /**
@@ -63,14 +66,24 @@ export class UrnHoldersBootstrap implements OnModuleInit {
       this.logger.log('Holder seeding is switched off (FACTORY_AUTO_PROVISION=false).');
       return;
     }
-    try {
-      await this.seedShopFloorCounter();
-      await this.seedGlobalAllocatedAssets();
-    } catch (err) {
-      this.logger.error(
-        `Could not seed the holders: ${err?.message ?? err}. ` +
-          'They will start from nothing on first use, so check this before creating shop floors.',
-      );
+    // Each on its own: one that cannot be read must not skip the others. The
+    // counter is the one that matters most — a shop floor created against a
+    // counter that was never carried over collides with ids already in use —
+    // so its failure is reported in those terms.
+    const steps: [string, () => Promise<void>][] = [
+      ['the shop floor counter', () => this.seedShopFloorCounter()],
+      ['the global allocated-asset list', () => this.seedGlobalAllocatedAssets()],
+      ["each factory's allocated assets", () => this.seedFactoryAllocatedAssets()],
+    ];
+    for (const [what, run] of steps) {
+      try {
+        await run();
+      } catch (err) {
+        this.logger.error(
+          `Could not seed ${what}: ${err?.message ?? err}. ` +
+            'It will start from nothing on first use — check this before using the flow editor.',
+        );
+      }
     }
   }
 
@@ -96,6 +109,41 @@ export class UrnHoldersBootstrap implements OnModuleInit {
       `Allocated-asset list seeded with ${assets.length} asset(s). ` +
         'It is rebuilt in full on the next allocation either way.',
     );
+  }
+
+  /**
+   * Each factory's allocated assets, carried over from the entity that used
+   * to hold them. One per factory, so the flow editor keeps showing what is
+   * allocated where instead of starting empty.
+   */
+  private async seedFactoryAllocatedAssets(): Promise<void> {
+    const headers = await this.headers();
+    if (!headers) return;
+
+    let stores: any[];
+    try {
+      const { data } = await axios.get(
+        `${this.scorpioUrl}/?idPattern=${SCORPIO_FACTORY_STORE_PATTERN}&type=${SCORPIO_URN_HOLDER_TYPE}`,
+        { headers },
+      );
+      stores = Array.isArray(data) ? data : [];
+    } catch (err) {
+      if (err?.response?.status === 404) return;
+      throw err;
+    }
+
+    let seeded = 0;
+    for (const store of stores) {
+      const factoryId = String(store?.id ?? '').split(':allocated-assets')[0];
+      if (!factoryId) continue;
+      if (await this.holders.has(factoryAllocatedAssetsKey(factoryId))) continue;
+      const assets = this.assetsOf(store);
+      await this.holders.seedIfAbsent(factoryAllocatedAssetsKey(factoryId), { assets });
+      seeded++;
+    }
+    if (seeded) {
+      this.logger.log(`Carried over the allocated assets of ${seeded} factory/factories.`);
+    }
   }
 
   /** The count to carry over, and where it was found — for the log line. */
@@ -137,13 +185,10 @@ export class UrnHoldersBootstrap implements OnModuleInit {
     return { number: 0, from: 'no shop floors yet' };
   }
 
-  private async assetsFromScorpio(): Promise<string[]> {
-    const headers = await this.headers();
-    if (!headers) return [];
-    const store = await this.fetch(SCORPIO_GLOBAL_STORE, headers);
+  /** The asset ids inside an allocated-assets entity, in either shape. */
+  private assetsOf(store: Record<string, any> | null): string[] {
     if (!store) return [];
-    const payload =
-      store['http://www.industry-fusion.org/schema#last-data'] ?? {};
+    const payload = store['http://www.industry-fusion.org/schema#last-data'] ?? {};
     const value = payload.json ?? payload.value ?? payload.object ?? {};
     const items =
       value['https://industry-fusion.org/base/v0.1/items'] ?? value.items ?? [];
@@ -151,6 +196,12 @@ export class UrnHoldersBootstrap implements OnModuleInit {
     return list
       .map((item: any) => (typeof item === 'string' ? item : item?.id))
       .filter((id: unknown): id is string => typeof id === 'string');
+  }
+
+  private async assetsFromScorpio(): Promise<string[]> {
+    const headers = await this.headers();
+    if (!headers) return [];
+    return this.assetsOf(await this.fetch(SCORPIO_GLOBAL_STORE, headers));
   }
 
   private async headers(): Promise<Record<string, string> | null> {

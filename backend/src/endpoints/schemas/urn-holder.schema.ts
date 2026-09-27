@@ -28,11 +28,25 @@ import { Document } from 'mongoose';
  *
  * One document per `key`:
  *
- *   shop-floor-counter       lastNumber, width  -> urn:ngsi-ld:shopFloors:2:007
- *   global-allocated-assets  assets             -> every allocated asset id
+ *   shop-floor-counter        lastNumber, width  -> urn:ngsi-ld:shopFloors:2:007
+ *   global-allocated-assets   assets             -> every allocated asset id
+ *   allocated-assets:<factory> assets            -> that factory's allocated assets
  */
 export const SHOP_FLOOR_COUNTER = 'shop-floor-counter';
 export const GLOBAL_ALLOCATED_ASSETS = 'global-allocated-assets';
+
+/**
+ * One factory's allocated assets. Held here for the same reason as the other
+ * two: the list is this application's own bookkeeping, rebuilt from the flow,
+ * and nothing outside it reads the entity — the PDT does not know the
+ * `urn-holder` type at all.
+ */
+export const factoryAllocatedAssetsKey = (factoryId: string) =>
+  `allocated-assets:${factoryId}`;
+
+/** The factory a per-factory key belongs to, or null for any other key. */
+export const factoryOfAllocatedAssetsKey = (key: string): string | null =>
+  key.startsWith('allocated-assets:') ? key.slice('allocated-assets:'.length) : null;
 
 @Schema({ collection: 'urn_holders' })
 export class UrnHolder extends Document {
