@@ -60,10 +60,15 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
     return ids;
   }, [edges, nodes, id]);
 
-  const desiredCategory = (data?.asset_category ?? "")
-    .toLowerCase()
-    .replace(/\btemplate\b/gi, "")
-    .trim();
+  // The same category is written both ways across the estate: a relation slot
+  // in a template says "Air Filter", while a category derived from an entity
+  // type reads "airFilter". Compared literally, a factory full of air filters
+  // answered "no products available". Compared on the letters, they match.
+  const normalizeCategory = (value: unknown) =>
+    typeof value === "string"
+      ? value.toLowerCase().replace(/\btemplate\b/g, "").replace(/[^a-z0-9]/g, "")
+      : "";
+  const desiredCategory = normalizeCategory(data?.asset_category);
 
   const capFirst = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 
@@ -80,7 +85,7 @@ const CustomRelationNode: React.FC<CustomRelationNodeProps> = ({ data, id }) => 
             const rawCategory = asset.asset_category
 
             const label_clean = String(rawLabel).toLowerCase().replace(/\btemplate\b/gi, "").trim();
-            const asset_category_clean = String(rawCategory).toLowerCase().replace(/\btemplate\b/gi, "").trim();
+            const asset_category_clean = normalizeCategory(rawCategory);
 
             if (asset_category_clean !== desiredCategory) return null;
 

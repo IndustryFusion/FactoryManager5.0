@@ -25,6 +25,7 @@ import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { assetCategoryExpr } from '../../utils/asset-category';
+import { categoryPattern } from '../../utils/asset-category';
 @Injectable()
 export class NonShopFloorAssetsService {
   constructor(
@@ -67,7 +68,10 @@ export class NonShopFloorAssetsService {
     try {
       return this.factoryPdtCacheModel.aggregate([
         {
-          $match: { company_ifric_id, asset_category: { $regex: product_type, $options: "i" }, factory_site: "" }
+          // Spelled either way: a relation slot asks for "Air Filter" while a
+          // category derived from the entity type reads "airFilter". Matched
+          // on the letters, not on the spacing.
+          $match: { company_ifric_id, asset_category: { $regex: categoryPattern(product_type), $options: "i" }, factory_site: "" }
         },
         {
           $project: {

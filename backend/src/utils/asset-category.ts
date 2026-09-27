@@ -59,3 +59,28 @@ export const assetCategoryExpr = {
     },
   },
 };
+
+/**
+ * A category reduced to what it actually says: lower case, letters and digits
+ * only, and without the word "template" that some of these carry.
+ *
+ *   'Air Filter'  ->  'airfilter'
+ *   'airFilter'   ->  'airfilter'
+ *   'Air filter template' -> 'airfilter'
+ *
+ * The same category is written both ways across this estate — a relation
+ * slot in a template says "Air Filter" while a category derived from an
+ * entity type says "airFilter" — and comparing them literally means a
+ * factory full of air filters answers "no products available".
+ */
+export const normalizeCategory = (value: unknown): string =>
+  typeof value === 'string'
+    ? value.toLowerCase().replace(/\btemplate\b/g, '').replace(/[^a-z0-9]/g, '')
+    : '';
+
+/**
+ * A Mongo regex that matches a category however it is spelled: the letters in
+ * order, with any separators — or none — between them.
+ */
+export const categoryPattern = (value: unknown): string =>
+  `^${normalizeCategory(value).split('').join('[^a-zA-Z0-9]*')}$`;
