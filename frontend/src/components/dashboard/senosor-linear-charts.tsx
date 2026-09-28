@@ -22,6 +22,7 @@ import axios from "axios";
 import { Asset } from "@/types/asset-types";
 import { Skeleton } from "primereact/skeleton";
 import socketIOClient, { Socket } from "socket.io-client";
+import { backendSocketTarget } from "@/utility/socket";
 import { useRouter } from "next/router";
 import "../../styles/combine-chart.css";
 import "../../styles/factory-form.css";
@@ -895,7 +896,9 @@ const CombineSensorChart: React.FC = () => {
   useEffect(() => {
     console.log("WebSocket: Connecting to", API_URL);
 
-    const socket = socketIOClient(`${API_URL}/`, {
+    const { url, path } = backendSocketTarget();
+    const socket = socketIOClient(url, {
+      path,
       transports: ["websocket"],
       rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
       reconnectionAttempts: 5, // Retry if connection fails
