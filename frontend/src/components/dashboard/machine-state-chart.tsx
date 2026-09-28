@@ -27,6 +27,7 @@ import { useDashboard } from "@/context/dashboard-context";
 import { Toast, ToastMessage } from "primereact/toast";
 import { Skeleton } from "primereact/skeleton";
 import socketIOClient from "socket.io-client";
+import { backendSocketTarget } from "@/utility/socket";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { create } from "@/redux/machineState/machineStateSlice";
@@ -573,7 +574,9 @@ const MachineStateChart = () => {
 
     // useEffect to handle socket receiving data
     useEffect(() => {
-        const socket = socketIOClient(`${API_URL}/`,  {
+        const { url, path } = backendSocketTarget();
+        const socket = socketIOClient(url, {
+            path,
             transports: ["websocket"],
             rejectUnauthorized: false, // Ignore SSL certificate validation (only for HTTPS)
             reconnectionAttempts: 5, // Retry if connection fails

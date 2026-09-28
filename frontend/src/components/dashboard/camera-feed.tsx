@@ -1,22 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from "@/utility/jwt";
 import { io } from 'socket.io-client';
+import { backendSocketTarget } from '@/utility/socket';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-/**
- * socket.io-client reads a URL's path as the namespace, not as a prefix, so a
- * backend served under a path (e.g. https://host/backend) must pass that
- * prefix through `path` instead. Locally (http://localhost:4002) prefix is "".
- */
-function cameraSocketTarget(): { url: string; path: string } {
-  const apiUrl = new URL(API_URL!);
-  const prefix = apiUrl.pathname.replace(/\/$/, '');
-  return { url: `${apiUrl.origin}/camera`, path: `${prefix}/socket.io` };
-}
 
 interface StreamInfo {
   deviceId: string;
@@ -51,7 +41,7 @@ const CameraStream = ({ deviceId, cameraIndex }: CameraStreamProps) => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const { url, path } = cameraSocketTarget();
+    const { url, path } = backendSocketTarget('/camera');
     const socket = io(url, {
       path,
       transports: ['websocket'],
