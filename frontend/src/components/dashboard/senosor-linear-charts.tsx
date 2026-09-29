@@ -125,6 +125,40 @@ interface DataItem {
   value: string;
 }
 
+/** The part of a template property this screen reads. */
+interface TemplateProperty {
+  /** 'realtime' for a measurement; 'parameter', 'identification', … otherwise. */
+  segment?: string;
+  /** A written label — better than one rebuilt from the key. */
+  title?: string;
+  unit?: string;
+}
+
+/** One entry of GET /pgrest/reported-attributes. */
+interface ReportedAttribute {
+  attribute: string;
+  attributeId: string;
+  latestValue: string | null;
+  observedAt: string | null;
+  samples: number;
+  /** More than one distinct value in the window — so it is a reading. */
+  changed: boolean;
+}
+
+/**
+ * A template's unit, which may be written as a list of them — "unit": ["kg","g"].
+ * The first entry is the default, the same rule the backend applies in
+ * utils/units.ts. Reading only the string form silently loses those units.
+ */
+const firstUnit = (unit: unknown): string | undefined => {
+  if (typeof unit === "string") return unit.trim() || undefined;
+  if (Array.isArray(unit)) {
+    const first = unit.find((entry) => typeof entry === "string" && entry.trim());
+    return typeof first === "string" ? first.trim() : undefined;
+  }
+  return undefined;
+};
+
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 type AttributeOption = {
@@ -300,11 +334,14 @@ const CombineSensorChart: React.FC = () => {
     ...prev,
     [selectedAttribute]: { upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "" },
   }));
-  // ── Unit display — per-attribute unit string ─────────────────────────────
-  // templateUnitCacheRef: maps assetType IRI → { shortAttributeKey: unitString }
+  // ── Template properties — units, labels and the segment ──────────────────
+  // templatePropertyCacheRef: maps assetType IRI → { shortAttributeKey: property }
   // so the template endpoint is only called once per asset type, even when the
   // user switches between attributes of the same asset.
-  const templateUnitCacheRef = useRef<Record<string, Record<string, string>>>({});
+  const templatePropertyCacheRef = useRef<Record<string, Record<string, TemplateProperty>>>({});
+  // What the asset reported, per asset and interval, so moving between the
+  // parameters of one machine does not ask again.
+  const reportedCacheRef = useRef<Record<string, { at: number; attributes: ReportedAttribute[] }>>({});
   const [unitMap, setUnitMap] = useState<Record<string, string>>({});
   // Derived — no extra state needed
   const selectedAttributeUnit = unitMap[selectedAttribute] ?? "";
@@ -523,6 +560,61 @@ const CombineSensorChart: React.FC = () => {
     selectedDatasetIndex: number;
   };
 
+  /**
+   * Which attributes the asset actually reported over the chosen interval.
+   *
+   * Held for a minute per asset and interval so that moving between the
+   * parameters of one machine does not ask again — the backend caches the same
+   * answer for the same length of time. Never throws: an unreachable time
+   * series leaves the dropdown on what the entity declares, which is what this
+   * screen listed before.
+   */
+  const fetchReportedAttributes = async (
+    entityId: string,
+    interval: string,
+    date?: Date,
+    from?: Date,
+    to?: Date,
+  ): Promise<ReportedAttribute[]> => {
+    if (!entityId || !interval) return [];
+
+    const params: Record<string, string> = {
+      entityId: `eq.${entityId}`,
+      intervalType: interval,
+    };
+    if (interval === "custom") {
+      if (!date || !from || !to) return [];
+      // The same range the chart itself asks for, built the same way.
+      const startDate = new Date(date);
+      startDate.setHours(from.getHours(), from.getMinutes());
+      const endDate = new Date(date);
+      endDate.setHours(to.getHours(), to.getMinutes());
+      params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
+    }
+
+    const cacheKey = `${entityId}|${interval}|${params.observedAt ?? ""}`;
+    const cached = reportedCacheRef.current[cacheKey];
+    if (cached && Date.now() - cached.at < 60_000) return cached.attributes;
+
+    try {
+      const response = await api.get(`${API_URL}/pgrest/reported-attributes`, {
+        params,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+      const attributes: ReportedAttribute[] = Array.isArray(response.data?.attributes)
+        ? response.data.attributes
+        : [];
+      reportedCacheRef.current[cacheKey] = { at: Date.now(), attributes };
+      return attributes;
+    } catch {
+      return [];
+    }
+  };
+
   const fetchAsset = async () => {
     try {
       const scorpioData = await getAssetById(selectedAssetData.id);
@@ -557,13 +649,16 @@ const CombineSensorChart: React.FC = () => {
       });
 
       // ── Step 2: template fetch with cache guard ────────────────────────────
-      // templateUnitCacheRef is keyed by asset type IRI so the template endpoint
+      // templatePropertyCacheRef is keyed by asset type IRI so the template endpoint
       // is called at most once per asset type across the lifetime of this component.
+      // The whole property is kept, not just its unit: `segment` is how a
+      // measurement is told apart from a description, and `title` is a written
+      // label rather than one rebuilt from the key.
       const assetType = selectedAssetData.type;
-      let templateUnitMap: Record<string, string> | undefined = templateUnitCacheRef.current[assetType];
+      let templateProps: Record<string, TemplateProperty> | undefined = templatePropertyCacheRef.current[assetType];
 
-      if (templateUnitMap === undefined) {
-        let fetched: Record<string, string> = {};
+      if (templateProps === undefined) {
+        let fetched: Record<string, TemplateProperty> = {};
         try {
           const temp = await api.get(API_URL + `/mongodb-templates/type/${btoa(assetType)}`, {
             headers: {
@@ -574,71 +669,106 @@ const CombineSensorChart: React.FC = () => {
           });
 
           if (temp.data?.properties) {
-            const prefixedKeys = Object.keys(temp.data.properties)
-              .filter((key: string) => temp.data.properties[key].segment !== 'realtime');
-            const excluded = new Set(prefixedKeys);
-            const normalize = (k: string) => (k.includes('eclass:') ? k.split('eclass:').pop() || k : k);
-
-            // Extract unit from each template property
             Object.entries(temp.data.properties).forEach(([propKey, propVal]: [string, any]) => {
               const shortKey = propKey.includes("eclass:")
                 ? propKey.split("eclass:").pop() ?? propKey
                 : propKey.split("/").pop() ?? propKey;
-              if (propVal?.unit && typeof propVal.unit === "string") {
-                fetched[shortKey] = propVal.unit;
-              }
+              fetched[shortKey] = {
+                segment: typeof propVal?.segment === "string" ? propVal.segment.toLowerCase() : undefined,
+                title: typeof propVal?.title === "string" && propVal.title.trim() ? propVal.title : undefined,
+                unit: firstUnit(propVal?.unit),
+              };
             });
           }
         } catch {
-          // Template fetch failed — proceed without template units
+          // Template fetch failed — proceed without template properties
         }
-        templateUnitCacheRef.current[assetType] = fetched;
-        templateUnitMap = fetched;
+        templatePropertyCacheRef.current[assetType] = fetched;
+        templateProps = fetched;
       }
+
+      const templateUnitMap: Record<string, string> = {};
+      Object.entries(templateProps).forEach(([shortKey, prop]) => {
+        if (prop.unit) templateUnitMap[shortKey] = prop.unit;
+      });
 
       // ── Step 3: merge — asset-level unit wins over template fallback ───────
       const mergedUnitMap: Record<string, string> = { ...templateUnitMap, ...assetUnitMap };
       setUnitMap(mergedUnitMap);
 
-      // 2) Collect allowed labels from selectedAssetData (unique, filtered)
-      const attributeLabels: AttributeOption[] = Object.entries(scorpioData)
-        .filter(([_, val]) => {
-          if (typeof val === "object") {
-            // ✅ Find a key ending with 'segment'
-            const segmentEntry = Object.entries(val).find(
-              ([innerKey]) => innerKey.endsWith("segment")
-            );
+      // ── Step 4: what the entity declares about each property ───────────────
+      const declaredProperties: Record<string, { segment?: string; hasObservedAt: boolean }> = {};
+      Object.entries(scorpioData).forEach(([key, val]) => {
+        if (typeof val !== "object" || val === null) return;
+        const shortKey = key.split("/").pop() ?? key;
+        const segmentEntry = Object.entries(val as Record<string, any>).find(
+          ([innerKey]) => innerKey.endsWith("segment")
+        );
+        declaredProperties[shortKey] = {
+          segment: segmentEntry?.[1]?.value?.toLowerCase?.(),
+          hasObservedAt: Object.prototype.hasOwnProperty.call(val, "observedAt"),
+        };
+      });
 
-            // ✅ Find if 'observedAt' exists
-            const hasObservedAt = Object.prototype.hasOwnProperty.call(val, "observedAt");
+      const labelFor = (shortKey: string): string =>
+        templateProps?.[shortKey]?.title ??
+        shortKey
+          .split("_")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+          .join(" ");
 
-            // Check for realtime segment
-            const isRealtimeSegment = (() => {
-              if (!segmentEntry) return false;
-              const [, segmentValueObj] = segmentEntry;
-              const segmentValue = segmentValueObj?.value?.toLowerCase?.();
-              return segmentValue === "realtime";
-            })();
+      const asOption = (shortKey: string): AttributeOption => ({
+        label: labelFor(shortKey),
+        value: shortKey,
+        selectedDatasetIndex: 1,
+      });
 
-            // ✅ Keep if either condition is true
-            return isRealtimeSegment || hasObservedAt;
-          }
-          return false;
+      // ── Step 5: the list — what the machine reported, less the descriptions ─
+      // The entity says what a machine is *meant* to report, which is wrong in
+      // both directions on a real one: a gateway writes attributes nobody marked
+      // realtime, and a declared sensor may never have sent a row. So the time
+      // series decides what is on offer, and the metadata only takes things off
+      // it — an attribute a template or the entity files under any segment other
+      // than realtime is a description (a production name, an article number),
+      // not a reading. With no metadata at all, a value that moved is a reading.
+      const reported = await fetchReportedAttributes(
+        entityIdValue,
+        selectedInterval,
+        selectedDate,
+        startTime,
+        endTime,
+      );
+
+      const fromTimeSeries: AttributeOption[] = reported
+        .filter((entry) => {
+          const segment =
+            templateProps?.[entry.attribute]?.segment ??
+            declaredProperties[entry.attribute]?.segment;
+          if (segment) return segment === "realtime";
+          return entry.changed;
         })
-        .map(([key]) => {
-          const lastPart = key.split("/").pop() ?? key;
-          const formatted = lastPart
-            .split("_")
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-            .join(" ");
-          return { label: formatted, value: lastPart, selectedDatasetIndex: 1 };
-        });
+        .map((entry) => asOption(entry.attribute));
+
+      // Nothing reported — a machine that has just been onboarded, or a time
+      // series that cannot be reached. Offer what the entity declares, which is
+      // what this screen listed before, rather than an empty dropdown.
+      const declared: AttributeOption[] = Object.keys(declaredProperties)
+        .filter((shortKey) => {
+          const { segment, hasObservedAt } = declaredProperties[shortKey];
+          return segment === "realtime" || hasObservedAt;
+        })
+        .map(asOption);
+
+      const attributeLabels = fromTimeSeries.length > 0 ? fromTimeSeries : declared;
 
       setAttributes(attributeLabels);
-      const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
 
-      if (selectedAttribute == '' || selectedAttribute == undefined || selectedAttribute == null) {
-        setSelectedAttribute(attributeLabels[0].value);
+      // Keep what the reader is looking at if the new list still has it — the
+      // list is refetched whenever the interval changes, and a chart that jumped
+      // back to the first parameter each time would be unusable.
+      const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
+      if (!existingAttribute) {
+        setSelectedAttribute(attributeLabels[0]?.value ?? "");
       }
     }
     catch (error) {

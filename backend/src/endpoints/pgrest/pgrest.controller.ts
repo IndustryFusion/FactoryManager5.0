@@ -45,6 +45,21 @@ export class PgRestController {
     }
   }
 
+  /**
+   * The attributes an asset reported in the interval, for the Data Viewer's
+   * parameter list. Declared above the bare @Get() so the static path is
+   * matched first.
+   */
+  @Get('reported-attributes')
+  async getReportedAttributes(@Query() queryParams: any) {
+    try{
+      let token = await this.tokenService.getToken();
+      return this.pgRestService.reportedAttributes(token, queryParams);
+    } catch(err) {
+      throw err;
+    }
+  }
+
   @Get()
   async findAll(@Query() queryParams: any, key: string) {
     try{
