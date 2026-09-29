@@ -502,6 +502,42 @@ font-size : 18px;
 .ms-dot-offline { background: rgba(130, 130, 130, 0.4); border: 1px solid rgba(130, 130, 130, 0.6); }
 
 /* ── Empty / loading states ───────────────────────────────────────────────── */
+/* A parameter whose values are words: the value is the reading, so it is the
+   thing on the card — not an axis with nothing drawn against it. */
+.chart-text-reading {
+  min-height: clamp(320px, 48vh, 560px);
+  gap: 10px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.chart-text-reading-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey-secondary);
+}
+
+.chart-text-reading-value {
+  margin: 0;
+  /* Large, but it must survive a long word on a narrow card. */
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--black);
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.chart-text-reading-time {
+  margin: 0;
+  font-size: 13px;
+  color: var(--grey-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 .chart-empty-state {
   display: flex;
   flex-direction: column;
@@ -519,11 +555,13 @@ font-size : 18px;
   min-height: clamp(320px, 48vh, 560px);
 }
 
-/* ── Sensor rail ────────────────────────────────────────────────────────────
-   Replaces the attribute Dropdown. Every sensor the machine publishes is
-   visible without opening anything, and switching costs one click instead of
-   dropdown → scroll → click. Scrolls horizontally when an asset has many. */
-.sensor-rail-wrapper {
+/* ── Sensor selector ────────────────────────────────────────────────────────
+   A dropdown rather than a rail of cards. The rail put every sensor on one
+   line and hid its own scrollbar, so on a machine with more than a handful
+   the ones past the card's edge could not be reached. The chrome comes from
+   the shared .global-button.dropdown / .dashboard-dropdown pair, as on the
+   other charts of this screen. */
+.sensor-select-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -531,83 +569,45 @@ font-size : 18px;
   min-width: 0;
 }
 
-.sensor-rail-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--grey-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.sensor-select-label {
   flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey-secondary);
 }
 
-.sensor-rail {
+/* The class list repeats so this wins over .dashboard-dropdown's own width,
+   which stretches the control across the whole card. */
+.global-button.dropdown.sensor-select {
+  /* Wide enough for "Energy Consumption L1" without stretching the card. */
+  width: 320px;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+/* One row per sensor: its name, and the unit it is measured in. */
+.sensor-option {
   display: flex;
-  align-items: stretch;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 2px;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
 }
 
-.sensor-rail::-webkit-scrollbar {
-  display: none;
-}
-
-.sensor-rail-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1.5px solid var(--dividers);
-  background-color: var(--white);
-  color: var(--grey-primary);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
+.sensor-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sensor-option-unit {
   flex-shrink: 0;
-  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
-}
-
-.sensor-rail-item:hover {
-  border-color: var(--common-text-grey-400);
-  color: var(--black);
-}
-
-.sensor-rail-item.active {
-  border-color: var(--ifx-blue);
-  background-color: rgba(60, 160, 201, 0.08);
-  color: var(--ifx-blue);
-}
-
-.sensor-rail-item:focus-visible {
-  outline: 2px solid var(--fusion-blue);
-  outline-offset: 1px;
-}
-
-.sensor-rail-name {
-  line-height: 1.2;
-}
-
-.sensor-rail-unit {
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--grey-secondary);
-  line-height: 1.2;
 }
 
-.sensor-rail-item.active .sensor-rail-unit {
-  color: var(--ifx-blue);
-  opacity: 0.75;
-}
-
-/* ── Freshness chip ─────────────────────────────────────────────────────────
-   Was an 8px dot beside a form label. Now a readable chip sitting next to the
-   interval control, where the owner is already looking. */
 .freshness-chip {
   display: inline-flex;
   align-items: center;
@@ -636,7 +636,15 @@ font-size : 18px;
 }
 
 @media screen and (max-width: 1200px) {
-  .sensor-rail-label {
-    display: none;
+  /* Stacked rather than hidden: the rail's caption was dropped here for room,
+     but a control with no label is worse than one on its own line. */
+  .sensor-select-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .sensor-select {
+    width: 100%;
   }
 }

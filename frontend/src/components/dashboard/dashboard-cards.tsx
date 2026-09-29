@@ -16,7 +16,7 @@
 
 import { useDashboard } from "@/context/dashboard-context";
 import api from "@/utility/jwt";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NotificationDialog from "./notification-card-popup";
 import RelationDialog from "./relation-card-popup";
 import { findDifference, findOnlineAverage } from "@/utility/chartUtility";
@@ -37,6 +37,7 @@ import { logHandledError } from "@/utility/log";import { linkTargets } from "@/u
 const DashboardCards: React.FC = () => {
 
     const { machineStateValue,
+        setMachineStateValue,
         selectedAssetData,
         machineStateData,
         notificationData,
@@ -55,6 +56,10 @@ const DashboardCards: React.FC = () => {
     const [hasRelations, setHasRelations] = useState<Record<string, {}>[]>([]);
     const [childCount, setChildCount] = useState(0);
     const [prevTimer, setPrevTimer] = useState('00:00:00');
+    // The machine_state attribute of the selected asset, resolved once per
+    // asset: it does not change while the asset is the same, and the poll
+    // below would otherwise re-read the whole entity every time.
+    const machineStateAttributeRef = useRef<string>('');
     let intervalId: ReturnType<typeof setInterval>;
     const { t } = useTranslation('dashboard');
     const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -160,6 +165,52 @@ const DashboardCards: React.FC = () => {
         }, 1000);
         setOnlineAverage(findOnlineAverage(allOnlineTime))
     }
+
+    /**
+     * Keeps the state pill current.
+     *
+     * The pill reads `machineStateValue`, which was written once — when the
+     * asset was selected — and never again, so a machine that started running
+     * while the screen was open still read Offline for the whole session. This
+     * is the same read the uptime above already makes: the newest machine_state
+     * row for this asset. The attribute is resolved once per asset.
+     *
+     * Deliberately not the live socket: that stream carries only the parameter
+     * currently charted (the backend re-queries one attributeId), so
+     * machine_state arrives there only when someone happens to be looking at it.
+     */
+    const refreshMachineState = async () => {
+        if (!entityIdValue) return;
+        try {
+            if (!machineStateAttributeRef.current) {
+                machineStateAttributeRef.current = (await fetchAssets(entityIdValue)) ?? '';
+            }
+            const attributeId = machineStateAttributeRef.current;
+            if (!attributeId) return;
+            const response = await api.get(API_URL + '/value-change-state', {
+                params: { attributeId, entityId: 'eq.' + entityIdValue, order: "observedAt.desc", limit: '1' },
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                withCredentials: true,
+            });
+            const latest = Array.isArray(response.data) ? response.data[0] : undefined;
+            // No reading is not the same as a reading of 0, but the pill has
+            // only two states and "we have not heard from it" is not running.
+            setMachineStateValue(latest?.value !== undefined && latest?.value !== null ? String(latest.value) : "0");
+        } catch (error) {
+            // Never a toast: this runs on a timer in the background, and a
+            // missed poll simply leaves the pill where it was.
+            logHandledError("Could not refresh the machine state:", error);
+        }
+    };
+
+    // Re-read on asset change, then every 15 seconds while the screen is open.
+    useEffect(() => {
+        machineStateAttributeRef.current = '';
+        if (!entityIdValue) return;
+        refreshMachineState();
+        const pollId = setInterval(refreshMachineState, 15000);
+        return () => clearInterval(pollId);
+    }, [entityIdValue]);
 
     const getHasProperties = () => {
         const propertiesArray = [];
