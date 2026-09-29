@@ -122,6 +122,8 @@
     "updated_just_now": "Updated just now",
     "updated": "Updated",
     "ago": "ago",
+    "current_value": "Current value",
+    "observed_at": "Observed",
     "no_live_data": "No live data",
     "no_notifications_today": "No notifications today",
     "notifications_loading": "Loading notifications…",

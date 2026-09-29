@@ -122,6 +122,8 @@
     "updated_just_now": "Gerade aktualisiert",
     "updated": "Aktualisiert",
     "ago": "vor",
+    "current_value": "Aktueller Wert",
+    "observed_at": "Gemessen",
     "no_live_data": "Keine Live-Daten",
     "no_notifications_today": "Heute keine Benachrichtigungen",
     "notifications_loading": "Benachrichtigungen werden geladen…",

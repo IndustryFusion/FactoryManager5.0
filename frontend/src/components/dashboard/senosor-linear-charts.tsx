@@ -38,6 +38,7 @@ import { RootState } from "@/redux/store";
 import { InputText } from "primereact/inputtext";
 import { useTranslation } from "next-i18next";
 import { OverlayPanel } from "primereact/overlaypanel";
+import { Dropdown } from "primereact/dropdown";
 import Image from "next/image";
 import { getAssetById } from "@/utility/factory-site-utility";
 
@@ -114,6 +115,8 @@ interface DataItem {
   observedAt: string;
   attributeId: string;
   value: string;
+  /** Present on live rows — the view selects it. Used to ignore other assets. */
+  entityId?: string;
 }
 
 interface DataItem {
@@ -252,6 +255,20 @@ const CombineSensorChart: React.FC = () => {
   // ── New state: KPI, threshold, freshness, zoom tracking ──────────────────
   const [kpiStats, setKpiStats] = useState<KPIStats | null>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
+  /**
+   * The latest value of a parameter whose values are not numbers.
+   *
+   * `Number("Idle")` is NaN, so a text parameter used to draw a chart with
+   * axes and no line — and because the datasets were still there, the "no
+   * data" state never showed either. Null means this parameter is numeric
+   * (or has no readings at all) and the chart is the right thing to draw.
+   */
+  const [textReading, setTextReading] = useState<{ value: string; observedAt: string } | null>(null);
+  // The socket subscription is created once, so it cannot read these from the
+  // closure: they would be whatever they were on the first render.
+  const selectedAttributeRef = useRef<string>("");
+  const entityIdRef = useRef<string>("");
+  const isTextReadingRef = useRef<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const lastUpdateRef = useRef<number>(Date.now());
@@ -630,6 +647,11 @@ const CombineSensorChart: React.FC = () => {
     }
   };
 
+  // Kept in step with the state the socket handler needs.
+  useEffect(() => { selectedAttributeRef.current = selectedAttribute; }, [selectedAttribute]);
+  useEffect(() => { entityIdRef.current = entityIdValue; }, [entityIdValue]);
+  useEffect(() => { isTextReadingRef.current = textReading !== null; }, [textReading]);
+
   const handleAttributeChange = (selectedValue: string) => {
     setSelectedAttribute(selectedValue); // Set the attribute then fetch
   };
@@ -685,6 +707,18 @@ const CombineSensorChart: React.FC = () => {
       });
 
       const factoryData = Array.isArray(response.data) ? response.data : JSON.parse(response.data);
+      // Numeric or not, decided once from the rows themselves: a parameter is
+      // text only when it has readings and not one of them parses. A mostly
+      // numeric series with the odd bad row stays a chart, where the bad rows
+      // are gaps — which is what they are.
+      const readings = factoryData.filter((row: DataItem) => row?.value !== null && row?.value !== undefined && row.value !== "");
+      const isText = readings.length > 0 && !readings.some((row: DataItem) => Number.isFinite(Number(row.value)));
+      if (isText) {
+        // Newest first: the query orders by observedAt.desc.
+        setTextReading({ value: String(readings[0].value), observedAt: readings[0].observedAt });
+      } else {
+        setTextReading(null);
+      }
       const labels = factoryData.map((data: DataItem) => formatLabel(new Date(data.observedAt)));
       const dataPoints = factoryData.map((data: DataItem) => data.value ? Number(data.value) : null);
 
@@ -916,10 +950,29 @@ const CombineSensorChart: React.FC = () => {
       console.error("WebSocket: Connection error", error);
     });
 
-    socketRef.current.on("dataUpdate", (updatedData: []) => {
+    socketRef.current.on("dataUpdate", (updatedData: DataItem[]) => {
       console.log("WebSocket: Received update (", updatedData.length, "records)");
       lastUpdateRef.current = Date.now();
       if (updatedData.length > 0) setHasLiveReading(true);
+      // A text parameter has no dataset to merge into, so the chart merge
+      // below ignores its rows. Its centred reading is updated here instead,
+      // and only from rows for the asset and parameter on screen — this is a
+      // broadcast, so it can carry another asset's rows.
+      if (isTextReadingRef.current) {
+        const mine = updatedData.filter((row) =>
+          row?.attributeId?.split("/").pop() === selectedAttributeRef.current &&
+          (!row?.entityId || row.entityId === entityIdRef.current) &&
+          row?.value !== null && row?.value !== undefined && row.value !== ""
+        );
+        if (mine.length > 0) {
+          const newest = mine.reduce((a, b) => (new Date(a.observedAt) > new Date(b.observedAt) ? a : b));
+          setTextReading((current) =>
+            !current || new Date(newest.observedAt) >= new Date(current.observedAt)
+              ? { value: String(newest.value), observedAt: newest.observedAt }
+              : current
+          );
+        }
+      }
       setChartData(currentData => updateChartDataWithSocketData(currentData, updatedData));
     });
 
@@ -1298,29 +1351,47 @@ const CombineSensorChart: React.FC = () => {
       <div className="grid p-fluid">
         <div className="col-12">
 
-          {/* ── Sensor rail ─────────────────────────────────────────────────
-              Every attribute the machine publishes, visible without opening
-              anything. Replaces the attribute Dropdown; same handler. */}
+          {/* ── Sensor selector ─────────────────────────────────────────────
+              A dropdown, not a rail of cards: with more than a handful of
+              sensors the rail ran off the edge of the card, and its scrollbar
+              is hidden, so the ones past the edge could not be reached at all.
+              Same options, same handler, and each one still shows its unit. */}
           {attributes.length > 0 && (
-            <div className="sensor-rail-wrapper">
-              <span className="sensor-rail-label">{t("dashboard:sensors")}</span>
-              <div className="sensor-rail" role="tablist" aria-label={t("dashboard:selectAttribute")}>
-                {attributes.map((attr) => (
-                  <button
-                    key={attr.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={selectedAttribute === attr.value}
-                    className={`sensor-rail-item ${selectedAttribute === attr.value ? "active" : ""}`}
-                    onClick={() => handleAttributeChange(attr.value)}
-                    title={attr.label}
-                  >
-                    <span className="sensor-rail-name">{attr.label}</span>
-                    {unitMap[attr.value] && (
-                      <span className="sensor-rail-unit">{unitMap[attr.value]}</span>
-                    )}
-                  </button>
-                ))}
+            <div className="sensor-select-wrapper">
+              <span className="sensor-select-label">{t("dashboard:sensors")}</span>
+              <div className="global-button dropdown dashboard-dropdown sensor-select">
+                <Dropdown
+                  id="attribute"
+                  inputId="attribute"
+                  name="attribute"
+                  value={selectedAttribute}
+                  options={attributes}
+                  onChange={(e) => handleAttributeChange(e.value)}
+                  placeholder={t("dashboard:selectAttribute")}
+                  appendTo="self"
+                  panelClassName="global_dropdown_panel"
+                  itemTemplate={(option: AttributeOption) => (
+                    <div className="sensor-option">
+                      <span className="sensor-option-name">{option.label}</span>
+                      {unitMap[option.value] && (
+                        <span className="sensor-option-unit">{unitMap[option.value]}</span>
+                      )}
+                    </div>
+                  )}
+                  valueTemplate={(option: AttributeOption | null) =>
+                    option ? (
+                      <div className="sensor-option">
+                        <span className="sensor-option-name">{option.label}</span>
+                        {unitMap[option.value] && (
+                          <span className="sensor-option-unit">{unitMap[option.value]}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span>{t("dashboard:selectAttribute")}</span>
+                    )
+                  }
+                />
+                <Image src="/dropdown-icon.svg" width={8} height={14} alt="" />
               </div>
             </div>
           )}
@@ -1404,6 +1475,10 @@ const CombineSensorChart: React.FC = () => {
             </div>
 
             <div className="chart-toolbar-right">
+              {/* Limits and exports belong to a chart; a text reading has
+                  neither an axis to draw them on nor a series to export. */}
+              {!textReading && (
+              <>
               <button className="chart-tool-btn chart-tool-btn-limits" onClick={(e) => thresholdOp.current?.toggle(e)} title={t("dashboard:limits_hint")}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
                 {t("dashboard:set_limits")}
@@ -1422,6 +1497,8 @@ const CombineSensorChart: React.FC = () => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                 {t("dashboard:export_png")}
               </button>
+              </>
+              )}
               <button className="chart-tool-btn chart-tool-btn-icon" onClick={handleFullscreen} title={t("dashboard:fullscreen")} aria-label={t("dashboard:fullscreen")}>
                 {isFullscreen
                   ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
@@ -1566,6 +1643,16 @@ const CombineSensorChart: React.FC = () => {
               <div className="chart-loading-state">
                 <Skeleton height="40px" borderRadius="8px"></Skeleton>
                 <Skeleton height="320px" borderRadius="10px"></Skeleton>
+              </div>
+            ) : textReading ? (
+              /* A parameter whose values are words, not numbers. The chart
+                 drew axes and nothing else; the value itself is the reading. */
+              <div className="chart-empty-state chart-text-reading">
+                <p className="chart-text-reading-label">{t("dashboard:current_value")}</p>
+                <p className="chart-text-reading-value" title={textReading.value}>{textReading.value}</p>
+                <p className="chart-text-reading-time">
+                  {t("dashboard:observed_at")} {formatLabel(new Date(textReading.observedAt))}
+                </p>
               </div>
             ) : data.datasets && data.datasets.length > 0 && !noChartData ? (
               <Chart
