@@ -65,7 +65,7 @@ const sampleFor = (factor: number, offset: number) =>
 
 interface ParameterCardProps {
   parameter: string;
-  /** The OPC UA node(s) the value is read from. */
+  /** Where the value is read: OPC UA node(s), or MQTT topic and key. */
   source: string;
   target: Target;
   rule: TransformRule | undefined;
@@ -148,12 +148,12 @@ const ParameterCard: React.FC<ParameterCardProps> = ({ parameter, source, target
     : [];
 
   return (
-    <div className={`vt-card${open ? " is-open" : ""}${legacy ? " is-review" : ""}`}>
+    <div className={`vt-card${open ? " is-open" : ""}${legacy ? " is-review" : ""}${disabled ? " is-disabled" : ""}`}>
       <div className="vt-card-head" role="button" tabIndex={0} aria-expanded={open} onClick={onToggle}
         onKeyDown={e => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onToggle())}>
         <div className="vt-prop">
           <strong title={parameter}>{propertyLabel(parameter)}</strong>
-          <span className="vt-node" title={`OPC UA node ${source}`}>{source}</span>
+          <span className="vt-node" title={`Read from ${source}`}>{source}</span>
         </div>
         <div className="vt-tags">
           {legacy && <span className="vt-tag is-review"><i className="pi pi-flag" /> As before</span>}

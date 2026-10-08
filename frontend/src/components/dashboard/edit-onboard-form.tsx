@@ -33,11 +33,11 @@ import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
 import YAML from 'yaml';
 import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
-import ValueTransformsStep from "./value-transforms/value-transforms-step";
+import ValueTransformsStep, { TransformSource } from "./value-transforms/value-transforms-step";
 import { TransformRule } from "@/utility/value-transform/engine";
 import { MACHINE_STATE_IRI, SERVER_STATE_NODE, serverReachableRule } from "@/utility/value-transform/presets";
 import {
-    buildTransforms, imageAppliesTransforms, pruneRules, ruleProblems, rulesFromConfig, seedLegacyRules, setRule, upgradedImage,
+    DataProtocol, appConfigFor, imageAppliesTransforms, parametersOf, pruneRules, ruleProblems, rulesFromConfig, seedLegacyRules, setRule, upgradedImage,
 } from "@/utility/value-transform/rules";
 import { propertyUnitMap } from "@/utility/asset-units";
 import { getRawAssetById } from "@/utility/asset";
@@ -138,17 +138,22 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 setSecondarySpecItems(secSpecs);
             }
 
-            // Value transforms live with the OPC UA mappings. When the data
-            // service already applies them, what is stored is the user's choice
+            // Value transforms live in each data service's own config. Where the
+            // service already applies them, what is stored is the user's choice,
             // and no legacy rule is added for the mappings loaded here.
-            const opcConfig = assetProtocol === "opc-ua" ? response.data.app_config : response.data.secondary_app_config;
-            setRules(rulesFromConfig(opcConfig));
-            const loadedImage = assetProtocol === "opc-ua"
-                ? response.data.dataservice_image_config
-                : response.data.secondary_dataservice_image_config;
-            if (imageAppliesTransforms(loadedImage)) {
-                const loaded: OpcUaSpec[] = opcConfig?.fusionopcuadataservice?.specification ?? [];
-                loaded.forEach(item => seenRef.current.add(item.parameter));
+            const loadedRules = [
+                ...rulesFromConfig(response.data.app_config),
+                ...rulesFromConfig(response.data.secondary_app_config),
+            ];
+            setRules(loadedRules.filter((rule, i) => loadedRules.findIndex(r => r.parameter === rule.parameter) === i));
+            const loadedServices: [any, string][] = [
+                [response.data.app_config, response.data.dataservice_image_config],
+                [response.data.secondary_app_config, response.data.secondary_dataservice_image_config],
+            ];
+            for (const [config, image] of loadedServices) {
+                if (!config || !imageAppliesTransforms(image)) continue;
+                const service = config.fusionopcuadataservice ?? config.fusionmqttdataservice;
+                parametersOf(service?.specification ?? []).forEach(parameter => seenRef.current.add(parameter));
             }
 
         } catch (error) {
@@ -288,19 +293,32 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         }
     };
 
-    // The rules act on the OPC UA mappings: the primary ones, or the secondary
-    // ones when the primary protocol is MQTT (as in the payload below).
-    const opcIsPrimary = onboard.protocol === "opc-ua";
-    const opcItems = (opcIsPrimary ? specItems : showSecondaryConfig ? secondarySpecItems : []) as OpcUaSpec[];
-    const mqttCount = opcIsPrimary ? (showSecondaryConfig ? secondarySpecItems.length : 0) : specItems.length;
-    const opcImageKey = opcIsPrimary ? "dataservice_image_config" : "secondary_dataservice_image_config";
-    const opcImage: string = onboard[opcImageKey] || "";
+    // The data services the rules act on: the primary one, and the secondary
+    // one (always the other protocol) when it is shown.
+    const primaryProtocol: DataProtocol = onboard.protocol === "opc-ua" ? "opc-ua" : "mqtt";
+    const secondaryProtocol: DataProtocol = primaryProtocol === "opc-ua" ? "mqtt" : "opc-ua";
+    const upgradeImage = (key: string, protocol: DataProtocol) => () =>
+        setOnboard(prev => ({ ...prev, [key]: upgradedImage(prev[key] , protocol) }));
+    const transformSources: TransformSource[] = [
+        {
+            protocol: primaryProtocol,
+            items: specItems,
+            image: (onboard.dataservice_image_config ) || "",
+            onUpgradeImage: upgradeImage("dataservice_image_config", primaryProtocol),
+        },
+        ...(showSecondaryConfig ? [{
+            protocol: secondaryProtocol,
+            items: secondarySpecItems,
+            image: (onboard.secondary_dataservice_image_config ) || "",
+            onUpgradeImage: upgradeImage("secondary_dataservice_image_config", secondaryProtocol),
+        }] : []),
+    ];
 
     const addServerState = () => {
         const item: OpcUaSpec = { ...SERVER_STATE_NODE, parameter: MACHINE_STATE_IRI };
         seenRef.current.add(MACHINE_STATE_IRI);
         setRules(prev => setRule(prev, MACHINE_STATE_IRI, serverReachableRule(MACHINE_STATE_IRI)));
-        if (opcIsPrimary) setSpecItems(prev => [...prev, item]);
+        if (primaryProtocol === "opc-ua") setSpecItems(prev => [...prev, item]);
         else setSecondarySpecItems(prev => [...prev, item]);
     };
 
@@ -347,30 +365,24 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             // Value transforms: only for mappings still present, and with the
             // legacy rule for state parameters nobody has looked at, so a data
             // service that applies rules behaves as before until told otherwise.
-            const opcParameters = opcItems.map(item => item.parameter);
-            let finalRules = pruneRules(rules, opcParameters);
-            if (imageAppliesTransforms(opcImage)) {
-                finalRules = seedLegacyRules(finalRules, opcParameters, seenRef.current);
-            }
+            const enabledParameters = transformSources
+                .filter(source => imageAppliesTransforms(source.image))
+                .flatMap(source => parametersOf(source.items));
+            let finalRules = pruneRules(rules, transformSources.flatMap(source => parametersOf(source.items)));
+            finalRules = seedLegacyRules(finalRules, enabledParameters, seenRef.current);
             const problem = ruleProblems(finalRules)[0];
             if (problem) {
                 showToast('error', t('toast:error'), problem.message);
                 setActiveStep(TRANSFORMS_STEP);
                 return;
             }
-            const transforms = buildTransforms(finalRules);
 
-            // Build config objects from spec editor items
-            parsedConfig = onboard.protocol === "opc-ua"
-                ? { fusionopcuadataservice: { specification: specItems, ...(transforms && { transforms }) } }
-                : { fusionmqttdataservice: { specification: specItems } };
+            // Build config objects from spec editor items, each with the rules for its own parameters
+            parsedConfig = appConfigFor(primaryProtocol, specItems, finalRules);
 
             let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
             if (showSecondaryConfig && secondarySpecItems.length > 0) {
-                const secondaryProtocol = onboard.protocol === "opc-ua" ? "mqtt" : "opc-ua";
-                parsedSecondaryConfig = secondaryProtocol === "opc-ua"
-                    ? { fusionopcuadataservice: { specification: secondarySpecItems, ...(transforms && { transforms }) } }
-                    : { fusionmqttdataservice: { specification: secondarySpecItems } };
+                parsedSecondaryConfig = appConfigFor(secondaryProtocol, secondarySpecItems, finalRules);
             }
 
             if (typeof parsedConfig === "object") {
@@ -718,14 +730,11 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             case TRANSFORMS_STEP:
                 return (
                     <ValueTransformsStep
-                        opcItems={opcItems}
-                        mqttCount={mqttCount}
+                        sources={transformSources}
                         rules={rules}
                         onRulesChange={setRules}
                         units={units}
                         seen={seenRef}
-                        image={opcImage}
-                        onUpgradeImage={() => setOnboard(prev => ({ ...prev, [opcImageKey]: upgradedImage(prev[opcImageKey]) }))}
                         onAddServerState={addServerState}
                     />
                 );

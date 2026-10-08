@@ -38,6 +38,12 @@ describe('checking the value transforms of an onboarding app config', () => {
     ]))).toBeUndefined();
   });
 
+  it('checks the MQTT data service\'s rules too', () => {
+    const mqtt = (rules: unknown[]) => ({ fusionmqttdataservice: { specification: [], transforms: { version: 1, rules } } });
+    expect(transformsProblem(mqtt([{ parameter: MS, map: { cases: [{ eq: 'Running', out: '2' }] } }]))).toBeUndefined();
+    expect(transformsProblem(mqtt([{ parameter: PW, linear: { factor: 'abc' } }]))).toMatch(/factor must be a number/);
+  });
+
   it('rejects an unknown version', () => {
     expect(transformsProblem(withRules([], 2))).toMatch(/version/);
   });

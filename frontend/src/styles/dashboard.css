@@ -1719,7 +1719,9 @@ margin-bottom: 24px
 .vt-banner > .pi, .vt-suggest > .pi { font-size: 18px; }
 
 .vt-sections { display: flex; flex-direction: column; gap: 14px; }
-.vt-sections.is-disabled { opacity: 0.6; pointer-events: none; }
+/* A parameter whose data service image does not apply rules yet: shown, not editable */
+.vt-card.is-disabled .vt-card-body { opacity: 0.6; pointer-events: none; }
+.vt-card.is-disabled .vt-tags { opacity: 0.6; }
 .vt-node {
     font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #8a94a6; background: var(--vt-sunken);
     border-radius: 5px; padding: 2px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; align-self: flex-start;
@@ -1742,9 +1744,9 @@ margin-bottom: 24px
 }
 .vt-card-head:hover { background: #f8faff; }
 .vt-card-head:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
-.vt-prop { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 0 1 300px; }
+.vt-prop { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 0 1 400px; }
 .vt-prop strong { font-weight: 600; font-size: 14px; color: #111827; }
-.vt-prop .vt-node { max-width: 280px; }
+.vt-prop .vt-node { max-width: 380px; }
 .vt-tags { flex: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .vt-tag {
     display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 12px;
@@ -1818,3 +1820,20 @@ margin-bottom: 24px
     .vt-tags { justify-content: flex-start; }
     .vt-step > .vt-pairs, .vt-step > .vt-options { margin-left: 0; }
 }
+
+/* MQTT mapping: what the message holds, and the JSON fields read from it */
+.spec-payload-toggle { display: inline-flex; padding: 3px; border-radius: 9px; background: #eef2f7; gap: 2px; align-self: flex-start; }
+.spec-payload-toggle button {
+    border: 0; background: transparent; padding: 6px 14px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: #475569;
+}
+.spec-payload-toggle button.is-active { background: #fff; color: #1d4ed8; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.spec-json-head, .spec-json-row { display: grid; grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1.5fr) 32px; gap: 8px; align-items: center; }
+.spec-json-head { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #8a94a6; margin-bottom: 2px; }
+.spec-json-row { margin-bottom: 8px; }
+.spec-json-row .p-inputtext { width: 100%; }
+.spec-json-arrow { color: #b6c0cd; font-size: 11px; }
+.spec-edit-hint { display: block; margin: 2px 0 8px; font-size: 12px; color: #6b7280; }
+.spec-edit-hint code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11.5px; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; }
+.spec-tag-key { font-family: 'SFMono-Regular', Consolas, monospace; font-weight: 600; }
+

@@ -29,6 +29,11 @@ export interface OpcUaSpec {
 
 export interface MqttSpec {
   topic: string;
+  /**
+   * Empty: the whole message is the value of the first parameter. Otherwise
+   * the message is JSON, and each key (a path, levels separated by commas,
+   * e.g. "params,em:0,a_current") fills the parameter at the same position.
+   */
   key: string[];
   parameter: string[];
 }
@@ -146,6 +151,7 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
     setDraftErrors(prev => ({ ...prev, topic: false }));
   };
 
+  // MQTT rows: the JSON field and the parameter it fills, kept the same length
   const updateParam = (idx: number, value: string) => {
     setDraft(d => {
       const params = [...(d as MqttSpec).parameter];
@@ -155,18 +161,32 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
     setDraftErrors(prev => ({ ...prev, parameter: false }));
   };
 
+  const updateKey = (idx: number, value: string) => {
+    setDraft(d => {
+      const keys = [...(d as MqttSpec).key];
+      keys[idx] = value;
+      return { ...(d as MqttSpec), key: keys };
+    });
+    setDraftErrors(prev => ({ ...prev, parameter: false }));
+  };
+
   const addParam = () =>
-    setDraft(d => ({ ...(d as MqttSpec), parameter: [...(d as MqttSpec).parameter, ""] }));
+    setDraft(d => ({ ...(d as MqttSpec), key: [...(d as MqttSpec).key, ""], parameter: [...(d as MqttSpec).parameter, ""] }));
 
   const removeParam = (idx: number) =>
     setDraft(d => ({
       ...(d as MqttSpec),
+      key: (d as MqttSpec).key.filter((_, i) => i !== idx),
       parameter: (d as MqttSpec).parameter.filter((_, i) => i !== idx),
     }));
+
+  // Whether the MQTT mapping being edited reads JSON fields (keys) or takes the whole message
+  const [jsonFields, setJsonFields] = useState(false);
 
   // ── Actions ──────────────────────────────────────────────────────────────
   const startAdd = () => {
     setDraft(protocol === "opc-ua" ? emptyOpcUa() : emptyMqtt());
+    setJsonFields(false);
     setDraftErrors({});
     setEditingIndex(-1);
   };
@@ -176,7 +196,11 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
     if (protocol === "opc-ua") {
       setDraft({ ...(item as OpcUaSpec) });
     } else {
-      setDraft({ ...(item as MqttSpec), parameter: [...(item as MqttSpec).parameter] });
+      const mqtt = item as MqttSpec;
+      const keys = Array.isArray(mqtt.key) ? mqtt.key : [];
+      const params = mqtt.parameter.length ? [...mqtt.parameter] : [""];
+      setDraft({ ...mqtt, parameter: params, key: params.map((_, i) => keys[i] ?? "") });
+      setJsonFields(keys.length > 0);
     }
     setDraftErrors({});
     setEditingIndex(idx);
@@ -194,7 +218,14 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
     } else {
       const d = draft as MqttSpec;
       if (!d.topic.trim()) errs.topic = true;
-      if (d.parameter.filter(p => p.trim()).length === 0) errs.parameter = true;
+      if (jsonFields) {
+        // Every row needs both its field and its parameter, and there must be one
+        const rows = d.parameter.map((p, i) => [d.key[i] ?? "", p].map(v => v.trim()));
+        const filled = rows.filter(([k, p]) => k || p);
+        if (filled.length === 0 || filled.some(([k, p]) => !k || !p)) errs.parameter = true;
+      } else if (!(d.parameter[0] ?? "").trim()) {
+        errs.parameter = true;
+      }
     }
     setDraftErrors(errs);
     return Object.keys(errs).length === 0;
@@ -203,11 +234,19 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
   const saveDraft = () => {
     if (!validate()) return;
 
-    // Ensure key:[] is always present for MQTT items
-    const item: SpecItem =
-      protocol === "mqtt"
-        ? { ...(draft as MqttSpec), key: [], parameter: (draft as MqttSpec).parameter.filter(p => p.trim()) }
-        : draft;
+    let item: SpecItem = draft;
+    if (protocol === "mqtt") {
+      const d = draft as MqttSpec;
+      if (jsonFields) {
+        const rows = d.parameter
+          .map((p, i) => ({ key: (d.key[i] ?? "").trim(), parameter: p.trim() }))
+          .filter(r => r.key && r.parameter);
+        item = { ...d, topic: d.topic.trim(), key: rows.map(r => r.key), parameter: rows.map(r => r.parameter) };
+      } else {
+        // The whole message is one value, so it fills one parameter
+        item = { ...d, topic: d.topic.trim(), key: [], parameter: [d.parameter[0].trim()] };
+      }
+    }
 
     const newItems =
       editingIndex === -1
@@ -281,29 +320,74 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
             {draftErrors.topic && <small className="p-error">Required</small>}
           </div>
           <div className="spec-edit-field spec-edit-field-full">
-            <label className="spec-edit-label">
-              Parameters (IRI) <span style={{ color: "#ef4444" }}>*</span>
-            </label>
-            {(draft as MqttSpec).parameter.map((p, pi) => (
-              <div key={pi} className="spec-param-row">
-                <InputText
-                  value={p}
-                  onChange={e => updateParam(pi, e.target.value)}
-                  placeholder="https://industry-fusion.org/base/v0.1/..."
-                  className={`w-full${draftErrors.parameter ? " p-invalid" : ""}`}
-                />
-                {(draft as MqttSpec).parameter.length > 1 && (
-                  <button type="button" className="spec-remove-param-btn" onClick={() => removeParam(pi)}>
+            <label className="spec-edit-label">The message</label>
+            <div className="spec-payload-toggle" role="group" aria-label="What the message holds">
+              <button type="button" className={!jsonFields ? "is-active" : ""} onClick={() => setJsonFields(false)}>
+                Is the value itself
+              </button>
+              <button type="button" className={jsonFields ? "is-active" : ""} onClick={() => setJsonFields(true)}>
+                Is JSON: read fields
+              </button>
+            </div>
+          </div>
+
+          {!jsonFields ? (
+            <div className="spec-edit-field spec-edit-field-full">
+              <label className="spec-edit-label">
+                Parameter (IRI) <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <InputText
+                value={(draft as MqttSpec).parameter[0] ?? ""}
+                onChange={e => updateParam(0, e.target.value)}
+                placeholder="https://industry-fusion.org/base/v0.1/..."
+                className={`w-full${draftErrors.parameter ? " p-invalid" : ""}`}
+              />
+              {draftErrors.parameter && <small className="p-error">Required</small>}
+              {(draft as MqttSpec).parameter.filter(p => p.trim()).length > 1 && (
+                <small className="spec-edit-hint">
+                  Only the first parameter is kept: a message that is a single value fills one parameter.
+                  To fill several, choose &ldquo;Is JSON: read fields&rdquo;.
+                </small>
+              )}
+            </div>
+          ) : (
+            <div className="spec-edit-field spec-edit-field-full">
+              <div className="spec-json-head">
+                <span>JSON field <span style={{ color: "#ef4444" }}>*</span></span>
+                <span />
+                <span>Parameter (IRI) <span style={{ color: "#ef4444" }}>*</span></span>
+              </div>
+              {(draft as MqttSpec).parameter.map((p, pi) => (
+                <div key={pi} className="spec-json-row">
+                  <InputText
+                    value={(draft as MqttSpec).key[pi] ?? ""}
+                    onChange={e => updateKey(pi, e.target.value)}
+                    placeholder="e.g. temp or params,em:0,a_current"
+                    className={draftErrors.parameter && !((draft as MqttSpec).key[pi] ?? "").trim() ? "p-invalid" : ""}
+                  />
+                  <i className="pi pi-arrow-right spec-json-arrow" />
+                  <InputText
+                    value={p}
+                    onChange={e => updateParam(pi, e.target.value)}
+                    placeholder="https://industry-fusion.org/base/v0.1/..."
+                    className={draftErrors.parameter && !p.trim() ? "p-invalid" : ""}
+                  />
+                  <button type="button" className="spec-remove-param-btn" onClick={() => removeParam(pi)}
+                    disabled={(draft as MqttSpec).parameter.length === 1} aria-label="Remove this field">
                     <i className="pi pi-minus" />
                   </button>
-                )}
-              </div>
-            ))}
-            {draftErrors.parameter && <small className="p-error">At least one parameter is required</small>}
-            <button type="button" className="spec-add-param-btn" onClick={addParam}>
-              <i className="pi pi-plus" /> Add Parameter
-            </button>
-          </div>
+                </div>
+              ))}
+              {draftErrors.parameter && <small className="p-error">Every row needs a JSON field and a parameter</small>}
+              <small className="spec-edit-hint">
+                Separate nested levels with commas: <code>params,em:0,a_current</code> reads
+                {" "}<code>{"{\"params\": {\"em:0\": {\"a_current\": …}}}"}</code>. A message without the field sends nothing for it.
+              </small>
+              <button type="button" className="spec-add-param-btn" onClick={addParam}>
+                <i className="pi pi-plus" /> Add field
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -452,13 +536,17 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
                         <span className="spec-field-val">{(item as MqttSpec).topic}</span>
                       </div>
                       <div className="spec-card-row spec-card-tags">
-                        <span className="spec-field-key">Parameters</span>
+                        <span className="spec-field-key">{(item as MqttSpec).key?.length ? "JSON fields" : "Whole message"}</span>
                         <div className="spec-tags">
-                          {(item as MqttSpec).parameter.map((p, pi) => (
-                            <span key={pi} className="spec-tag" title={p}>
-                              {shortLabel(p)}
-                            </span>
-                          ))}
+                          {(item as MqttSpec).key?.length
+                            ? (item as MqttSpec).parameter.map((p, pi) => (
+                                <span key={pi} className="spec-tag" title={`${(item as MqttSpec).key[pi] ?? ""} → ${p}`}>
+                                  <span className="spec-tag-key">{(item as MqttSpec).key[pi] ?? "?"}</span> → {shortLabel(p)}
+                                </span>
+                              ))
+                            : (item as MqttSpec).parameter.slice(0, 1).map((p, pi) => (
+                                <span key={pi} className="spec-tag" title={p}>{shortLabel(p)}</span>
+                              ))}
                         </div>
                       </div>
                     </>
