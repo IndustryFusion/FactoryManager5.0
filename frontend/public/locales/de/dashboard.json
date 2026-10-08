@@ -81,6 +81,7 @@
     "weeks": "Wochen",
     "data_viewer": "Datenanzeige",
     "running": "Läuft",
+    "idle": "Leerlauf",
     "connections": "Verbindungen",
     "no_results": "Keine Ergebnisse gefunden",
     "edit_onboard": "Onboard bearbeiten",
@@ -133,5 +134,12 @@
     "limits_hint": "Horizontale Linien im Diagramm markieren den sicheren Betriebsbereich.",
     "reset_limits": "Grenzwerte zurücksetzen",
     "no_asset_selected_hint": "Wählen Sie oben eine Maschine aus, um ihre Live-Daten zu sehen.",
-    "no_chart_data_hint": "Dieser Sensor hat im gewählten Zeitraum keine Werte gemeldet."
+    "no_chart_data_hint": "Dieser Sensor hat im gewählten Zeitraum keine Werte gemeldet.",
+    "gateway_restart_note": "Das Gateway startet seine Datendienste neu, um die Änderung zu übernehmen. Das dauert etwa 2 Minuten.",
+    "sensor_reporting": "sendet · {{ago}}",
+    "sensor_last_seen": "zuletzt {{ago}}",
+    "sensor_no_data": "noch keine Daten",
+    "sensor_new": "neu",
+    "sensor_new_hint": "Von der Maschine gesendet, fehlt aber in Scorpio",
+    "parameter_no_data_yet": "{{name}} hat in den letzten 7 Tagen keinen Wert gesendet."
 }

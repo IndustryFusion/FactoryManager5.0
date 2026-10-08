@@ -23,6 +23,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './endpoints/auth/auth.guard';
 import { UrnHoldersBootstrap } from './bootstrap/urn-holders.bootstrap';
 import { PdtViewsBootstrap } from './bootstrap/pdt-views.bootstrap';
+import { PdtIndexBootstrap } from './bootstrap/pdt-index.bootstrap';
 import { AuthService } from './endpoints/auth/auth.service';
 import { AuthController } from './endpoints/auth/auth.controller';
 import { AlertsService } from './endpoints/alerts/alerts.service';
@@ -151,6 +152,7 @@ const mongoURIFactory = process.env.MONGO_URL_FACTORY_DB;
     // neither is fatal.
     UrnHoldersBootstrap,
     PdtViewsBootstrap,
+    PdtIndexBootstrap,
     AppService,
     AuthService,
     RouteHandoffService,

@@ -1,0 +1,2162 @@
+{
+  "version": 1,
+  "note": "Shared by fusionopcuadataservice (source of truth) and FactoryManager5.0 frontend/src/utility/value-transform. raw may be {\"$special\": \"nan\"|\"inf\"|\"list\"}; expected null means nothing is sent.",
+  "cases": [
+    {
+      "name": "eq matches an integer",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": "2"
+    },
+    {
+      "name": "eq matches a float of the same value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1.0,
+      "expected": "2"
+    },
+    {
+      "name": "eq matches numeric text",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "1",
+      "expected": "2"
+    },
+    {
+      "name": "eq matches numeric text with decimals",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "1.0",
+      "expected": "2"
+    },
+    {
+      "name": "eq matches true as 1",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": true,
+      "expected": "2"
+    },
+    {
+      "name": "eq matches 'TRUE' text as 1",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "TRUE",
+      "expected": "2"
+    },
+    {
+      "name": "eq matches a Float32 read within tolerance",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1.0000000149,
+      "expected": "2"
+    },
+    {
+      "name": "eq on text ignores case and spaces",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "  running ",
+      "expected": "2"
+    },
+    {
+      "name": "second case",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 2,
+      "expected": "1"
+    },
+    {
+      "name": "range lower bound is inclusive",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 3,
+      "expected": "1"
+    },
+    {
+      "name": "range upper bound is inclusive",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 9,
+      "expected": "1"
+    },
+    {
+      "name": "inside the range",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 4.5,
+      "expected": "1"
+    },
+    {
+      "name": "above the range uses the fallback value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 10,
+      "expected": "0"
+    },
+    {
+      "name": "unknown text uses the fallback value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "Stopped",
+      "expected": "0"
+    },
+    {
+      "name": "false is 0 and uses the fallback",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": false,
+      "expected": "0"
+    },
+    {
+      "name": "empty text uses the fallback",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "",
+      "expected": "0"
+    },
+    {
+      "name": "no value sends on_error",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": null,
+      "expected": "0"
+    },
+    {
+      "name": "NaN counts as no value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": {
+        "$special": "nan"
+      },
+      "expected": "0"
+    },
+    {
+      "name": "infinity counts as no value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": {
+        "$special": "inf"
+      },
+      "expected": "0"
+    },
+    {
+      "name": "a list is unsupported and uses the fallback",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": {
+        "$special": "list"
+      },
+      "expected": "0"
+    },
+    {
+      "name": "hex text is text, not a number",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "0x1",
+      "expected": "0"
+    },
+    {
+      "name": "first match wins",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "min": 0,
+                  "out": "1"
+                },
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 5,
+      "expected": "1"
+    },
+    {
+      "name": "bit 4 set",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 16,
+      "expected": "2"
+    },
+    {
+      "name": "bit 4 wins over bit 0 by order",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 17,
+      "expected": "2"
+    },
+    {
+      "name": "bit 0 set",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": "1"
+    },
+    {
+      "name": "no bit set drops",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 2,
+      "expected": null
+    },
+    {
+      "name": "bit test ignores fractions",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 16.5,
+      "expected": null
+    },
+    {
+      "name": "bit test ignores negatives",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": -16,
+      "expected": null
+    },
+    {
+      "name": "bit test works above 32 bits",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "bit": 4,
+                  "out": "2"
+                },
+                {
+                  "bit": 0,
+                  "out": "1"
+                }
+              ],
+              "fallback": "drop"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 4294967312,
+      "expected": "2"
+    },
+    {
+      "name": "legacy: any readable value is running",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [],
+              "fallback": {
+                "value": "2"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 0,
+      "expected": "2"
+    },
+    {
+      "name": "legacy: text is running",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [],
+              "fallback": {
+                "value": "2"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "Idle",
+      "expected": "2"
+    },
+    {
+      "name": "legacy: unreadable is offline",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [],
+              "fallback": {
+                "value": "2"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": null,
+      "expected": "0"
+    },
+    {
+      "name": "kW to W",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1.5,
+      "expected": "1500"
+    },
+    {
+      "name": "kW to W from text",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": "2.25",
+      "expected": "2250"
+    },
+    {
+      "name": "kW to W rounds to 3 decimals",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 0.0012346,
+      "expected": "1.235"
+    },
+    {
+      "name": "rounds half away from zero on the exact binary value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1,
+              "offset": 0,
+              "decimals": 2
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1.005,
+      "expected": "1"
+    },
+    {
+      "name": "rounds half away from zero",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1,
+              "offset": 0,
+              "decimals": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 2.5,
+      "expected": "3"
+    },
+    {
+      "name": "rounds negative half away from zero",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1,
+              "offset": 0,
+              "decimals": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": -2.5,
+      "expected": "-3"
+    },
+    {
+      "name": "negative zero is 0",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1,
+              "offset": 0,
+              "decimals": 2
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": -0.001,
+      "expected": "0"
+    },
+    {
+      "name": "default 6 decimals",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 3,
+              "offset": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1.1,
+      "expected": "3.3"
+    },
+    {
+      "name": "linear on text drops",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": "n/a",
+      "expected": null
+    },
+    {
+      "name": "linear on true uses 1",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": true,
+      "expected": "1000"
+    },
+    {
+      "name": "linear without on_error sends nothing on no value",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1000,
+              "offset": 0,
+              "decimals": 3,
+              "from": "kW",
+              "to": "W"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": null,
+      "expected": null
+    },
+    {
+      "name": "very large results are not rounded",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 10000000000.0,
+              "offset": 0,
+              "decimals": 2
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1000000.0,
+      "expected": "1e+16"
+    },
+    {
+      "name": "°F to °C",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/temperature",
+            "linear": {
+              "factor": 0.5555555555555556,
+              "offset": -17.77777777777778,
+              "decimals": 2,
+              "from": "°F",
+              "to": "°C"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/temperature",
+      "raw": 212,
+      "expected": "100"
+    },
+    {
+      "name": "°F to °C below zero",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/temperature",
+            "linear": {
+              "factor": 0.5555555555555556,
+              "offset": -17.77777777777778,
+              "decimals": 2,
+              "from": "°F",
+              "to": "°C"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/temperature",
+      "raw": 0,
+      "expected": "-17.78"
+    },
+    {
+      "name": "raw fallback sends integers without .0",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ],
+              "fallback": "raw"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 7.0,
+      "expected": "7"
+    },
+    {
+      "name": "raw fallback sends text unchanged",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ],
+              "fallback": "raw"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": "Busy ",
+      "expected": "Busy "
+    },
+    {
+      "name": "raw fallback sends booleans as true/false",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ],
+              "fallback": "raw"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": true,
+      "expected": "true"
+    },
+    {
+      "name": "raw fallback sends floats in shortest form",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ],
+              "fallback": "raw"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 0.1,
+      "expected": "0.1"
+    },
+    {
+      "name": "fallback defaults to drop",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "5",
+                  "out": "2"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 6,
+      "expected": null
+    },
+    {
+      "name": "no rules: integer",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 2,
+      "expected": "2"
+    },
+    {
+      "name": "no rules: integral float has no .0",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 2.0,
+      "expected": "2"
+    },
+    {
+      "name": "no rules: float",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 12.75,
+      "expected": "12.75"
+    },
+    {
+      "name": "no rules: small float uses exponent",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1e-05,
+      "expected": "1e-05"
+    },
+    {
+      "name": "no rules: large integral float uses exponent",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1e+16,
+      "expected": "1e+16"
+    },
+    {
+      "name": "no rules: integral float at 1e15 keeps .0",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 1000000000000000.0,
+      "expected": "1000000000000000.0"
+    },
+    {
+      "name": "no rules: boolean",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": false,
+      "expected": "false"
+    },
+    {
+      "name": "no rules: text unchanged",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": "Auto",
+      "expected": "Auto"
+    },
+    {
+      "name": "no rules: no value sends nothing",
+      "transforms": null,
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": null,
+      "expected": null
+    },
+    {
+      "name": "rule for another parameter does not apply",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 2,
+      "expected": "2"
+    },
+    {
+      "name": "unknown version drops the listed parameters",
+      "transforms": {
+        "version": 2,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": null
+    },
+    {
+      "name": "unknown version leaves other parameters alone",
+      "transforms": {
+        "version": 2,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 5,
+      "expected": "5"
+    },
+    {
+      "name": "malformed rule drops its parameter",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": "abc"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 5,
+      "expected": null
+    },
+    {
+      "name": "malformed rule does not affect other rules",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": "abc"
+            }
+          },
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1",
+                  "out": "2"
+                },
+                {
+                  "eq": "2",
+                  "out": "1"
+                },
+                {
+                  "eq": "Running",
+                  "out": "2"
+                },
+                {
+                  "min": 3,
+                  "max": 9,
+                  "out": "1"
+                }
+              ],
+              "fallback": {
+                "value": "0"
+              }
+            },
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": "2"
+    },
+    {
+      "name": "map then convert: an empty map that drops drops everything",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": 1
+            },
+            "map": {
+              "cases": []
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 5,
+      "expected": null
+    },
+    {
+      "name": "case without out is malformed",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": "1"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": null
+    },
+    {
+      "name": "numeric strings in rules are accepted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": "1000",
+              "offset": "0",
+              "decimals": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 2,
+      "expected": "2000"
+    },
+    {
+      "name": "numeric eq and out are accepted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+            "map": {
+              "cases": [
+                {
+                  "eq": 1,
+                  "out": 2
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/machine_state",
+      "raw": 1,
+      "expected": "2"
+    },
+    {
+      "name": "hex factor is malformed",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "linear": {
+              "factor": "0x10"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 2,
+      "expected": null
+    },
+    {
+      "name": "null cases is malformed",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+            "map": {
+              "cases": null
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/power_consumption",
+      "raw": 2,
+      "expected": null
+    },
+    {
+      "name": "map then convert: a mapped number is converted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "10"
+                },
+                {
+                  "eq": "-1",
+                  "out": "stopped"
+                }
+              ],
+              "fallback": "raw"
+            },
+            "linear": {
+              "factor": 60,
+              "offset": 0,
+              "decimals": 3,
+              "from": "m/s",
+              "to": "m/min"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 0,
+      "expected": "600"
+    },
+    {
+      "name": "map then convert: an unmapped number is converted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "10"
+                },
+                {
+                  "eq": "-1",
+                  "out": "stopped"
+                }
+              ],
+              "fallback": "raw"
+            },
+            "linear": {
+              "factor": 60,
+              "offset": 0,
+              "decimals": 3,
+              "from": "m/s",
+              "to": "m/min"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 2,
+      "expected": "120"
+    },
+    {
+      "name": "map then convert: mapped text is sent as mapped",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "10"
+                },
+                {
+                  "eq": "-1",
+                  "out": "stopped"
+                }
+              ],
+              "fallback": "raw"
+            },
+            "linear": {
+              "factor": 60,
+              "offset": 0,
+              "decimals": 3,
+              "from": "m/s",
+              "to": "m/min"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": -1,
+      "expected": "stopped"
+    },
+    {
+      "name": "map then convert: unmapped text cannot be converted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "10"
+                },
+                {
+                  "eq": "-1",
+                  "out": "stopped"
+                }
+              ],
+              "fallback": "raw"
+            },
+            "linear": {
+              "factor": 60,
+              "offset": 0,
+              "decimals": 3,
+              "from": "m/s",
+              "to": "m/min"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": "n/a",
+      "expected": null
+    },
+    {
+      "name": "map then convert: no value and no on_error sends nothing",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "10"
+                },
+                {
+                  "eq": "-1",
+                  "out": "stopped"
+                }
+              ],
+              "fallback": "raw"
+            },
+            "linear": {
+              "factor": 60,
+              "offset": 0,
+              "decimals": 3,
+              "from": "m/s",
+              "to": "m/min"
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": null,
+      "expected": null
+    },
+    {
+      "name": "map then convert: the fallback value is converted",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "0"
+                }
+              ],
+              "fallback": {
+                "value": "1"
+              }
+            },
+            "linear": {
+              "factor": 1000,
+              "offset": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 7,
+      "expected": "1000"
+    },
+    {
+      "name": "map then convert: a mapped zero stays zero",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "eq": "0",
+                  "out": "0"
+                }
+              ],
+              "fallback": {
+                "value": "1"
+              }
+            },
+            "linear": {
+              "factor": 1000,
+              "offset": 0
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 0,
+      "expected": "0"
+    },
+    {
+      "name": "map then convert: a range maps before converting",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "min": 0,
+                  "max": 5,
+                  "out": "5"
+                }
+              ],
+              "fallback": "drop"
+            },
+            "linear": {
+              "factor": 2,
+              "offset": 1
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 3.5,
+      "expected": "11"
+    },
+    {
+      "name": "map then convert: fallback drop drops",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "map": {
+              "cases": [
+                {
+                  "min": 0,
+                  "max": 5,
+                  "out": "5"
+                }
+              ],
+              "fallback": "drop"
+            },
+            "linear": {
+              "factor": 2,
+              "offset": 1
+            }
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 9,
+      "expected": null
+    },
+    {
+      "name": "rule with neither map nor linear is malformed",
+      "transforms": {
+        "version": 1,
+        "rules": [
+          {
+            "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+            "on_error": "0"
+          }
+        ]
+      },
+      "parameter": "https://industry-fusion.org/base/v0.1/cutting_velocity",
+      "raw": 5,
+      "expected": null
+    }
+  ]
+}

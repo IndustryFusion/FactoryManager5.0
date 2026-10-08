@@ -33,6 +33,14 @@ import "../../styles/dashboard.css"
 import { OnboardData } from "@/types/onboard-form";
 import YAML from 'yaml';
 import SpecEditor, { OpcUaSpec, MqttSpec, SpecItem } from "./spec-editor";
+import ValueTransformsStep from "./value-transforms/value-transforms-step";
+import { TransformRule } from "@/utility/value-transform/engine";
+import { MACHINE_STATE_IRI, SERVER_STATE_NODE, serverReachableRule } from "@/utility/value-transform/presets";
+import {
+    buildTransforms, imageAppliesTransforms, pruneRules, ruleProblems, rulesFromConfig, seedLegacyRules, setRule, upgradedImage,
+} from "@/utility/value-transform/rules";
+import { propertyUnitMap } from "@/utility/asset-units";
+import { getRawAssetById } from "@/utility/asset";
 
 type OnboardDataKey = keyof OnboardData;
 interface EditOnboardAssetProp {
@@ -51,11 +59,22 @@ interface EditOnboardAssetProp {
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+const TRANSFORMS_STEP = 2;
+
 const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp, setEditOnboardAssetProp }) => {
     const [onboard, setOnboard] = useState<Record<string, any>>({});
     const [showSecondaryConfig, setShowSecondaryConfig] = useState(false);
     const [specItems, setSpecItems] = useState<SpecItem[]>([]);
     const [secondarySpecItems, setSecondarySpecItems] = useState<SpecItem[]>([]);
+    const [rules, setRules] = useState<TransformRule[]>([]);
+    // Whether the YAML typed in each mapping editor can be read
+    const [specYamlValid, setSpecYamlValid] = useState({ primary: true, secondary: true });
+    const yamlValidity = (which: "primary" | "secondary") => (valid: boolean) =>
+        setSpecYamlValid(prev => (prev[which] === valid ? prev : { ...prev, [which]: valid }));
+    const specYamlOk = specYamlValid.primary && (!showSecondaryConfig || specYamlValid.secondary);
+    const [units, setUnits] = useState<Record<string, string>>({});
+    // Parameters already offered the legacy rule, so a rule the user removed is not put back
+    const seenRef = useRef<Set<string>>(new Set());
     const toast = useRef<Toast>(null);
     const { t } = useTranslation(['button', 'dashboard']);
     const [validateInput, setValidateInput] = useState({
@@ -75,6 +94,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
     const stepItems = [
         { label: 'Connection' },
         { label: 'Configuration' },
+        { label: 'Value Transforms' },
         { label: 'Images' },
         { label: 'Server Settings' },
         { label: 'Authentication' }
@@ -118,6 +138,19 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 setSecondarySpecItems(secSpecs);
             }
 
+            // Value transforms live with the OPC UA mappings. When the data
+            // service already applies them, what is stored is the user's choice
+            // and no legacy rule is added for the mappings loaded here.
+            const opcConfig = assetProtocol === "opc-ua" ? response.data.app_config : response.data.secondary_app_config;
+            setRules(rulesFromConfig(opcConfig));
+            const loadedImage = assetProtocol === "opc-ua"
+                ? response.data.dataservice_image_config
+                : response.data.secondary_dataservice_image_config;
+            if (imageAppliesTransforms(loadedImage)) {
+                const loaded: OpcUaSpec[] = opcConfig?.fusionopcuadataservice?.specification ?? [];
+                loaded.forEach(item => seenRef.current.add(item.parameter));
+            }
+
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 showToast('warn', t('toast:warn'), error.response?.data.message + ". \n\n " + t('toast:onboard_first'));
@@ -127,6 +160,10 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
 
     useEffect(() => {
         getOnboardFormData();
+        // Units only label the conversions; without them the step offers a plain factor.
+        getRawAssetById(editOnboardAssetProp.onboardAssetId)
+            .then(raw => setUnits(propertyUnitMap(raw)))
+            .catch(() => setUnits({}));
     }, [])
 
     const showToast = (severity: ToastMessage['severity'], summary: string, message: string) => {
@@ -195,7 +232,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 }
                 break;
             case 1: // Configuration
-                if (specItems.length === 0) {
+                if (specItems.length === 0 || !specYamlOk) {
                     setValidateInput(prev => ({
                         ...prev,
                         app_config: true
@@ -203,7 +240,12 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     isValid = false;
                 }
                 break;
-            case 2: // Services
+            case TRANSFORMS_STEP:
+                if (ruleProblems(rules).length > 0) {
+                    isValid = false;
+                }
+                break;
+            case 3: // Services
                 if (!onboard.dataservice_image_config || !onboard.agentservice_image_config) {
                     setValidateInput(prev => ({
                         ...prev,
@@ -213,7 +255,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     isValid = false;
                 }
                 break;
-            case 3: // MQTT Settings
+            case 4: // MQTT Settings
                 if (!onboard.pdt_mqtt_hostname || !onboard.pdt_mqtt_port) {
                     setValidateInput(prev => ({
                         ...prev,
@@ -223,7 +265,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     isValid = false;
                 }
                 break;
-            case 4: // Authentication
+            case 5: // Authentication
                 if (!onboard.keycloak_url || !onboard.realm_password) {
                     setValidateInput(prev => ({
                         ...prev,
@@ -244,6 +286,22 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
         } else {
             showToast('warn', t('toast:validation'), t('toast:fill_required_step'));
         }
+    };
+
+    // The rules act on the OPC UA mappings: the primary ones, or the secondary
+    // ones when the primary protocol is MQTT (as in the payload below).
+    const opcIsPrimary = onboard.protocol === "opc-ua";
+    const opcItems = (opcIsPrimary ? specItems : showSecondaryConfig ? secondarySpecItems : []) as OpcUaSpec[];
+    const mqttCount = opcIsPrimary ? (showSecondaryConfig ? secondarySpecItems.length : 0) : specItems.length;
+    const opcImageKey = opcIsPrimary ? "dataservice_image_config" : "secondary_dataservice_image_config";
+    const opcImage: string = onboard[opcImageKey] || "";
+
+    const addServerState = () => {
+        const item: OpcUaSpec = { ...SERVER_STATE_NODE, parameter: MACHINE_STATE_IRI };
+        seenRef.current.add(MACHINE_STATE_IRI);
+        setRules(prev => setRule(prev, MACHINE_STATE_IRI, serverReachableRule(MACHINE_STATE_IRI)));
+        if (opcIsPrimary) setSpecItems(prev => [...prev, item]);
+        else setSecondarySpecItems(prev => [...prev, item]);
     };
 
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -282,17 +340,36 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
             agentservice_image_config === undefined || agentservice_image_config === ""
         ) {
             showToast('error', t('toast:error'), t('toast:fill_required'))
+        } else if (!specYamlOk) {
+            showToast('error', t('toast:error'), "A data mapping's YAML cannot be read. Fix it or undo the changes.");
+            setActiveStep(1);
         } else {
+            // Value transforms: only for mappings still present, and with the
+            // legacy rule for state parameters nobody has looked at, so a data
+            // service that applies rules behaves as before until told otherwise.
+            const opcParameters = opcItems.map(item => item.parameter);
+            let finalRules = pruneRules(rules, opcParameters);
+            if (imageAppliesTransforms(opcImage)) {
+                finalRules = seedLegacyRules(finalRules, opcParameters, seenRef.current);
+            }
+            const problem = ruleProblems(finalRules)[0];
+            if (problem) {
+                showToast('error', t('toast:error'), problem.message);
+                setActiveStep(TRANSFORMS_STEP);
+                return;
+            }
+            const transforms = buildTransforms(finalRules);
+
             // Build config objects from spec editor items
             parsedConfig = onboard.protocol === "opc-ua"
-                ? { fusionopcuadataservice: { specification: specItems } }
+                ? { fusionopcuadataservice: { specification: specItems, ...(transforms && { transforms }) } }
                 : { fusionmqttdataservice: { specification: specItems } };
 
             let parsedSecondaryConfig: Record<string, any> | undefined = undefined;
             if (showSecondaryConfig && secondarySpecItems.length > 0) {
                 const secondaryProtocol = onboard.protocol === "opc-ua" ? "mqtt" : "opc-ua";
                 parsedSecondaryConfig = secondaryProtocol === "opc-ua"
-                    ? { fusionopcuadataservice: { specification: secondarySpecItems } }
+                    ? { fusionopcuadataservice: { specification: secondarySpecItems, ...(transforms && { transforms }) } }
                     : { fusionmqttdataservice: { specification: secondarySpecItems } };
             }
 
@@ -337,13 +414,13 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 successToast: true
                             }
                         )
-                        showToast('success', t('toast:success'), t('toast:onboard_form_updated'));
+                        showToast('success', t('toast:success'), `${t('toast:onboard_form_updated')} ${t('dashboard:gateway_restart_note')}`);
                     }
 
                 } catch (error) {
                     if (axios.isAxiosError(error)) {
                         console.error("Error response:", error.response?.data.message);
-                        showToast('error', t('toast:error'), t('toast:updating_onboard_form'));
+                        showToast('error', t('toast:error'), error.response?.data?.message || t('toast:updating_onboard_form'));
                     }
                 }
             }
@@ -546,6 +623,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 items={specItems}
                                 onChange={setSpecItems}
                                 hasError={validateInput.app_config}
+                                onValidityChange={yamlValidity("primary")}
                             />
                             {validateInput?.app_config && (
                                 <small className="p-error">At least one data mapping is required</small>
@@ -565,14 +643,14 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                 />
                             </div>
                         ) : (
-                            <div className="field">
+                            <div className="field secondary-config">
                                 <div className="flex align-items-center justify-content-between mb-2">
                                     <div>
                                         <label htmlFor="secondary_app_config" className="font-semibold">
                                             Secondary Configuration
                                         </label>
                                         <small className="block text-gray-600">
-                                            Optional secondary YAML configuration
+                                            A second data service for the other protocol (optional)
                                         </small>
                                     </div>
                                     <Button
@@ -630,13 +708,29 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                                     protocol={onboard.protocol === "opc-ua" ? "mqtt" : "opc-ua"}
                                     items={secondarySpecItems}
                                     onChange={setSecondarySpecItems}
+                                    onValidityChange={yamlValidity("secondary")}
                                 />
                             </div>
                         )}
                     </div>
                 );
 
-            case 2: // Services
+            case TRANSFORMS_STEP:
+                return (
+                    <ValueTransformsStep
+                        opcItems={opcItems}
+                        mqttCount={mqttCount}
+                        rules={rules}
+                        onRulesChange={setRules}
+                        units={units}
+                        seen={seenRef}
+                        image={opcImage}
+                        onUpgradeImage={() => setOnboard(prev => ({ ...prev, [opcImageKey]: upgradedImage(prev[opcImageKey]) }))}
+                        onAddServerState={addServerState}
+                    />
+                );
+
+            case 3: // Services
                 return (
                     <div className="step-content">
                         <div className="step-header">
@@ -687,7 +781,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     </div>
                 );
 
-            case 3: // MQTT Settings
+            case 4: // MQTT Settings
                 return (
                     <div className="step-content">
                         <div className="step-header">
@@ -763,7 +857,7 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                     </div>
                 );
 
-            case 4: // Authentication
+            case 5: // Authentication
                 return (
                     <div className="step-content">
                         <div className="step-header">
@@ -860,7 +954,8 @@ const EditOnboardForm: React.FC<EditOnboardAssetProp> = ({ editOnboardAssetProp,
                 modal
                 header={headerElement}
                 footer={footerContent}
-                style={{ width: '60rem', maxWidth: '95vw' }}
+                className="onboard-dialog onboard-form"
+                style={{ width: activeStep === TRANSFORMS_STEP ? '72rem' : '60rem', maxWidth: '95vw' }}
                 onHide={() => {
                     setEditOnboardAssetProp({
                         ...editOnboardAssetProp,

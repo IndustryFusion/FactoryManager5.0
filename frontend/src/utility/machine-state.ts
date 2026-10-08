@@ -15,20 +15,43 @@
 //
 
 /**
- * Is the machine running, from a machine_state reading?
+ * The values machine_state takes in the digital twin. Gateways send these
+ * after applying the asset's value transforms, and the stats views count hours
+ * per value (backend/src/bootstrap/pdt-views.sql.ts).
+ */
+export const MACHINE_STATE_OPTIONS = [
+  { value: "0", label: "Offline", tone: "offline" },
+  { value: "1", label: "Online Idle", tone: "idle" },
+  { value: "2", label: "Online Running", tone: "running" },
+] as const;
+
+export type MachineState = "running" | "idle" | "offline";
+
+/**
+ * Which of the three states a machine_state reading means.
  *
- * 0 means not running. Everything that is not a real reading — missing, empty,
- * the "NULL" placeholder, or text that is not a number — is not running either,
- * because a machine that reports nothing is not known to be running.
+ * 0 is offline, 1 is online but idle. Everything that is not a real reading —
+ * missing, empty, the "NULL" placeholder, or text that is not a number — is
+ * offline too, because a machine that reports nothing is not known to be on.
+ * Any other number counts as running, as every non-zero value did before idle
+ * was told apart.
+ */
+export const machineStateOf = (value: unknown): MachineState => {
+  if (value === null || value === undefined) return "offline";
+  const text = String(value).trim();
+  if (text === "" || text === "NULL" || text === "undefined") return "offline";
+  const state = Number(text);
+  if (!Number.isFinite(state) || state === 0) return "offline";
+  return state === 1 ? "idle" : "running";
+};
+
+/**
+ * Is the machine running, from a machine_state reading? Idle (1) is online
+ * but not running. See machineStateOf.
  *
  * The checks this replaces compared the raw value with the *strings* "0" and
  * "NULL", so a numeric 0 (what the product record carries before the first
  * reading) passed as "running".
  */
-export const isMachineRunning = (value: unknown): boolean => {
-  if (value === null || value === undefined) return false;
-  const text = String(value).trim();
-  if (text === "" || text === "NULL" || text === "undefined") return false;
-  const state = Number(text);
-  return Number.isFinite(state) && state !== 0;
-};
+export const isMachineRunning = (value: unknown): boolean =>
+  machineStateOf(value) === "running";

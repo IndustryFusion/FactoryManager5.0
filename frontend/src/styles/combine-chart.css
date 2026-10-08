@@ -608,6 +608,49 @@ font-size : 18px;
   color: var(--grey-secondary);
 }
 
+/* Whether a parameter is reporting: green now, grey earlier, hollow never. */
+.sensor-option { align-items: center; }
+.sensor-status-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+.sensor-status-earlier .sensor-status-dot { background-color: #94a3b8; box-shadow: none; }
+.sensor-status-none .sensor-status-dot { background-color: transparent; border: 1.5px solid #cbd5e1; box-shadow: none; }
+.sensor-status-none .sensor-option-name { color: var(--grey-secondary); }
+
+.sensor-option-new {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 8px;
+  color: #b45309;
+  background-color: #fef3c7;
+}
+
+/* The open list is wider than the closed control, so names are not cut to
+   make room for the status beside them. */
+.global-button.dropdown.sensor-select .p-dropdown-panel {
+  min-width: 480px;
+  max-width: min(600px, calc(100vw - 32px));
+}
+
+/* Pushed to the right edge of the row in the open list */
+.sensor-option-status {
+  margin-left: auto;
+  padding-left: 12px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--grey-secondary);
+  white-space: nowrap;
+}
+
 .freshness-chip {
   display: inline-flex;
   align-items: center;

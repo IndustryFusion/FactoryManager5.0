@@ -21,18 +21,27 @@ import * as moment from 'moment';
 import { AssetService } from '../asset/asset.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { upstreamMessage } from '../../utils/upstream-error';
-import { summariseRows } from './reported-attributes';
+import { LatestRow, buildParameterList, latestPerAttribute } from './parameters';
 @Injectable()
 export class PgRestService {
   private readonly timescaleUrl = process.env.TIMESCALE_URL;
   /**
-   * How many rows the attribute listing will read before it gives up on being
-   * exhaustive. Nothing in this repo creates an index on `attributes`, and the
-   * widest interval is twenty-one hours across every attribute of an asset, so
-   * the listing asks for the newest rows and stops.
+   * The attribute_latest view (see bootstrap/pdt-views.sql.ts): one row per
+   * attribute an asset reported in the last seven days. It sits next to the
+   * attributes table in the same PostgREST unless told otherwise.
+   */
+  private readonly attributeLatestUrl =
+    process.env.PGREST_ATTRIBUTE_LATEST_URL ||
+    (process.env.TIMESCALE_URL ?? '').replace(/\/[^/]*$/, '/attribute_latest');
+  /**
+   * When that view has not been created, the newest rows of the last seven
+   * days are read instead, up to this many. Nothing in this repo indexes
+   * `attributes`, so the scan asks for the newest rows and stops.
    */
   private readonly discoveryLimit =
     parseInt(process.env.PGREST_DISCOVERY_LIMIT ?? '', 10) || 20000;
+  private readonly discoveryDays = 7;
+  private readonly templateSandboxUrl = process.env.TEMPLATE_SANDBOX_BACKEND_URL;
   private readonly machineState10DaysUrl = process.env.MACHINE_STATE_10_DAYS_URL;
   private readonly machineStateIntraDayUrl = process.env.MACHINE_STATE_INTRA_DAY_URL;
   constructor(
@@ -45,8 +54,9 @@ export class PgRestService {
       const headers = {
         Authorization: 'Bearer ' + token
       };
+      // Encoded, so an attribute IRI with a "#" (eclass) is not cut off as a URL fragment
       const queryString = Object.keys(queryParams)
-            .map(key => key + '=' + queryParams[key])
+            .map(key => key + '=' + encodeURIComponent(queryParams[key]))
             .join('&');
 
       const url = this.timescaleUrl + '?' + queryString;
@@ -141,7 +151,10 @@ export class PgRestService {
     
     // fetch actual key from asset data 
 
-      const attributeId = `attributeId=eq.${"https://industry-fusion.org/base/v0.1/" + key}`;
+      // A full IRI is used as it is; a bare name is taken to be in the IFF
+      // namespace, which is what this endpoint always assumed.
+      const fullId = /^(https?:|urn:)/i.test(key) ? key : "https://industry-fusion.org/base/v0.1/" + key;
+      const attributeId = `attributeId=eq.${encodeURIComponent(fullId)}`;
       const entityId = `entityId=${queryParams.entityId}`;
       const observedAt = `observedAt=gte.${startTimeFormatted}&observedAt=lte.${endTimeFormatted}`;
       const order = `order=${queryParams.order}`;
@@ -182,103 +195,95 @@ export class PgRestService {
   }
 
   /**
-   * Which attributes an asset actually reported in a window, and whether each
-   * one's value moved.
+   * Every parameter the Data Viewer should offer for an asset: what Scorpio
+   * and the template say it reports, joined with what the time series shows it
+   * did report in the last seven days. See parameters.ts for the rule.
    *
-   * The Data Viewer's parameter list used to come from the NGSI-LD entity,
-   * which says what a machine is meant to report. This says what it did report:
-   * a gateway writes attributes the entity never marked `realtime`, and the
-   * entity declares sensors that have never sent a row. The caller still
-   * filters this with the metadata it holds — the time series cannot tell a
-   * measurement from a product name on its own, which is what `changed` is for.
-   *
-   * Read-only, and cached for a minute per asset and interval: every reader of
-   * the same machine asks the same question, and the answer cannot usefully
-   * change faster than the window slides.
+   * Each source is optional. Without Scorpio the reported ones are still
+   * listed, without the time series the declared ones are, so the list is
+   * never empty because one system is down. Cached for a minute per asset.
    */
-  async reportedAttributes(token: string, queryParams: any) {
+  async parameters(token: string, queryParams: any) {
     if (!token) {
       throw new HttpException("Authorization token is missing", HttpStatus.NOT_FOUND);
     }
-
     const given = typeof queryParams?.entityId === 'string' ? queryParams.entityId.trim() : '';
-    if (!given) {
-      throw new HttpException(
-        "entityId is required, as entityId=eq.<urn>",
-        HttpStatus.BAD_REQUEST,
-      );
+    const entityId = given.startsWith('eq.') ? given.slice(3) : given;
+    if (!entityId) {
+      throw new HttpException("entityId is required", HttpStatus.BAD_REQUEST);
     }
-    const entityFilter = given.startsWith('eq.') ? given : `eq.${given}`;
 
-    const { from, to } = this.windowFor(queryParams);
-
-    // Keyed by the window, not just the interval, so a custom range cannot be
-    // served another range's answer. Namespaced away from `storedData`, which
-    // is the socket handoff and must keep living without a TTL.
-    const cacheKey =
-      `reported-attributes:${entityFilter}:${queryParams.intervalType}` +
-      (queryParams.intervalType === 'custom' ? `:${from}:${to}` : '');
-
+    const cacheKey = `data-viewer-parameters:${entityId}`;
     try {
       const cached = await this.redisService.getData(cacheKey);
       if (cached) return cached;
     } catch (err) {
-      // A cache that cannot be read is not a reason to fail the request.
       console.warn(`Could not read ${cacheKey} from Redis: ${err.message}`);
     }
 
     const headers = { Authorization: `Bearer ${token}` };
-    const filters = [
-      `entityId=${entityFilter}`,
-      `observedAt=gte.${from}`,
-      `observedAt=lte.${to}`,
-      `order=observedAt.desc`,
-      `limit=${this.discoveryLimit}`,
-    ].join('&');
-    // Only three of the thirteen columns are needed. If this PostgREST refuses
-    // the projection, the same query without it gives the same answer in more
-    // bytes — so a rejection is retried rather than surfaced.
-    const url = `${this.timescaleUrl}?select=attributeId,value,observedAt&${filters}`;
+    const entity = await this.assetService.getAssetDataById(entityId, token).catch((err) => {
+      console.warn(`Parameters of ${entityId}: Scorpio entity unavailable (${err.message}); listing what the time series has.`);
+      return null;
+    });
+    const [template, latest] = await Promise.all([
+      this.templateFor(entity?.type),
+      this.latestRows(entityId, headers),
+    ]);
 
+    const answer = {
+      parameters: buildParameterList(entity, template, latest.rows),
+      // Where the reported part came from: the view, a scan of raw rows, or nowhere
+      source: latest.source,
+      windowDays: this.discoveryDays,
+    };
     try {
-      let rows: any[];
-      try {
-        rows = (await axios.get(url, { headers })).data;
-      } catch (err) {
-        if (err.response?.status !== HttpStatus.BAD_REQUEST) throw err;
-        console.warn('PostgREST refused the column projection; reading full rows instead.');
-        rows = (await axios.get(`${this.timescaleUrl}?${filters}`, { headers })).data;
-      }
-
-      const list = Array.isArray(rows) ? rows : [];
-      const answer = {
-        from,
-        to,
-        // The window held more than was read, so an attribute that only
-        // reported in the older part of it is missing from this list.
-        truncated: list.length >= this.discoveryLimit,
-        attributes: summariseRows(list),
-      };
-
-      try {
-        await this.redisService.saveData(cacheKey, answer, 60);
-      } catch (err) {
-        console.warn(`Could not cache ${cacheKey}: ${err.message}`);
-      }
-      return answer;
+      await this.redisService.saveData(cacheKey, answer, 60);
     } catch (err) {
-      if (err.response) {
-        throw new HttpException({
-          errorCode: `PG_${err.response.status}`,
-          message: upstreamMessage(err)
-        }, err.response.status);
-      } else {
-        throw new HttpException({
-          errorCode: "PG_500",
-          message: err.message
-        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      console.warn(`Could not cache ${cacheKey}: ${err.message}`);
+    }
+    return answer;
+  }
+
+  /** The asset type's template, or null when the template service cannot give one. */
+  private async templateFor(type: unknown): Promise<any> {
+    if (typeof type !== 'string' || !type || !this.templateSandboxUrl) return null;
+    try {
+      const encoded = Buffer.from(type).toString('base64');
+      return (await axios.get(`${this.templateSandboxUrl}/templates/mongo-templates/type/${encoded}`)).data;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * The newest row of each attribute the asset reported in the window: from
+   * the attribute_latest view, or, when that view does not exist yet, from a
+   * bounded scan of the newest raw rows.
+   */
+  private async latestRows(entityId: string, headers: Record<string, string>): Promise<{ rows: LatestRow[]; source: 'view' | 'scan' | 'none' }> {
+    const entity = `entityId=eq.${encodeURIComponent(entityId)}`;
+    const columns = 'select=attributeId,attributeType,value,observedAt';
+    try {
+      const { data } = await axios.get(`${this.attributeLatestUrl}?${columns}&${entity}`, { headers });
+      return { rows: Array.isArray(data) ? data : [], source: 'view' };
+    } catch (err) {
+      console.warn(`attribute_latest unavailable (${err.response?.status ?? err.message}); scanning the newest rows instead.`);
+    }
+
+    const since = moment().utc().subtract(this.discoveryDays, 'days').format('YYYY-MM-DDTHH:mm:ss') + '-00:00';
+    const filters = [entity, `observedAt=gte.${since}`, 'order=observedAt.desc', `limit=${this.discoveryLimit}`];
+    // Sub-properties are not readings. An older table without parentId refuses
+    // the filter, so the scan is retried without it.
+    for (const extra of [['parentId=is.null'], []]) {
+      try {
+        const { data } = await axios.get(`${this.timescaleUrl}?${columns}&${[...filters, ...extra].join('&')}`, { headers });
+        return { rows: latestPerAttribute(Array.isArray(data) ? data : []), source: 'scan' };
+      } catch (err) {
+        if (err.response?.status !== HttpStatus.BAD_REQUEST) break;
       }
     }
+    return { rows: [], source: 'none' };
   }
 
   async getTenDaysMachineState(token: string) {

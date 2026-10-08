@@ -202,8 +202,8 @@ describe('PdtViewsBootstrap', () => {
     await new PdtViewsBootstrap().onModuleInit();
 
     expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length);
-    expect(queries.filter((q) => q.startsWith('CREATE OR REPLACE VIEW'))).toHaveLength(6);
-    expect(queries.filter((q) => q.startsWith('GRANT SELECT'))).toHaveLength(6);
+    expect(queries.filter((q) => q.startsWith('CREATE OR REPLACE VIEW'))).toHaveLength(7);
+    expect(queries.filter((q) => q.startsWith('GRANT SELECT'))).toHaveLength(7);
   });
 
   it('creates the role only when it is missing', async () => {
@@ -232,9 +232,12 @@ describe('PdtViewsBootstrap', () => {
 
     await new PdtViewsBootstrap().onModuleInit();
 
-    // Only the role statement is attempted; the twelve view ones are skipped.
-    expect(queries).toHaveLength(1);
-    expect(queries[0]).toContain('CREATE ROLE');
+    // The six hand-made views and their grants are skipped. The role runs, and
+    // so does attribute_latest, which such an installation does not have yet:
+    // that is how an existing installation picks up a view added later.
+    expect(queries).toHaveLength(3);
+    expect(queries.some((q) => q.includes('CREATE ROLE'))).toBe(true);
+    expect(queries.filter((q) => q.includes('attribute_latest'))).toHaveLength(2);
     expect(errors).not.toHaveBeenCalled();
   });
 
