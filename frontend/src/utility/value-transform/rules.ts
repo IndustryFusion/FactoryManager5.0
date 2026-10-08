@@ -22,6 +22,15 @@ import { matchKey, matchLabel } from "./parameter-rule";
 // ignore them and keep their built-in machine-state handling.
 export const TRANSFORMS_IMAGE_TAG = "v0.1.0";
 export const DEFAULT_OPCUA_IMAGE = `docker.io/ibn40/fusionopcuadataservice:${TRANSFORMS_IMAGE_TAG}`;
+export const DEFAULT_MQTT_IMAGE = `docker.io/ibn40/fusionmqttdataservice:${TRANSFORMS_IMAGE_TAG}`;
+
+export type DataProtocol = "opc-ua" | "mqtt";
+
+/** The app config key of each protocol's data service. */
+export const SERVICE_KEY: Record<DataProtocol, string> = {
+  "opc-ua": "fusionopcuadataservice",
+  mqtt: "fusionmqttdataservice",
+};
 
 export const ruleFor = (rules: TransformRule[], parameter: string) =>
   rules.find(rule => rule.parameter === parameter);
@@ -42,10 +51,27 @@ export const pruneRules = (rules: TransformRule[], parameters: string[]) =>
 export const buildTransforms = (rules: TransformRule[]): Transforms | undefined =>
   rules.length > 0 ? { version: SUPPORTED_VERSION, rules } : undefined;
 
-/** The rules stored in an app config, or none. */
+/** The rules stored in an app config, for whichever data service it configures, or none. */
 export const rulesFromConfig = (appConfig: any): TransformRule[] => {
-  const rules = appConfig?.fusionopcuadataservice?.transforms?.rules;
+  const service = appConfig?.[SERVICE_KEY["opc-ua"]] ?? appConfig?.[SERVICE_KEY.mqtt];
+  const rules = service?.transforms?.rules;
   return Array.isArray(rules) ? rules : [];
+};
+
+/** The parameters a list of mappings sends, in order: OPC UA has one per mapping, MQTT one or more. */
+export const parametersOf = (items: any[]): string[] => {
+  const out: string[] = [];
+  for (const item of items ?? []) {
+    const params = Array.isArray(item?.parameter) ? item.parameter : [item?.parameter];
+    for (const p of params) if (typeof p === "string" && p.trim() && !out.includes(p)) out.push(p);
+  }
+  return out;
+};
+
+/** An app config for a data service: its mappings, and the rules for those mappings if any. */
+export const appConfigFor = (protocol: DataProtocol, items: any[], rules: TransformRule[]) => {
+  const transforms = buildTransforms(pruneRules(rules, parametersOf(items)));
+  return { [SERVICE_KEY[protocol]]: { specification: items, ...(transforms && { transforms }) } };
 };
 
 /** Parameters the data service used to treat as states: any IRI with a "_state" part. */
@@ -103,7 +129,8 @@ export const ruleProblems = (rules: TransformRule[]): { parameter: string; messa
 
 // ─── Data service image ─────────────────────────────────────────────────────
 
-export const isOpcUaImage = (image: string | undefined) => !!image && /fusionopcuadataservice/.test(image);
+/** One of the published data service images, whose version tells whether it applies rules. */
+export const isDataServiceImage = (image: string | undefined) => !!image && /fusion(opcua|mqtt)dataservice/.test(image);
 
 const imageTag = (image: string) => {
   const name = image.split("/").pop() ?? "";
@@ -113,21 +140,21 @@ const imageTag = (image: string) => {
 
 /**
  * Does the data service image apply value transforms? Only the published OPC UA
- * data service image can be judged; any other image is assumed to. No image
- * at all does not.
+ * and MQTT data service images can be judged; any other image is assumed to.
+ * No image at all does not.
  */
 export const imageAppliesTransforms = (image: string | undefined): boolean => {
   if (!image) return false;
-  if (!isOpcUaImage(image)) return true;
+  if (!isDataServiceImage(image)) return true;
   const version = /^v?(\d+)\.(\d+)\.(\d+)/.exec(imageTag(image!));
   if (!version) return false;
   const [major, minor] = [Number(version[1]), Number(version[2])];
   return major > 0 || minor >= 1;
 };
 
-/** The same image at the first version that applies transforms. */
-export const upgradedImage = (image: string | undefined) => {
-  if (!isOpcUaImage(image)) return DEFAULT_OPCUA_IMAGE;
+/** The same image at the first version that applies transforms, or the protocol's default image. */
+export const upgradedImage = (image: string | undefined, protocol: DataProtocol) => {
+  if (!isDataServiceImage(image)) return protocol === "mqtt" ? DEFAULT_MQTT_IMAGE : DEFAULT_OPCUA_IMAGE;
   const name = image!.split("/").pop() ?? "";
   const base = name.includes(":") ? image!.slice(0, image!.lastIndexOf(":")) : image!;
   return `${base}:${TRANSFORMS_IMAGE_TAG}`;

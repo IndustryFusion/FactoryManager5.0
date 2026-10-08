@@ -15,7 +15,7 @@
 //
 
 // Shape check for the value transforms an onboarding app config carries
-// (app_config.fusionopcuadataservice.transforms). The gateway's data service
+// (app_config.fusionopcuadataservice.transforms, or fusionmqttdataservice's). The gateway's data service
 // is the real judge and drops a rule it cannot use; this only stops a bad
 // shape from being stored. Everything other than `transforms` is left alone.
 
@@ -94,7 +94,15 @@ const ruleProblem = (rule: unknown, where: string): string | undefined => {
  */
 export const transformsProblem = (appConfig: unknown): string | undefined => {
   if (!isObject(appConfig)) return undefined;
-  const service = appConfig.fusionopcuadataservice;
+  for (const key of ['fusionopcuadataservice', 'fusionmqttdataservice']) {
+    const problem = serviceProblem(appConfig[key]);
+    if (problem) return problem;
+  }
+  return undefined;
+};
+
+/** The first problem with one data service's transforms. */
+const serviceProblem = (service: unknown): string | undefined => {
   if (!isObject(service) || service.transforms == null) return undefined;
 
   const transforms = service.transforms;

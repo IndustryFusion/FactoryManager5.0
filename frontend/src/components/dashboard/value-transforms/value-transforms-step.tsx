@@ -20,57 +20,95 @@ import YAML from "yaml";
 import { TransformRule } from "@/utility/value-transform/engine";
 import { isMachineState, targetFor } from "@/utility/value-transform/presets";
 import {
-  TRANSFORMS_IMAGE_TAG, buildTransforms, imageAppliesTransforms, ruleFor, seedLegacyRules, setRule,
+  DataProtocol, SERVICE_KEY, TRANSFORMS_IMAGE_TAG, buildTransforms, imageAppliesTransforms, parametersOf, pruneRules,
+  ruleFor, seedLegacyRules, setRule,
 } from "@/utility/value-transform/rules";
-import { OpcUaSpec } from "../spec-editor";
+import { SpecItem } from "../spec-editor";
 import ParameterCard from "./parameter-card";
 
+/** One data service of the onboarding: the primary one, or the secondary one. */
+export interface TransformSource {
+  protocol: DataProtocol;
+  items: SpecItem[];
+  /** The data service image the rules run in. */
+  image: string;
+  onUpgradeImage: () => void;
+}
+
+const PROTOCOL_LABEL: Record<DataProtocol, string> = { "opc-ua": "OPC UA", mqtt: "MQTT" };
+
+/** Where a parameter's value is read: "ns=4;i=39", or "plant/line1 › temp" for MQTT. */
+const sourceLabel = (protocol: DataProtocol, items: any[], parameter: string): string => {
+  const labels: string[] = [];
+  for (const item of items) {
+    if (protocol === "opc-ua") {
+      if (item?.parameter === parameter) labels.push(`${item.node_id};${item.identifier}`);
+      continue;
+    }
+    const params: string[] = Array.isArray(item?.parameter) ? item.parameter : [item?.parameter];
+    const at = params.indexOf(parameter);
+    if (at < 0) continue;
+    const key = Array.isArray(item?.key) ? item.key[at] : undefined;
+    labels.push(key ? `${item.topic} › ${key}` : String(item.topic));
+  }
+  return labels.join(", ");
+};
+
 interface ValueTransformsStepProps {
-  /** The OPC UA mappings the rules act on. */
-  opcItems: OpcUaSpec[];
-  /** MQTT mappings in this onboarding; their data service does not apply rules. */
-  mqttCount: number;
+  /** The data services the rules act on, primary first. */
+  sources: TransformSource[];
   rules: TransformRule[];
   onRulesChange: (rules: TransformRule[]) => void;
   /** Each property's unit on the asset, by property IRI. */
   units: Record<string, string>;
   /** Parameters already offered a legacy rule, kept by the form across steps. */
   seen: MutableRefObject<Set<string>>;
-  /** The data service image the rules run in. */
-  image: string;
-  onUpgradeImage: () => void;
-  /** Add a machine_state mapping read from the server's own status. */
+  /** Add a machine_state mapping read from the OPC UA server's own status. */
   onAddServerState: () => void;
 }
 
 /**
  * The onboarding step where the user says what a machine's values mean, so the
  * gateway can turn them into what the digital twin expects. Every mapped
- * parameter is listed with the same options: map values, convert the unit,
- * and what to send when the machine cannot be read.
+ * parameter, OPC UA or MQTT, is listed with the same options: map values,
+ * convert the unit, and what to send when the machine cannot be read.
  */
 const ValueTransformsStep: React.FC<ValueTransformsStepProps> = ({
-  opcItems, mqttCount, rules, onRulesChange, units, seen, image, onUpgradeImage, onAddServerState,
+  sources, rules, onRulesChange, units, seen, onAddServerState,
 }) => {
-  const enabled = imageAppliesTransforms(image);
-  const parameters = Array.from(new Set(opcItems.map(item => item.parameter).filter(Boolean)));
   const [open, setOpen] = useState<string | null>(null);
 
-  // Parameters the old data service treated as states keep that behaviour
+  // Every parameter once, with the data service that reads it (the first one,
+  // should both list it) and whether that service applies rules
+  const parameters: { parameter: string; source: string; enabled: boolean }[] = [];
+  for (const s of sources) {
+    const enabled = imageAppliesTransforms(s.image);
+    for (const parameter of parametersOf(s.items)) {
+      if (!parameters.some(p => p.parameter === parameter)) {
+        parameters.push({ parameter, source: sourceLabel(s.protocol, s.items, parameter), enabled });
+      }
+    }
+  }
+  const outdated = sources.filter(s => s.items.length > 0 && !imageAppliesTransforms(s.image));
+  const opcUa = sources.find(s => s.protocol === "opc-ua");
+
+  // Parameters the old data services treated as states keep that behaviour
   // (the legacy rule) until the user changes it.
-  const parameterKey = parameters.join("|");
+  const enabledParameters = parameters.filter(p => p.enabled).map(p => p.parameter);
+  const parameterKey = enabledParameters.join("|");
   useEffect(() => {
-    if (!enabled) return;
-    const next = seedLegacyRules(rules, parameters, seen.current);
+    const next = seedLegacyRules(rules, enabledParameters, seen.current);
     if (next !== rules) onRulesChange(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, parameterKey]);
+  }, [parameterKey]);
 
-  const sourceOf = (parameter: string) =>
-    opcItems.filter(i => i.parameter === parameter).map(i => `${i.node_id};${i.identifier}`).join(", ");
   const change = (parameter: string, rule: TransformRule | undefined) => onRulesChange(setRule(rules, parameter, rule));
 
-  const transforms = buildTransforms(rules.filter(r => parameters.includes(r.parameter)));
+  // What each data service will receive
+  const preview = sources.flatMap(s => {
+    const transforms = buildTransforms(pruneRules(rules, parametersOf(s.items)));
+    return transforms ? [YAML.stringify({ [SERVICE_KEY[s.protocol]]: { transforms } }, { indent: 2 })] : [];
+  });
 
   return (
     <div className="step-content vt">
@@ -84,44 +122,40 @@ const ValueTransformsStep: React.FC<ValueTransformsStepProps> = ({
         </p>
       </div>
 
-      {!enabled && (
-        <div className="vt-banner">
+      {outdated.map(s => (
+        <div key={s.protocol} className="vt-banner">
           <i className="pi pi-info-circle" />
           <div>
-            <strong>Value transforms need data service {TRANSFORMS_IMAGE_TAG}.</strong>
-            <span> The current image ({image || "none"}) handles machine states itself and ignores these settings.</span>
+            <strong>Value transforms need {PROTOCOL_LABEL[s.protocol]} data service {TRANSFORMS_IMAGE_TAG}.</strong>
+            <span> The current image ({s.image || "none"}) handles machine states itself and ignores these settings for its parameters.</span>
           </div>
-          <Button type="button" label="Upgrade data service" icon="pi pi-arrow-up" size="small" onClick={onUpgradeImage} />
+          <Button type="button" label={`Upgrade ${PROTOCOL_LABEL[s.protocol]} data service`} icon="pi pi-arrow-up" size="small" onClick={s.onUpgradeImage} />
         </div>
-      )}
+      ))}
 
       {parameters.length === 0 ? (
         <div className="spec-empty">
           <i className="pi pi-sitemap" />
-          <span>
-            {mqttCount > 0
-              ? "This onboarding has only MQTT mappings. The MQTT data service does not apply value transforms yet."
-              : <>No OPC UA mappings yet. Add them in the <strong>Configuration</strong> step.</>}
-          </span>
+          <span>No data mappings yet. Add them in the <strong>Configuration</strong> step.</span>
         </div>
       ) : (
-        <div className={`vt-sections${enabled ? "" : " is-disabled"}`} aria-disabled={!enabled}>
-          {!parameters.some(isMachineState) && (
+        <div className="vt-sections">
+          {opcUa && imageAppliesTransforms(opcUa.image) && !parameters.some(p => isMachineState(p.parameter)) && (
             <div className="vt-suggest">
               <i className="pi pi-lightbulb" />
               <span>
                 No machine state is mapped. Show this machine as Running while its OPC UA server can be reached, and Offline when it can&apos;t?
               </span>
-              <Button type="button" label="Add" icon="pi pi-plus" size="small" outlined onClick={onAddServerState} disabled={!enabled} />
+              <Button type="button" label="Add" icon="pi pi-plus" size="small" outlined onClick={onAddServerState} />
             </div>
           )}
 
           <div className="vt-cards">
-            {parameters.map(parameter => (
+            {parameters.map(({ parameter, source, enabled }) => (
               <ParameterCard
                 key={parameter}
                 parameter={parameter}
-                source={sourceOf(parameter)}
+                source={source}
                 target={targetFor(parameter, units[parameter])}
                 rule={ruleFor(rules, parameter)}
                 onChange={rule => change(parameter, rule)}
@@ -132,13 +166,9 @@ const ValueTransformsStep: React.FC<ValueTransformsStepProps> = ({
             ))}
           </div>
 
-          {mqttCount > 0 && (
-            <p className="vt-hint">The {mqttCount} MQTT {mqttCount === 1 ? "mapping is" : "mappings are"} sent as received; the MQTT data service does not apply transforms yet.</p>
-          )}
-
           <details className="vt-rules">
             <summary>Show the rules sent to the gateway</summary>
-            <pre>{transforms ? YAML.stringify({ transforms }, { indent: 2 }) : "No rules: every value is sent as the machine sends it."}</pre>
+            <pre>{preview.length ? preview.join("\n") : "No rules: every value is sent as the machine sends it."}</pre>
           </details>
         </div>
       )}
