@@ -14,13 +14,14 @@
 // limitations under the License. 
 // 
 
-import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
 import * as YAML from 'js-yaml';
 import { Onboarding } from '../schemas/onboarding.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { OnboardingDto } from './dto/onboarding.dto';
+import { transformsProblem } from './transforms.validate';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 @Injectable()
@@ -31,8 +32,17 @@ export class OnboardingAssetService {
     private onboardingModel: Model<Onboarding>,
   ) { }
 
+  // Rejects value transforms that are not well formed, in either app config.
+  private checkTransforms(data: OnboardingDto) {
+    const problem = transformsProblem(data?.app_config) ?? transformsProblem(data?.secondary_app_config);
+    if (problem) {
+      throw new BadRequestException(`Invalid value transforms: ${problem}`);
+    }
+  }
+
   async create(data: OnboardingDto) {
     try {
+      this.checkTransforms(data);
       const onbaordDevice = await this.onboardingModel.findOne({ device_id: data.device_id }).exec();
       if (onbaordDevice) {
         return {
@@ -79,6 +89,7 @@ export class OnboardingAssetService {
 
   async update(id: string, data: OnboardingDto) {
     try {
+      this.checkTransforms(data);
       const onbaordDevice = await this.onboardingModel.findOne({ device_id: id }).exec();
       if (!onbaordDevice) {
         throw new NotFoundException(`Device with id ${id} not found`);

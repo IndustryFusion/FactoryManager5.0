@@ -250,6 +250,18 @@ SELECT
 FROM formatted
 ORDER BY day DESC, interval_index ASC;
 
+CREATE OR REPLACE VIEW attribute_latest AS
+SELECT DISTINCT ON ("entityId", "attributeId")
+    "entityId",
+    "attributeId",
+    "attributeType",
+    value,
+    "observedAt"
+FROM attributes
+WHERE "observedAt" > now() - interval '7 days'
+  AND "parentId" IS NULL
+ORDER BY "entityId", "attributeId", "observedAt" DESC;
+
 CREATE ROLE PGREST;
 
 GRANT SELECT ON value_change_state_entries TO pgrest;
@@ -263,7 +275,24 @@ GRANT SELECT ON power_emission_entries_months TO pgrest;
 GRANT SELECT ON machine_state_daily_stats TO pgrest;
 
 GRANT SELECT ON machine_state_2h_stats TO pgrest;
+
+GRANT SELECT ON attribute_latest TO pgrest;
 ```
+
+The Data Viewer's parameter list (the `attribute_latest` view) also wants an index on `attributes`, which the PDT does not create. The backend builds it at startup too, in the background and without holding up startup, when the `PDT_DB_*` user owns the `attributes` table. On a hypertable it is built one chunk at a time, so the PDT keeps writing during the build. Set `PDT_DB_INDEXES=false` to leave it out. Otherwise, run it once as the table's owner:
+
+```sql
+-- attributes is a TimescaleDB hypertable (the usual case)
+CREATE INDEX IF NOT EXISTS attributes_entity_attribute_time
+ON attributes ("entityId", "attributeId", "observedAt" DESC)
+WITH (timescaledb.transaction_per_chunk);
+
+-- attributes is a plain table
+CREATE INDEX CONCURRENTLY IF NOT EXISTS attributes_entity_attribute_time
+ON attributes ("entityId", "attributeId", "observedAt" DESC);
+```
+
+Without it the Data Viewer still works, but looking up an asset's parameters reads a week of rows on a large installation.
 
 After creation, close the pod console and refresh the timescale bridge. For more information, use [this](https://github.com/IndustryFusion/DigitalTwin/blob/main/wiki/setup/setup.md#pdt-endpoints) document.
 

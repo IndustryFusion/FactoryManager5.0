@@ -254,6 +254,24 @@ FROM formatted
 ORDER BY day DESC, interval_index ASC`,
   },
   {
+    // One row per attribute an asset reported in the last seven days, with its
+    // newest reading. The Data Viewer's parameter list reads it, so a parameter
+    // that only ever reached the time series (never Scorpio) is still offered.
+    // Sub-properties (unit, segment, …) are left out: they are not readings.
+    label: "view attribute_latest",
+    sql: `CREATE OR REPLACE VIEW attribute_latest AS
+SELECT DISTINCT ON ("entityId", "attributeId")
+    "entityId",
+    "attributeId",
+    "attributeType",
+    value,
+    "observedAt"
+FROM attributes
+WHERE "observedAt" > now() - interval '7 days'
+  AND "parentId" IS NULL
+ORDER BY "entityId", "attributeId", "observedAt" DESC`,
+  },
+  {
     label: "role pgrest",
     sql: `DO $do$
 BEGIN
@@ -287,4 +305,27 @@ $do$`,
     label: "grant on machine_state_2h_stats",
     sql: `GRANT SELECT ON machine_state_2h_stats TO pgrest`,
   },
+  {
+    label: "grant on attribute_latest",
+    sql: `GRANT SELECT ON attribute_latest TO pgrest`,
+  },
 ];
+
+/**
+ * The index that lets the Data Viewer find an asset's parameters without
+ * reading a week of every machine's rows (attribute_latest, above). Nothing in
+ * the PDT indexes `attributes` by asset.
+ *
+ * Two forms, because neither works everywhere. A TimescaleDB hypertable does
+ * not support CONCURRENTLY, and a plain CREATE INDEX would block the PDT's
+ * writes for the whole build; transaction_per_chunk builds it a chunk at a
+ * time instead. A plain table takes CONCURRENTLY, which blocks no writes.
+ */
+export const ATTRIBUTE_INDEX = {
+  name: 'attributes_entity_attribute_time',
+  onHypertable: `CREATE INDEX IF NOT EXISTS attributes_entity_attribute_time
+ON attributes ("entityId", "attributeId", "observedAt" DESC)
+WITH (timescaledb.transaction_per_chunk)`,
+  onTable: `CREATE INDEX CONCURRENTLY IF NOT EXISTS attributes_entity_attribute_time
+ON attributes ("entityId", "attributeId", "observedAt" DESC)`,
+} as const;

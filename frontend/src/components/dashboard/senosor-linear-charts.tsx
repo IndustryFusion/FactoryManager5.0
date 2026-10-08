@@ -40,7 +40,6 @@ import { useTranslation } from "next-i18next";
 import { OverlayPanel } from "primereact/overlaypanel";
 import { Dropdown } from "primereact/dropdown";
 import Image from "next/image";
-import { getAssetById } from "@/utility/factory-site-utility";
 
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
@@ -125,47 +124,48 @@ interface DataItem {
   value: string;
 }
 
-/** The part of a template property this screen reads. */
-interface TemplateProperty {
-  /** 'realtime' for a measurement; 'parameter', 'identification', … otherwise. */
-  segment?: string;
-  /** A written label — better than one rebuilt from the key. */
-  title?: string;
-  unit?: string;
-}
-
-/** One entry of GET /pgrest/reported-attributes. */
-interface ReportedAttribute {
-  attribute: string;
-  attributeId: string;
-  latestValue: string | null;
-  observedAt: string | null;
-  samples: number;
-  /** More than one distinct value in the window — so it is a reading. */
-  changed: boolean;
-}
-
-/**
- * A template's unit, which may be written as a list of them — "unit": ["kg","g"].
- * The first entry is the default, the same rule the backend applies in
- * utils/units.ts. Reading only the string form silently loses those units.
- */
-const firstUnit = (unit: unknown): string | undefined => {
-  if (typeof unit === "string") return unit.trim() || undefined;
-  if (Array.isArray(unit)) {
-    const first = unit.find((entry) => typeof entry === "string" && entry.trim());
-    return typeof first === "string" ? first.trim() : undefined;
-  }
-  return undefined;
-};
-
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-type AttributeOption = {
-  selectedDatasetIndex: number;
+/** One entry of GET /pgrest/parameters: declared and reported parameters together. */
+interface AssetParameter {
+  attributeId: string;
+  name: string;
   label: string;
+  unit?: string;
+  declared: boolean;
+  inScorpio: boolean;
+  lastSeen: string | null;
+  latestValue: string | null;
+}
+
+/** Reporting now, reported earlier in the last week, or not reported at all. */
+type ParameterStatus = "live" | "earlier" | "none";
+
+/** A reading within this long counts as "reporting now". */
+const LIVE_WITHIN_MS = 15 * 60 * 1000;
+
+type AttributeOption = {
+  label: string;
+  /** The full attribute IRI. */
   value: string;
+  name: string;
+  unit?: string;
+  status: ParameterStatus;
+  lastSeen: string | null;
+  inScorpio: boolean;
 };
+
+const STATUS_ORDER: Record<ParameterStatus, number> = { live: 0, earlier: 1, none: 2 };
+
+const toOption = (p: AssetParameter, now: number): AttributeOption => ({
+  label: p.label,
+  value: p.attributeId,
+  name: p.name,
+  unit: p.unit,
+  lastSeen: p.lastSeen,
+  inScorpio: p.inScorpio,
+  status: !p.lastSeen ? "none" : now - Date.parse(p.lastSeen) <= LIVE_WITHIN_MS ? "live" : "earlier",
+});
 
 interface ChartDataState extends ChartData<"line", (number | null)[], string> {
   datasets: ChartDataSets[];
@@ -173,6 +173,8 @@ interface ChartDataState extends ChartData<"line", (number | null)[], string> {
 
 interface ChartDataSets {
   label: string;
+  /** The attribute IRI this dataset charts; absent on the average and threshold lines. */
+  attributeId?: string;
   data: (number | null)[];
   fill: boolean;
   borderColor: string;
@@ -268,7 +270,11 @@ const CombineSensorChart: React.FC = () => {
   const [noChartData, setNoChartData] = useState(false)
   const entityIdValue = useSelector((state: RootState) => state.entityId.id);
   const [attributes, setAttributes] = useState<AttributeOption[]>([]);
+  // The attribute IRI of the parameter on screen
   const [selectedAttribute, setSelectedAttribute] = useState("");
+  const selectedOption = attributes.find((o) => o.value === selectedAttribute);
+  // The list as the chart's own fetch sees it, which may run before a re-render
+  const attributesRef = useRef<AttributeOption[]>([]);
   const [productName, setProductName] = useState<string>("");
   const chartRef = useRef(null);
   const [zoomLevel, setZoomLevel] = useState({ min: null, max: null });
@@ -334,14 +340,7 @@ const CombineSensorChart: React.FC = () => {
     ...prev,
     [selectedAttribute]: { upperWarning: "", lowerWarning: "", upperAlarm: "", lowerAlarm: "" },
   }));
-  // ── Template properties — units, labels and the segment ──────────────────
-  // templatePropertyCacheRef: maps assetType IRI → { shortAttributeKey: property }
-  // so the template endpoint is only called once per asset type, even when the
-  // user switches between attributes of the same asset.
-  const templatePropertyCacheRef = useRef<Record<string, Record<string, TemplateProperty>>>({});
-  // What the asset reported, per asset and interval, so moving between the
-  // parameters of one machine does not ask again.
-  const reportedCacheRef = useRef<Record<string, { at: number; attributes: ReportedAttribute[] }>>({});
+  // Unit of each parameter, keyed by attribute IRI
   const [unitMap, setUnitMap] = useState<Record<string, string>>({});
   // Derived — no extra state needed
   const selectedAttributeUnit = unitMap[selectedAttribute] ?? "";
@@ -554,226 +553,44 @@ const CombineSensorChart: React.FC = () => {
     ).padStart(2, "0")}`;
   }
 
-  type AttributeOption = {
-    label: string;
-    value: string;
-    selectedDatasetIndex: number;
-  };
 
   /**
-   * Which attributes the asset actually reported over the chosen interval.
-   *
-   * Held for a minute per asset and interval so that moving between the
-   * parameters of one machine does not ask again — the backend caches the same
-   * answer for the same length of time. Never throws: an unreachable time
-   * series leaves the dropdown on what the entity declares, which is what this
-   * screen listed before.
+   * Every parameter of the asset: what Scorpio and the template say it
+   * reports, and what the time series shows it did report in the last week,
+   * joined on the server (GET /pgrest/parameters). The list does not depend on
+   * the chart's interval. Reporting parameters come first.
    */
-  const fetchReportedAttributes = async (
-    entityId: string,
-    interval: string,
-    date?: Date,
-    from?: Date,
-    to?: Date,
-  ): Promise<ReportedAttribute[]> => {
-    if (!entityId || !interval) return [];
-
-    const params: Record<string, string> = {
-      entityId: `eq.${entityId}`,
-      intervalType: interval,
-    };
-    if (interval === "custom") {
-      if (!date || !from || !to) return [];
-      // The same range the chart itself asks for, built the same way.
-      const startDate = new Date(date);
-      startDate.setHours(from.getHours(), from.getMinutes());
-      const endDate = new Date(date);
-      endDate.setHours(to.getHours(), to.getMinutes());
-      params.observedAt = `gte.${startDate.toISOString()}&observedAt=lt.${endDate.toISOString()}`;
-    }
-
-    const cacheKey = `${entityId}|${interval}|${params.observedAt ?? ""}`;
-    const cached = reportedCacheRef.current[cacheKey];
-    if (cached && Date.now() - cached.at < 60_000) return cached.attributes;
-
+  const loadParameters = async (assetId: string) => {
     try {
-      const response = await api.get(`${API_URL}/pgrest/reported-attributes`, {
-        params,
+      const response = await api.get(`${API_URL}/pgrest/parameters`, {
+        params: { entityId: assetId },
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         withCredentials: true,
       });
-      const attributes: ReportedAttribute[] = Array.isArray(response.data?.attributes)
-        ? response.data.attributes
-        : [];
-      reportedCacheRef.current[cacheKey] = { at: Date.now(), attributes };
-      return attributes;
-    } catch {
-      return [];
-    }
-  };
+      // Another asset may have been chosen while this was on its way
+      if (entityIdRef.current && entityIdRef.current !== assetId) return;
+      const list: AssetParameter[] = Array.isArray(response.data?.parameters) ? response.data.parameters : [];
+      const now = Date.now();
+      const options = list
+        .map((p) => toOption(p, now))
+        .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.label.localeCompare(b.label));
 
-  const fetchAsset = async () => {
-    try {
-      const scorpioData = await getAssetById(selectedAssetData.id);
-      if (!scorpioData) return;
-      const productKey = Object.keys(selectedAssetData).find(key => key.includes("product_name"));
-      const creationKey = Object.keys(selectedAssetData).find(key => key.includes("creation_date"));
-      const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;
-      if (creationDate) {
-        const [month, day, year] = creationDate.split('.');
-        setMinDate(new Date(year, month - 1, day));
+      attributesRef.current = options;
+      setAttributes(options);
+      setUnitMap(Object.fromEntries(options.filter((o) => o.unit).map((o) => [o.value, o.unit as string])));
+      // Keep what the reader is looking at; otherwise start on the first reporting one
+      setSelectedAttribute((current) => (options.some((o) => o.value === current) ? current : options[0]?.value ?? ""));
+      if (options.length === 0) {
+        setLoading(false);
+        setNoChartData(true);
       }
-      const productName = productKey ? (selectedAssetData[productKey]?.value || "Unknown Product") : undefined;
-      setProductName(productName); // Set the product name in the state
-
-      // ── Step 1: extract units directly from asset/scorpio property objects ─
-      // Mirrors the same sub-property scan used for segment detection.
-      const assetUnitMap: Record<string, string> = {};
-      Object.entries(scorpioData).forEach(([key, val]) => {
-        if (typeof val !== "object" || val === null) return;
-        const shortKey = key.split("/").pop() ?? key;
-        // Sub-property key ending in "unit" (e.g. "https://.../unit") or NGSI-LD "unitCode"
-        // Prefer the unit symbol ("°C"); the UN/CEFACT unitCode ("CEL") is the fallback.
-        const entries = Object.entries(val as Record<string, any>);
-        const unitEntry =
-          entries.find(([innerKey]) => innerKey.endsWith("unit")) ??
-          entries.find(([innerKey]) => innerKey === "unitCode");
-        if (unitEntry) {
-          const unitVal = unitEntry[1];
-          const unitStr = typeof unitVal === "object" ? unitVal?.value : unitVal;
-          if (unitStr && typeof unitStr === "string") assetUnitMap[shortKey] = unitStr;
-        }
-      });
-
-      // ── Step 2: template fetch with cache guard ────────────────────────────
-      // templatePropertyCacheRef is keyed by asset type IRI so the template endpoint
-      // is called at most once per asset type across the lifetime of this component.
-      // The whole property is kept, not just its unit: `segment` is how a
-      // measurement is told apart from a description, and `title` is a written
-      // label rather than one rebuilt from the key.
-      const assetType = selectedAssetData.type;
-      let templateProps: Record<string, TemplateProperty> | undefined = templatePropertyCacheRef.current[assetType];
-
-      if (templateProps === undefined) {
-        let fetched: Record<string, TemplateProperty> = {};
-        try {
-          const temp = await api.get(API_URL + `/mongodb-templates/type/${btoa(assetType)}`, {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            withCredentials: true,
-          });
-
-          if (temp.data?.properties) {
-            Object.entries(temp.data.properties).forEach(([propKey, propVal]: [string, any]) => {
-              const shortKey = propKey.includes("eclass:")
-                ? propKey.split("eclass:").pop() ?? propKey
-                : propKey.split("/").pop() ?? propKey;
-              fetched[shortKey] = {
-                segment: typeof propVal?.segment === "string" ? propVal.segment.toLowerCase() : undefined,
-                title: typeof propVal?.title === "string" && propVal.title.trim() ? propVal.title : undefined,
-                unit: firstUnit(propVal?.unit),
-              };
-            });
-          }
-        } catch {
-          // Template fetch failed — proceed without template properties
-        }
-        templatePropertyCacheRef.current[assetType] = fetched;
-        templateProps = fetched;
-      }
-
-      const templateUnitMap: Record<string, string> = {};
-      Object.entries(templateProps).forEach(([shortKey, prop]) => {
-        if (prop.unit) templateUnitMap[shortKey] = prop.unit;
-      });
-
-      // ── Step 3: merge — asset-level unit wins over template fallback ───────
-      const mergedUnitMap: Record<string, string> = { ...templateUnitMap, ...assetUnitMap };
-      setUnitMap(mergedUnitMap);
-
-      // ── Step 4: what the entity declares about each property ───────────────
-      const declaredProperties: Record<string, { segment?: string; hasObservedAt: boolean }> = {};
-      Object.entries(scorpioData).forEach(([key, val]) => {
-        if (typeof val !== "object" || val === null) return;
-        const shortKey = key.split("/").pop() ?? key;
-        const segmentEntry = Object.entries(val as Record<string, any>).find(
-          ([innerKey]) => innerKey.endsWith("segment")
-        );
-        declaredProperties[shortKey] = {
-          segment: segmentEntry?.[1]?.value?.toLowerCase?.(),
-          hasObservedAt: Object.prototype.hasOwnProperty.call(val, "observedAt"),
-        };
-      });
-
-      const labelFor = (shortKey: string): string =>
-        templateProps?.[shortKey]?.title ??
-        shortKey
-          .split("_")
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-          .join(" ");
-
-      const asOption = (shortKey: string): AttributeOption => ({
-        label: labelFor(shortKey),
-        value: shortKey,
-        selectedDatasetIndex: 1,
-      });
-
-      // ── Step 5: the list — what the machine reported, less the descriptions ─
-      // The entity says what a machine is *meant* to report, which is wrong in
-      // both directions on a real one: a gateway writes attributes nobody marked
-      // realtime, and a declared sensor may never have sent a row. So the time
-      // series decides what is on offer, and the metadata only takes things off
-      // it — an attribute a template or the entity files under any segment other
-      // than realtime is a description (a production name, an article number),
-      // not a reading. With no metadata at all, a value that moved is a reading.
-      const reported = await fetchReportedAttributes(
-        entityIdValue,
-        selectedInterval,
-        selectedDate,
-        startTime,
-        endTime,
-      );
-
-      const fromTimeSeries: AttributeOption[] = reported
-        .filter((entry) => {
-          const segment =
-            templateProps?.[entry.attribute]?.segment ??
-            declaredProperties[entry.attribute]?.segment;
-          if (segment) return segment === "realtime";
-          return entry.changed;
-        })
-        .map((entry) => asOption(entry.attribute));
-
-      // Nothing reported — a machine that has just been onboarded, or a time
-      // series that cannot be reached. Offer what the entity declares, which is
-      // what this screen listed before, rather than an empty dropdown.
-      const declared: AttributeOption[] = Object.keys(declaredProperties)
-        .filter((shortKey) => {
-          const { segment, hasObservedAt } = declaredProperties[shortKey];
-          return segment === "realtime" || hasObservedAt;
-        })
-        .map(asOption);
-
-      const attributeLabels = fromTimeSeries.length > 0 ? fromTimeSeries : declared;
-
-      setAttributes(attributeLabels);
-
-      // Keep what the reader is looking at if the new list still has it — the
-      // list is refetched whenever the interval changes, and a chart that jumped
-      // back to the first parameter each time would be unusable.
-      const existingAttribute = attributeLabels.find(attr => attr.value == selectedAttribute);
-      if (!existingAttribute) {
-        setSelectedAttribute(attributeLabels[0]?.value ?? "");
-      }
-    }
-    catch (error) {
-      setAttributes([]);
-      setSelectedAttribute(""); // Reset if an error occurs or no attributes are available
+    } catch (error) {
+      // A failed refresh keeps the list on screen; only the first load leaves it empty
+      logHandledError("Could not load the parameters of this asset:", error);
+      setLoading(false);
     }
   };
 
@@ -781,6 +598,23 @@ const CombineSensorChart: React.FC = () => {
   useEffect(() => { selectedAttributeRef.current = selectedAttribute; }, [selectedAttribute]);
   useEffect(() => { entityIdRef.current = entityIdValue; }, [entityIdValue]);
   useEffect(() => { isTextReadingRef.current = textReading !== null; }, [textReading]);
+
+  // "reporting · 12 seconds ago", "last seen 3 hours ago", "no data yet"
+  const relativeTime = new Intl.RelativeTimeFormat(router.locale ?? "en", { numeric: "auto" });
+  const ago = (iso: string) => {
+    const seconds = Math.round((Date.parse(iso) - Date.now()) / 1000);
+    const steps: [Intl.RelativeTimeFormatUnit, number][] = [["day", 86400], ["hour", 3600], ["minute", 60]];
+    for (const [unit, size] of steps) {
+      if (Math.abs(seconds) >= size) return relativeTime.format(Math.round(seconds / size), unit);
+    }
+    return relativeTime.format(Math.min(seconds, 0), "second");
+  };
+  const statusText = (option: AttributeOption) =>
+    !option.lastSeen
+      ? t("dashboard:sensor_no_data")
+      : option.status === "live"
+        ? t("dashboard:sensor_reporting", { ago: ago(option.lastSeen) })
+        : t("dashboard:sensor_last_seen", { ago: ago(option.lastSeen) });
 
   const handleAttributeChange = (selectedValue: string) => {
     setSelectedAttribute(selectedValue); // Set the attribute then fetch
@@ -853,7 +687,8 @@ const CombineSensorChart: React.FC = () => {
       const dataPoints = factoryData.map((data: DataItem) => data.value ? Number(data.value) : null);
 
       const newDataset = {
-        label: attributeId.replace('eq.', ''),
+        label: attributesRef.current.find((o) => o.value === attributeId)?.label ?? attributeId.split("/").pop() ?? attributeId,
+        attributeId,
         data: dataPoints,
         fill: true,
         borderColor: colors[0 % colors.length].borderColor,
@@ -967,9 +802,9 @@ const CombineSensorChart: React.FC = () => {
         return;
       }
 
-      // Attempt to find the dataset with the cleaned attributeId
+      // The dataset charting this attribute
       const datasetIndex = newChartData.datasets.findIndex(
-        (ds) => ds.label === cleanAttributeId
+        (ds) => ds.attributeId === attributeId
       );
       
       if (datasetIndex === -1) {
@@ -1035,27 +870,40 @@ const CombineSensorChart: React.FC = () => {
     }
   }
 
+  // The parameter list: loaded when the asset changes and refreshed every
+  // minute, so a parameter the machine starts sending appears without a reload.
   useEffect(() => {
-    // Reset attributes when entityIdValue changes
+    attributesRef.current = [];
     setAttributes([]);
     setSelectedAttribute("");
     setUnitMap({});
+    if (!entityIdValue) return;
+    loadParameters(entityIdValue);
+    const refresh = setInterval(() => loadParameters(entityIdValue), 60_000);
+    return () => clearInterval(refresh);
   }, [entityIdValue]);
 
+  // Product name and the earliest date the calendar offers
   useEffect(() => {
-    const fetchData = async () => {
-      await fetchAsset();
-      await fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval, selectedDate, startTime, endTime);
-    };
+    const productKey = Object.keys(selectedAssetData ?? {}).find(key => key.includes("product_name"));
+    const creationKey = Object.keys(selectedAssetData ?? {}).find(key => key.includes("creation_date"));
+    const creationDate = creationKey ? selectedAssetData[creationKey]?.value : undefined;
+    if (creationDate) {
+      const [month, day, year] = creationDate.split('.');
+      setMinDate(new Date(year, month - 1, day));
+    }
+    setProductName(productKey ? (selectedAssetData[productKey]?.value || "Unknown Product") : "");
+  }, [selectedAssetData]);
 
+  // The chart: whenever the parameter or the interval changes
+  useEffect(() => {
     if (selectedInterval === 'custom' && (!selectedDate || !startTime || !endTime)) {
       return;
     }
-    if (selectedAssetData.id) {
-      fetchData();
+    if (entityIdValue && selectedAttribute) {
+      fetchDataForAttribute(selectedAttribute, entityIdValue, selectedInterval, selectedDate, startTime, endTime);
     }
-
-  }, [selectedAssetData, selectedAttribute, entityIdValue, selectedInterval, router.isReady]);
+  }, [selectedAttribute, entityIdValue, selectedInterval, router.isReady]);
 
   useEffect(() => {
     console.log("WebSocket: Connecting to", API_URL);
@@ -1090,7 +938,7 @@ const CombineSensorChart: React.FC = () => {
       // broadcast, so it can carry another asset's rows.
       if (isTextReadingRef.current) {
         const mine = updatedData.filter((row) =>
-          row?.attributeId?.split("/").pop() === selectedAttributeRef.current &&
+          row?.attributeId === selectedAttributeRef.current &&
           (!row?.entityId || row.entityId === entityIdRef.current) &&
           row?.value !== null && row?.value !== undefined && row.value !== ""
         );
@@ -1198,7 +1046,7 @@ const CombineSensorChart: React.FC = () => {
             label: (context: TooltipItem<"line">) => {
               const yVal = context.parsed.y;
               const formatted = Number.isInteger(yVal) ? yVal.toString() : parseFloat(yVal.toFixed(4)).toString();
-              const isMainDataset = context.dataset.label !== 'Average' && !context.dataset.label?.startsWith('__');
+              const isMainDataset = !!(context.dataset as any).attributeId;
               const unitSuffix = isMainDataset && selectedAttributeUnit ? ` ${selectedAttributeUnit}` : "";
               return `${context.dataset.label}: ${formatted}${unitSuffix}`;
             },
@@ -1324,11 +1172,10 @@ const CombineSensorChart: React.FC = () => {
   // instance alive across zoom/pan operations.
   const annotatedDatasets = React.useMemo(() => {
     if (!data.datasets?.length) return data.datasets;
-    const mainDs = data.datasets.find((ds: any) => ds.label !== 'Average' && !ds.label?.startsWith('__'));
+    const mainDs = data.datasets.find((ds) => !!ds.attributeId);
     const fullStats = mainDs ? computeKPIs(mainDs.data as (number | null)[], []) : null;
     return data.datasets.map((ds) => {
-      if (ds.label === 'Average' || ds.label?.startsWith('__')) return ds;
-      if (!fullStats) return ds;
+      if (!ds.attributeId || !fullStats) return ds;
       const { pointBg, pointRadius } = computeAnomalyColors(
         ds.data as (number | null)[],
         fullStats.avg,
@@ -1347,7 +1194,7 @@ const CombineSensorChart: React.FC = () => {
     labels: data.labels,
     datasets: [
       ...annotatedDatasets.filter(
-        (ds: any) => ds.label === selectedAttribute || ds.label === 'Average'
+        (ds: any) => ds.attributeId === selectedAttribute || ds.label === 'Average'
       ),
       ...thresholdDatasets,
     ],
@@ -1361,7 +1208,7 @@ const CombineSensorChart: React.FC = () => {
     const a = document.createElement("a");
     const assetName = (productName || selectedAssetData?.product_name || "asset")
       .replace(/\s+/g, "_");
-    a.download = `${assetName}_${selectedAttribute}_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
+    a.download = `${assetName}_${selectedOption?.name ?? "parameter"}_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
     a.href = url;
     a.click();
   };
@@ -1389,7 +1236,7 @@ const CombineSensorChart: React.FC = () => {
     const a = document.createElement("a");
     const assetName = (productName || selectedAssetData?.product_name || "asset")
       .replace(/\s+/g, "_");
-    a.download = `${assetName}_${selectedAttribute}_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`;
+    a.download = `${assetName}_${selectedOption?.name ?? "parameter"}_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`;
     a.href = url;
     a.click();
     URL.revokeObjectURL(url);
@@ -1500,21 +1347,25 @@ const CombineSensorChart: React.FC = () => {
                   placeholder={t("dashboard:selectAttribute")}
                   appendTo="self"
                   panelClassName="global_dropdown_panel"
+                  filter={attributes.length > 8}
+                  filterBy="label"
                   itemTemplate={(option: AttributeOption) => (
-                    <div className="sensor-option">
+                    <div className={`sensor-option sensor-status-${option.status}`}>
+                      <span className="sensor-status-dot" aria-hidden="true" />
                       <span className="sensor-option-name">{option.label}</span>
-                      {unitMap[option.value] && (
-                        <span className="sensor-option-unit">{unitMap[option.value]}</span>
+                      {option.unit && <span className="sensor-option-unit">{option.unit}</span>}
+                      {!option.inScorpio && (
+                        <span className="sensor-option-new" title={t("dashboard:sensor_new_hint")}>{t("dashboard:sensor_new")}</span>
                       )}
+                      <span className="sensor-option-status">{statusText(option)}</span>
                     </div>
                   )}
                   valueTemplate={(option: AttributeOption | null) =>
                     option ? (
-                      <div className="sensor-option">
+                      <div className={`sensor-option sensor-status-${option.status}`}>
+                        <span className="sensor-status-dot" aria-hidden="true" />
                         <span className="sensor-option-name">{option.label}</span>
-                        {unitMap[option.value] && (
-                          <span className="sensor-option-unit">{unitMap[option.value]}</span>
-                        )}
+                        {option.unit && <span className="sensor-option-unit">{option.unit}</span>}
                       </div>
                     ) : (
                       <span>{t("dashboard:selectAttribute")}</span>
@@ -1784,7 +1635,7 @@ const CombineSensorChart: React.FC = () => {
                   {t("dashboard:observed_at")} {formatLabel(new Date(textReading.observedAt))}
                 </p>
               </div>
-            ) : data.datasets && data.datasets.length > 0 && !noChartData ? (
+            ) : data.datasets && data.datasets.length > 0 && (data.labels?.length ?? 0) > 0 && !noChartData ? (
               <Chart
                 key={selectedAttribute + "_" + selectedInterval}
                 ref={chartRef}
@@ -1801,7 +1652,11 @@ const CombineSensorChart: React.FC = () => {
                   </svg>
                 </div>
                 <p className="dv_empty_state_title">{t("dashboard:no_chart_data")}</p>
-                <p className="dv_empty_state_sub">{t("dashboard:no_chart_data_hint")}</p>
+                <p className="dv_empty_state_sub">
+                  {selectedOption && !selectedOption.lastSeen
+                    ? t("dashboard:parameter_no_data_yet", { name: selectedOption.label })
+                    : t("dashboard:no_chart_data_hint")}
+                </p>
               </div>
             )}
           </div>

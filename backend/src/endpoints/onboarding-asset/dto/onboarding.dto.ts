@@ -19,3 +19,25 @@ export interface OnboardingDto {
   dataservice_image_config: string;
   agentservice_image_config: string;
 }
+
+// Value transforms, carried in app_config.fusionopcuadataservice.transforms and
+// applied by the gateway's data service. See transforms.validate.ts.
+export interface TransformCase {
+  eq?: string;
+  min?: number;
+  max?: number;
+  bit?: number;
+  out: string;
+}
+
+export interface TransformRule {
+  parameter: string;
+  map?: { cases: TransformCase[]; fallback?: 'drop' | 'raw' | { value: string } };
+  linear?: { factor: number; offset: number; decimals?: number; from?: string; to?: string };
+  on_error?: string;
+}
+
+export interface Transforms {
+  version: 1;
+  rules: TransformRule[];
+}

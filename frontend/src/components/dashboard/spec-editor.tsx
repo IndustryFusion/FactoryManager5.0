@@ -14,8 +14,10 @@
 // limitations under the License. 
 // 
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InputText } from "primereact/inputtext";
+import { InputTextarea } from "primereact/inputtextarea";
+import { parseSpecYaml, specToYaml } from "@/utility/spec-yaml";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -42,7 +44,14 @@ interface SpecEditorProps {
   onChange: (items: SpecItem[]) => void;
   /** Highlights the outer border in error red */
   hasError?: boolean;
+  /** Told whether the YAML being typed can be read; the mappings keep their last good state until it can. */
+  onValidityChange?: (valid: boolean) => void;
 }
+
+type EditorMode = "form" | "yaml";
+
+// The mode last chosen, so leaving the step and coming back keeps it.
+let lastMode: EditorMode = "form";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,7 +63,7 @@ const shortLabel = (iri: string) => iri.split("/").pop() ?? iri;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasError }) => {
+const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasError, onValidityChange }) => {
   // editingIndex: null = no row open, -1 = new-row form at bottom, ≥0 = editing that row
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draft, setDraft] = useState<OpcUaSpec | MqttSpec>(
@@ -63,6 +72,68 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
   const [draftErrors, setDraftErrors] = useState<Record<string, boolean>>({});
 
   const isEditing = editingIndex !== null;
+
+  // ── YAML mode: the same mappings as text, kept in step with the form ─────
+  const [mode, setModeState] = useState<EditorMode>(lastMode);
+  const [yamlText, setYamlText] = useState(() => (lastMode === "yaml" ? specToYaml(protocol, items) : ""));
+  const [yamlError, setYamlError] = useState<{ message: string; line?: number } | null>(null);
+  const [yamlNote, setYamlNote] = useState<string | undefined>();
+  const [copied, setCopied] = useState(false);
+  // The mappings the text currently stands for
+  const synced = useRef(JSON.stringify(items));
+
+  const resetYaml = (next: SpecItem[]) => {
+    synced.current = JSON.stringify(next);
+    setYamlText(specToYaml(protocol, next));
+    setYamlError(null);
+    setYamlNote(undefined);
+    onValidityChange?.(true);
+  };
+
+  // A step left with broken YAML comes back showing the mappings it kept.
+  useEffect(() => {
+    onValidityChange?.(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mappings changed from outside (the asset's prefill, the value transforms
+  // step) rewrite the text; mappings changed by typing here do not.
+  useEffect(() => {
+    if (mode === "yaml" && JSON.stringify(items) !== synced.current) resetYaml(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, mode, protocol]);
+
+  const setMode = (next: EditorMode) => {
+    if (next === mode || (next === "form" && yamlError) || isEditing) return;
+    if (next === "yaml") resetYaml(items);
+    lastMode = next;
+    setModeState(next);
+  };
+
+  const onYamlChange = (value: string) => {
+    setYamlText(value);
+    setCopied(false);
+    const result = parseSpecYaml(protocol, value);
+    if ("error" in result) {
+      setYamlError({ message: result.error, line: result.line });
+      onValidityChange?.(false);
+      return;
+    }
+    setYamlError(null);
+    setYamlNote(result.note);
+    onValidityChange?.(true);
+    synced.current = JSON.stringify(result.items);
+    onChange(result.items);
+  };
+
+  const copyYaml = async () => {
+    try {
+      await navigator.clipboard.writeText(yamlText);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   // ── Draft field setters ──────────────────────────────────────────────────
   const setOpcField = (field: keyof OpcUaSpec, value: string) => {
@@ -261,18 +332,86 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
             {items.length} {items.length === 1 ? "mapping" : "mappings"}
           </span>
         </div>
-        <button
-          type="button"
-          className="spec-add-btn"
-          onClick={startAdd}
-          disabled={isEditing}
-        >
-          <i className="pi pi-plus" /> Add Mapping
-        </button>
+        <div className="spec-header-right">
+          <div className="spec-mode-toggle" role="group" aria-label="Edit mappings as">
+            <button
+              type="button"
+              className={mode === "form" ? "is-active" : ""}
+              onClick={() => setMode("form")}
+              disabled={!!yamlError}
+              title={yamlError ? "Fix the YAML first, or undo the changes" : "Edit one mapping at a time"}
+            >
+              <i className="pi pi-list" /> Form
+            </button>
+            <button
+              type="button"
+              className={mode === "yaml" ? "is-active" : ""}
+              onClick={() => setMode("yaml")}
+              disabled={isEditing}
+              title={isEditing ? "Save or cancel the open mapping first" : "Paste or edit all mappings as YAML"}
+            >
+              <i className="pi pi-code" /> YAML
+            </button>
+          </div>
+          {mode === "form" && (
+            <button
+              type="button"
+              className="spec-add-btn"
+              onClick={startAdd}
+              disabled={isEditing}
+            >
+              <i className="pi pi-plus" /> Add Mapping
+            </button>
+          )}
+        </div>
       </div>
 
+      {mode === "yaml" && (
+        <div className="spec-yaml">
+          <InputTextarea
+            value={yamlText}
+            onChange={e => onYamlChange(e.target.value)}
+            autoResize
+            rows={10}
+            spellCheck={false}
+            className={`spec-yaml-input${yamlError ? " p-invalid" : ""}`}
+            placeholder={protocol === "opc-ua"
+              ? "fusionopcuadataservice:\n  specification:\n    - node_id: ns=4\n      identifier: i=39\n      parameter: https://industry-fusion.org/base/v0.1/machine_state"
+              : "fusionmqttdataservice:\n  specification:\n    - topic: airtracker-74145/relay1\n      key: []\n      parameter:\n        - https://industry-fusion.org/base/v0.1/machine_state"}
+          />
+          <div className="spec-yaml-bar">
+            {yamlError ? (
+              <span className="spec-yaml-status is-error">
+                <i className="pi pi-times-circle" />
+                {yamlError.line ? `Line ${yamlError.line}: ` : ""}{yamlError.message}
+              </span>
+            ) : (
+              <span className="spec-yaml-status is-ok">
+                <i className="pi pi-check-circle" />
+                In sync with the form · {items.length} {items.length === 1 ? "mapping" : "mappings"}
+              </span>
+            )}
+            <div className="spec-yaml-actions">
+              {yamlError ? (
+                <button type="button" className="spec-yaml-btn" onClick={() => resetYaml(items)}>
+                  <i className="pi pi-undo" /> Undo changes
+                </button>
+              ) : (
+                <button type="button" className="spec-yaml-btn" onClick={() => resetYaml(items)}>
+                  <i className="pi pi-align-left" /> Tidy up
+                </button>
+              )}
+              <button type="button" className="spec-yaml-btn" onClick={copyYaml}>
+                <i className={copied ? "pi pi-check" : "pi pi-copy"} /> {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+          </div>
+          {yamlNote && <div className="spec-yaml-note"><i className="pi pi-info-circle" /> {yamlNote}</div>}
+        </div>
+      )}
+
       {/* Empty state */}
-      {items.length === 0 && !isEditing && (
+      {mode === "form" && items.length === 0 && !isEditing && (
         <div className="spec-empty">
           <i className={protocol === "opc-ua" ? "pi pi-sitemap" : "pi pi-wifi"} />
           <span>
@@ -283,7 +422,7 @@ const SpecEditor: React.FC<SpecEditorProps> = ({ protocol, items, onChange, hasE
       )}
 
       {/* Existing item cards */}
-      {items.map((item, idx) => (
+      {mode === "form" && items.map((item, idx) => (
         <div key={idx} className={`spec-card${editingIndex === idx ? " spec-card-active" : ""}`}>
           {editingIndex === idx ? (
             renderEditForm()

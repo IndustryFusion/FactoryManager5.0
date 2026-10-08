@@ -31,7 +31,7 @@ import { Asset } from "@/types/asset-types";
 import Image from "next/image";
 
 import { notifyError } from "@/utility/global-toast";
-import { isMachineRunning } from "@/utility/machine-state";
+import { isMachineRunning, machineStateOf } from "@/utility/machine-state";
 import { logHandledError } from "@/utility/log";import { linkTargets } from "@/utility/ngsi-links";
 
 const DashboardCards: React.FC = () => {
@@ -193,8 +193,8 @@ const DashboardCards: React.FC = () => {
                 withCredentials: true,
             });
             const latest = Array.isArray(response.data) ? response.data[0] : undefined;
-            // No reading is not the same as a reading of 0, but the pill has
-            // only two states and "we have not heard from it" is not running.
+            // No reading is not the same as a reading of 0, but "we have not
+            // heard from it" is not known to be on, so the pill says offline.
             setMachineStateValue(latest?.value !== undefined && latest?.value !== null ? String(latest.value) : "0");
         } catch (error) {
             // Never a toast: this runs on a timer in the background, and a
@@ -295,16 +295,17 @@ const DashboardCards: React.FC = () => {
         fetchAllAlerts();
     }, [entityIdValue])
 
-    // A machine counts as running only on a real reading: see isMachineRunning.
-    const isRunning = isMachineRunning(machineStateValue);
+    // A machine counts as running only on a real reading: see machineStateOf.
+    const machineState = machineStateOf(machineStateValue);
+    const isRunning = machineState === "running";
 
     return (
         <div className="dv_status_row">
             {/* Machine state and uptime are one fact about the machine, so they
                 read as one pill instead of two cards saying half of it each. */}
-            <div className={`dv_state_pill ${isRunning ? "" : "is-offline"}`}>
+            <div className={`dv_state_pill ${isRunning ? "" : `is-${machineState}`}`}>
                 <span className="dv_state_dot" />
-                <span className="dv_state_pill_label">{isRunning ? t("running") : t("offline")}</span>
+                <span className="dv_state_pill_label">{t(machineState)}</span>
                 {isRunning && (
                     <span className="dv_state_pill_time" suppressHydrationWarning>{difference}</span>
                 )}

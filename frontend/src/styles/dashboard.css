@@ -1518,6 +1518,17 @@ margin-bottom: 24px
     background-color: var(--grey-secondary);
 }
 
+/* Online but not producing: amber, so it reads apart from both running and offline. */
+.dv_state_pill.is-idle {
+    background-color: rgba(217, 119, 6, 0.12);
+    color: #b45309;
+    border-color: rgba(217, 119, 6, 0.3);
+}
+
+.dv_state_pill.is-idle .dv_state_dot {
+    background-color: #d97706;
+}
+
 /* ── Shared empty state ────────────────────────────────────────────────────
    One silhouette for every "nothing to show" on the screen, replacing an
    inline <p><b>, a 5%-wide png and three ad-hoc layouts. */
@@ -1588,4 +1599,222 @@ margin-bottom: 24px
     flex-direction: column;
     gap: 12px;
     min-height: 320px;
+}
+
+/* ── Onboarding wizard (Onboard / Edit Onboard dialogs) ─────────────────────
+   Both dialogs carry .onboard-dialog.onboard-form. The rules here come last
+   and are scoped to that pair, so they settle the spacing the older rules
+   above left to chance: icon/text gaps, the footer's double divider and the
+   step indicator. */
+.onboard-dialog.p-dialog { border-radius: 14px; overflow: hidden; }
+.onboard-dialog .p-dialog-header { padding: 22px 28px 0; border-bottom: 1px solid #eef0f3; align-items: flex-start; }
+.onboard-dialog .onboardform-header h3 { font-size: 1.35rem; margin: 0 0 4px; }
+.onboard-dialog .onboardform-header p { font-size: 13px; font-weight: 400; color: #6b7280; line-height: 1.5; }
+.onboard-dialog .p-dialog-content { padding: 0 28px; }
+.onboard-dialog .onboard-form-content { padding: 24px 0 8px; min-height: 380px; }
+.onboard-dialog .p-dialog-footer { padding: 14px 28px; border-top: 1px solid #eef0f3; background: #fafbfc; }
+
+/* Step indicator: every number in a circle, done steps tinted, the current one filled */
+.onboard-dialog .onboard-steps.p-steps { margin: 16px 0 0 !important; padding: 0 0 14px; }
+.onboard-dialog .onboard-steps .p-steps-item .p-menuitem-link { gap: 6px; }
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item .p-menuitem-link .p-steps-number {
+    width: 30px; height: 30px; min-width: 30px; line-height: 30px; border-radius: 50%;
+    background: #f1f5f9; color: #64748b; font-size: 13px; font-weight: 700;
+}
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item:has(~ .p-highlight) .p-menuitem-link .p-steps-number {
+    background: #dbeafe; color: #1d4ed8;
+}
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item.p-highlight .p-menuitem-link .p-steps-number {
+    background: #3b82f6; color: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item .p-steps-title { font-size: 12.5px; color: #94a3b8; margin: 0; font-weight: 500; }
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item:has(~ .p-highlight) .p-steps-title { color: #475569; }
+.onboard-dialog.onboard-form .onboard-steps .p-steps-item.p-highlight .p-steps-title { color: #1e40af; font-weight: 700; }
+
+/* Step heading: icon in its own chip, a clear gap before the text */
+.onboard-dialog.onboard-form .step-header { margin-bottom: 1.4rem; }
+.onboard-dialog.onboard-form .step-title {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 6px;
+    font-size: 1.05rem; font-weight: 700; color: #111827;
+}
+.onboard-dialog.onboard-form .step-title i {
+    margin: 0; width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #eff6ff; color: #2563eb; font-size: 14px;
+}
+.onboard-dialog.onboard-form .step-description { font-size: 13.5px; color: #6b7280; line-height: 1.5; margin: 0; }
+.onboard-dialog.onboard-form .field { margin-bottom: 1.35rem; }
+.onboard-dialog.onboard-form .field > label { font-size: 14px; margin-bottom: 4px; }
+.onboard-dialog.onboard-form .field > small { margin-bottom: 8px !important; }
+
+/* Any button in the dialog: icon and label spaced by the button, not by luck */
+.onboard-dialog .p-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.onboard-dialog .p-button .p-button-icon-left,
+.onboard-dialog .p-button .p-button-icon-right { margin: 0; }
+.onboard-dialog .p-button .p-button-label { flex: none; }
+
+/* Footer: the dialog draws the one divider; the buttons sit on it */
+.onboard-dialog .onboard-footer { margin: 0; padding: 0; border: 0; }
+.onboard-dialog .onboard-footer .footer-actions { gap: 10px; }
+.onboard-dialog .p-dialog-footer .onboard-footer .p-button {
+    margin: 0; padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; transform: none;
+}
+.onboard-dialog .p-dialog-footer .onboard-footer .back-btn { padding-left: 10px; color: #4b5563; }
+.onboard-dialog .p-dialog-footer .onboard-footer .cancel-btn { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.onboard-dialog .p-dialog-footer .onboard-footer .cancel-btn:hover { background: #f3f4f6; box-shadow: none; transform: none; }
+.onboard-dialog .p-dialog-footer .onboard-footer .next-btn:hover,
+.onboard-dialog .p-dialog-footer .onboard-footer .submit-btn:hover { transform: none; }
+
+/* Secure-connection switch row */
+.onboard-dialog.onboard-form .field .flex.items-center { align-items: center; gap: 12px; padding: 12px 14px; }
+
+/* Secondary configuration reads as its own card */
+.onboard-dialog .secondary-config {
+    border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px 4px; background: #fcfcfd;
+}
+.onboard-dialog .secondary-config > .flex label { margin-bottom: 2px; }
+.onboard-dialog .secondary-config hr { border: 0; border-top: 1px solid #e5e7eb; margin: 10px 0 16px; }
+
+/* Mapping editor: Form / YAML switch and the YAML pane */
+.spec-header-right { display: flex; align-items: center; gap: 10px; }
+.spec-mode-toggle { display: inline-flex; padding: 3px; border-radius: 20px; background: #eef2f7; }
+.spec-mode-toggle button {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 0; border-radius: 16px;
+    background: transparent; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.spec-mode-toggle button .pi { font-size: 11px; }
+.spec-mode-toggle button.is-active { background: #fff; color: #1d4ed8; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.spec-mode-toggle button:disabled { opacity: 0.45; cursor: not-allowed; }
+.spec-yaml { padding: 14px 16px 12px; }
+.spec-editor .spec-yaml textarea.spec-yaml-input {
+    width: 100%; min-height: 220px; resize: vertical; padding: 12px 14px; border-radius: 8px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace !important; font-size: 12.5px; line-height: 1.65;
+    color: #0f172a; background: #f8fafc; border: 1px solid #e2e8f0; tab-size: 2;
+}
+.spec-editor .spec-yaml textarea.spec-yaml-input:focus { background: #fff; border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); }
+.spec-yaml-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.spec-yaml-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.spec-yaml-status.is-ok { color: #15803d; }
+.spec-yaml-status.is-error { color: #b91c1c; }
+.spec-yaml-actions { display: flex; gap: 6px; }
+.spec-yaml-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 7px;
+    border: 1px solid #d1d5db; background: #fff; color: #374151; font-size: 12px; font-weight: 500; cursor: pointer;
+}
+.spec-yaml-btn:hover { background: #f3f4f6; }
+.spec-yaml-note { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: #92400e; }
+
+/* ── Value transforms (onboarding step) ─────────────────────────────────────
+   One card per mapped parameter, all with the same options in the order the
+   gateway applies them: 1 map values, 2 convert the unit, then what to send
+   when the machine cannot be read. State colours follow the machine-state pill. */
+.vt { --vt-running: #2b8fb8; --vt-running-soft: #e3f3fa; --vt-idle: #c26a06; --vt-idle-soft: #fdf1e1;
+      --vt-offline: #5f6b7a; --vt-offline-soft: #eef0f3; --vt-line: #e3e8ef; --vt-sunken: #f6f8fb; }
+.vt-banner, .vt-suggest {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 16px; border-radius: 10px; font-size: 13px;
+}
+.vt-banner { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.vt-suggest { background: #f0f9ff; border: 1px solid #bae6fd; color: #075985; margin-bottom: 0; }
+.vt-banner > div, .vt-suggest > span { flex: 1; }
+.vt-banner > .pi, .vt-suggest > .pi { font-size: 18px; }
+
+.vt-sections { display: flex; flex-direction: column; gap: 14px; }
+.vt-sections.is-disabled { opacity: 0.6; pointer-events: none; }
+.vt-node {
+    font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #8a94a6; background: var(--vt-sunken);
+    border-radius: 5px; padding: 2px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; align-self: flex-start;
+}
+.vt-hint { margin: 0; font-size: 12.5px; color: #8a94a6; }
+.vt-arrow { color: #b6c0cd; font-size: 11px; }
+.vt-dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.vt-note { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; padding: 9px 12px; border-radius: 9px; }
+.vt-note .pi { margin-top: 2px; }
+.vt-note-warn { background: #fff7e6; border: 1px solid #f6d79a; color: #8a5a00; }
+
+/* The list */
+.vt-cards { border: 1px solid var(--vt-line); border-radius: 12px; overflow: hidden; }
+.vt-card { border-bottom: 1px solid var(--vt-line); }
+.vt-card:last-child { border-bottom: 0; }
+.vt-card.is-review { box-shadow: inset 3px 0 0 #f59e0b; }
+.vt-card.is-open { background: #fbfcfe; box-shadow: inset 3px 0 0 #3b82f6; }
+.vt-card-head {
+    display: flex; align-items: center; gap: 14px; padding: 11px 16px; cursor: pointer;
+}
+.vt-card-head:hover { background: #f8faff; }
+.vt-card-head:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.vt-prop { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 0 1 300px; }
+.vt-prop strong { font-weight: 600; font-size: 14px; color: #111827; }
+.vt-prop .vt-node { max-width: 280px; }
+.vt-tags { flex: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.vt-tag {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe;
+}
+.vt-tag.is-plain { background: transparent; color: #9ca3af; border-color: transparent; font-weight: 500; }
+.vt-tag.is-review { background: #fff7e6; color: #b45309; border-color: #f6d79a; }
+.vt-chevron { color: #9ca3af; font-size: 12px; }
+
+/* An open card */
+.vt-card-body { display: flex; flex-direction: column; gap: 16px; padding: 4px 16px 16px 16px; }
+.vt-step { display: flex; flex-direction: column; gap: 10px; }
+.vt-step-head { display: flex; gap: 10px; align-items: flex-start; }
+.vt-step-no {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700;
+}
+.vt-step-head h6 { margin: 0; font-size: 14px; font-weight: 700; color: #111827; }
+.vt-step-head p { margin: 2px 0 0; font-size: 12.5px; color: #6b7280; }
+.vt-step-head code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11.5px; background: var(--vt-sunken); padding: 1px 5px; border-radius: 4px; color: #4b5563; }
+.vt-step > .vt-pairs, .vt-step > .vt-options { margin-left: 32px; }
+.vt-step-plain { border-top: 1px dashed var(--vt-line); padding-top: 12px; }
+.vt-step-plain > .vt-options { margin-left: 0; }
+
+.vt-pairs { display: flex; flex-direction: column; gap: 8px; }
+.vt-pairs-head { display: grid; grid-template-columns: 190px 20px 190px; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #8a94a6; }
+.vt-pair { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vt-pair > .p-inputtext, .vt-pair > .vt-state-pick { width: 190px; }
+.vt .p-inputtext { padding: 6px 9px; font-size: 13px; }
+.vt-state-pick .p-dropdown-label { padding: 6px 9px; font-size: 13px; }
+.vt-tone-running { background: var(--vt-running-soft); color: var(--vt-running); }
+.vt-tone-idle { background: var(--vt-idle-soft); color: var(--vt-idle); }
+.vt-tone-offline { background: var(--vt-offline-soft); color: var(--vt-offline); }
+.vt-remove { border: 0; background: none; color: #8a94a6; cursor: pointer; padding: 6px 8px; border-radius: 6px; }
+.vt-remove:hover { color: #c2410c; background: #fff1ea; }
+.vt-add {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 7px;
+    border: 1px dashed #b8c4d6; background: #fff; color: #2563eb; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.vt-error { font-size: 12px; color: #c2410c; }
+.vt-warn { font-size: 12px; color: #b45309; }
+.vt-options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.vt-option { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; color: #4b5563; margin: 0 !important; font-weight: 500 !important; }
+.vt-options .p-dropdown { min-width: 170px; }
+.vt-options .p-dropdown .p-dropdown-label { padding: 6px 10px; font-size: 13px; }
+.vt-conversion { min-width: 230px !important; }
+.vt-factor { display: inline-flex; align-items: center; gap: 6px; color: #8a94a6; }
+.vt .vt-num { width: 90px; padding: 6px 9px; font-size: 13px; }
+.vt-example { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12.5px; color: #2563eb; font-variant-numeric: tabular-nums; }
+
+.vt-try {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px;
+    background: var(--vt-sunken); font-size: 13px; color: #4b5563;
+}
+.vt-try strong { color: #111827; font-weight: 600; }
+.vt-try .p-inputtext { width: 130px; }
+.vt-result { display: inline-flex; align-items: center; gap: 7px; padding: 3px 11px; border-radius: 14px; font-size: 13px; font-weight: 700; color: #8a94a6; }
+.vt-result.is-value { background: #e0f2fe; color: #075985; font-family: 'SFMono-Regular', Consolas, monospace; }
+.vt-why { font-size: 12px; color: #8a94a6; }
+
+.vt-rules { border-top: 1px solid var(--vt-line); padding-top: 12px; }
+.vt-rules summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #4b5563; }
+.vt-rules pre {
+    margin: 10px 0 0; padding: 12px 14px; border-radius: 10px; background: #0f172a; color: #dbe4f3; overflow-x: auto;
+    font-family: 'SFMono-Regular', Consolas, monospace !important; font-size: 12px; line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+    .vt-card-head { flex-wrap: wrap; }
+    .vt-tags { justify-content: flex-start; }
+    .vt-step > .vt-pairs, .vt-step > .vt-options { margin-left: 0; }
 }
