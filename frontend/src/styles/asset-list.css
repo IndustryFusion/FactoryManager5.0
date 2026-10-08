@@ -432,3 +432,125 @@ For Checkbox Component: */
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
   }
+
+/* ── Notification window ─────────────────────────────────────────────────────
+   Alerts in two groups (machines, platform services), one card per alert, all
+   cards the same width. A card reads: severity icon, message, time on the
+   right; below, indented to the message, what it is about and the status
+   control. These rules are scoped to .alert-card so the global .card rule
+   (a centred flex row) no longer shrinks the content to its text. */
+.alerts-details-content .p-tabview .p-tabview-panels { padding: 4px 20px 20px; }
+
+.alerts-group + .alerts-group { margin-top: 20px; }
+.alerts-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.alerts-group-count {
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.alert-card {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 12px;
+  border: 1px solid #e6e9ef;
+  border-radius: 12px;
+  background: #fff;
+}
+.alert-card .alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px 16px;
+}
+
+/* Icon, message, time */
+.alert-card .asset-first-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+}
+.alert-card .asset-first-content > .asset-first-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow: visible;
+  white-space: normal;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.alert-card .asset-first-left > i {
+  flex-shrink: 0;
+  width: 20px;
+  margin-top: 1px;
+  font-size: 1.1rem !important;
+  text-align: center;
+}
+.alert-card .asset-warning { min-width: 0; overflow-wrap: anywhere; }
+.alert-card .asset-first-content > .asset-time {
+  flex: none;
+  margin-left: auto;
+  padding-top: 2px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #98a2b3;
+}
+
+/* What the alert is about, and its status control, lined up under the message */
+.alert-card .asset-second-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 30px;
+}
+.alert-card .alert-panel {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.alert-card .product-panel-header { width: 100%; gap: 12px; }
+.alert-card .product-panel-header > div:first-child { min-width: 0; }
+.alert-card .product-image {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.alert-card .alert-service-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e8ecf2;
+  color: #475569;
+}
+.alert-card .alert-service-icon .pi { font-size: 1.05rem; }
+.alert-card .alert-product-name { font-size: 15px; line-height: 1.2; overflow-wrap: anywhere; }
+.alert-card .alert-details-content { margin-top: 12px; }
+.alert-card .alert-row { margin-top: 0 !important; }
+

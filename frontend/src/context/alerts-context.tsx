@@ -41,6 +41,10 @@ interface AlertsContextValue {
 
 const AlertsContext = createContext<AlertsContextValue | null>(null);
 
+/** Whether an alert's resource is an asset (an NGSI-LD urn), not a platform service. */
+export const isAssetId = (resource: unknown): resource is string =>
+  typeof resource === "string" && /^urn:/i.test(resource);
+
 const mapBackendDataToAssetState = (backendData: Asset) => {
   const modifiedObject: any = {};
   Object.keys(backendData).forEach((key) => {
@@ -85,7 +89,12 @@ export const AlertsProvider = ({ children }: { children: ReactNode }) => {
       const nextAlerts: Alert[] = alertResponse?.alerts ?? [];
       setJobs(jobResponse?.jobs ?? []);
       setAlerts(nextAlerts);
-      setAssetData(await Promise.all(nextAlerts.map((a) => fetchAssetData(a.resource))));
+      // Only machine alerts name an asset (an urn: id). Platform alerts, which
+      // the PDT's own services raise, name a service ("mqtt-bridge") that is no
+      // asset, so it is not looked up. Each asset is looked up once per poll.
+      const assetIds = Array.from(new Set(nextAlerts.map((a) => a.resource).filter(isAssetId)));
+      const found = await Promise.all(assetIds.map((id) => fetchAssetData(id)));
+      setAssetData(found.filter((asset) => asset !== null));
       setError(null);
       reportedRef.current = false;
     } catch (err) {
