@@ -32,6 +32,7 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 import { notifyError } from "@/utility/global-toast";
 import { logHandledError } from "@/utility/log";
 import { getAccessGroup } from "@/utility/indexed-db";
+import { isAssetId } from "@/context/alerts-context";
 export type AlertaState = "open" | "assign" | "ack" | "closed" | "expired";
 
 const ALL_STATES: { label: string; value: AlertaState }[] = [
@@ -95,30 +96,39 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
     }));
   };
 
+  // The machine severities, and Alerta's standard ones that the platform's own alerts use
   const getIcon = (severity: string) => {
-    switch (severity) {
+    switch ((severity || '').toLowerCase()) {
       case 'ok':
+      case 'normal':
+      case 'cleared':
+      case 'informational':
+      case 'indeterminate':
         return {
           icon: 'pi pi-info-circle',
           color: "#04c904"
         };
       case 'warning':
+      case 'minor':
         return {
           icon: 'pi pi-exclamation-circle',
           color: "#ffc107"
         }
       case 'machine-danger':
+      case 'critical':
+      case 'major':
         return {
           icon: 'pi pi-exclamation-triangle',
           color: "#ff0000"
         };
       case 'machine-error':
+      case 'error':
         return {
           icon: 'pi pi-times',
           color: "#ff0000"
         }
       default:
-        return { icon: '', color: '' };
+        return { icon: 'pi pi-info-circle', color: "#9ca3af" };
     }
   };
 
@@ -530,12 +540,15 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
       );
     }
 
-    return alerts
-      .map((alert, index) => {
+    // Machine alerts name an asset; platform alerts, raised by the PDT's own
+    // services, name the service. Both are listed, each in its own group.
+    const renderAlert = (alert: Alerts, index: number) => {
         try {
-          const findAsset = assetData.find(
-            ({ id }: { id: string }) => id === alert?.resource
-          );
+          const isPlatform = !isAssetId(alert?.resource);
+          // assetData holds only assets that could be read, but stay safe with gaps
+          const findAsset = isPlatform
+            ? undefined
+            : assetData.find((asset) => asset?.id === alert?.resource);
 
           const text = alert?.text || "";
           const parts = text.split(". ");
@@ -584,7 +597,7 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
           }
 
           return (
-            <div key={index} className="alerts-container card mb-4" style={{ borderBottom: "1px solid #e0e0e0", marginTop: "0px" }}>
+            <div key={alert.id ?? index} className="alert-card">
               <div className="alert-content">
                 <div className="asset-first-content">
                   <div className="asset-first-left">
@@ -597,7 +610,11 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
                     ></i>
                     <span className="asset-warning">{updatedText}</span>
                   </div>
-                  <div className="asset-time">{alert?.updateTime}</div>
+                  <div className="asset-time" title={alert?.updateTime}>
+                    {alert?.updateTime && !isNaN(Date.parse(alert.updateTime))
+                      ? new Date(alert.updateTime).toLocaleString()
+                      : alert?.updateTime}
+                  </div>
                 </div>
 
                 <div className="asset-second-content">
@@ -607,23 +624,29 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
                   >
                     <div className="product-panel-header flex align-items-center justify-content-between width-full">
                       <div className="flex align-items-center gap-3">
-                        <img
-                          src={findAsset?.image || "/avatar.svg"}
-                          alt="product"
-                          className="product-image"
-                          onError={(e) =>
-                            (e.currentTarget.src = "/avatar.svg")
-                          }
-                        />
+                        {isPlatform ? (
+                          <span className="product-image alert-service-icon" aria-hidden="true">
+                            <i className="pi pi-server" />
+                          </span>
+                        ) : (
+                          <img
+                            src={findAsset?.image || "/avatar.svg"}
+                            alt="product"
+                            className="product-image"
+                            onError={(e) =>
+                              (e.currentTarget.src = "/avatar.svg")
+                            }
+                          />
+                        )}
                         <div className="flex flex-column gap-1">
                           <span className="alert-product-name">
-                            {findAsset?.product_name}
+                            {isPlatform ? alert?.resource : findAsset?.product_name || alert?.resource}
                           </span>
                           <span className="alert-factory-name">
                             <span className="alert-factory-sub-name">
-                              Area Name -{" "}
+                              {isPlatform ? "Event - " : "Area Name - "}
                             </span>
-                            {findAsset?.factory_site || "Factory name"}
+                            {isPlatform ? alert?.event || "—" : findAsset?.factory_site || "Factory name"}
                           </span>
                           <span className="alert-factory-name">
                             <span className="alert-factory-sub-name">
@@ -649,17 +672,17 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
                     {expandedAlerts[alert.id] && (
                       <div className="alert-details-content">
                         <div className="alert-detail-item">
-                          <label className="alert-label">Machine ID</label>
+                          <label className="alert-label">{isPlatform ? "Service" : "Machine ID"}</label>
                           <span className="alert-value">
-                            {findAsset?.id || ""}
+                            {isPlatform ? alert?.resource : findAsset?.id || alert?.resource || ""}
                           </span>
                         </div>
 
                         <div className="alert-detail-grid">
                           <div className="alert-detail-item">
-                            <label className="alert-label">Category</label>
+                            <label className="alert-label">{isPlatform ? "Event" : "Category"}</label>
                             <span className="alert-value">
-                              {findAsset?.asset_category || ""}
+                              {isPlatform ? alert?.event || "" : findAsset?.asset_category || ""}
                             </span>
                           </div>
 
@@ -755,8 +778,26 @@ const AlertDetails: React.FC<AlertDetailsProps> = ({ alerts, jobs, alertsCount, 
           console.log("alertlist skip", err);
           return null;
         }
-      })
-      .filter((component) => component !== null);
+    };
+
+    const machineAlerts = alerts.filter((alert) => isAssetId(alert?.resource));
+    const platformAlerts = alerts.filter((alert) => !isAssetId(alert?.resource));
+    const group = (title: string, list: Alerts[]) =>
+      list.length > 0 && (
+        <div className="alerts-group">
+          <div className="alerts-group-title">
+            {title} <span className="alerts-group-count">{list.length}</span>
+          </div>
+          {list.map((alert, index) => renderAlert(alert, index)).filter((component) => component !== null)}
+        </div>
+      );
+
+    return (
+      <>
+        {group("Machines", machineAlerts)}
+        {group("Platform services", platformAlerts)}
+      </>
+    );
   };
 
   return (
