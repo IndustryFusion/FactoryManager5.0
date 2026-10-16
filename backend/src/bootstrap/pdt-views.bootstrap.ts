@@ -16,7 +16,7 @@
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client } from 'pg';
-import { PDT_VIEW_STATEMENTS } from './pdt-views.sql';
+import { DEFAULT_PGREST_ROLE, pdtViewStatements } from './pdt-views.sql';
 
 /**
  * Creates the dashboard views in the PDT database, and the role PostgREST
@@ -30,6 +30,13 @@ import { PDT_VIEW_STATEMENTS } from './pdt-views.sql';
  * reads the same data through PostgREST, which cannot run DDL — hence a
  * direct connection, configured entirely from the environment.
  *
+ * The role is PDT_PGREST_ROLE, or pgrest as the README has it. The role and
+ * its grants are only attempted when they can work: not when PostgREST reads
+ * as this connection's own user, which owns the views it creates and needs no
+ * grant (the DigitalTwin case: dbreader), and not when the role is missing and
+ * this user may not create roles (dbreader is NOCREATEROLE), which is said
+ * once with what to do rather than as a failure per statement.
+ *
  * Inert unless PDT_DB_HOST is set: an installation that has not been given a
  * connection keeps the manual arrangement and is not nagged about it.
  */
@@ -42,6 +49,11 @@ export class PdtViewsBootstrap implements OnModuleInit {
     if (label.startsWith('view ')) return label.slice('view '.length);
     if (label.startsWith('grant on ')) return label.slice('grant on '.length);
     return undefined;
+  }
+
+  /** The role statement and the grants, as opposed to the views. */
+  private isForRole(label: string): boolean {
+    return label.startsWith('role ') || label.startsWith('grant on ');
   }
 
   async onModuleInit(): Promise<void> {
@@ -71,19 +83,50 @@ export class PdtViewsBootstrap implements OnModuleInit {
       statement_timeout: Number(process.env.PDT_DB_TIMEOUT_MS ?? 10_000),
     });
 
+    // Written into the SQL as it is, so nothing but a plain role name is used.
+    const role = process.env.PDT_PGREST_ROLE || DEFAULT_PGREST_ROLE;
+    const roleIsPlain = /^[a-z_][a-z0-9_]*$/.test(role);
+    const statements = pdtViewStatements(
+      roleIsPlain ? role : DEFAULT_PGREST_ROLE,
+    );
+
     try {
       await client.connect();
+
+      // Who this connection is, and whether the role can be granted to: it has
+      // to exist already, or this user has to be allowed to create it.
+      const { rows: probe } = await client.query(
+        `SELECT current_user AS me,
+       EXISTS (SELECT FROM pg_roles WHERE rolname = $1) AS role_exists,
+       COALESCE((SELECT rolcreaterole OR rolsuper FROM pg_roles WHERE rolname = current_user), false) AS can_create_role`,
+        [role],
+      );
+      const me = probe[0]?.me;
+      const grantable = probe[0]?.role_exists || probe[0]?.can_create_role;
+      const runRoleStatements = roleIsPlain && role !== me && grantable;
+
+      if (!roleIsPlain) {
+        this.logger.error(
+          `PDT_PGREST_ROLE "${role}" is not a plain role name, so the dashboard views were ` +
+            'not granted to anyone. Use lowercase letters, digits and underscores only.',
+        );
+      } else if (role !== me && !grantable) {
+        this.logger.warn(
+          `Role ${role} does not exist and ${me} may not create roles, so the dashboard views ` +
+            `were not granted to it. If PostgREST reads them as ${role}, create it once as a ` +
+            `superuser: CREATE ROLE ${role} NOLOGIN; If PostgREST reads them as ${me}, which owns ` +
+            `them, set PDT_PGREST_ROLE=${me} and no grant is needed.`,
+        );
+      }
 
       // Which of these views already exist, and who owns them. An existing
       // view owned by someone else cannot be replaced or granted on, and that
       // is the normal case on an installation where they were created by hand
       // before this existed — so it is reported as "left alone", not as a
       // failure. Only an object we could have created and did not is an error.
-      const { rows: whoami } = await client.query('SELECT current_user AS me');
-      const me = whoami[0]?.me;
       const { rows: existing } = await client.query(
         'SELECT viewname, viewowner FROM pg_views WHERE viewname = ANY($1)',
-        [PDT_VIEW_STATEMENTS.map((s) => this.targetOf(s.label)).filter(Boolean)],
+        [statements.map((s) => this.targetOf(s.label)).filter(Boolean)],
       );
       const ownerOf = new Map<string, string>(
         existing.map((r: any) => [r.viewname, r.viewowner]),
@@ -91,7 +134,8 @@ export class PdtViewsBootstrap implements OnModuleInit {
 
       let applied = 0;
       let skipped = 0;
-      for (const statement of PDT_VIEW_STATEMENTS) {
+      for (const statement of statements) {
+        if (!runRoleStatements && this.isForRole(statement.label)) continue;
         const target = this.targetOf(statement.label);
         const owner = target ? ownerOf.get(target) : undefined;
         if (owner && owner !== me) {

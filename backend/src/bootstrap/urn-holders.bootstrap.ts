@@ -55,6 +55,8 @@ const SHOP_FLOOR_TYPE = 'https://industry-fusion.org/base/v0.1/shopFloor';
 export class UrnHoldersBootstrap implements OnModuleInit {
   private readonly logger = new Logger(UrnHoldersBootstrap.name);
   private readonly scorpioUrl = process.env.SCORPIO_URL;
+  /** Asked for once per start and shared by every step. */
+  private scorpioHeaders?: Promise<Record<string, string> | null>;
 
   constructor(
     private readonly tokenService: TokenService,
@@ -64,6 +66,21 @@ export class UrnHoldersBootstrap implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     if (process.env.FACTORY_AUTO_PROVISION === 'false') {
       this.logger.log('Holder seeding is switched off (FACTORY_AUTO_PROVISION=false).');
+      return;
+    }
+    // Every step reads Scorpio with the same token. Without one they would all
+    // fail the same way, three times over and without saying where the token
+    // was asked for — so it is asked for first, and a refusal is said once,
+    // naming what to check. Nothing is seeded: a counter seeded without seeing
+    // Scorpio could collide with ids already in use.
+    try {
+      await this.headers();
+    } catch (err) {
+      this.logger.error(
+        `Could not get a Scorpio token from ${process.env.API_URL} as ${process.env.USERNAME}: ` +
+          `${err?.message ?? err}. Check API_URL, USERNAME and PASSWORD. Nothing was seeded, so ` +
+          'the holders will start from nothing on first use — check this before using the flow editor.',
+      );
       return;
     }
     // Each on its own: one that cannot be read must not skip the others. The
@@ -204,7 +221,12 @@ export class UrnHoldersBootstrap implements OnModuleInit {
     return this.assetsOf(await this.fetch(SCORPIO_GLOBAL_STORE, headers));
   }
 
-  private async headers(): Promise<Record<string, string> | null> {
+  private headers(): Promise<Record<string, string> | null> {
+    this.scorpioHeaders ??= this.buildHeaders();
+    return this.scorpioHeaders;
+  }
+
+  private async buildHeaders(): Promise<Record<string, string> | null> {
     if (!this.scorpioUrl) {
       this.logger.warn('SCORPIO_URL is not set; seeding from what exists is skipped.');
       return null;

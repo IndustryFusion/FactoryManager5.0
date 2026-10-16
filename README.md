@@ -21,6 +21,8 @@ The data dashboards read a set of views in the PDT's Postgres.
 
 **The backend creates these itself at startup too**, provided it is given a connection: set `PDT_DB_HOST`, `PDT_DB_PORT`, `PDT_DB_NAME`, `PDT_DB_USER` and `PDT_DB_PASSWORD`. Without `PDT_DB_HOST` it leaves the database alone and you create them by hand, as below. Every statement is safe to run again, so restarts cost nothing.
 
+The views are granted to the role PostgREST reads them as: `PDT_PGREST_ROLE`, or `pgrest` when it is not set. On the DigitalTwin PDT, PostgREST reads as the role its Keycloak tokens carry, `dbreader`. Connecting as `dbreader` with `PDT_PGREST_ROLE=dbreader` needs no grant at all, because `dbreader` owns the views it creates. If the role does not exist and `PDT_DB_USER` may not create roles (DigitalTwin's `dbreader` may not), the backend creates the views, skips the grants and logs once what to run as a superuser: `CREATE ROLE pgrest NOLOGIN;`
+
 To do it manually: using Kubectl enter the acid-cluster pod in PDT, then login to Postgres DB with the below command.
 
 ```bash
