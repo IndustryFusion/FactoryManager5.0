@@ -27,11 +27,19 @@ const queries: string[] = [];
 /** Views the fake database reports as existing, and who owns them. */
 let existingViews: Array<{ viewname: string; viewowner: string }> = [];
 let currentUser = 'factory_admin';
+/** Whether the PostgREST role exists, and whether currentUser may create roles. */
+let roleExists = false;
+let canCreateRole = true;
+const probeRow = () => ({
+  me: currentUser,
+  role_exists: roleExists,
+  can_create_role: canCreateRole,
+});
 
 const client = {
   connect: jest.fn(),
   query: jest.fn(async (sql: string) => {
-    if (sql.includes('current_user')) return { rows: [{ me: currentUser }] };
+    if (sql.includes('current_user')) return { rows: [probeRow()] };
     if (sql.includes('pg_views')) return { rows: existingViews };
     queries.push(sql);
     return { rows: [] };
@@ -180,6 +188,44 @@ describe('UrnHoldersBootstrap', () => {
     expect(holders.seeded.size).toBe(0);
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });
+
+  it('says once, and where it asked, when no Scorpio token can be had', async () => {
+    // A wrong API_URL, USERNAME or PASSWORD used to fail each step on its own:
+    // three errors, none of which said what had been refused.
+    process.env.API_URL = 'http://keycloak.test/token';
+    process.env.USERNAME = 'realm_user';
+    const refusing = {
+      getToken: jest.fn(async () => {
+        throw new Error('Invalid user credentials');
+      }),
+    } as any;
+    const errors = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const holders = holderStore();
+
+    await expect(
+      new UrnHoldersBootstrap(refusing, holders).onModuleInit(),
+    ).resolves.toBeUndefined();
+
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(errors.mock.calls[0][0]).toContain('http://keycloak.test/token');
+    expect(errors.mock.calls[0][0]).toContain('realm_user');
+    expect(errors.mock.calls[0][0]).toContain('Invalid user credentials');
+    expect(refusing.getToken).toHaveBeenCalledTimes(1);
+    expect(holders.seeded.size).toBe(0);
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+  });
+
+  it('asks for the token once for all three steps', async () => {
+    mockedAxios.get.mockImplementation(async (url: string) => {
+      if (url.includes('store')) throw { response: { status: 404 } };
+      return { data: [] } as any;
+    });
+    const counting = { getToken: jest.fn(async () => 'service-token') } as any;
+
+    await new UrnHoldersBootstrap(counting, holderStore()).onModuleInit();
+
+    expect(counting.getToken).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('PdtViewsBootstrap', () => {
@@ -188,6 +234,8 @@ describe('PdtViewsBootstrap', () => {
     queries.length = 0;
     existingViews = [];
     currentUser = 'factory_admin';
+    roleExists = false;
+    canCreateRole = true;
     delete process.env.FACTORY_AUTO_PROVISION;
     process.env.PDT_DB_HOST = 'pdt-db.test';
     process.env.PDT_DB_USER = 'ngb';
@@ -196,6 +244,7 @@ describe('PdtViewsBootstrap', () => {
 
   afterEach(() => {
     delete process.env.PDT_DB_HOST;
+    delete process.env.PDT_PGREST_ROLE;
   });
 
   it('applies every statement from the README', async () => {
@@ -258,12 +307,87 @@ describe('PdtViewsBootstrap', () => {
     expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length);
   });
 
+  it('warns once, and grants nothing, when the role is missing and cannot be created', async () => {
+    // DigitalTwin's dbreader is NOCREATEROLE. Trying anyway failed the role
+    // and then every grant after it - seven errors on every start.
+    currentUser = 'dbreader';
+    canCreateRole = false;
+    const errors = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const warnings = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    // The views are still created; only the role and its grants are left out.
+    expect(
+      queries.filter((q) => q.startsWith('CREATE OR REPLACE VIEW')),
+    ).toHaveLength(7);
+    expect(
+      queries.some((q) => q.includes('CREATE ROLE') || q.startsWith('GRANT')),
+    ).toBe(false);
+    expect(errors).not.toHaveBeenCalled();
+    expect(warnings).toHaveBeenCalledTimes(1);
+    expect(warnings.mock.calls[0][0]).toContain('CREATE ROLE pgrest NOLOGIN');
+    expect(warnings.mock.calls[0][0]).toContain('PDT_PGREST_ROLE=dbreader');
+  });
+
+  it('grants to a role that exists, without needing to create roles', async () => {
+    currentUser = 'dbreader';
+    canCreateRole = false;
+    roleExists = true;
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    expect(queries).toHaveLength(PDT_VIEW_STATEMENTS.length);
+  });
+
+  it('needs no role or grants when PostgREST reads as the connecting user', async () => {
+    // The DigitalTwin arrangement: its tokens carry role dbreader, and
+    // dbreader owns the views it creates.
+    currentUser = 'dbreader';
+    canCreateRole = false;
+    process.env.PDT_PGREST_ROLE = 'dbreader';
+    const warnings = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    expect(queries).toHaveLength(7);
+    expect(queries.every((q) => q.startsWith('CREATE OR REPLACE VIEW'))).toBe(
+      true,
+    );
+    expect(warnings).not.toHaveBeenCalled();
+  });
+
+  it('creates and grants to the role PDT_PGREST_ROLE names', async () => {
+    process.env.PDT_PGREST_ROLE = 'web_anon';
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    expect(queries.find((q) => q.includes('CREATE ROLE'))).toContain(
+      "rolname = 'web_anon'",
+    );
+    const grants = queries.filter((q) => q.startsWith('GRANT SELECT'));
+    expect(grants).toHaveLength(7);
+    expect(grants.every((q) => q.endsWith(' TO web_anon'))).toBe(true);
+  });
+
+  it('refuses a PDT_PGREST_ROLE that is not a plain role name', async () => {
+    // The role is written into the SQL, so anything else could change what runs.
+    process.env.PDT_PGREST_ROLE = 'pgrest; DROP TABLE attributes';
+    const errors = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    await new PdtViewsBootstrap().onModuleInit();
+
+    expect(queries).toHaveLength(7);
+    expect(queries.some((q) => q.includes('DROP'))).toBe(false);
+    expect(errors).toHaveBeenCalledTimes(1);
+  });
+
   it('carries on when one statement fails', async () => {
     // Fails the first view only - not the probes, which run before any of
     // the statements and whose failure is a different path.
     let failed = false;
     client.query.mockImplementation(async (sql: string) => {
-      if (sql.includes('current_user')) return { rows: [{ me: currentUser }] };
+      if (sql.includes('current_user')) return { rows: [probeRow()] };
       if (sql.includes('pg_views')) return { rows: existingViews };
       if (!failed && sql.startsWith('CREATE OR REPLACE VIEW')) {
         failed = true;

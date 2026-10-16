@@ -24,8 +24,13 @@
  *
  * Every statement is written to be safe to run again — CREATE OR REPLACE for
  * the views, a guarded CREATE for the role, and GRANT, which is idempotent.
+ *
+ * The README's role is pgrest. Not every PostgREST reads as pgrest — the
+ * DigitalTwin one reads as the role its Keycloak tokens name, dbreader — so
+ * the role and its grants are built for whichever role is configured
+ * (PDT_PGREST_ROLE, see pdt-views.bootstrap.ts).
  */
-export const PDT_VIEW_STATEMENTS: ReadonlyArray<{ label: string; sql: string }> = [
+const VIEW_STATEMENTS: ReadonlyArray<{ label: string; sql: string }> = [
   {
     label: "view value_change_state_entries",
     sql: `CREATE OR REPLACE VIEW value_change_state_entries AS
@@ -271,45 +276,45 @@ WHERE "observedAt" > now() - interval '7 days'
   AND "parentId" IS NULL
 ORDER BY "entityId", "attributeId", "observedAt" DESC`,
   },
-  {
-    label: "role pgrest",
-    sql: `DO $do$
+];
+
+/** The role PostgREST reads the views as, unless PDT_PGREST_ROLE names another. */
+export const DEFAULT_PGREST_ROLE = 'pgrest';
+
+/**
+ * Every statement for one PostgREST role: the views, then the role, then a
+ * grant on each view to it.
+ *
+ * `role` is written into the SQL as it is, so the caller must have checked
+ * that it is a plain identifier.
+ */
+export function pdtViewStatements(
+  role: string,
+): ReadonlyArray<{ label: string; sql: string }> {
+  return [
+    ...VIEW_STATEMENTS,
+    {
+      label: `role ${role}`,
+      sql: `DO $do$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pgrest') THEN
-    CREATE ROLE pgrest;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${role}') THEN
+    CREATE ROLE ${role};
   END IF;
 END
 $do$`,
-  },
-  {
-    label: "grant on value_change_state_entries",
-    sql: `GRANT SELECT ON value_change_state_entries TO pgrest`,
-  },
-  {
-    label: "grant on power_emission_entries_days",
-    sql: `GRANT SELECT ON power_emission_entries_days TO pgrest`,
-  },
-  {
-    label: "grant on power_emission_entries_weeks",
-    sql: `GRANT SELECT ON power_emission_entries_weeks TO pgrest`,
-  },
-  {
-    label: "grant on power_emission_entries_months",
-    sql: `GRANT SELECT ON power_emission_entries_months TO pgrest`,
-  },
-  {
-    label: "grant on machine_state_daily_stats",
-    sql: `GRANT SELECT ON machine_state_daily_stats TO pgrest`,
-  },
-  {
-    label: "grant on machine_state_2h_stats",
-    sql: `GRANT SELECT ON machine_state_2h_stats TO pgrest`,
-  },
-  {
-    label: "grant on attribute_latest",
-    sql: `GRANT SELECT ON attribute_latest TO pgrest`,
-  },
-];
+    },
+    ...VIEW_STATEMENTS.map(({ label }) => {
+      const view = label.slice('view '.length);
+      return {
+        label: `grant on ${view}`,
+        sql: `GRANT SELECT ON ${view} TO ${role}`,
+      };
+    }),
+  ];
+}
+
+/** The statements for the README's role. */
+export const PDT_VIEW_STATEMENTS = pdtViewStatements(DEFAULT_PGREST_ROLE);
 
 /**
  * The index that lets the Data Viewer find an asset's parameters without
