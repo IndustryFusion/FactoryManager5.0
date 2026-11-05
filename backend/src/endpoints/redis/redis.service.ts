@@ -25,8 +25,13 @@ export class RedisService {
   private redisClient: Redis;
   private readonly REDIS_SERVER =  process.env.REDIS_SERVER;
   private readonly REDIS_PORT: number = parseInt(<string>process.env.REDIS_PORT)  ;
+  private readonly REDIS_PASSWORD = process.env.REDIS_PASSWORD;
   constructor() {
-    this.redisClient = new Redis({ host:this.REDIS_SERVER, port: Number(this.REDIS_PORT)});
+    this.redisClient = new Redis({
+      host: this.REDIS_SERVER,
+      port: Number(this.REDIS_PORT),
+      ...(this.REDIS_PASSWORD ? { password: this.REDIS_PASSWORD } : {}),
+    });
     this.redisClient.on('error', (err) => {
       console.error('Redis error:', err);
     });

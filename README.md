@@ -321,6 +321,7 @@ MONGO_URL=mongodb://<username>:<password>@<hostname or IP>:<port>/<DB_Name>?dire
 CORS_ORIGIN=http://localhost:3002
 REDIS_SERVER=<hostname or IP>
 REDIS_PORT=6379
+REDIS_PASSWORD=<Redis password>
 
 ```
 
