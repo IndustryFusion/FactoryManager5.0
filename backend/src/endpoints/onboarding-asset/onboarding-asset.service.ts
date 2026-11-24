@@ -52,7 +52,7 @@ export class OnboardingAssetService {
         }
       }
       const newOnboard = new this.onboardingModel(data);
-      newOnboard.save();
+      await newOnboard.save();
       return {
         "success": true,
         "status": 201,
