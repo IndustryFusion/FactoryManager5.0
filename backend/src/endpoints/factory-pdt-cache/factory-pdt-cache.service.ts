@@ -127,8 +127,7 @@ export class FactoryPdtCacheService implements OnModuleInit {
               }
             }
           }
-        ],
-        {new: true}
+        ]
       )
     } catch(err) {
       if (err instanceof HttpException) {
@@ -159,8 +158,7 @@ export class FactoryPdtCacheService implements OnModuleInit {
 
           await this.factoryPdtCacheModel.updateMany(
             { id: { $in: assetIds } },
-            { $addToSet: { product_line: subFlowId } },
-            { new: true }
+            { $addToSet: { product_line: subFlowId } }
           )
         })
       );
