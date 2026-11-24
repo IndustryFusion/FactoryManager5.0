@@ -1,51 +1,47 @@
-# 
-# Copyright (c) 2024 IB Systems GmbH 
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
-# 
-#    http://www.apache.org/licenses/LICENSE-2.0 
-# 
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
-# limitations under the License. 
-# 
+# Security baseline (ifx-docs 14.1, step 4): pinned Node 22 base, reproducible
+# `npm ci`, multi-stage build without dev dependencies, runs as the non-root `node` user.
 
+# ---- build stage ----
+FROM node:22.23.5-alpine3.24 AS build
 
-
-
-# Use the official lightweight Node.js 16 image.
-# https://hub.docker.com/_/node
-FROM node:20-alpine
-
-# Create and change to the app directory.
 WORKDIR /usr/src/app
 
-# Copy application dependency manifests to the container image.
-# A wildcard is used to ensure both package.json AND package-lock.json are copied.
-# Copying this separately prevents re-running npm install on every code change.
+# Install exactly what package-lock.json lists
 COPY package*.json ./
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
-# Install production dependencies.
-RUN npm i --legacy-peer-deps
-
-# Copy local code to the container image.
+# Copy the rest of the application source code
 COPY . .
 
-# Open the desired port
-EXPOSE 3002
-
+# Set dev as the default environment
 ARG ENV=dev
+
 # Conditionally copy the correct environment file based on ENV
 RUN if [ "$ENV" = "dev" ]; then \
     cp .env.development .env.local; \
   else \
     cp .env.production .env.local; \
   fi
-# Run the build (always)
-RUN npm run build
+
+# Build, then drop dev dependencies for the runtime image
+RUN npm run build && npm prune --omit=dev --legacy-peer-deps --no-audit --no-fund
+
+# ---- runtime stage ----
+FROM node:22.23.5-alpine3.24
+
+WORKDIR /usr/src/app
+
+COPY --from=build --chown=node:node /usr/src/app ./
+
+# Expose the port your app runs on
+EXPOSE 3002
+
+# Non-root: the image's built-in `node` user (uid/gid 1000), numeric so runAsNonRoot can verify it
+# WORKDIR creates /usr/src/app as root and COPY --chown only changes the copied files,
+# so give the runtime user the directory itself, in case Next.js creates new files
+# here at runtime (its cache under .next/ is already owned by node).
+RUN chown node:node /usr/src/app
+USER 1000:1000
+
 # Start the application (production start command)
 CMD ["npm", "run", "start"]
