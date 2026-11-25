@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
 import axios from 'axios';
+import { urlSegment } from '../../utils/url-segment';
 
 @Injectable()
 export class ContractService {
@@ -35,7 +36,7 @@ export class ContractService {
         'Authorization': req.headers['authorization']
       };
 
-      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`, { headers: registryHeaders });
+      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${urlSegment(company_ifric_id)}`, { headers: registryHeaders });
       if (!(companyData.data.length)) {
         return {
           status: 404,

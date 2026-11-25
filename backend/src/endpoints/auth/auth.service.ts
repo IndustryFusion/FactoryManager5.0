@@ -25,6 +25,7 @@ import { compactDecrypt } from 'jose';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { RouteHandoffService } from './route-handoff.service';
+import { urlSegment } from '../../utils/url-segment';
 /**
  * Retrieves tokens from the keylock service.
  * Returns access and refresh tokens.
@@ -153,7 +154,7 @@ export class AuthService {
       };
 
       // check whether the product is installed or not
-      const companyProducts = await axios.get(`${this.registryUrl}/auth/get-company-products/${data.company_ifric_id}`,{
+      const companyProducts = await axios.get(`${this.registryUrl}/auth/get-company-products/${urlSegment(data.company_ifric_id)}`,{
         headers: registryHeader,
       });
       const installed = Array.isArray(companyProducts.data) &&
@@ -548,7 +549,7 @@ export class AuthService {
         'Accept': 'application/json',
         'Authorization': req.headers['authorization'],
       };
-      const response = await axios.get(`${this.registryUrl}/auth/get-user-details-by-email/${email}`,{ headers: registryHeader });
+      const response = await axios.get(`${this.registryUrl}/auth/get-user-details-by-email/${urlSegment(email)}`,{ headers: registryHeader });
       return response.data;
     } catch(err) {
       if (err instanceof HttpException) {
@@ -568,7 +569,7 @@ export class AuthService {
         'Accept': 'application/json',
         'Authorization': req.headers['authorization'],
       };
-      const response = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`,{ headers: registryHeader });
+      const response = await axios.get(`${this.registryUrl}/auth/get-company-details/${urlSegment(company_ifric_id)}`,{ headers: registryHeader });
       return response.data;
     } catch(err) {
       if (err instanceof HttpException) {
@@ -588,7 +589,7 @@ export class AuthService {
         'Accept': 'application/json',
         'Authorization': req.headers['authorization'],
       };
-      const response = await axios.get(`${this.registryUrl}/auth/get-company-details-id/${id}`,{ headers: registryHeader });
+      const response = await axios.get(`${this.registryUrl}/auth/get-company-details-id/${urlSegment(id)}`,{ headers: registryHeader });
       return response.data;
     } catch(err) {
       if (err instanceof HttpException) {
@@ -608,7 +609,7 @@ export class AuthService {
         'Accept': 'application/json',
         'Authorization': req.headers['authorization'],
       };
-      const response = await axios.get(`${this.registryUrl}/auth/get-category-specific-company/${categoryName}`,{ headers: registryHeader });
+      const response = await axios.get(`${this.registryUrl}/auth/get-category-specific-company/${urlSegment(categoryName)}`,{ headers: registryHeader });
       return response.data;
     } catch(err) {
       if (err instanceof HttpException) {
@@ -654,7 +655,7 @@ export class AuthService {
         'Accept': 'application/json',
         'Authorization': req.headers['authorization'],
       };
-      const response = await axios.get(`${this.registryUrl}/auth/get-company-products/${company_ifric_id}`,{ headers: registryHeader });
+      const response = await axios.get(`${this.registryUrl}/auth/get-company-products/${urlSegment(company_ifric_id)}`,{ headers: registryHeader });
       return response.data;
     } catch(err) {
       if (err instanceof HttpException) {

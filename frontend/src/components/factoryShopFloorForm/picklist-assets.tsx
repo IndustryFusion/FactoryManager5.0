@@ -192,7 +192,7 @@ const PicklistAssets = () => {
     }
 
     async function updateReactFlow(factoryId: string) {
-        const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${factoryId}`;
+        const reactFlowUpdate = `${API_URL}/react-flow/react-flow-update/${encodeURIComponent(factoryId)}`;
         try {
             await api.get(reactFlowUpdate, {
                 headers: {

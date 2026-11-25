@@ -9,6 +9,7 @@ import { FlinkJobDto } from './dto/flink-job.dto';
 import * as Multer from 'multer';
 import { FileService } from '../file/file.service';
 import { createParser } from 'eventsource-parser';
+import { urlSegment } from '../../utils/url-segment';
 
 @Injectable()
 export class FlinkDeployService {
@@ -87,7 +88,7 @@ export class FlinkDeployService {
   // === Fetch logs from runner and stream to client ===
   async pipeRunnerSseToResponse(jobId: string, res: import('express').Response) {
     const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
-    const url = `${RUNNER_URL}/jobs/${jobId}/logs`;
+    const url = `${RUNNER_URL}/jobs/${urlSegment(jobId)}/logs`;
 
     this.logger.log(`Fetching logs from runner for job ${jobId} at: ${url}`);
 

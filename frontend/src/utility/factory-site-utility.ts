@@ -132,7 +132,7 @@ export const fetchFactoriesAndAssets = async () => {
  */
 export async function fetchFactoryDetails(factoryId: string) {
   try {
-    const response = await api.get(`${API_URL}/factory-site/${factoryId}`, {
+    const response = await api.get(`${API_URL}/factory-site/${encodeURIComponent(factoryId)}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -261,7 +261,7 @@ const flattenData = (data: any): any => {
 };
 
 export const getShopFloors = async (factoryId: string) => {
-  const response = await api.get(`${API_URL}/shop-floor/${factoryId}`, {
+  const response = await api.get(`${API_URL}/shop-floor/${encodeURIComponent(factoryId)}`, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -689,7 +689,7 @@ export const getAssetById = async(assetId: string) =>{
 
 export const fetchAllocatedAssets = async (factoryId: string) => {
   try {
-    const response = await api.get(`${API_URL}/allocated-asset/${factoryId}`, {
+    const response = await api.get(`${API_URL}/allocated-asset/${encodeURIComponent(factoryId)}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -867,7 +867,7 @@ export const fetchAllShopFloors = async (factoryId: string): Promise<Transformed
     // refreshes it on a 401 and replays the call. Sent bare, this first request
     // was refused, so a factory's shop floors could be created and then not
     // listed — the next call in this function already uses `api`.
-    const factoryResponse = await api.get<FactoryResponse>(`${API_URL}/shop-floor/${factoryId}`, {
+    const factoryResponse = await api.get<FactoryResponse>(`${API_URL}/shop-floor/${encodeURIComponent(factoryId)}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

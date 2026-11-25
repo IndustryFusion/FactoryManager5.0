@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { TemplateProperties } from './to-ngsi-ld';
+import { urlSegment } from '../url-segment';
 
 // The full template IFX edits a product against: the base template for its
 // type, plus the company's custom fields for model and asset creation. This
@@ -13,7 +14,7 @@ const customProperties = async (companyIfricId: string, templateId: string, kind
   if (!companyIfricId) return {};
   try {
     const response = await axios.get(
-      `${templateSandboxUrl()}/custom-properties/${companyIfricId}/${templateId}/${kind}`,
+      `${templateSandboxUrl()}/custom-properties/${urlSegment(companyIfricId)}/${urlSegment(templateId)}/${urlSegment(kind)}`,
       productName !== undefined ? { params: { model_name: productName } } : undefined,
     );
     // IFX reads only the first saved entry; that one wins for a field it has,

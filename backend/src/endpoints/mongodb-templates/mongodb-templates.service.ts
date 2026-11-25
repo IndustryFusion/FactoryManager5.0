@@ -18,6 +18,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 import { upstreamMessage } from '../../utils/upstream-error';
+import { urlSegment } from '../../utils/url-segment';
 dotenv.config();
 const templateSandboxUrl = process.env.TEMPLATE_SANDBOX_BACKEND_URL;
 
@@ -42,7 +43,7 @@ export class MongodbTemplatesService {
 
   async getTemplateById(id: string) {
     try {
-      const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/${id}`);
+      const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/${urlSegment(id)}`);
       return response.data;
     } catch (error) {
       if (error instanceof HttpException) {
@@ -72,7 +73,7 @@ export class MongodbTemplatesService {
 
   async getTemplateByType(type: string) {
     try {
-      const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/type/${type}`);
+      const response = await axios.get(`${templateSandboxUrl}/templates/mongo-templates/type/${urlSegment(type)}`);
       return response.data;
     } catch (error) {
       if (error instanceof HttpException) {

@@ -27,6 +27,7 @@ import { FactoryPdtCache } from '../schemas/factory-pdt-cache.schema';
 import { upstreamMessage } from '../../utils/upstream-error';
 import { linkTargets, prepareForScorpio, replaceEntity, toLinks } from '../../utils/ngsi-ld';
 import { UrnHolderService } from '../urn-holder/urn-holder.service';
+import { urlSegment } from '../../utils/url-segment';
 @Injectable()
 export class ShopFloorService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
@@ -176,7 +177,7 @@ export class ShopFloorService {
         'Content-Type': 'application/ld+json',
         Accept: 'application/ld+json',
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       const response = await axios.get(url, { headers });
       if (response.data) {
         return response.data;
@@ -262,7 +263,7 @@ export class ShopFloorService {
         }
       }
       if(flag) {
-        const url = this.scorpioUrl + '/' + id + '/attrs';
+        const url = this.scorpioUrl + '/' + urlSegment(id) + '/attrs';
         const response = await axios.post(url, prepareForScorpio(data, { requireId: false, label: `update for ${id}` }), { headers });
         return {
           status: response.status,
@@ -297,7 +298,7 @@ export class ShopFloorService {
         'Content-Type': 'application/ld+json',
         Accept: 'application/ld+json',
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       const response = await axios.delete(url, { headers });
       return {
         status: response.status,
