@@ -320,6 +320,13 @@ export class ShopFloorService {
 
   async updateReact(node: any, token: string) {
     try {
+      // The body is the flow's edge list. Anything else is refused: the loops
+      // below run to node.length, so an object with a huge "length" would
+      // keep the server busy, and a string would be walked character by
+      // character.
+      if (!Array.isArray(node)) {
+        throw new HttpException('Expected an array of edges', HttpStatus.BAD_REQUEST);
+      }
       let shopFloorobj = {}, assetObj = {}, factoryId = "";
       // Every shop floor the flow still shows under its factory — including
       // the ones that now carry no asset. The cleanup below is keyed on shop
@@ -543,6 +550,13 @@ export class ShopFloorService {
 
   async deleteScript(node: any, token: string) {
     try {
+      // The body is the flow's edge list. Anything else is refused: the loops
+      // below run to node.length, so an object with a huge "length" would
+      // keep the server busy, and a string would be walked character by
+      // character.
+      if (!Array.isArray(node)) {
+        throw new HttpException('Expected an array of edges', HttpStatus.BAD_REQUEST);
+      }
       const headers = {
         Authorization: 'Bearer ' + token,
         'Content-Type': 'application/ld+json',
