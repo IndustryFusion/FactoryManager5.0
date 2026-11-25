@@ -21,9 +21,19 @@ export class CompanyService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   private readonly context = process.env.CONTEXT;
 
-  async getSyncPdtData(company_ifric_id: string) {
+  // The PDT backend needs the user's token on every call; the AuthGuard has
+  // already swapped the incoming one for the real access token.
+  private pdtHeaders(req: Request) {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': req.headers['authorization'],
+    };
+  }
+
+  async getSyncPdtData(company_ifric_id: string, req: Request) {
     try {
-      const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-data/${company_ifric_id}`);
+      const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-data/${company_ifric_id}`, { headers: this.pdtHeaders(req) });
       const factoryPdtData = await this.factoryPdtCache.find({company_ifric_id, isCacheUpdated: true});
       const result = [...response.data, ...factoryPdtData].reduce((acc, obj) => {
         acc[`${obj.product_name}_${obj.asset_serial_number}`] = obj;
@@ -45,9 +55,9 @@ export class CompanyService {
     }
   }
 
-  async getSyncPdtCountData(company_ifric_id: string) {
+  async getSyncPdtCountData(company_ifric_id: string, req: Request) {
     try {
-      const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-count-data/${company_ifric_id}`);
+      const response = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-count-data/${company_ifric_id}`, { headers: this.pdtHeaders(req) });
       const factoryPdtData = await this.factoryPdtCache.find({company_ifric_id, isCacheUpdated: true});
       const result = [...response.data, ...factoryPdtData].reduce((acc, obj) => {
         acc[obj.id] = obj;
@@ -91,7 +101,7 @@ export class CompanyService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       }
-      const ifxCacheData = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-count-data/${company_ifric_id}`);
+      const ifxCacheData = await axios.get(`${this.ifxPlatformUrl}/company/get-sync-pdt-count-data/${company_ifric_id}`, { headers });
       const factoryPdtData = await this.factoryPdtCache.find({company_ifric_id, isCacheUpdated: true});
       const updateIfxData = [];
       for(let i = 0; i < factoryPdtData.length; i++) {
@@ -103,7 +113,7 @@ export class CompanyService {
       }
       
       // endpoint to update all ifx cache data factory_site and shop_floor data
-      await axios.patch(`${this.ifxPlatformUrl}/company/update-factory-and-shopfloor/${company_ifric_id}`,updateIfxData);
+      await axios.patch(`${this.ifxPlatformUrl}/company/update-factory-and-shopfloor/${company_ifric_id}`, updateIfxData, { headers });
 
       // after ifx cache update set isCacheUpdated to false for factory pdt cache
       await this.factoryPdtCache.updateMany({company_ifric_id}, {isCacheUpdated : false});
