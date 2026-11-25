@@ -25,6 +25,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { upstreamMessage } from '../../utils/upstream-error';
 import { linkTargets, prepareForScorpio, toLinks } from '../../utils/ngsi-ld';
+import { urlSegment } from '../../utils/url-segment';
 interface FactoryData {
   nodes: any[]; 
   edges: any[]
@@ -278,7 +279,7 @@ export class FactorySiteService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       const response = await axios.get(url, {headers});
       return response.data;
     } catch (err) {
@@ -316,7 +317,7 @@ export class FactorySiteService {
         }
       }
       if(flag) {
-        const url = this.scorpioUrl + '/' + id + '/attrs';
+        const url = this.scorpioUrl + '/' + urlSegment(id) + '/attrs';
         const response = await axios.post(url, prepareForScorpio(data, { requireId: false, label: `update for ${id}` }), {headers});
         return {
           status: response.status,
@@ -351,7 +352,7 @@ export class FactorySiteService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       // Delete Factory 
       const response = await axios.delete(url, {headers});
       if(response['status'] == 200 || response['status'] == 204) {

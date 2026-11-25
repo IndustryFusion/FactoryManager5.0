@@ -20,6 +20,7 @@ import { AlertStatusDto } from './dto/alerta-status.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { urlSegment } from '../../utils/url-segment';
 @Injectable()
 export class AlertsService {
 
@@ -102,7 +103,7 @@ export class AlertsService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      let url = this.alertaUrl + '/alert/' + id + '/status';
+      let url = this.alertaUrl + '/alert/' + urlSegment(id) + '/status';
       const response = await axios.put(url, data, {headers});
       return response.data;
     } catch (err) {

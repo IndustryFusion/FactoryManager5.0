@@ -9,6 +9,7 @@ import { Response, Request } from 'express';
 import { upstreamMessage } from '../../utils/upstream-error';
 import { assertCompliant, mergeForSync, templateCache, toNgsiLd } from '../../utils/ngsi-ld';
 import { assetCategoryOf } from '../../utils/asset-category';
+import { urlSegment } from '../../utils/url-segment';
 @Injectable()
 export class CompanyService {
   private readonly logger = new Logger(CompanyService.name);
@@ -199,7 +200,7 @@ export class CompanyService {
       }
 
       // Update isScorpioUpdated to false in ifx together at end
-      await axios.patch(`${this.ifxPlatformUrl}/company/update-is-scorpio-updated/${company_ifric_id}`, updatedAssetIds, { headers });
+      await axios.patch(`${this.ifxPlatformUrl}/company/update-is-scorpio-updated/${urlSegment(company_ifric_id)}`, updatedAssetIds, { headers });
 
       res.write(
         JSON.stringify({

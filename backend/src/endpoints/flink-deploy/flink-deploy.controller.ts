@@ -19,6 +19,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FlinkJob } from '../schemas/flink-job.schema';
 import { Model } from 'mongoose';
 import { TokenInQuery } from '../auth/token-in-query.decorator';
+import { urlSegment } from '../../utils/url-segment';
 
 // Multer: keep files in memory and filter for .ttl
 const multerOptions = {
@@ -114,7 +115,7 @@ export class FlinkDeployController {
     if (!job) throw new NotFoundException('Job not found');
     
     const RUNNER_URL = process.env.RUNNER_URL || 'http://localhost:8080';
-    const url = `${RUNNER_URL}/jobs/${jobId}/logs`;
+    const url = `${RUNNER_URL}/jobs/${urlSegment(jobId)}/logs`;
     
     try {
       const response = await fetch(url, {

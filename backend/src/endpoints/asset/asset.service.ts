@@ -31,6 +31,7 @@ import { FactoryPdtCacheService } from '../factory-pdt-cache/factory-pdt-cache.s
 import { upstreamMessage } from '../../utils/upstream-error';
 import { assertCompliant, linkTargets, prepareForScorpio, replaceEntity, templateCache, toLinks, toNgsiLd } from '../../utils/ngsi-ld';
 import { assetCategoryOf } from '../../utils/asset-category';
+import { urlSegment } from '../../utils/url-segment';
 @Injectable()
 export class AssetService {
   private readonly logger = new Logger(AssetService.name);
@@ -164,7 +165,7 @@ export class AssetService {
       };
 
       // we need to remove registry company twin call Factory server as each factory has its own scorpio
-      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${company_ifric_id}`, { headers: registryHeaders });
+      const companyData = await axios.get(`${this.registryUrl}/auth/get-company-details/${urlSegment(company_ifric_id)}`, { headers: registryHeaders });
       if (!(companyData.data.length)) {
         throw new HttpException('No company found with the provided ID', HttpStatus.NOT_FOUND);
       }
@@ -224,7 +225,7 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       const response = await axios.get(url, { headers });
       if (response.data) {
         return response.data;
@@ -298,7 +299,7 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id + '?options=keyValues';
+      const url = this.scorpioUrl + '/' + urlSegment(id) + '?options=keyValues';
       const response = await axios.get(url, { headers });
       return response.data;
     } catch (err) {
@@ -473,8 +474,8 @@ export class AssetService {
       this.logger.log(`${tag} start: asking IFX for the company's owned products`);
 
       const [scorpioDataResponseRaw, cacheDataResponse] = await Promise.all([
-        axios.get(`${this.ifxurl}/asset/get-owner-asset/${company_ifric_id}`, { headers: ifxHeaders }),
-        axios.get(`${this.ifxurl}/company/get-asset-and-purchaced-pdt-cache/${company_ifric_id}`, { headers: ifxHeaders })
+        axios.get(`${this.ifxurl}/asset/get-owner-asset/${urlSegment(company_ifric_id)}`, { headers: ifxHeaders }),
+        axios.get(`${this.ifxurl}/company/get-asset-and-purchaced-pdt-cache/${urlSegment(company_ifric_id)}`, { headers: ifxHeaders })
       ]);
 
       // IFX puts null in the list for an owned product it could not load.
@@ -602,8 +603,8 @@ export class AssetService {
 
       // Patch updates isScorpioUpdated and isCacheUpdated in ifx together at end
       await Promise.all([
-        axios.patch(`${this.ifxurl}/company/update-is-scorpio-updated/${company_ifric_id}`, scorpioUpdatedAssetIds, { headers: ifxHeaders }),
-        axios.patch(`${this.ifxurl}/company/update-is-cache-updated/${company_ifric_id}`, cacheUpdatedAssetIds, { headers: ifxHeaders }),
+        axios.patch(`${this.ifxurl}/company/update-is-scorpio-updated/${urlSegment(company_ifric_id)}`, scorpioUpdatedAssetIds, { headers: ifxHeaders }),
+        axios.patch(`${this.ifxurl}/company/update-is-cache-updated/${urlSegment(company_ifric_id)}`, cacheUpdatedAssetIds, { headers: ifxHeaders }),
       ]);
 
       return {
@@ -695,7 +696,7 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id + '/attrs';
+      const url = this.scorpioUrl + '/' + urlSegment(id) + '/attrs';
       const response = await axios.post(url, prepareForScorpio(data, { requireId: false, label: `update for ${id}` }), { headers });
       return {
         status: response.status,
@@ -840,7 +841,7 @@ export class AssetService {
         'Content-Type': 'application/ld+json',
         'Accept': 'application/ld+json'
       };
-      const url = this.scorpioUrl + '/' + id;
+      const url = this.scorpioUrl + '/' + urlSegment(id);
       const response = await axios.delete(url, { headers });
       return {
         status: response.status,
@@ -960,7 +961,7 @@ export class AssetService {
       }
       // Delete AssetId From Scorpio
       try {
-        const finalUrl = this.scorpioUrl + '/' + assetId;
+        const finalUrl = this.scorpioUrl + '/' + urlSegment(assetId);
         let deleteResponse = await axios.delete(finalUrl, { headers });
         return {
           status: deleteResponse.status,
