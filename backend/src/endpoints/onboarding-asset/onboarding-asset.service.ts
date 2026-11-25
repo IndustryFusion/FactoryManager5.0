@@ -24,6 +24,7 @@ import { OnboardingDto } from './dto/onboarding.dto';
 import { transformsProblem } from './transforms.validate';
 
 import { upstreamMessage } from '../../utils/upstream-error';
+import { requireString } from '../../utils/mongo-input';
 @Injectable()
 export class OnboardingAssetService {
 
@@ -43,7 +44,7 @@ export class OnboardingAssetService {
   async create(data: OnboardingDto) {
     try {
       this.checkTransforms(data);
-      const onbaordDevice = await this.onboardingModel.findOne({ device_id: data.device_id }).exec();
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: requireString(data.device_id, 'device_id') }).exec();
       if (onbaordDevice) {
         return {
           "success": false,
@@ -71,7 +72,7 @@ export class OnboardingAssetService {
 
   async findOne(id: string) {
     try {
-      const onbaordDevice = await this.onboardingModel.findOne({ device_id: id }).exec();
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: requireString(id, 'id') }).exec();
       if (!onbaordDevice) {
         throw new NotFoundException(`Device with id ${id} not found`);
       }
@@ -90,7 +91,7 @@ export class OnboardingAssetService {
   async update(id: string, data: OnboardingDto) {
     try {
       this.checkTransforms(data);
-      const onbaordDevice = await this.onboardingModel.findOne({ device_id: id }).exec();
+      const onbaordDevice = await this.onboardingModel.findOne({ device_id: requireString(id, 'id') }).exec();
       if (!onbaordDevice) {
         throw new NotFoundException(`Device with id ${id} not found`);
       }

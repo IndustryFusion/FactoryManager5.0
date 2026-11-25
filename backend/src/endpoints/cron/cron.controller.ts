@@ -14,7 +14,7 @@
 // limitations under the License. 
 // 
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, Req, Res, Session, Query, Logger } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { TokenService } from '../session/token.service';
 import { CronService } from './cron.service';
@@ -33,7 +33,9 @@ export class CronController {
             const token = await this.tokenService.getToken();
             return this.cronService.validateScript(token);
         } catch (err) {
-            throw new NotFoundException("Error fetching assets " + err);
+            // Public route: the detail goes to the log, not to the caller.
+            new Logger(CronController.name).error(`validate failed: ${err?.message ?? err}`);
+            throw new NotFoundException("Error fetching assets");
         }
     }
 }

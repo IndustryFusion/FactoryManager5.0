@@ -19,7 +19,6 @@ import { AppModule } from './app.module';
 import { SocketIoAdapter } from './adapters/socket-io.adapter';
 import * as cors from 'cors';
 import * as cookieParser from 'cookie-parser';
-import * as session from 'express-session';
 import * as dotenv from 'dotenv';
 import { AllExceptionsFilter } from './utils/exception.middleware';
 import * as bodyParser from 'body-parser';
@@ -38,13 +37,6 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
-  app.use(
-    session({
-      secret: 'login_token', 
-      resave: false,
-      saveUninitialized: false,
-    }),
-  );
 
   app.use(bodyParser.json({ limit: '100mb' }));
   app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
