@@ -11,7 +11,7 @@ export class ContractService {
 
   async findByType(contract_type: string, req: Request) {
     try {
-      const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-type/${contract_type}`, {
+      const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-type/${encodeURIComponent(contract_type)}`, {
         headers: { 'Authorization': req.headers['authorization'] },
       });
       return response.data;
