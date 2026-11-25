@@ -13,8 +13,8 @@ export class ContractController {
   ) {}
 
   @Get('get-contract-by-type/:contract_type')
-  findByType(@Param('contract_type') contract_type: string) {
-    return this.contractService.findByType(contract_type);
+  findByType(@Param('contract_type') contract_type: string, @Req() req: Request) {
+    return this.contractService.findByType(contract_type, req);
   }
 
   @UseGuards(AuthGuard)

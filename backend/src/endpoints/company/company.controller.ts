@@ -11,13 +11,13 @@ export class CompanyController {
   ) {}
 
   @Get('get-sync-pdt-data/:company_ifric_id')
-  getSyncPdtData(@Param('company_ifric_id') company_ifric_id: string) {
-    return this.companyService.getSyncPdtData(company_ifric_id);
+  getSyncPdtData(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+    return this.companyService.getSyncPdtData(company_ifric_id, req);
   }
 
   @Get('get-sync-pdt-count/:company_ifric_id')
-  getSyncPdtCountData(@Param('company_ifric_id') company_ifric_id: string) {
-    return this.companyService.getSyncPdtCountData(company_ifric_id);
+  getSyncPdtCountData(@Param('company_ifric_id') company_ifric_id: string, @Req() req: Request) {
+    return this.companyService.getSyncPdtCountData(company_ifric_id, req);
   }
 
   @Post('sync-pdt/:company_ifric_id') 

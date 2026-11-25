@@ -9,9 +9,11 @@ export class ContractService {
   private readonly scorpioUrl = process.env.SCORPIO_URL;
   private readonly registryUrl = process.env.IFRIC_REGISTRY_BACKEND_URL;
 
-  async findByType(contract_type: string) {
+  async findByType(contract_type: string, req: Request) {
     try {
-      const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-type/${contract_type}`);
+      const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-type/${encodeURIComponent(contract_type)}`, {
+        headers: { 'Authorization': req.headers['authorization'] },
+      });
       return response.data;
     } catch (err) {
       throw new NotFoundException(`Failed to fetch contract by type ${contract_type}: ${err.message}`);
@@ -58,7 +60,7 @@ export class ContractService {
 
       for (let i = 0; i < typeArr.length; i++) {
         let type = typeArr[i];
-        const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-asset-type/${btoa(type)}`);
+        const response = await axios.get(`${this.ifxUrl}/contract/get-contract-by-asset-type/${btoa(type)}`, { headers: registryHeaders });
         if (response.data.length > 0) {
           contractData.push(...response.data);
         }
